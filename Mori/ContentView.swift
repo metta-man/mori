@@ -116,7 +116,7 @@ struct ContentView: View {
                 Text("Today's Bonus:")
                     .foregroundColor(.white)
                 Spacer()
-                Text("\(todaysBonus) mins")
+                Text("\(todaysBonus) minutes")
                     .font(.title3)
                     .fontWeight(.bold)
                     .foregroundColor(todaysBonus >= 0 ? .green : .red)
