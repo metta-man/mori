@@ -1,0 +1,138 @@
+/* 🌙 Habit Check-In Component */
+/* Mori Brand Identity */
+
+.habit-checkin-container {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-xl);
+  padding: var(--space-lg);
+  margin: var(--space-lg) 0;
+}
+
+.habit-checkin-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: var(--space-md);
+}
+
+.habit-checkin-title {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: var(--text-h3);
+  color: var(--text-primary);
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+.habit-checkin-progress {
+  font-family: var(--font-ui);
+  font-size: var(--text-ui-sm);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+/* Progress Bar */
+.habit-progress-bar {
+  height: 4px;
+  background: var(--mori-gray-mid);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+  margin-bottom: var(--space-lg);
+}
+
+.habit-progress-fill {
+  height: 100%;
+  background: var(--mori-gold-gradient);
+  border-radius: var(--radius-full);
+  transition: width var(--transition-normal) var(--mori-ease);
+}
+
+/* Habit List */
+.habit-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.habit-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-lg);
+  cursor: pointer;
+  transition: all var(--transition-normal);
+}
+
+.habit-row:hover {
+  background: var(--mori-gray-mid);
+}
+
+.habit-row.completed {
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.habit-icon {
+  font-size: 24px;
+  width: 32px;
+  text-align: center;
+}
+
+.habit-name {
+  flex: 1;
+  font-family: var(--font-ui);
+  font-size: var(--text-ui);
+  color: var(--text-primary);
+}
+
+/* Toggle Button */
+.habit-toggle {
+  width: 32px;
+  height: 32px;
+  border: 2px solid var(--mori-gray-mid);
+  border-radius: var(--radius-full);
+  background: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--transition-normal);
+  flex-shrink: 0;
+}
+
+.habit-toggle.complete {
+  border-color: var(--mori-gold);
+  background: var(--mori-gold);
+  animation: checkmark-pop 0.3s ease;
+}
+
+/* Checkmark SVG */
+.habit-toggle .checkmark {
+  width: 16px;
+  height: 16px;
+  color: var(--mori-dark);
+  stroke-dasharray: 24;
+  stroke-dashoffset: 0;
+  animation: mori-checkmark 0.3s ease forwards;
+}
+
+@keyframes checkmark-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); }
+}
+
+@keyframes mori-checkmark {
+  0% {
+    stroke-dashoffset: 24;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+/* Completion Glow */
+.habit-row.completed .habit-toggle {
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+}

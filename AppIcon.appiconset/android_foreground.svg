@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 432 432">
+  <defs>
+    <radialGradient id="centerGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" style="stop-color:#D4A574;stop-opacity:0.9"/>
+      <stop offset="40%" style="stop-color:#D4A574;stop-opacity:0.4"/>
+      <stop offset="100%" style="stop-color:#D4A574;stop-opacity:0"/>
+    </radialGradient>
+    <linearGradient id="ringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#F5F0E1"/>
+      <stop offset="100%" style="stop-color:#E8E0D0"/>
+    </linearGradient>
+  </defs>
+  <circle cx="216" cy="216" r="120" fill="url(#centerGlow)"/>
+  <circle cx="216" cy="216" r="160" fill="none" stroke="#F5F0E1" stroke-width="12" opacity="0.3"/>
+  <circle cx="216" cy="216" r="135" fill="none" stroke="url(#ringGrad)" stroke-width="14" opacity="0.5"/>
+  <circle cx="216" cy="216" r="105" fill="none" stroke="#F5F0E1" stroke-width="15" opacity="0.7"/>
+  <circle cx="216" cy="216" r="72" fill="none" stroke="#F5F0E1" stroke-width="17" opacity="0.85"/>
+  <circle cx="216" cy="216" r="38" fill="#D4A574" opacity="0.6"/>
+</svg>

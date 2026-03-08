@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Clock - Countdown</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: linear-gradient(135deg, #FDF5E6 0%, #FFF8E7 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+        .container {
+            background: #FFF8E7;
+            border-radius: 32px;
+            padding: 60px;
+            box-shadow: 0 8px 32px rgba(51, 51, 51, 0.08);
+            text-align: center;
+            max-width: 500px;
+        }
+        .greeting {
+            color: #4A4A4A;
+            font-size: 16px;
+            margin-bottom: 20px;
+            opacity: 0.7;
+        }
+        .clock {
+            font-size: 72px;
+            font-weight: 200;
+            color: #333333;
+            letter-spacing: -2px;
+            margin: 30px 0;
+        }
+        .countdown-label {
+            color: #4A4A4A;
+            font-size: 14px;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            opacity: 0.6;
+        }
+        .countdown {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+        .countdown-item {
+            text-align: center;
+        }
+        .countdown-number {
+            font-size: 36px;
+            font-weight: 300;
+            color: #333333;
+            display: block;
+        }
+        .countdown-unit {
+            font-size: 11px;
+            color: #4A4A4A;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            opacity: 0.6;
+        }
+        .warm-message {
+            color: #4A4A4A;
+            font-size: 15px;
+            line-height: 1.6;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 1px solid rgba(74, 74, 74, 0.1);
+        }
+        .warm-message strong {
+            color: #333333;
+            font-weight: 400;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="greeting">🌙 晚上好</div>
+        <div class="clock" id="clock">21:30</div>
+        
+        <div class="countdown-label">距离今天结束</div>
+        <div class="countdown">
+            <div class="countdown-item">
+                <span class="countdown-number" id="hours">02</span>
+                <span class="countdown-unit">小时</span>
+            </div>
+            <div class="countdown-item">
+                <span class="countdown-number" id="minutes">30</span>
+                <span class="countdown-unit">分钟</span>
+            </div>
+            <div class="countdown-item">
+                <span class="countdown-number" id="seconds">15</span>
+                <span class="countdown-unit">秒</span>
+            </div>
+        </div>
+        
+        <div class="warm-message">
+            <strong>今天已经完成了</strong><br>
+            你已经度过了这一天的 90.3%<br>
+            剩下的时光，温柔以待 💫
+        </div>
+    </div>
+    
+    <script>
+        function updateTime() {
+            const now = new Date();
+            const hours = now.getHours();
+            const minutes = now.getMinutes();
+            
+            // Update clock
+            document.getElementById('clock').textContent = 
+                `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+            
+            // Update countdown
+            const endOfDay = new Date();
+            endOfDay.setHours(23, 59, 59, 999);
+            const diff = endOfDay - now;
+            
+            const h = Math.floor(diff / (1000 * 60 * 60));
+            const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            const s = Math.floor((diff % (1000 * 60)) / 1000);
+            
+            document.getElementById('hours').textContent = h.toString().padStart(2, '0');
+            document.getElementById('minutes').textContent = m.toString().padStart(2, '0');
+            document.getElementById('seconds').textContent = s.toString().padStart(2, '0');
+        }
+        
+        updateTime();
+        setInterval(updateTime, 1000);
+    </script>
+</body>
+</html>

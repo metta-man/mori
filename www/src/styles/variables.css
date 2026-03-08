@@ -1,0 +1,188 @@
+/* 🌙 MORI Brand System - CSS Variables */
+/* Version: 2.0 - Updated 2026-03-07 */
+/* Brand: Metta Labs | Design: Flare */
+
+/* ========================================
+   PRIMARY COLORS (70-20-10 Rule)
+   ======================================== */
+
+:root {
+  /* === PRIMARY === */
+  --mori-gold: #D4AF37;       /* Accent - lived weeks, highlights */
+  --mori-cream: #F5F5F5;      /* Light text, warm backgrounds */
+  --mori-dark: #0A0A0A;       /* Dark background - foundation */
+  
+  /* === SECONDARY === */
+  --mori-gray-dark: #1A1A1A;  /* Elevated surfaces */
+  --mori-gray-mid: #3A3A3A;   /* Future weeks (dimmed) */
+  --mori-gray-light: #888888; /* Supporting text */
+  --mori-white: #FFFFFF;      /* Bright accents */
+  
+  /* === SEMANTIC === */
+  --mori-success: #788c5d;    /* Habit complete, positive */
+  --mori-warning: #FF6B35;     /* Streak at risk, attention */
+  --mori-info: #6a9bcc;       /* Insights, information */
+  --mori-purple: #6B5B95;      /* Gratitude, reflection */
+  
+  /* === GRADIENTS === */
+  --mori-gold-gradient: linear-gradient(135deg, #D4AF37 0%, #B8962F 100%);
+  --mori-dark-gradient: linear-gradient(180deg, #0A0A0A 0%, #1A1A1A 100%);
+  --mori-glow-gradient: radial-gradient(circle, rgba(212,175,55,0.3) 0%, transparent 70%);
+  
+  /* === TYPOGRAPHY === */
+  --font-display: 'Cormorant Garamond', Georgia, serif;
+  --font-body: 'Crimson Pro', Georgia, serif;
+  --font-ui: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  
+  /* Type Scale */
+  --text-display-1: 96px;
+  --text-display-2: 72px;
+  --text-h1: 48px;
+  --text-h2: 36px;
+  --text-h3: 28px;
+  --text-h4: 24px;
+  --text-body-lg: 20px;
+  --text-body: 18px;
+  --text-body-sm: 16px;
+  --text-caption: 14px;
+  --text-ui: 16px;
+  --text-ui-sm: 14px;
+  --text-ui-xs: 12px;
+  
+  /* === SPACING === */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 16px;
+  --space-lg: 24px;
+  --space-xl: 48px;
+  --space-2xl: 72px;
+  --space-3xl: 96px;
+  
+  /* === SHADOWS === */
+  --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-medium: 0 4px 12px rgba(0, 0, 0, 0.15);
+  --shadow-strong: 0 8px 24px rgba(0, 0, 0, 0.2);
+  --shadow-gold: 0 0 20px rgba(212,175,55,0.3);
+  --shadow-gold-strong: 0 0 40px rgba(212,175,55,0.5);
+  
+  /* === TRANSITIONS === */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.6s ease;
+  --mori-ease: cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* === BORDER RADIUS === */
+  --radius-sm: 1px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-xl: 12px;
+  --radius-2xl: 16px;
+  --radius-full: 9999px;
+  
+  /* === LAYOUT === */
+  --grid-weeks: 52;
+  --grid-years: 80;
+  --cell-size-mobile: 12px;
+  --cell-size-desktop: 16px;
+  --cell-gap: 2px;
+}
+
+/* ========================================
+   DARK MODE (Default)
+   ======================================== */
+
+:root {
+  --bg-primary: var(--mori-dark);
+  --bg-secondary: var(--mori-gray-dark);
+  --bg-card: var(--mori-gray-dark);
+  --bg-elevated: var(--mori-gray-mid);
+  --text-primary: var(--mori-cream);
+  --text-secondary: var(--mori-gray-light);
+  --text-muted: var(--mori-gray-light);
+  --border-subtle: rgba(255, 255, 255, 0.1);
+}
+
+/* ========================================
+   ANIMATIONS
+   ======================================== */
+
+@keyframes mori-pulse {
+  0%, 100% { 
+    opacity: 1; 
+    box-shadow: 0 0 20px rgba(212,175,55,0.5); 
+  }
+  50% { 
+    opacity: 0.7; 
+    box-shadow: 0 0 40px rgba(212,175,55,0.8); 
+  }
+}
+
+@keyframes mori-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes mori-checkmark {
+  0% {
+    stroke-dashoffset: 24;
+  }
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+@keyframes mori-glow {
+  0%, 100% {
+    box-shadow: 0 0 20px rgba(212,175,55,0.3);
+  }
+  50% {
+    box-shadow: 0 0 40px rgba(212,175,55,0.5);
+  }
+}
+
+@keyframes mori-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* ========================================
+   UTILITY CLASSES
+   ======================================== */
+
+.mori-entrance {
+  animation: mori-fade-up 0.6s ease-out;
+}
+
+.mori-pulse {
+  animation: mori-pulse 2s ease-in-out infinite;
+}
+
+.mori-glow {
+  animation: mori-glow 3s ease-in-out infinite;
+}
+
+.mori-scale-in {
+  animation: mori-scale-in 0.3s ease-out;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .mori-entrance,
+  .mori-pulse,
+  .mori-glow,
+  .mori-scale-in {
+    animation: none;
+  }
+}

@@ -1,0 +1,86 @@
+/* Mori Button Styles */
+
+.mori-btn {
+  font-family: var(--font-ui);
+  font-weight: 500;
+  cursor: pointer;
+  border: none;
+  border-radius: var(--radius-md);
+  transition: all var(--transition-normal);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-sm);
+}
+
+.mori-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Sizes */
+.mori-btn-sm {
+  padding: 8px 16px;
+  font-size: 12px;
+}
+
+.mori-btn-md {
+  padding: 13px 27px;
+  font-size: 14px;
+}
+
+.mori-btn-lg {
+  padding: 16px 32px;
+  font-size: 16px;
+}
+
+/* Primary Variant */
+.mori-btn-primary {
+  background: linear-gradient(135deg, var(--mori-sand) 0%, var(--time-gold) 100%);
+  color: var(--deep-night);
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(194, 178, 128, 0.3);
+}
+
+.mori-btn-primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(194, 178, 128, 0.4);
+}
+
+.mori-btn-primary:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+/* Secondary Variant */
+.mori-btn-secondary {
+  background: transparent;
+  border: 1px solid var(--mori-sand);
+  color: var(--mori-sand);
+}
+
+.mori-btn-secondary:hover:not(:disabled) {
+  background: var(--mori-sand);
+  color: var(--deep-night);
+}
+
+/* Ghost Variant */
+.mori-btn-ghost {
+  background: transparent;
+  color: var(--text-primary);
+}
+
+.mori-btn-ghost:hover:not(:disabled) {
+  background: rgba(194, 178, 128, 0.1);
+  color: var(--mori-sand);
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .mori-btn {
+    transition: none;
+  }
+  
+  .mori-btn:hover:not(:disabled) {
+    transform: none;
+  }
+}

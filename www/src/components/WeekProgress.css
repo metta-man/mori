@@ -1,0 +1,70 @@
+/* 🌙 Week Progress Indicator Component */
+/* Mori Brand Identity */
+
+.week-progress-container {
+  margin: var(--space-md) 0;
+}
+
+.week-progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: var(--space-sm);
+}
+
+.week-progress-label {
+  font-family: var(--font-ui);
+  font-size: var(--text-ui-sm);
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.week-progress-percent {
+  font-family: var(--font-ui);
+  font-size: var(--text-ui);
+  font-weight: 500;
+  color: var(--mori-gold);
+}
+
+.week-progress-track {
+  position: relative;
+  height: 8px;
+  background: var(--mori-gray-mid);
+  border-radius: var(--radius-full);
+  overflow: hidden;
+}
+
+.week-progress-fill {
+  height: 100%;
+  background: var(--mori-gold-gradient);
+  border-radius: var(--radius-full);
+  transition: width 0.5s var(--mori-ease);
+}
+
+.week-progress-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--mori-gold);
+  border-radius: var(--radius-full);
+  animation: mori-pulse 2s ease-in-out infinite;
+}
+
+.week-progress-detail {
+  font-family: var(--font-ui);
+  font-size: var(--text-ui-xs);
+  color: var(--text-muted);
+  margin: var(--space-sm) 0 0 0;
+}
+
+/* Complete State */
+.week-progress-container.complete .week-progress-percent {
+  color: var(--mori-success);
+}
+
+.week-progress-container.complete .week-progress-fill {
+  background: var(--mori-success);
+}

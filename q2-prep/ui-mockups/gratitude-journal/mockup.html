@@ -1,0 +1,520 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mori - Gratitude Journal Mockup</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Crimson+Pro:wght@400;500&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --mori-gold: #D4AF37;
+            --zen-cream: #FDF5E6;
+            --zen-cream-dark: #FFF8E7;
+            --charcoal: #333333;
+            --charcoal-muted: #666666;
+            --sage-green: #788c5d;
+            --border-light: #E8E8E8;
+            --shadow-soft: rgba(0, 0, 0, 0.05);
+            --shadow-medium: rgba(0, 0, 0, 0.1);
+            --font-heading: 'Cormorant Garamond', Georgia, serif;
+            --font-body: 'Crimson Pro', Georgia, serif;
+            --font-ui: 'Poppins', -apple-system, sans-serif;
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+            --space-2xl: 48px;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: var(--font-body);
+            background: var(--zen-cream);
+            color: var(--charcoal);
+            line-height: 1.8;
+            padding: var(--space-2xl);
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: var(--space-2xl);
+        }
+        
+        .header h1 {
+            font-family: var(--font-heading);
+            font-size: 48px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            margin-bottom: var(--space-md);
+        }
+        
+        .header p {
+            font-size: 16px;
+            color: var(--charcoal-muted);
+        }
+        
+        /* Journal Card */
+        .journal-card {
+            background: white;
+            border-radius: 20px;
+            padding: var(--space-2xl);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: var(--space-2xl);
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .journal-header {
+            text-align: center;
+            margin-bottom: var(--space-xl);
+            padding-bottom: var(--space-lg);
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        .journal-date {
+            font-family: var(--font-heading);
+            font-size: 32px;
+            font-weight: 300;
+            color: var(--charcoal);
+            margin-bottom: var(--space-sm);
+        }
+        
+        .journal-time {
+            font-family: var(--font-ui);
+            font-size: 12px;
+            color: var(--charcoal-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        /* Prompts */
+        .prompts-section {
+            margin-bottom: var(--space-xl);
+        }
+        
+        .prompts-title {
+            font-family: var(--font-ui);
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--charcoal-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: var(--space-md);
+        }
+        
+        .prompts-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: var(--space-sm);
+        }
+        
+        .prompt-chip {
+            padding: var(--space-sm) var(--space-md);
+            border-radius: 20px;
+            border: 1px solid var(--border-light);
+            background: var(--zen-cream);
+            font-family: var(--font-body);
+            font-size: 13px;
+            color: var(--charcoal-muted);
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .prompt-chip:hover {
+            border-color: var(--mori-gold);
+            background: #FFFBF0;
+            color: var(--charcoal);
+        }
+        
+        .prompt-chip.active {
+            border-color: var(--mori-gold);
+            background: var(--mori-gold);
+            color: white;
+        }
+        
+        /* Textarea */
+        .journal-input {
+            width: 100%;
+            min-height: 200px;
+            padding: var(--space-lg);
+            font-family: var(--font-body);
+            font-size: 16px;
+            border: 2px solid var(--border-light);
+            border-radius: 12px;
+            background: #FFFCF5;
+            color: var(--charcoal);
+            resize: vertical;
+            line-height: 1.8;
+            transition: all 0.2s ease;
+        }
+        
+        .journal-input:focus {
+            outline: none;
+            border-color: var(--mori-gold);
+            background: white;
+            box-shadow: 0 0 0 4px rgba(212, 175, 55, 0.1);
+        }
+        
+        .journal-input::placeholder {
+            color: #AAAAAA;
+            font-style: italic;
+        }
+        
+        /* Character Counter */
+        .char-counter {
+            text-align: right;
+            margin-top: var(--space-sm);
+            font-family: var(--font-ui);
+            font-size: 11px;
+            color: var(--charcoal-muted);
+        }
+        
+        /* Save Button */
+        .save-btn {
+            width: 100%;
+            padding: var(--space-lg);
+            margin-top: var(--space-lg);
+            background: var(--mori-gold);
+            color: var(--charcoal);
+            border: none;
+            border-radius: 12px;
+            font-family: var(--font-ui);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .save-btn:hover {
+            background: #B8942D;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+        }
+        
+        /* Past Entries */
+        .entries-section {
+            margin-top: var(--space-2xl);
+        }
+        
+        .entries-title {
+            font-family: var(--font-heading);
+            font-size: 28px;
+            font-weight: 400;
+            margin-bottom: var(--space-lg);
+        }
+        
+        .entries-list {
+            display: grid;
+            gap: var(--space-lg);
+        }
+        
+        .entry-card {
+            background: white;
+            border-radius: 16px;
+            padding: var(--space-lg);
+            box-shadow: 0 2px 8px var(--shadow-soft);
+            border: 1px solid var(--border-light);
+            transition: all 0.2s ease;
+        }
+        
+        .entry-card:hover {
+            box-shadow: 0 8px 24px var(--shadow-medium);
+            border-color: var(--mori-gold);
+            transform: translateY(-2px);
+        }
+        
+        .entry-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-md);
+            padding-bottom: var(--space-sm);
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        .entry-date {
+            font-family: var(--font-heading);
+            font-size: 18px;
+            font-weight: 400;
+            color: var(--charcoal);
+        }
+        
+        .entry-day {
+            font-family: var(--font-ui);
+            font-size: 11px;
+            color: var(--charcoal-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .entry-preview {
+            font-family: var(--font-body);
+            font-size: 15px;
+            color: var(--charcoal-muted);
+            line-height: 1.7;
+        }
+        
+        .entry-preview.truncate {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+        }
+        
+        .entry-read-more {
+            color: var(--mori-gold);
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: var(--space-sm);
+        }
+        
+        /* Random Memory Feature */
+        .memory-feature {
+            background: linear-gradient(135deg, #F0F5EB 0%, #FFF5F0 100%);
+            border-radius: 16px;
+            padding: var(--space-xl);
+            margin-top: var(--space-2xl);
+            text-align: center;
+        }
+        
+        .memory-title {
+            font-family: var(--font-heading);
+            font-size: 24px;
+            font-weight: 400;
+            margin-bottom: var(--space-md);
+        }
+        
+        .memory-btn {
+            padding: var(--space-md) var(--space-2xl);
+            background: var(--mori-gold);
+            color: var(--charcoal);
+            border: none;
+            border-radius: 24px;
+            font-family: var(--font-ui);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .memory-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 8px 16px rgba(212, 175, 55, 0.3);
+        }
+        
+        /* Spec Section */
+        .spec-section {
+            background: white;
+            border-radius: 16px;
+            padding: var(--space-xl);
+            margin-top: var(--space-2xl);
+        }
+        
+        .spec-section h2 {
+            font-family: var(--font-heading);
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: var(--space-lg);
+            border-bottom: 2px solid var(--mori-gold);
+            padding-bottom: var(--space-sm);
+        }
+        
+        .spec-list {
+            list-style: none;
+        }
+        
+        .spec-list li {
+            padding: var(--space-sm) 0;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            gap: var(--space-md);
+        }
+        
+        .spec-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .spec-label {
+            font-family: var(--font-ui);
+            font-weight: 600;
+            color: var(--charcoal);
+            min-width: 150px;
+        }
+        
+        .spec-value {
+            color: var(--charcoal-muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Gratitude Journal</h1>
+        <p>Reflect on what matters. One day at a time.</p>
+    </div>
+    
+    <div class="journal-card">
+        <div class="journal-header">
+            <div class="journal-date">Wednesday, March 5, 2026</div>
+            <div class="journal-time">Evening Reflection</div>
+        </div>
+        
+        <div class="prompts-section">
+            <div class="prompts-title">Choose a Prompt (Optional)</div>
+            <div class="prompts-list">
+                <div class="prompt-chip" onclick="selectPrompt(this)">Today I'm grateful for...</div>
+                <div class="prompt-chip" onclick="selectPrompt(this)">A small joy I noticed...</div>
+                <div class="prompt-chip" onclick="selectPrompt(this)">I want to remember this moment...</div>
+                <div class="prompt-chip" onclick="selectPrompt(this)">Someone I appreciate today...</div>
+                <div class="prompt-chip" onclick="selectPrompt(this)">Something I learned...</div>
+            </div>
+        </div>
+        
+        <textarea class="journal-input" placeholder="Write your thoughts here... (3-5 sentences suggested)" onkeyup="updateCharCount(this)"></textarea>
+        <div class="char-counter"><span id="charCount">0</span> characters</div>
+        
+        <button class="save-btn" onclick="saveEntry()">Save Reflection</button>
+    </div>
+    
+    <div class="entries-section">
+        <h2 class="entries-title">Past Reflections</h2>
+        <div class="entries-list">
+            <div class="entry-card">
+                <div class="entry-header">
+                    <div>
+                        <div class="entry-date">Tuesday, March 4</div>
+                        <div class="entry-day">Yesterday</div>
+                    </div>
+                    <span>💭</span>
+                </div>
+                <div class="entry-preview truncate">
+                    I'm grateful for the quiet morning coffee. The sunrise was beautiful today, and I felt a moment of stillness before the busy day began. It reminded me that peace is always available if I pause to notice it...
+                </div>
+                <div class="entry-read-more">Read Full Entry →</div>
+            </div>
+            
+            <div class="entry-card">
+                <div class="entry-header">
+                    <div>
+                        <div class="entry-date">Monday, March 3</div>
+                        <div class="entry-day">2 days ago</div>
+                    </div>
+                    <span>✨</span>
+                </div>
+                <div class="entry-preview truncate">
+                    Someone I appreciate today: my colleague who helped me debug that tricky issue. We worked through it together, and I learned something new about the codebase. Collaboration makes hard problems easier...
+                </div>
+                <div class="entry-read-more">Read Full Entry →</div>
+            </div>
+            
+            <div class="entry-card">
+                <div class="entry-header">
+                    <div>
+                        <div class="entry-date">Sunday, March 2</div>
+                        <div class="entry-day">3 days ago</div>
+                    </div>
+                    <span>🌿</span>
+                </div>
+                <div class="entry-preview truncate">
+                    A small joy I noticed: watching the birds at the feeder this afternoon. Their colors, their movements, their simple existence. It was a reminder that beauty doesn't need to be grand to be meaningful...
+                </div>
+                <div class="entry-read-more">Read Full Entry →</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="memory-feature">
+        <h3 class="memory-title">✨ Random Memory</h3>
+        <p style="margin-bottom: 16px; color: var(--charcoal-muted);">Revisit a past moment of gratitude</p>
+        <button class="memory-btn" onclick="showRandomMemory()">Show Me a Memory</button>
+    </div>
+    
+    <div class="spec-section">
+        <h2>Implementation Specifications</h2>
+        <ul class="spec-list">
+            <li>
+                <span class="spec-label">Input Type:</span>
+                <span class="spec-value">Textarea with minimal diary input (3-5 sentences suggested)</span>
+            </li>
+            <li>
+                <span class="spec-label">Prompts:</span>
+                <span class="spec-value">5 rotating prompts (optional, user can skip)</span>
+            </li>
+            <li>
+                <span class="spec-label">Character Limit:</span>
+                <span class="spec-value">No hard limit, but suggest 3-5 sentences (300-500 chars)</span>
+            </li>
+            <li>
+                <span class="spec-label">Timestamp:</span>
+                <span class="spec-value">Auto-generated, date-stamped entries</span>
+            </li>
+            <li>
+                <span class="spec-label">Entry Browser:</span>
+                <span class="spec-value">Chronological list, truncated preview (3 lines), expandable</span>
+            </li>
+            <li>
+                <span class="spec-label">Random Memory:</span>
+                <span class="spec-value">Pull random past entry for reflection</span>
+            </li>
+            <li>
+                <span class="spec-label">Search:</span>
+                <span class="spec-value">Full-text search across all entries (future feature)</span>
+            </li>
+            <li>
+                <span class="spec-label">Export:</span>
+                <span class="spec-value">Export all entries as JSON/Markdown (Pro feature)</span>
+            </li>
+            <li>
+                <span class="spec-label">Privacy:</span>
+                <span class="spec-value">Local-first storage, optional iCloud sync</span>
+            </li>
+        </ul>
+    </div>
+    
+    <script>
+        function selectPrompt(chip) {
+            // Remove active class from all chips
+            document.querySelectorAll('.prompt-chip').forEach(c => c.classList.remove('active'));
+            
+            // Add active class to selected chip
+            chip.classList.add('active');
+            
+            // Insert prompt text into textarea
+            const textarea = document.querySelector('.journal-input');
+            textarea.value = chip.textContent + '\n\n';
+            textarea.focus();
+            updateCharCount(textarea);
+        }
+        
+        function updateCharCount(textarea) {
+            const count = textarea.value.length;
+            document.getElementById('charCount').textContent = count;
+        }
+        
+        function saveEntry() {
+            const textarea = document.querySelector('.journal-input');
+            const content = textarea.value.trim();
+            
+            if (content) {
+                alert('Entry saved! ✨\n\n(Note: This is a mockup - no actual save)');
+                textarea.value = '';
+                updateCharCount(textarea);
+            } else {
+                alert('Please write something before saving.');
+            }
+        }
+        
+        function showRandomMemory() {
+            alert('Random Memory:\n\n"November 15, 2025\n\nI\'m grateful for the unexpected phone call from an old friend. We talked for hours, and it felt like no time had passed. Connection is precious..."\n\n✨ (This is a mockup example)');
+        }
+    </script>
+</body>
+</html>

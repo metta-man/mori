@@ -1,0 +1,54 @@
+/* Mori Counter Styles */
+
+.mori-counter-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.mori-counter {
+  font-family: var(--font-accent);
+  font-weight: 700;
+  color: var(--time-gold);
+  line-height: 1;
+}
+
+.mori-counter-sm {
+  font-size: 36px;
+}
+
+.mori-counter-md {
+  font-size: 64px;
+}
+
+.mori-counter-lg {
+  font-size: 96px;
+}
+
+.mori-counter-xl {
+  font-size: 128px;
+  text-shadow: 0 2px 30px rgba(212, 175, 55, 0.4);
+}
+
+.mori-counter-label {
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-top: var(--space-sm);
+}
+
+/* Glow Effect */
+.mori-counter-glow {
+  animation: mori-glow 3s ease-in-out infinite;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .mori-counter {
+    animation: none;
+    text-shadow: none;
+  }
+}

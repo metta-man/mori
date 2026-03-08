@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024">
+  <defs>
+    <radialGradient id="bgGrad" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#3A3A3A"/>
+      <stop offset="100%" stop-color="#2A2A2A"/>
+    </radialGradient>
+    <linearGradient id="sandGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#F2C94C"/>
+      <stop offset="100%" stop-color="#D4AF37"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bgGrad)"/>
+  <path d="M 289 172 L 289 140 Q 289 120 309 120 L 715 120 Q 735 120 735 140 L 735 172 L 680 172 L 680 192 Q 680 212 660 212 L 364 212 Q 344 212 344 192 L 344 172 Z" fill="#F5F5F5"/>
+  <path d="M 289 852 L 289 884 Q 289 904 309 904 L 715 904 Q 735 904 735 884 L 735 852 L 680 852 L 680 832 Q 680 812 660 812 L 364 812 Q 344 812 344 832 L 344 852 Z" fill="#F5F5F5"/>
+  <rect x="310" y="120" width="30" height="792" fill="#F5F5F5"/>
+  <rect x="684" y="120" width="30" height="792" fill="#F5F5F5"/>
+  <path d="M 344 212 Q 344 320 512 430 Q 680 320 680 212 L 344 212 Z" fill="url(#sandGrad)"/>
+  <path d="M 344 812 Q 344 704 512 594 Q 680 704 680 812 L 344 812 Z" fill="url(#sandGrad)"/>
+  <rect x="504" y="430" width="16" height="164" fill="url(#sandGrad)"/>
+</svg>

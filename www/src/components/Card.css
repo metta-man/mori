@@ -1,0 +1,65 @@
+/* Mori Card Styles */
+
+.mori-card {
+  background: var(--bg-card);
+  border-radius: var(--radius-lg);
+  padding: var(--space-lg);
+  transition: all var(--transition-normal);
+}
+
+/* Default Variant */
+.mori-card-default {
+  border: 1px solid rgba(194, 178, 128, 0.1);
+  box-shadow: var(--shadow-soft);
+}
+
+.mori-card-default:hover {
+  border-color: rgba(194, 178, 128, 0.3);
+}
+
+/* Elevated Variant */
+.mori-card-elevated {
+  border: 1px solid rgba(194, 178, 128, 0.1);
+  box-shadow: var(--shadow-medium);
+}
+
+.mori-card-elevated:hover {
+  border-color: var(--mori-sand);
+  box-shadow: var(--shadow-strong);
+  transform: translateY(-4px);
+}
+
+/* Outlined Variant */
+.mori-card-outlined {
+  border: 1px solid var(--ash-gray);
+  box-shadow: none;
+}
+
+.mori-card-outlined:hover {
+  border-color: var(--mori-sand);
+}
+
+/* Clickable Card */
+.mori-card[role="button"] {
+  cursor: pointer;
+}
+
+.mori-card[role="button"]:hover {
+  outline: none;
+}
+
+.mori-card[role="button"]:focus {
+  outline: 2px solid var(--mori-sand);
+  outline-offset: 2px;
+}
+
+/* Reduced Motion */
+@media (prefers-reduced-motion: reduce) {
+  .mori-card {
+    transition: none;
+  }
+  
+  .mori-card-elevated:hover {
+    transform: none;
+  }
+}

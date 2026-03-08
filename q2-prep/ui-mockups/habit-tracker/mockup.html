@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mori - Habit Tracker Mockup</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Crimson+Pro:wght@400;500&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --mori-gold: #D4AF37;
+            --mori-gold-light: #E8C547;
+            --mori-gold-dark: #B8942D;
+            --zen-cream: #FDF5E6;
+            --zen-cream-dark: #FFF8E7;
+            --charcoal: #333333;
+            --charcoal-muted: #666666;
+            --sage-green: #788c5d;
+            --sage-green-light: #8FA072;
+            --ember-orange: #FF6B35;
+            --ember-orange-light: #FF8A5B;
+            --border-light: #E8E8E8;
+            --shadow-soft: rgba(0, 0, 0, 0.05);
+            --shadow-medium: rgba(0, 0, 0, 0.1);
+            --font-heading: 'Cormorant Garamond', Georgia, serif;
+            --font-body: 'Crimson Pro', Georgia, serif;
+            --font-ui: 'Poppins', -apple-system, sans-serif;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+            --space-2xl: 48px;
+            --space-3xl: 64px;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: var(--font-body);
+            background: var(--zen-cream);
+            color: var(--charcoal);
+            line-height: 1.8;
+            padding: var(--space-2xl);
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: var(--space-3xl);
+        }
+        
+        .header h1 {
+            font-family: var(--font-heading);
+            font-size: 48px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            margin-bottom: var(--space-md);
+        }
+        
+        .header p {
+            font-size: 16px;
+            color: var(--charcoal-muted);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* Main Card */
+        .tracker-card {
+            background: white;
+            border-radius: 20px;
+            padding: var(--space-2xl);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: var(--space-3xl);
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        
+        .tracker-header {
+            text-align: center;
+            margin-bottom: var(--space-xl);
+        }
+        
+        .tracker-date {
+            font-family: var(--font-heading);
+            font-size: 32px;
+            font-weight: 300;
+            color: var(--charcoal);
+            margin-bottom: var(--space-sm);
+        }
+        
+        .tracker-subtitle {
+            font-family: var(--font-ui);
+            font-size: 13px;
+            color: var(--charcoal-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        /* Main Question */
+        .tracker-question {
+            text-align: center;
+            margin-bottom: var(--space-xl);
+        }
+        
+        .question-text {
+            font-family: var(--font-heading);
+            font-size: 28px;
+            font-weight: 400;
+            color: var(--charcoal);
+            line-height: 1.4;
+        }
+        
+        /* Toggle Buttons */
+        .habit-toggle {
+            display: flex;
+            gap: var(--space-md);
+            margin-bottom: var(--space-2xl);
+        }
+        
+        .habit-btn {
+            flex: 1;
+            height: 120px;
+            border-radius: 16px;
+            border: 2px solid var(--border-light);
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-sm);
+        }
+        
+        .habit-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+        }
+        
+        .habit-btn.positive {
+            border-color: var(--sage-green);
+            background: #F0F5EB;
+        }
+        
+        .habit-btn.positive:hover {
+            background: var(--sage-green);
+        }
+        
+        .habit-btn.positive.selected {
+            background: var(--sage-green);
+            transform: scale(1.05);
+            box-shadow: 0 8px 24px rgba(120, 140, 93, 0.3);
+        }
+        
+        .habit-btn.negative {
+            border-color: var(--ember-orange);
+            background: #FFF5F0;
+        }
+        
+        .habit-btn.negative:hover {
+            background: var(--ember-orange);
+        }
+        
+        .habit-btn.negative.selected {
+            background: var(--ember-orange);
+            transform: scale(1.05);
+            box-shadow: 0 8px 24px rgba(255, 107, 53, 0.3);
+        }
+        
+        .habit-btn-icon {
+            font-size: 40px;
+            transition: transform 0.2s ease;
+        }
+        
+        .habit-btn.selected .habit-btn-icon {
+            transform: scale(1.2);
+        }
+        
+        .habit-btn-label {
+            font-family: var(--font-ui);
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--charcoal);
+        }
+        
+        .habit-btn.selected .habit-btn-label {
+            color: white;
+        }
+        
+        /* Streak Display */
+        .streak-display {
+            display: flex;
+            justify-content: center;
+            gap: var(--space-2xl);
+            padding: var(--space-lg);
+            background: var(--zen-cream);
+            border-radius: 12px;
+            margin-bottom: var(--space-xl);
+        }
+        
+        .streak-item {
+            text-align: center;
+        }
+        
+        .streak-value {
+            font-family: var(--font-heading);
+            font-size: 48px;
+            font-weight: 300;
+            color: var(--mori-gold);
+            display: block;
+            line-height: 1;
+        }
+        
+        .streak-label {
+            font-family: var(--font-ui);
+            font-size: 11px;
+            color: var(--charcoal-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-top: var(--space-xs);
+        }
+        
+        /* Weekly Trend */
+        .weekly-trend {
+            margin-top: var(--space-xl);
+        }
+        
+        .trend-title {
+            font-family: var(--font-ui);
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--charcoal-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: var(--space-md);
+        }
+        
+        .trend-dots {
+            display: flex;
+            justify-content: space-between;
+            gap: var(--space-sm);
+        }
+        
+        .trend-dot {
+            flex: 1;
+            aspect-ratio: 1;
+            border-radius: 50%;
+            background: var(--border-light);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s ease;
+        }
+        
+        .trend-dot.positive {
+            background: var(--sage-green);
+        }
+        
+        .trend-dot.negative {
+            background: var(--ember-orange);
+        }
+        
+        .trend-dot.today {
+            border: 2px solid var(--mori-gold);
+            transform: scale(1.1);
+        }
+        
+        .trend-day {
+            font-family: var(--font-ui);
+            font-size: 10px;
+            color: var(--charcoal-muted);
+            margin-top: var(--space-xs);
+            text-align: center;
+        }
+        
+        /* States Showcase */
+        .states-showcase {
+            background: white;
+            border-radius: 16px;
+            padding: var(--space-xl);
+            margin-top: var(--space-3xl);
+        }
+        
+        .states-title {
+            font-family: var(--font-heading);
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: var(--space-lg);
+            border-bottom: 2px solid var(--mori-gold);
+            padding-bottom: var(--space-sm);
+        }
+        
+        .states-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: var(--space-lg);
+            margin-top: var(--space-xl);
+        }
+        
+        .state-example {
+            text-align: center;
+        }
+        
+        .state-label {
+            font-family: var(--font-ui);
+            font-size: 12px;
+            color: var(--charcoal-muted);
+            margin-bottom: var(--space-sm);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .state-preview {
+            height: 80px;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin-bottom: var(--space-sm);
+        }
+        
+        .state-preview.default {
+            border: 2px solid var(--border-light);
+            background: white;
+        }
+        
+        .state-preview.positive-hover {
+            border: 2px solid var(--sage-green);
+            background: #F0F5EB;
+        }
+        
+        .state-preview.positive-selected {
+            border: 2px solid var(--sage-green);
+            background: var(--sage-green);
+            color: white;
+        }
+        
+        .state-preview.negative-hover {
+            border: 2px solid var(--ember-orange);
+            background: #FFF5F0;
+        }
+        
+        .state-preview.negative-selected {
+            border: 2px solid var(--ember-orange);
+            background: var(--ember-orange);
+            color: white;
+        }
+        
+        /* Spec Section */
+        .spec-section {
+            background: white;
+            border-radius: 16px;
+            padding: var(--space-xl);
+            margin-top: var(--space-2xl);
+        }
+        
+        .spec-section h2 {
+            font-family: var(--font-heading);
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: var(--space-lg);
+            border-bottom: 2px solid var(--mori-gold);
+            padding-bottom: var(--space-sm);
+        }
+        
+        .spec-list {
+            list-style: none;
+        }
+        
+        .spec-list li {
+            padding: var(--space-sm) 0;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            gap: var(--space-md);
+        }
+        
+        .spec-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .spec-label {
+            font-family: var(--font-ui);
+            font-weight: 600;
+            color: var(--charcoal);
+            min-width: 150px;
+        }
+        
+        .spec-value {
+            color: var(--charcoal-muted);
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Habit +/- Tracker</h1>
+        <p>One tap to track your day. Simple, mindful, effective.</p>
+    </div>
+    
+    <div class="tracker-card">
+        <div class="tracker-header">
+            <div class="tracker-date">Wednesday, March 5</div>
+            <div class="tracker-subtitle">Day 64 of 2026</div>
+        </div>
+        
+        <div class="tracker-question">
+            <div class="question-text">How was today?</div>
+        </div>
+        
+        <div class="habit-toggle">
+            <button class="habit-btn positive" onclick="selectHabit(this, 'positive')">
+                <span class="habit-btn-icon">😊</span>
+                <span class="habit-btn-label">Good Day</span>
+            </button>
+            <button class="habit-btn negative" onclick="selectHabit(this, 'negative')">
+                <span class="habit-btn-icon">😔</span>
+                <span class="habit-btn-label">Tough Day</span>
+            </button>
+        </div>
+        
+        <div class="streak-display">
+            <div class="streak-item">
+                <span class="streak-value">12</span>
+                <span class="streak-label">Current Streak</span>
+            </div>
+            <div class="streak-item">
+                <span class="streak-value">28</span>
+                <span class="streak-label">Best Streak</span>
+            </div>
+            <div class="streak-item">
+                <span class="streak-value">85%</span>
+                <span class="streak-label">Positive Days</span>
+            </div>
+        </div>
+        
+        <div class="weekly-trend">
+            <div class="trend-title">Last 7 Days</div>
+            <div class="trend-dots">
+                <div>
+                    <div class="trend-dot positive">😊</div>
+                    <div class="trend-day">Sat</div>
+                </div>
+                <div>
+                    <div class="trend-dot positive">😊</div>
+                    <div class="trend-day">Sun</div>
+                </div>
+                <div>
+                    <div class="trend-dot negative">😔</div>
+                    <div class="trend-day">Mon</div>
+                </div>
+                <div>
+                    <div class="trend-dot positive">😊</div>
+                    <div class="trend-day">Tue</div>
+                </div>
+                <div>
+                    <div class="trend-dot today">?</div>
+                    <div class="trend-day">Today</div>
+                </div>
+                <div>
+                    <div class="trend-dot" style="opacity: 0.3">—</div>
+                    <div class="trend-day">Thu</div>
+                </div>
+                <div>
+                    <div class="trend-dot" style="opacity: 0.3">—</div>
+                    <div class="trend-day">Fri</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="states-showcase">
+        <h2 class="states-title">Button States</h2>
+        <div class="states-grid">
+            <div class="state-example">
+                <div class="state-label">Default</div>
+                <div class="state-preview default">😊</div>
+            </div>
+            <div class="state-example">
+                <div class="state-label">Positive Hover</div>
+                <div class="state-preview positive-hover">😊</div>
+            </div>
+            <div class="state-example">
+                <div class="state-label">Positive Selected</div>
+                <div class="state-preview positive-selected">😊</div>
+            </div>
+            <div class="state-example">
+                <div class="state-label">Negative Hover</div>
+                <div class="state-preview negative-hover">😔</div>
+            </div>
+            <div class="state-example">
+                <div class="state-label">Negative Selected</div>
+                <div class="state-preview negative-selected">😔</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="spec-section">
+        <h2>Implementation Specifications</h2>
+        <ul class="spec-list">
+            <li>
+                <span class="spec-label">Interaction:</span>
+                <span class="spec-value">One-tap toggle (positive/negative)</span>
+            </li>
+            <li>
+                <span class="spec-label">Button Size:</span>
+                <span class="spec-value">120px height, equal width, 16px gap</span>
+            </li>
+            <li>
+                <span class="spec-label">Positive Color:</span>
+                <span class="spec-value">Sage Green (#788c5d) - success, growth</span>
+            </li>
+            <li>
+                <span class="spec-label">Negative Color:</span>
+                <span class="spec-value">Ember Orange (#FF6B35) - warmth, challenge</span>
+            </li>
+            <li>
+                <span class="spec-label">Animation:</span>
+                <span class="spec-value">Scale 1.05 on select, 2s ease transition</span>
+            </li>
+            <li>
+                <span class="spec-label">Streak Logic:</span>
+                <span class="spec-value">Consecutive positive days, reset on negative</span>
+            </li>
+            <li>
+                <span class="spec-label">History:</span>
+                <span class="spec-value">7-day trend view, monthly calendar view</span>
+            </li>
+            <li>
+                <span class="spec-label">Feedback:</span>
+                <span class="spec-value">Haptic feedback on selection (iOS)</span>
+            </li>
+            <li>
+                <span class="spec-label">Data:</span>
+                <span class="spec-value">Store: timestamp, type (positive/negative), notes (optional)</span>
+            </li>
+        </ul>
+    </div>
+    
+    <script>
+        function selectHabit(button, type) {
+            // Remove selected class from all buttons
+            document.querySelectorAll('.habit-btn').forEach(btn => {
+                btn.classList.remove('selected');
+            });
+            
+            // Add selected class to clicked button
+            button.classList.add('selected');
+            
+            // Update today's dot
+            const todayDot = document.querySelector('.trend-dot.today');
+            todayDot.textContent = type === 'positive' ? '😊' : '😔';
+            todayDot.classList.remove('today');
+            todayDot.classList.add(type);
+        }
+    </script>
+</body>
+</html>

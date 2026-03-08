@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life Grid - Dot Style</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background: linear-gradient(135deg, #FDF5E6 0%, #FFF8E7 100%);
+            min-height: 100vh;
+            padding: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .container {
+            background: #FFF8E7;
+            border-radius: 24px;
+            padding: 50px;
+            box-shadow: 0 8px 32px rgba(51, 51, 51, 0.08);
+        }
+        h1 {
+            color: #333333;
+            font-size: 24px;
+            font-weight: 300;
+            margin-bottom: 10px;
+            text-align: center;
+            letter-spacing: 1px;
+        }
+        .subtitle {
+            color: #4A4A4A;
+            font-size: 13px;
+            text-align: center;
+            margin-bottom: 30px;
+            opacity: 0.7;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(80, 1fr);
+            gap: 2px;
+            line-height: 1;
+            font-size: 4px;
+        }
+        .dot {
+            color: #D4C5B0;
+            display: inline-block;
+            transition: all 0.2s;
+        }
+        .dot.filled {
+            color: #4A4A4A;
+        }
+        .dot.current {
+            color: #333333;
+            text-shadow: 0 0 4px rgba(51, 51, 51, 0.3);
+        }
+        .stats {
+            margin-top: 25px;
+            text-align: center;
+            color: #4A4A4A;
+            font-size: 14px;
+        }
+        .stats span {
+            display: inline-block;
+            margin: 0 15px;
+        }
+        .progress-bar {
+            margin-top: 20px;
+            background: #F0E6D3;
+            height: 6px;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            background: #4A4A4A;
+            height: 100%;
+            width: 37.5%;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Life Grid · 生命方格</h1>
+        <div class="subtitle">80 years × 52 weeks = 4,160 moments</div>
+        <div class="grid-container" id="grid"></div>
+        <div class="progress-bar">
+            <div class="progress-fill"></div>
+        </div>
+        <div class="stats">
+            <span>📅 30 / 80 周</span>
+            <span>✨ 37.5% 已度过</span>
+            <span>🎯 剩余 50 年</span>
+        </div>
+    </div>
+    <script>
+        const grid = document.getElementById('grid');
+        const filledCount = 1560; // 30 years
+        const current = 1560;
+        
+        for (let i = 0; i < 4160; i++) {
+            const dot = document.createElement('span');
+            dot.className = 'dot';
+            
+            if (i < filledCount) {
+                dot.textContent = '●';
+                dot.classList.add('filled');
+            } else if (i === current) {
+                dot.textContent = '●';
+                dot.classList.add('current');
+            } else {
+                dot.textContent = '○';
+            }
+            
+            grid.appendChild(dot);
+        }
+    </script>
+</body>
+</html>

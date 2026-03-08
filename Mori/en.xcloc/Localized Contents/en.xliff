@@ -1,0 +1,167 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<xliff xmlns="urn:oasis:names:tc:xliff:document:1.2" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" version="1.2" xsi:schemaLocation="urn:oasis:names:tc:xliff:document:1.2 http://docs.oasis-open.org/xliff/v1.2/os/xliff-core-1.2-strict.xsd">
+  <file original="en.lproj/Localizable.strings" source-language="en" target-language="en" datatype="plaintext">
+    <header>
+      <tool tool-id="com.apple.dt.xcode" tool-name="Xcode" tool-version="26.2" build-num="17C52"/>
+    </header>
+    <body>
+      <trans-unit id="%@" xml:space="preserve">
+        <source>%@</source>
+        <target>%@</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="%@ days" xml:space="preserve">
+        <source>%@ days</source>
+        <target>%@ days</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="%@ years" xml:space="preserve">
+        <source>%@ years</source>
+        <target>%@ years</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id=":" xml:space="preserve">
+        <source>:</source>
+        <target>:</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="About" xml:space="preserve">
+        <source>About</source>
+        <target>About</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Add Memory" xml:space="preserve">
+        <source>Add Memory</source>
+        <target>Add Memory</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Current Streak" xml:space="preserve">
+        <source>Current Streak</source>
+        <target>Current Streak</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Daily reminder set for 8:00 AM" xml:space="preserve">
+        <source>Daily reminder set for 8:00 AM</source>
+        <target>Daily reminder set for 8:00 AM</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="How long do you expect to live?" xml:space="preserve">
+        <source>How long do you expect to live?</source>
+        <target>How long do you expect to live?</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="How was your day?" xml:space="preserve">
+        <source>How was your day?</source>
+        <target>How was your day?</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Last 7 Days" xml:space="preserve">
+        <source>Last 7 Days</source>
+        <target>Last 7 Days</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Longest Streak" xml:space="preserve">
+        <source>Longest Streak</source>
+        <target>Longest Streak</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Memento mori — remember that you will die. But instead of fear, let it inspire you to live fully." xml:space="preserve">
+        <source>Memento mori — remember that you will die. But instead of fear, let it inspire you to live fully.</source>
+        <target>Memento mori — remember that you will die. But instead of fear, let it inspire you to live fully.</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Mori reminds us that time is precious. Use this grid to visualize your life and make each week count." xml:space="preserve">
+        <source>Mori reminds us that time is precious. Use this grid to visualize your life and make each week count.</source>
+        <target>Mori reminds us that time is precious. Use this grid to visualize your life and make each week count.</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="No memory logged" xml:space="preserve">
+        <source>No memory logged</source>
+        <target>No memory logged</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Remind me daily at 8:00 AM" xml:space="preserve">
+        <source>Remind me daily at 8:00 AM</source>
+        <target>Remind me daily at 8:00 AM</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Statistics" xml:space="preserve">
+        <source>Statistics</source>
+        <target>Statistics</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="This helps us calculate your life remaining" xml:space="preserve">
+        <source>This helps us calculate your life remaining</source>
+        <target>This helps us calculate your life remaining</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="This is just an estimate — update it anytime" xml:space="preserve">
+        <source>This is just an estimate — update it anytime</source>
+        <target>This is just an estimate — update it anytime</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Trend" xml:space="preserve">
+        <source>Trend</source>
+        <target>Trend</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Week %@, Age %@" xml:space="preserve">
+        <source>Week %1$@, Age %2$@</source>
+        <target>Week %1$@, Age %2$@</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Welcome to Mori" xml:space="preserve">
+        <source>Welcome to Mori</source>
+        <target>Welcome to Mori</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="When were you born?" xml:space="preserve">
+        <source>When were you born?</source>
+        <target>When were you born?</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="You have approximately %@ weeks remaining" xml:space="preserve">
+        <source>You have approximately %@ weeks remaining</source>
+        <target>You have approximately %@ weeks remaining</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="Your Life" xml:space="preserve">
+        <source>Your Life</source>
+        <target>Your Life</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="days" xml:space="preserve">
+        <source>days</source>
+        <target>days</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="網絡有點不穩定" xml:space="preserve">
+        <source>網絡有點不穩定</source>
+        <target>網絡有點不穩定</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+      <trans-unit id="🔥" xml:space="preserve">
+        <source>🔥</source>
+        <target>🔥</target>
+        <note>No comment provided by engineer.</note>
+      </trans-unit>
+    </body>
+  </file>
+  <file original="en.lproj/Mori-InfoPlist.strings" source-language="en" target-language="en" datatype="plaintext">
+    <header>
+      <tool tool-id="com.apple.dt.xcode" tool-name="Xcode" tool-version="26.2" build-num="17C52"/>
+    </header>
+    <body>
+      <trans-unit id="CFBundleDisplayName" xml:space="preserve">
+        <source>Mori</source>
+        <target>Mori</target>
+        <note>Bundle display name</note>
+      </trans-unit>
+      <trans-unit id="CFBundleName" xml:space="preserve">
+        <source>Mori</source>
+        <target>Mori</target>
+        <note>Bundle name</note>
+      </trans-unit>
+    </body>
+  </file>
+</xliff>

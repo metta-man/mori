@@ -1,0 +1,37 @@
+@import "tailwindcss";
+
+@theme {
+  --color-mori-forest: #1a3c34;
+  --color-mori-sage: #8fae8b;
+  --color-mori-cream: #faf8f5;
+  --color-mori-terracotta: #c47d5e;
+  --color-mori-gold: #d4a853;
+  --color-mori-charcoal: #2c2c2c;
+  
+  --font-heading: 'Cormorant Garamond', serif;
+  --font-body: 'Crimson Pro', serif;
+  --font-ui: 'Poppins', sans-serif;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: var(--font-body);
+  background-color: var(--color-mori-cream);
+  color: var(--color-mori-charcoal);
+  margin: 0;
+  padding: 0;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-heading);
+}
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 16px;
+}

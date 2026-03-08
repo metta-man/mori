@@ -1,0 +1,264 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Life Grid - 暖极简设计</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", sans-serif;
+      background: linear-gradient(135deg, #FAF7F2 0%, #F5EFE6 100%);
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: #FAF7F2;
+      border-radius: 24px;
+      box-shadow: 0 8px 32px rgba(93, 78, 55, 0.08);
+      padding: 40px;
+    }
+    
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid #D4D0C8;
+    }
+    
+    .title {
+      font-size: 32px;
+      font-weight: 600;
+      color: #3A3630;
+    }
+    
+    .subtitle {
+      font-size: 14px;
+      color: #8B8680;
+      margin-top: 4px;
+    }
+    
+    .help-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 2px solid #D4D0C8;
+      background: transparent;
+      color: #8B8680;
+      font-size: 20px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    
+    .help-btn:hover {
+      border-color: #5D4E37;
+      color: #5D4E37;
+    }
+    
+    .stats {
+      display: flex;
+      gap: 32px;
+      margin-bottom: 40px;
+    }
+    
+    .stat {
+      flex: 1;
+      background: #F5EFE6;
+      padding: 20px;
+      border-radius: 16px;
+    }
+    
+    .stat-value {
+      font-size: 48px;
+      font-weight: 700;
+      color: #5D4E37;
+      font-family: 'SF Mono', 'Monaco', monospace;
+    }
+    
+    .stat-label {
+      font-size: 14px;
+      color: #8B8680;
+      margin-top: 4px;
+    }
+    
+    .grid-container {
+      background: white;
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 32px;
+      overflow-x: auto;
+    }
+    
+    .life-grid {
+      display: grid;
+      grid-template-columns: repeat(52, 6px);
+      gap: 2px;
+      margin: 0 auto;
+      width: fit-content;
+    }
+    
+    .cell {
+      width: 6px;
+      height: 6px;
+      border-radius: 1px;
+      transition: all 0.2s;
+    }
+    
+    .cell.past {
+      background: #5D4E37;
+    }
+    
+    .cell.future {
+      background: transparent;
+      border: 1px solid #F5EFE6;
+    }
+    
+    .cell.current {
+      background: #D4A574;
+      animation: pulse 2s ease-in-out infinite;
+    }
+    
+    .cell.milestone {
+      background: #5D4E37;
+      box-shadow: 0 0 0 2px rgba(93, 78, 55, 0.2);
+    }
+    
+    .cell:hover {
+      transform: scale(1.5);
+      z-index: 10;
+      position: relative;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
+    }
+    
+    .legend {
+      display: flex;
+      justify-content: center;
+      gap: 32px;
+      padding-top: 24px;
+      border-top: 1px solid #D4D0C8;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      color: #8B8680;
+    }
+    
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 2px;
+    }
+    
+    .legend-dot.past {
+      background: #5D4E37;
+    }
+    
+    .legend-dot.future {
+      background: transparent;
+      border: 2px solid #F5EFE6;
+    }
+    
+    .legend-dot.current {
+      background: #D4A574;
+    }
+    
+    .year-labels {
+      position: absolute;
+      left: -40px;
+      top: 0;
+      font-size: 10px;
+      color: #8B8680;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div>
+        <h1 class="title">Life Grid</h1>
+        <p class="subtitle">30 years • 1,560 weeks lived</p>
+      </div>
+      <button class="help-btn">?</button>
+    </div>
+    
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-value">30</div>
+        <div class="stat-label">已度过年数</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">1,560</div>
+        <div class="stat-label">已度过周数</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value">50</div>
+        <div class="stat-label">剩余年数</div>
+      </div>
+    </div>
+    
+    <div class="grid-container">
+      <div class="life-grid" id="lifeGrid"></div>
+    </div>
+    
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-dot past"></div>
+        <span>已度过</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot future"></div>
+        <span>未来</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot current"></div>
+        <span>当前周</span>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    const grid = document.getElementById('lifeGrid');
+    const currentYear = 30;
+    const currentWeek = 8;
+    
+    for (let year = 0; year < 80; year++) {
+      for (let week = 0; week < 52; week++) {
+        const cell = document.createElement('div');
+        cell.className = 'cell';
+        
+        if (year < currentYear) {
+          cell.classList.add('past');
+          // Add some milestones
+          if ((year === 17 && week === 30) || (year === 22 && week === 15)) {
+            cell.classList.add('milestone');
+          }
+        } else if (year === currentYear && week === currentWeek) {
+          cell.classList.add('current');
+        } else {
+          cell.classList.add('future');
+        }
+        
+        cell.title = `${year + 1}岁 第${week + 1}周`;
+        grid.appendChild(cell);
+      }
+    }
+  </script>
+</body>
+</html>

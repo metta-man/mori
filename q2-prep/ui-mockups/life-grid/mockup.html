@@ -1,0 +1,516 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mori - Life Grid Mockup</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Crimson+Pro:wght@400;500&family=Poppins:wght@400;500;600&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            /* Mori Design Tokens */
+            --mori-gold: #D4AF37;
+            --mori-gold-light: #E8C547;
+            --mori-gold-dark: #B8942D;
+            
+            --zen-cream: #FDF5E6;
+            --zen-cream-dark: #FFF8E7;
+            --zen-cream-light: #FFFCF5;
+            
+            --charcoal: #333333;
+            --charcoal-light: #4A4A4A;
+            --charcoal-muted: #666666;
+            
+            --sage-green: #788c5d;
+            --ember-orange: #FF6B35;
+            
+            --bg-primary: #FDF5E6;
+            --bg-secondary: #FFF8E7;
+            --bg-tertiary: #F5EFE0;
+            
+            --border-light: #E8E8E8;
+            --border-medium: #CCCCCC;
+            
+            --shadow-soft: rgba(0, 0, 0, 0.05);
+            --shadow-medium: rgba(0, 0, 0, 0.1);
+            --shadow-strong: rgba(0, 0, 0, 0.15);
+            
+            /* Typography */
+            --font-heading: 'Cormorant Garamond', Georgia, serif;
+            --font-body: 'Crimson Pro', Georgia, serif;
+            --font-ui: 'Poppins', -apple-system, sans-serif;
+            
+            /* Spacing */
+            --space-xs: 4px;
+            --space-sm: 8px;
+            --space-md: 16px;
+            --space-lg: 24px;
+            --space-xl: 32px;
+            --space-2xl: 48px;
+            --space-3xl: 64px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: var(--font-body);
+            background: var(--bg-primary);
+            color: var(--charcoal);
+            line-height: 1.8;
+            padding: var(--space-2xl);
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: var(--space-3xl);
+        }
+        
+        .header h1 {
+            font-family: var(--font-heading);
+            font-size: 48px;
+            font-weight: 300;
+            letter-spacing: 2px;
+            color: var(--charcoal);
+            margin-bottom: var(--space-md);
+        }
+        
+        .header p {
+            font-size: 16px;
+            color: var(--charcoal-muted);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .life-grid-container {
+            background: white;
+            border-radius: 20px;
+            padding: var(--space-xl);
+            box-shadow: 0 8px 32px var(--shadow-strong);
+            margin-bottom: var(--space-3xl);
+        }
+        
+        .life-grid-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-xl);
+            padding-bottom: var(--space-lg);
+            border-bottom: 1px solid var(--border-light);
+        }
+        
+        .life-grid-title {
+            font-family: var(--font-heading);
+            font-size: 28px;
+            font-weight: 400;
+            color: var(--charcoal);
+        }
+        
+        .life-grid-stats {
+            display: flex;
+            gap: var(--space-xl);
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-family: var(--font-heading);
+            font-size: 32px;
+            font-weight: 300;
+            color: var(--mori-gold);
+            display: block;
+        }
+        
+        .stat-label {
+            font-family: var(--font-ui);
+            font-size: 12px;
+            color: var(--charcoal-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .life-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            padding: var(--space-md);
+            background: var(--bg-tertiary);
+            border-radius: 12px;
+            overflow-x: auto;
+        }
+        
+        .life-grid-row {
+            display: flex;
+            gap: 2px;
+        }
+        
+        .life-grid-cell {
+            width: 8px;
+            height: 8px;
+            border-radius: 2px;
+            background: var(--border-light);
+            transition: all 0.2s ease;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .life-grid-cell.filled {
+            background: var(--mori-gold);
+        }
+        
+        .life-grid-cell.current {
+            background: var(--ember-orange);
+            animation: pulse 2s infinite;
+        }
+        
+        .life-grid-cell:hover {
+            transform: scale(1.5);
+            z-index: 10;
+        }
+        
+        .life-grid-cell.tooltip {
+            position: absolute;
+            bottom: 100%;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--charcoal);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 10px;
+            white-space: nowrap;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+        
+        .life-grid-cell:hover .tooltip {
+            opacity: 1;
+        }
+        
+        @keyframes pulse {
+            0%, 100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.7;
+                transform: scale(1.3);
+            }
+        }
+        
+        .life-grid-legend {
+            display: flex;
+            justify-content: center;
+            gap: var(--space-2xl);
+            margin-top: var(--space-xl);
+            padding-top: var(--space-lg);
+            border-top: 1px solid var(--border-light);
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: var(--space-sm);
+            font-family: var(--font-ui);
+            font-size: 13px;
+            color: var(--charcoal-muted);
+        }
+        
+        .legend-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 3px;
+        }
+        
+        .legend-dot.filled {
+            background: var(--mori-gold);
+        }
+        
+        .legend-dot.current {
+            background: var(--ember-orange);
+        }
+        
+        .legend-dot.empty {
+            background: var(--border-light);
+        }
+        
+        .info-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: var(--space-xl);
+        }
+        
+        .info-card {
+            background: white;
+            border-radius: 16px;
+            padding: var(--space-lg);
+            box-shadow: 0 2px 8px var(--shadow-soft);
+            border: 1px solid var(--border-light);
+            transition: all 0.2s ease;
+        }
+        
+        .info-card:hover {
+            box-shadow: 0 8px 24px var(--shadow-medium);
+            border-color: var(--mori-gold);
+        }
+        
+        .info-card-icon {
+            font-size: 32px;
+            margin-bottom: var(--space-md);
+        }
+        
+        .info-card-title {
+            font-family: var(--font-heading);
+            font-size: 20px;
+            font-weight: 500;
+            margin-bottom: var(--space-sm);
+            color: var(--charcoal);
+        }
+        
+        .info-card-text {
+            font-size: 14px;
+            color: var(--charcoal-muted);
+            line-height: 1.6;
+        }
+        
+        .spec-section {
+            background: white;
+            border-radius: 16px;
+            padding: var(--space-xl);
+            margin-top: var(--space-3xl);
+            box-shadow: 0 2px 8px var(--shadow-soft);
+        }
+        
+        .spec-section h2 {
+            font-family: var(--font-heading);
+            font-size: 24px;
+            font-weight: 500;
+            margin-bottom: var(--space-lg);
+            color: var(--charcoal);
+            border-bottom: 2px solid var(--mori-gold);
+            padding-bottom: var(--space-sm);
+        }
+        
+        .spec-list {
+            list-style: none;
+        }
+        
+        .spec-list li {
+            padding: var(--space-sm) 0;
+            border-bottom: 1px solid var(--border-light);
+            display: flex;
+            gap: var(--space-md);
+        }
+        
+        .spec-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .spec-label {
+            font-family: var(--font-ui);
+            font-weight: 600;
+            color: var(--charcoal);
+            min-width: 150px;
+        }
+        
+        .spec-value {
+            color: var(--charcoal-muted);
+        }
+        
+        .code-block {
+            background: var(--bg-tertiary);
+            border-radius: 8px;
+            padding: var(--space-md);
+            margin-top: var(--space-lg);
+            font-family: 'Monaco', 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>Life Grid Visualization</h1>
+        <p>Your entire life at a glance — 80 years × 52 weeks = 4,160 weeks of existence</p>
+    </div>
+    
+    <div class="life-grid-container">
+        <div class="life-grid-header">
+            <h2 class="life-grid-title">Your Life Grid</h2>
+            <div class="life-grid-stats">
+                <div class="stat">
+                    <span class="stat-value">1,456</span>
+                    <span class="stat-label">Weeks Lived</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">2,704</span>
+                    <span class="stat-label">Weeks Remaining</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-value">35%</span>
+                    <span class="stat-label">Journey Complete</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="life-grid" id="lifeGrid">
+            <!-- Grid will be generated by JavaScript -->
+        </div>
+        
+        <div class="life-grid-legend">
+            <div class="legend-item">
+                <div class="legend-dot filled"></div>
+                <span>Weeks lived (1,456)</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot current"></div>
+                <span>Current week</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-dot empty"></div>
+                <span>Weeks remaining (2,704)</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="info-cards">
+        <div class="info-card">
+            <div class="info-card-icon">👁️</div>
+            <h3 class="info-card-title">Visual Impact</h3>
+            <p class="info-card-text">See your entire life at a glance. Each dot represents one week. Filled dots are weeks you've lived; empty ones are ahead.</p>
+        </div>
+        
+        <div class="info-card">
+            <div class="info-card-icon">💭</div>
+            <h3 class="info-card-title">Mindful Perspective</h3>
+            <p class="info-card-text">This visualization isn't meant to scare you — it's meant to inspire intentionality. Make each week count.</p>
+        </div>
+        
+        <div class="info-card">
+            <div class="info-card-icon">🎯</div>
+            <h3 class="info-card-title">Daily Motivation</h3>
+            <p class="info-card-text">Open Mori each day to see where you are. The current week pulses orange, reminding you to live fully.</p>
+        </div>
+    </div>
+    
+    <div class="spec-section">
+        <h2>Implementation Specifications</h2>
+        <ul class="spec-list">
+            <li>
+                <span class="spec-label">Grid Dimensions:</span>
+                <span class="spec-value">80 rows × 52 columns = 4,160 total cells</span>
+            </li>
+            <li>
+                <span class="spec-label">Cell Size:</span>
+                <span class="spec-value">8px × 8px with 2px gap</span>
+            </li>
+            <li>
+                <span class="spec-label">Filled Cells:</span>
+                <span class="spec-value">Mori Gold (#D4AF37) — represents lived weeks</span>
+            </li>
+            <li>
+                <span class="spec-label">Current Week:</span>
+                <span class="spec-value">Ember Orange (#FF6B35) with pulse animation</span>
+            </li>
+            <li>
+                <span class="spec-label">Empty Cells:</span>
+                <span class="spec-value">Border Light (#E8E8E8) — represents remaining weeks</span>
+            </li>
+            <li>
+                <span class="spec-label">Interaction:</span>
+                <span class="spec-value">Tap cell to see date range (Week X, Year Y)</span>
+            </li>
+            <li>
+                <span class="spec-label">Responsiveness:</span>
+                <span class="spec-value">Horizontal scroll on mobile, full view on tablet+</span>
+            </li>
+            <li>
+                <span class="spec-label">Animation:</span>
+                <span class="spec-value">Hover scale (1.5x), current week pulse (2s infinite)</span>
+            </li>
+            <li>
+                <span class="spec-label">Accessibility:</span>
+                <span class="spec-value">Each cell has ARIA label with week number and date range</span>
+            </li>
+        </ul>
+        
+        <div class="code-block">
+<pre>
+// SwiftUI Component: LifeGridView.swift
+struct LifeGridView: View {
+    let birthDate: Date
+    let lifeExpectancy: Int // default 80
+    
+    var body: some View {
+        ScrollView([.horizontal]) {
+            LazyVGrid(columns: Array(repeating: GridItem(.fixed(8), spacing: 2), count: 52), spacing: 2) {
+                ForEach(0..<(lifeExpectancy * 52), id: \.self) { weekIndex in
+                    LifeCell(
+                        weekIndex: weekIndex,
+                        isFilled: isWeekLived(weekIndex),
+                        isCurrent: isCurrentWeek(weekIndex)
+                    )
+                }
+            }
+        }
+    }
+}
+</pre>
+        </div>
+    </div>
+    
+    <script>
+        // Generate Life Grid
+        const lifeGrid = document.getElementById('lifeGrid');
+        const years = 80;
+        const weeksPerYear = 52;
+        const totalWeeks = years * weeksPerYear;
+        
+        // Simulate user age (28 years old)
+        const userAge = 28;
+        const weeksLived = userAge * weeksPerYear;
+        const currentWeekIndex = weeksLived;
+        
+        for (let year = 0; year < years; year++) {
+            const row = document.createElement('div');
+            row.className = 'life-grid-row';
+            
+            for (let week = 0; week < weeksPerYear; week++) {
+                const cell = document.createElement('div');
+                const weekIndex = (year * weeksPerYear) + week;
+                
+                cell.className = 'life-grid-cell';
+                
+                if (weekIndex < weeksLived) {
+                    cell.classList.add('filled');
+                } else if (weekIndex === currentWeekIndex) {
+                    cell.classList.add('current');
+                }
+                
+                // Calculate date range for tooltip
+                const birthYear = 1998; // Example
+                const cellYear = birthYear + year;
+                const weekNumber = week + 1;
+                
+                const tooltip = document.createElement('span');
+                tooltip.className = 'tooltip';
+                tooltip.textContent = `Week ${weekNumber}, ${cellYear}`;
+                cell.appendChild(tooltip);
+                
+                row.appendChild(cell);
+            }
+            
+            lifeGrid.appendChild(row);
+        }
+    </script>
+</body>
+</html>

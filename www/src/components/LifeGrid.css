@@ -1,0 +1,145 @@
+/* 🌙 Life Grid Component */
+/* Mori Brand Identity */
+
+.life-grid-container {
+  background: var(--bg-secondary);
+  border-radius: var(--radius-xl);
+  padding: var(--space-lg);
+  margin: var(--space-lg) 0;
+}
+
+.life-grid-header {
+  margin-bottom: var(--space-lg);
+  text-align: center;
+}
+
+.life-grid-title {
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: var(--text-h2);
+  color: var(--text-primary);
+  margin: 0 0 var(--space-sm) 0;
+  letter-spacing: 0.02em;
+}
+
+.life-grid-subtitle {
+  font-family: var(--font-body);
+  font-size: var(--text-body-sm);
+  color: var(--text-secondary);
+  margin: 0;
+}
+
+.life-grid-wrapper {
+  overflow-x: auto;
+  padding: var(--space-sm) 0;
+  scrollbar-width: thin;
+  scrollbar-color: var(--mori-gold) var(--bg-primary);
+}
+
+.life-grid {
+  display: grid;
+  grid-template-columns: repeat(52, var(--cell-size-mobile));
+  grid-template-rows: repeat(80, var(--cell-size-mobile));
+  gap: var(--cell-gap);
+  min-width: 52 * (var(--cell-size-mobile) + var(--cell-gap));
+}
+
+/* Desktop: larger cells */
+@media (min-width: 768px) {
+  .life-grid {
+    grid-template-columns: repeat(52, var(--cell-size-desktop));
+    grid-template-rows: repeat(80, var(--cell-size-desktop));
+  }
+}
+
+/* Cell States */
+.life-cell {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-sm);
+  transition: all var(--transition-normal);
+  cursor: pointer;
+}
+
+/* Past Week - Gold */
+.life-cell.cell-past {
+  background: var(--mori-gold);
+  opacity: 1;
+}
+
+/* Current Week - Pulsing Gold */
+.life-cell.cell-current {
+  background: var(--mori-gold);
+  animation: mori-pulse 2s ease-in-out infinite;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);
+}
+
+/* Near Current Week - Slightly Dimmed */
+.life-cell.cell-near {
+  background: var(--mori-gold);
+  opacity: 0.6;
+}
+
+/* Future Week - Dimmed Gray */
+.life-cell:not(.cell-past):not(.cell-current):not(.cell-near) {
+  background: var(--mori-gray-mid);
+  opacity: 0.4;
+}
+
+/* Hover Effect */
+.life-cell:hover {
+  transform: scale(1.2);
+  z-index: 10;
+  box-shadow: var(--shadow-gold);
+}
+
+/* Legend */
+.life-grid-legend {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-lg);
+  margin-top: var(--space-lg);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-family: var(--font-ui);
+  font-size: var(--text-ui-sm);
+  color: var(--text-secondary);
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-sm);
+}
+
+.legend-dot.cell-past {
+  background: var(--mori-gold);
+}
+
+.legend-dot.cell-current {
+  background: var(--mori-gold);
+  animation: mori-pulse 2s ease-in-out infinite;
+}
+
+.legend-dot.cell-future {
+  background: var(--mori-gray-mid);
+  opacity: 0.4;
+}
+
+/* Animations */
+@keyframes mori-pulse {
+  0%, 100% { 
+    opacity: 1; 
+    box-shadow: 0 0 20px rgba(212,175,55,0.5); 
+  }
+  50% { 
+    opacity: 0.7; 
+    box-shadow: 0 0 40px rgba(212,175,55,0.8); 
+  }
+}

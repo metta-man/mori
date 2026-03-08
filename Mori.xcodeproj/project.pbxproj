@@ -1,0 +1,501 @@
+// !$*UTF8*$!
+{
+	archiveVersion = 1;
+	classes = {
+	};
+	objectVersion = 77;
+	objects = {
+
+/* Begin PBXBuildFile section */
+		00234EEDF469D1CA204EE432 /* UserSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B6CFFC3CA93D05495D77C1C /* UserSettings.swift */; };
+		1298BD9B5E11070978162C28 /* GratitudeJournalScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7D19BF81C42C5E875BD840 /* GratitudeJournalScreen.swift */; };
+		183351573C7A22604790B161 /* UserManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EF57A39723BA1E0A5A74225 /* UserManager.swift */; };
+		203E3A0225C7CEFC0ABF95FD /* LifeWeekCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01E60EA12441479B980BADC1 /* LifeWeekCalculator.swift */; };
+		24C4021E9E1AEE9641BB3DA6 /* RandomMemoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0AFD524B54D362EA8FE9584 /* RandomMemoryView.swift */; };
+		2987ABA2BB18A42EA887A093 /* MoriOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38B026B3EB86B49946F5BC6E /* MoriOnboardingView.swift */; };
+		44965ED901F401C3F2A498B3 /* GratitudeHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 081FF2F571622BD08165894E /* GratitudeHistoryView.swift */; };
+		52131B1C8B9B8F4285BACDEB /* HabitDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52F275CDC73EF58846EA0EC /* HabitDataManager.swift */; };
+		534AA3CB3A00D9DB75E06C05 /* MoriApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 825C762CE11E6B9C7F4D2FA3 /* MoriApp.swift */; };
+		584F43D7952C2BE4BD15A0CE /* MoriComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DC26513C06171D04EAF7994 /* MoriComponents.swift */; };
+		640473D4246C3E8B64579986 /* MoriDesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2A439F1A1AD419A6D10525B /* MoriDesignTokens.swift */; };
+		69940530286A51A25BAB8E4E /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B42E8B55302412AF9670425 /* SettingsView.swift */; };
+		73D265F2BC53FA6813B593EC /* GratitudeDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8B239D556ED25FBED01C8C /* GratitudeDetailView.swift */; };
+		84281970D02B2AC6EC3D03DC /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A11BBA25A260729CD860A97 /* OnboardingView.swift */; };
+		859A36A80FD54C037064F2E2 /* GratitudeListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6935EB5F294F2B20BBC3BA4 /* GratitudeListView.swift */; };
+		87804C798B0B69E2636E5E28 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D03791AE11DCBD24B35A851 /* PersistenceController.swift */; };
+		94FF18E97D58F555072F5BA6 /* PromptChipView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA97FD878DD528A87B832DDF /* PromptChipView.swift */; };
+		96710BF35CB94BDD93503CF0 /* HabitTrackerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00DB74C52010158F02928AD /* HabitTrackerView.swift */; };
+		9830ED9E80D31E10390686DE /* AnalyticsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79B3BCE16448FB92A06B48E7 /* AnalyticsManager.swift */; };
+		B893F4D68858ACAF596C69AE /* MoriViewModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 099B70CB170D0B13085FEA01 /* MoriViewModifiers.swift */; };
+		B91DA351EACF087A91D17B76 /* GratitudeJournalViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CA6CA90897574C322C9A118 /* GratitudeJournalViewModel.swift */; };
+		BB2C0B88FF2769E5399CAFC6 /* MoriTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2643880213A70AB6540D6171 /* MoriTabView.swift */; };
+		C8402E570C0BC5F1530DAD83 /* GratitudeEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24FB204AE3E93DD1C8964516 /* GratitudeEditorView.swift */; };
+		CB0BC1A09D464C89869B079F /* Mori.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 1390F6223B93D3335688EA02 /* Mori.xcdatamodeld */; };
+		D80CDD974DBCF49ED4B43508 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CF9BE047811945D5C472DDD /* ContentView.swift */; };
+		EBE9BC6E5083160251343B46 /* GratitudeEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E3AECC174BC68EF721D9EC /* GratitudeEntry.swift */; };
+		F4CDB33F7B3D12E5907DE05C /* ClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9F472A5AEE02CC5FBC71434 /* ClockView.swift */; };
+		FE7B08BCE7BDA2E7E855ACD2 /* LifeGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1192CF8DC2AADBD34CC554D0 /* LifeGridView.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		01E60EA12441479B980BADC1 /* LifeWeekCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeWeekCalculator.swift; sourceTree = "<group>"; };
+		081FF2F571622BD08165894E /* GratitudeHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GratitudeHistoryView.swift; sourceTree = "<group>"; };
+		099B70CB170D0B13085FEA01 /* MoriViewModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriViewModifiers.swift; sourceTree = "<group>"; };
+		0CA6CA90897574C322C9A118 /* GratitudeJournalViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GratitudeJournalViewModel.swift; sourceTree = "<group>"; };
+		0D8B239D556ED25FBED01C8C /* GratitudeDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GratitudeDetailView.swift; sourceTree = "<group>"; };
+		10A97F908067E2B6CAD27AAE /* Mori.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Mori.xcdatamodel; sourceTree = "<group>"; };
+		1192CF8DC2AADBD34CC554D0 /* LifeGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeGridView.swift; sourceTree = "<group>"; };
+		24FB204AE3E93DD1C8964516 /* GratitudeEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GratitudeEditorView.swift; sourceTree = "<group>"; };
+		2643880213A70AB6540D6171 /* MoriTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriTabView.swift; sourceTree = "<group>"; };
+		2D03791AE11DCBD24B35A851 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
+		2F7D19BF81C42C5E875BD840 /* GratitudeJournalScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GratitudeJournalScreen.swift; sourceTree = "<group>"; };
+		38B026B3EB86B49946F5BC6E /* MoriOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriOnboardingView.swift; sourceTree = "<group>"; };
+		3DC26513C06171D04EAF7994 /* MoriComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriComponents.swift; sourceTree = "<group>"; };
+		5A11BBA25A260729CD860A97 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
+		62F9120F39BD4552A01D2CFB /* Mori.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Mori.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		79B3BCE16448FB92A06B48E7 /* AnalyticsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsManager.swift; sourceTree = "<group>"; };
+		7B42E8B55302412AF9670425 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		825C762CE11E6B9C7F4D2FA3 /* MoriApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriApp.swift; sourceTree = "<group>"; };
+		8EF57A39723BA1E0A5A74225 /* UserManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManager.swift; sourceTree = "<group>"; };
+		9B6CFFC3CA93D05495D77C1C /* UserSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSettings.swift; sourceTree = "<group>"; };
+		9CF9BE047811945D5C472DDD /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		A00DB74C52010158F02928AD /* HabitTrackerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitTrackerView.swift; sourceTree = "<group>"; };
+		AA97FD878DD528A87B832DDF /* PromptChipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptChipView.swift; sourceTree = "<group>"; };
+		B2E3AECC174BC68EF721D9EC /* GratitudeEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GratitudeEntry.swift; sourceTree = "<group>"; };
+		B52F275CDC73EF58846EA0EC /* HabitDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitDataManager.swift; sourceTree = "<group>"; };
+		B9F472A5AEE02CC5FBC71434 /* ClockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockView.swift; sourceTree = "<group>"; };
+		E6935EB5F294F2B20BBC3BA4 /* GratitudeListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GratitudeListView.swift; sourceTree = "<group>"; };
+		F0AFD524B54D362EA8FE9584 /* RandomMemoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomMemoryView.swift; sourceTree = "<group>"; };
+		F2A439F1A1AD419A6D10525B /* MoriDesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriDesignTokens.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXGroup section */
+		04CB97C8FFDB2AA03FE65B31 /* Features */ = {
+			isa = PBXGroup;
+			children = (
+				5470A253CEDD112A19AEEF06 /* Clock */,
+				F2E1B3141BBCA19C9011748D /* GratitudeJournal */,
+				F036D9A24F0D8AE1E6BBEB22 /* HabitTracker */,
+				5CBA0876E25F26AD31D3A586 /* LifeGrid */,
+				E292F79DE86259A11C0D64E8 /* Onboarding */,
+			);
+			path = Features;
+			sourceTree = "<group>";
+		};
+		2BB4B1E5E41202A4BA8BE49F /* Models */ = {
+			isa = PBXGroup;
+			children = (
+				B52F275CDC73EF58846EA0EC /* HabitDataManager.swift */,
+				01E60EA12441479B980BADC1 /* LifeWeekCalculator.swift */,
+				1390F6223B93D3335688EA02 /* Mori.xcdatamodeld */,
+				8EF57A39723BA1E0A5A74225 /* UserManager.swift */,
+				9B6CFFC3CA93D05495D77C1C /* UserSettings.swift */,
+			);
+			path = Models;
+			sourceTree = "<group>";
+		};
+		41ED02DFC10F68638929C9C4 /* DesignSystem */ = {
+			isa = PBXGroup;
+			children = (
+				3DC26513C06171D04EAF7994 /* MoriComponents.swift */,
+				F2A439F1A1AD419A6D10525B /* MoriDesignTokens.swift */,
+				2643880213A70AB6540D6171 /* MoriTabView.swift */,
+				099B70CB170D0B13085FEA01 /* MoriViewModifiers.swift */,
+			);
+			path = DesignSystem;
+			sourceTree = "<group>";
+		};
+		4B8C22CD5E1D29ED65016B98 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				79B3BCE16448FB92A06B48E7 /* AnalyticsManager.swift */,
+				2D03791AE11DCBD24B35A851 /* PersistenceController.swift */,
+			);
+			path = Services;
+			sourceTree = "<group>";
+		};
+		5470A253CEDD112A19AEEF06 /* Clock */ = {
+			isa = PBXGroup;
+			children = (
+				B9F472A5AEE02CC5FBC71434 /* ClockView.swift */,
+			);
+			path = Clock;
+			sourceTree = "<group>";
+		};
+		5CBA0876E25F26AD31D3A586 /* LifeGrid */ = {
+			isa = PBXGroup;
+			children = (
+				1192CF8DC2AADBD34CC554D0 /* LifeGridView.swift */,
+				7B42E8B55302412AF9670425 /* SettingsView.swift */,
+			);
+			path = LifeGrid;
+			sourceTree = "<group>";
+		};
+		A6E4849ADFD1B41BA2C9A6CB /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				62F9120F39BD4552A01D2CFB /* Mori.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		A717644E1D08484C44791969 = {
+			isa = PBXGroup;
+			children = (
+				AC29EA8E0BE2519F9DE2CDD8 /* App */,
+				41ED02DFC10F68638929C9C4 /* DesignSystem */,
+				04CB97C8FFDB2AA03FE65B31 /* Features */,
+				2BB4B1E5E41202A4BA8BE49F /* Models */,
+				4B8C22CD5E1D29ED65016B98 /* Services */,
+				A6E4849ADFD1B41BA2C9A6CB /* Products */,
+			);
+			sourceTree = "<group>";
+		};
+		AC29EA8E0BE2519F9DE2CDD8 /* App */ = {
+			isa = PBXGroup;
+			children = (
+				9CF9BE047811945D5C472DDD /* ContentView.swift */,
+				825C762CE11E6B9C7F4D2FA3 /* MoriApp.swift */,
+			);
+			path = App;
+			sourceTree = "<group>";
+		};
+		E292F79DE86259A11C0D64E8 /* Onboarding */ = {
+			isa = PBXGroup;
+			children = (
+				38B026B3EB86B49946F5BC6E /* MoriOnboardingView.swift */,
+				5A11BBA25A260729CD860A97 /* OnboardingView.swift */,
+			);
+			path = Onboarding;
+			sourceTree = "<group>";
+		};
+		F036D9A24F0D8AE1E6BBEB22 /* HabitTracker */ = {
+			isa = PBXGroup;
+			children = (
+				A00DB74C52010158F02928AD /* HabitTrackerView.swift */,
+			);
+			path = HabitTracker;
+			sourceTree = "<group>";
+		};
+		F2E1B3141BBCA19C9011748D /* GratitudeJournal */ = {
+			isa = PBXGroup;
+			children = (
+				0D8B239D556ED25FBED01C8C /* GratitudeDetailView.swift */,
+				24FB204AE3E93DD1C8964516 /* GratitudeEditorView.swift */,
+				B2E3AECC174BC68EF721D9EC /* GratitudeEntry.swift */,
+				081FF2F571622BD08165894E /* GratitudeHistoryView.swift */,
+				2F7D19BF81C42C5E875BD840 /* GratitudeJournalScreen.swift */,
+				0CA6CA90897574C322C9A118 /* GratitudeJournalViewModel.swift */,
+				E6935EB5F294F2B20BBC3BA4 /* GratitudeListView.swift */,
+				AA97FD878DD528A87B832DDF /* PromptChipView.swift */,
+				F0AFD524B54D362EA8FE9584 /* RandomMemoryView.swift */,
+			);
+			path = GratitudeJournal;
+			sourceTree = "<group>";
+		};
+/* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		555F06634E0DCC958AE3C40D /* Mori */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = CD36627C70BAD78946F45A35 /* Build configuration list for PBXNativeTarget "Mori" */;
+			buildPhases = (
+				60BEF08E62A77FC8F707C97E /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = Mori;
+			packageProductDependencies = (
+			);
+			productName = Mori;
+			productReference = 62F9120F39BD4552A01D2CFB /* Mori.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
+
+/* Begin PBXProject section */
+		6D1B5DB9018D9D4FB4962AFF /* Project object */ = {
+			isa = PBXProject;
+			attributes = {
+				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 1500;
+				TargetAttributes = {
+					555F06634E0DCC958AE3C40D = {
+						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+				};
+			};
+			buildConfigurationList = 090C52AD62D8C8EBF3761C39 /* Build configuration list for PBXProject "Mori" */;
+			compatibilityVersion = "Xcode 14.0";
+			developmentRegion = en;
+			hasScannedForEncodings = 0;
+			knownRegions = (
+				Base,
+				en,
+			);
+			mainGroup = A717644E1D08484C44791969;
+			minimizedProjectReferenceProxies = 1;
+			preferredProjectObjectVersion = 77;
+			projectDirPath = "";
+			projectRoot = "";
+			targets = (
+				555F06634E0DCC958AE3C40D /* Mori */,
+			);
+		};
+/* End PBXProject section */
+
+/* Begin PBXSourcesBuildPhase section */
+		60BEF08E62A77FC8F707C97E /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				9830ED9E80D31E10390686DE /* AnalyticsManager.swift in Sources */,
+				F4CDB33F7B3D12E5907DE05C /* ClockView.swift in Sources */,
+				D80CDD974DBCF49ED4B43508 /* ContentView.swift in Sources */,
+				73D265F2BC53FA6813B593EC /* GratitudeDetailView.swift in Sources */,
+				C8402E570C0BC5F1530DAD83 /* GratitudeEditorView.swift in Sources */,
+				EBE9BC6E5083160251343B46 /* GratitudeEntry.swift in Sources */,
+				44965ED901F401C3F2A498B3 /* GratitudeHistoryView.swift in Sources */,
+				1298BD9B5E11070978162C28 /* GratitudeJournalScreen.swift in Sources */,
+				B91DA351EACF087A91D17B76 /* GratitudeJournalViewModel.swift in Sources */,
+				859A36A80FD54C037064F2E2 /* GratitudeListView.swift in Sources */,
+				52131B1C8B9B8F4285BACDEB /* HabitDataManager.swift in Sources */,
+				96710BF35CB94BDD93503CF0 /* HabitTrackerView.swift in Sources */,
+				FE7B08BCE7BDA2E7E855ACD2 /* LifeGridView.swift in Sources */,
+				203E3A0225C7CEFC0ABF95FD /* LifeWeekCalculator.swift in Sources */,
+				CB0BC1A09D464C89869B079F /* Mori.xcdatamodeld in Sources */,
+				534AA3CB3A00D9DB75E06C05 /* MoriApp.swift in Sources */,
+				584F43D7952C2BE4BD15A0CE /* MoriComponents.swift in Sources */,
+				640473D4246C3E8B64579986 /* MoriDesignTokens.swift in Sources */,
+				2987ABA2BB18A42EA887A093 /* MoriOnboardingView.swift in Sources */,
+				BB2C0B88FF2769E5399CAFC6 /* MoriTabView.swift in Sources */,
+				B893F4D68858ACAF596C69AE /* MoriViewModifiers.swift in Sources */,
+				84281970D02B2AC6EC3D03DC /* OnboardingView.swift in Sources */,
+				87804C798B0B69E2636E5E28 /* PersistenceController.swift in Sources */,
+				94FF18E97D58F555072F5BA6 /* PromptChipView.swift in Sources */,
+				24C4021E9E1AEE9641BB3DA6 /* RandomMemoryView.swift in Sources */,
+				69940530286A51A25BAB8E4E /* SettingsView.swift in Sources */,
+				183351573C7A22604790B161 /* UserManager.swift in Sources */,
+				00234EEDF469D1CA204EE432 /* UserSettings.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin XCBuildConfiguration section */
+		3A246219AB8AD5C66DD954CF /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Mori;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mettalabs.mori;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		A8B0A5FC9530D0F8A2251C09 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "iPhone Developer";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_CFBundleDisplayName = Mori;
+				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mettalabs.mori;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		C952F1052EEE764DA06ECC7F /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = "";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				MTL_FAST_MATH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_COMPILATION_MODE = wholemodule;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Release;
+		};
+		ECA9C868A06A1531138928A4 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_ENABLE_OBJC_WEAK = YES;
+				CLANG_WARN_BLOCK_CAPTURE_AUTORELEASING = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_COMMA = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DEPRECATED_OBJC_IMPLEMENTATIONS = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_NON_LITERAL_NULL_CONVERSION = YES;
+				CLANG_WARN_OBJC_IMPLICIT_RETAIN_SELF = YES;
+				CLANG_WARN_OBJC_LITERAL_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER = YES;
+				CLANG_WARN_RANGE_LOOP_ANALYSIS = YES;
+				CLANG_WARN_STRICT_PROTOTYPES = YES;
+				CLANG_WARN_SUSPICIOUS_MOVE = YES;
+				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_STYLE = Automatic;
+				COPY_PHASE_STRIP = NO;
+				CURRENT_PROJECT_VERSION = 1;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = "";
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu11;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"$(inherited)",
+					"DEBUG=1",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
+				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
+				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = UIInterfaceOrientationPortrait;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				MARKETING_VERSION = 0.1.0;
+				MTL_ENABLE_DEBUG_INFO = INCLUDE_SOURCE;
+				MTL_FAST_MATH = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.9;
+			};
+			name = Debug;
+		};
+/* End XCBuildConfiguration section */
+
+/* Begin XCConfigurationList section */
+		090C52AD62D8C8EBF3761C39 /* Build configuration list for PBXProject "Mori" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				ECA9C868A06A1531138928A4 /* Debug */,
+				C952F1052EEE764DA06ECC7F /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		CD36627C70BAD78946F45A35 /* Build configuration list for PBXNativeTarget "Mori" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				A8B0A5FC9530D0F8A2251C09 /* Debug */,
+				3A246219AB8AD5C66DD954CF /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+/* End XCConfigurationList section */
+
+/* Begin XCVersionGroup section */
+		1390F6223B93D3335688EA02 /* Mori.xcdatamodeld */ = {
+			isa = XCVersionGroup;
+			children = (
+				10A97F908067E2B6CAD27AAE /* Mori.xcdatamodel */,
+			);
+			currentVersion = 10A97F908067E2B6CAD27AAE /* Mori.xcdatamodel */;
+			path = Mori.xcdatamodeld;
+			sourceTree = "<group>";
+			versionGroupType = wrapper.xcdatamodel;
+		};
+/* End XCVersionGroup section */
+	};
+	rootObject = 6D1B5DB9018D9D4FB4962AFF /* Project object */;
+}

@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mori - 庄重方案</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
+            background: #1C1C1E;
+            color: #E5E5EA;
+            padding: 40px;
+        }
+        h1 { color: #F2F2F7; margin-bottom: 30px; font-weight: 600; letter-spacing: 4px; text-transform: uppercase; font-size: 24px; }
+        .section { margin-bottom: 60px; }
+        .section-title { color: #8E8E93; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; font-weight: 500; }
+        
+        /* Color Palette */
+        .palette {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+        .color-swatch {
+            width: 80px;
+            height: 80px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            flex-direction: column;
+            font-weight: 500;
+        }
+        .primary { background: #1C1C1E; border: 1px solid #2C2C2E; color: #E5E5EA; }
+        .secondary { background: #2C2C2E; color: #E5E5EA; }
+        .accent { background: #0A84FF; color: white; }
+        .dark { background: #000000; color: white; border: 1px solid #2C2C2E; }
+        .gray { background: #636366; color: white; }
+        
+        /* Life Grid */
+        .life-grid {
+            background: #2C2C2E;
+            padding: 20px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(80, 3px);
+            gap: 1px;
+        }
+        .grid-cell {
+            width: 3px;
+            height: 3px;
+            background: #3A3A3C;
+            border-radius: 1px;
+        }
+        .grid-cell.filled { background: #0A84FF; }
+        .grid-cell.current { background: #5AC8FA; box-shadow: 0 0 6px rgba(90, 200, 250, 0.6); }
+        .grid-label {
+            margin-top: 15px;
+            color: #8E8E93;
+            font-size: 12px;
+            text-align: center;
+            font-weight: 500;
+        }
+        
+        /* The Clock */
+        .clock-container {
+            background: #2C2C2E;
+            padding: 40px;
+            border-radius: 8px;
+            display: inline-block;
+        }
+        .clock {
+            width: 220px;
+            height: 220px;
+            border: 3px solid #3A3A3C;
+            border-radius: 50%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .clock-mark {
+            position: absolute;
+            width: 2px;
+            height: 8px;
+            background: #3A3A3C;
+        }
+        .clock-center {
+            width: 10px;
+            height: 10px;
+            background: #0A84FF;
+            border-radius: 50%;
+            box-shadow: 0 0 10px rgba(10, 132, 255, 0.5);
+        }
+        .clock-hand {
+            position: absolute;
+            background: #E5E5EA;
+            transform-origin: bottom center;
+        }
+        .hour-hand {
+            width: 3px;
+            height: 55px;
+            top: 55px;
+            background: #E5E5EA;
+        }
+        .minute-hand {
+            width: 2px;
+            height: 75px;
+            top: 35px;
+            background: #0A84FF;
+        }
+        .clock-time {
+            position: absolute;
+            bottom: 35px;
+            font-size: 16px;
+            color: #E5E5EA;
+            letter-spacing: 3px;
+            font-weight: 500;
+        }
+        
+        /* Habit +/- */
+        .habit-container {
+            background: #2C2C2E;
+            padding: 30px;
+            border-radius: 8px;
+            max-width: 420px;
+        }
+        .habit-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 18px 0;
+            border-bottom: 1px solid #3A3A3C;
+        }
+        .habit-item:last-child { border-bottom: none; }
+        .habit-name { color: #E5E5EA; font-size: 16px; font-weight: 500; }
+        .habit-controls {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        .habit-btn {
+            width: 36px;
+            height: 36px;
+            border: 2px solid #3A3A3C;
+            background: transparent;
+            border-radius: 8px;
+            color: #E5E5EA;
+            font-size: 20px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .habit-btn:hover { 
+            border-color: #0A84FF;
+            color: #0A84FF;
+        }
+        .habit-count {
+            font-size: 24px;
+            font-weight: 600;
+            color: #0A84FF;
+            min-width: 35px;
+            text-align: center;
+        }
+        
+        /* Gratitude */
+        .gratitude-container {
+            background: #2C2C2E;
+            padding: 40px;
+            border-radius: 8px;
+            max-width: 520px;
+        }
+        .gratitude-title {
+            color: #E5E5EA;
+            font-size: 18px;
+            margin-bottom: 24px;
+            font-weight: 600;
+            letter-spacing: 1px;
+        }
+        .gratitude-input {
+            width: 100%;
+            border: none;
+            border-bottom: 2px solid #3A3A3C;
+            padding: 16px 0;
+            font-size: 16px;
+            color: #E5E5EA;
+            background: transparent;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+        .gratitude-input::placeholder { color: #636366; }
+        .gratitude-input:focus { border-color: #0A84FF; }
+        .gratitude-list {
+            margin-top: 24px;
+        }
+        .gratitude-item {
+            padding: 14px 0;
+            color: #8E8E93;
+            font-size: 15px;
+            display: flex;
+            align-items: center;
+            border-left: 2px solid #0A84FF;
+            padding-left: 16px;
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Mori · 庄重</h1>
+    
+    <!-- Color Palette -->
+    <div class="palette">
+        <div class="color-swatch primary">
+            <div>#1C1C1E</div>
+            <div style="margin-top:5px;font-size:9px">主色</div>
+        </div>
+        <div class="color-swatch secondary">
+            <div>#2C2C2E</div>
+            <div style="margin-top:5px;font-size:9px">辅助</div>
+        </div>
+        <div class="color-swatch accent">
+            <div>#0A84FF</div>
+            <div style="margin-top:5px;font-size:9px">强调</div>
+        </div>
+        <div class="color-swatch dark">
+            <div>#000000</div>
+            <div style="margin-top:5px;font-size:9px">深色</div>
+        </div>
+        <div class="color-swatch gray">
+            <div>#636366</div>
+            <div style="margin-top:5px;font-size:9px">灰色</div>
+        </div>
+    </div>
+    
+    <!-- Life Grid -->
+    <div class="section">
+        <div class="section-title">Life Grid · 80周 × 52年</div>
+        <div class="life-grid">
+            <div class="grid-container">
+                <script>
+                    for(let i = 0; i < 80*52; i++) {
+                        const className = i < 1560 ? 'filled' : (i === 1560 ? 'current' : '');
+                        document.write(`<div class="grid-cell ${className}"></div>`);
+                    }
+                </script>
+            </div>
+            <div class="grid-label">30 / 80 周 · 37.5%</div>
+        </div>
+    </div>
+    
+    <!-- The Clock -->
+    <div class="section">
+        <div class="section-title">The Clock</div>
+        <div class="clock-container">
+            <div class="clock">
+                <div class="clock-center"></div>
+                <div class="clock-hand hour-hand" style="transform: rotate(150deg);"></div>
+                <div class="clock-hand minute-hand" style="transform: rotate(180deg);"></div>
+                <div class="clock-time">05:00</div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Habit +/- -->
+    <div class="section">
+        <div class="section-title">Habit +/-</div>
+        <div class="habit-container">
+            <div class="habit-item">
+                <div class="habit-name">阅读</div>
+                <div class="habit-controls">
+                    <button class="habit-btn">−</button>
+                    <div class="habit-count">3</div>
+                    <button class="habit-btn">+</button>
+                </div>
+            </div>
+            <div class="habit-item">
+                <div class="habit-name">冥想</div>
+                <div class="habit-controls">
+                    <button class="habit-btn">−</button>
+                    <div class="habit-count">1</div>
+                    <button class="habit-btn">+</button>
+                </div>
+            </div>
+            <div class="habit-item">
+                <div class="habit-name">运动</div>
+                <div class="habit-controls">
+                    <button class="habit-btn">−</button>
+                    <div class="habit-count">2</div>
+                    <button class="habit-btn">+</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Gratitude -->
+    <div class="section">
+        <div class="section-title">Gratitude</div>
+        <div class="gratitude-container">
+            <div class="gratitude-title">今天，我感恩...</div>
+            <input type="text" class="gratitude-input" placeholder="写下你的感恩...">
+            <div class="gratitude-list">
+                <div class="gratitude-item">早晨的阳光透过窗帘</div>
+                <div class="gratitude-item">一杯热咖啡的温度</div>
+                <div class="gratitude-item">朋友的问候信息</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
