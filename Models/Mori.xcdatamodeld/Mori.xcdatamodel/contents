@@ -1,12 +1,18 @@
 <?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22225" systemVersion="23F79" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithSwiftData="YES" userDefinedModelVersionIdentifier="">
     <entity name="LifeWeekEntity" representedClassName="LifeWeekEntity" syncable="YES" codeGenerationType="class">
+        <attribute name="createdAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="endDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="id" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="isLived" optional="YES" attributeType="Boolean" usesScalarValueType="YES"/>
+        <attribute name="lastSyncedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
         <attribute name="mood" optional="YES" attributeType="String"/>
         <attribute name="note" optional="YES" attributeType="String"/>
+        <attribute name="remoteID" optional="YES" attributeType="String"/>
         <attribute name="startDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="syncStatus" optional="YES" attributeType="String" defaultValueString="pendingUpsert"/>
+        <attribute name="updatedAt" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="userID" optional="YES" attributeType="UUID" usesScalarValueType="NO"/>
         <attribute name="weekIndex" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="weekOfYear" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>
         <attribute name="yearIndex" optional="YES" attributeType="Integer 32" defaultValueString="0" usesScalarValueType="YES"/>

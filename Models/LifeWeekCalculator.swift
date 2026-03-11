@@ -1,11 +1,18 @@
-//
-//  LifeWeekCalculator.swift
-//  Mori
-//
-//  Calculates life weeks based on birth date and life expectancy
-//
-
 import Foundation
+
+enum LifeWeekSyncStatus: String, Codable {
+    case pendingUpsert
+    case synced
+    
+    var displayName: String {
+        switch self {
+        case .pendingUpsert:
+            return "Pending Sync"
+        case .synced:
+            return "Synced"
+        }
+    }
+}
 
 struct LifeWeek: Identifiable, Hashable {
     let id: UUID
@@ -17,9 +24,29 @@ struct LifeWeek: Identifiable, Hashable {
     let isLived: Bool
     var mood: String?
     var note: String?
+    var createdAt: Date?
+    var updatedAt: Date?
+    var lastSyncedAt: Date?
+    var remoteID: String?
+    var syncStatus: LifeWeekSyncStatus
     
-    init(weekIndex: Int, yearIndex: Int, weekOfYear: Int, startDate: Date, endDate: Date, isLived: Bool, mood: String? = nil, note: String? = nil) {
-        self.id = UUID()
+    init(
+        id: UUID = UUID(),
+        weekIndex: Int,
+        yearIndex: Int,
+        weekOfYear: Int,
+        startDate: Date,
+        endDate: Date,
+        isLived: Bool,
+        mood: String? = nil,
+        note: String? = nil,
+        createdAt: Date? = nil,
+        updatedAt: Date? = nil,
+        lastSyncedAt: Date? = nil,
+        remoteID: String? = nil,
+        syncStatus: LifeWeekSyncStatus = .pendingUpsert
+    ) {
+        self.id = id
         self.weekIndex = weekIndex
         self.yearIndex = yearIndex
         self.weekOfYear = weekOfYear
@@ -28,22 +55,21 @@ struct LifeWeek: Identifiable, Hashable {
         self.isLived = isLived
         self.mood = mood
         self.note = note
+        self.createdAt = createdAt
+        self.updatedAt = updatedAt
+        self.lastSyncedAt = lastSyncedAt
+        self.remoteID = remoteID
+        self.syncStatus = syncStatus
     }
 }
 
 struct LifeWeekCalculator {
-    
-    /// Calculate all life weeks from birth date
-    /// - Parameters:
-    ///   - birthDate: User's birth date
-    ///   - lifeExpectancy: Expected lifespan in years (default 80)
-    /// - Returns: Array of LifeWeek objects
-    static func calculateLifeWeeks(birthDate: Date, lifeExpectancy: Int = 80) -> [LifeWeek] {
-        let calendar = Calendar.current
+    static func generateWeeks(birthDate: Date, lifeExpectancy: Int = 80) -> [LifeWeek] {
         let totalWeeks = lifeExpectancy * 52
         var weeks: [LifeWeek] = []
         
         let today = Date()
+        let calendar = Calendar.current
         
         // Start from birth date
         var currentDate = birthDate
@@ -53,14 +79,14 @@ struct LifeWeekCalculator {
             let weekStart = calendar.date(byAdding: .day, value: weekIndex * 7, to: birthDate)!
             let weekEnd = calendar.date(byAdding: .day, value: (weekIndex + 1) * 7 - 1, to: birthDate)!
             
-            // Calculate year index (which year of life)
+            // Calculate year index (0-based)
             let yearIndex = weekIndex / 52
             
-            // Calculate week of year (1-52)
+            // Calculate week of year
             let weekOfYear = calendar.component(.weekOfYear, from: weekStart)
             
-            // Determine if this week is lived
-            let isLived = weekEnd < today
+            // Determine if this week has been lived
+            let isLived = today >= weekStart
             
             let week = LifeWeek(
                 weekIndex: weekIndex,
@@ -70,32 +96,9 @@ struct LifeWeekCalculator {
                 endDate: weekEnd,
                 isLived: isLived
             )
-            
             weeks.append(week)
         }
         
         return weeks
-    }
-    
-    /// Get weeks lived count
-    static func weeksLived(from birthDate: Date) -> Int {
-        let calendar = Calendar.current
-        let today = Date()
-        let weeks = calendar.dateComponents([.weekOfYear], from: birthDate, to: today).weekOfYear ?? 0
-        return max(0, weeks)
-    }
-    
-    /// Get weeks remaining
-    static func weeksRemaining(from birthDate: Date, lifeExpectancy: Int = 80) -> Int {
-        let totalWeeks = lifeExpectancy * 52
-        let lived = weeksLived(from: birthDate)
-        return max(0, totalWeeks - lived)
-    }
-    
-    /// Calculate percentage of life lived
-    static func percentageLived(from birthDate: Date, lifeExpectancy: Int = 80) -> Double {
-        let totalWeeks = lifeExpectancy * 52
-        let lived = weeksLived(from: birthDate)
-        return Double(lived) / Double(totalWeeks) * 100
     }
 }
