@@ -15,5 +15,5 @@ export { GratitudeInput } from './components/GratitudeInput';
 export { DailyQuote } from './components/DailyQuote';
 export { WeekProgress } from './components/WeekProgress';
 
-// Styles
-export './styles/variables.css';
+// Styles - import CSS for side effects
+import './styles/variables.css';
