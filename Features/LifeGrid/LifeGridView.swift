@@ -1,4 +1,5 @@
 import SwiftUI
+import CoreData
 
 struct LifeGridView: View {
     @EnvironmentObject var settings: UserSettings
@@ -173,88 +174,209 @@ struct WeekDetailSheet: View {
     let settings: UserSettings
     @Binding var isPresented: Bool
     
-    @Environment(\.accessibilityReduceMotion) var reduceMotion
+    @State private var memoryText: String = ""
+    @State private var isEditing: Bool = false
+    @State private var existingNote: String?
+    @State private var weekID: UUID?
+    @State private var showSaveSuccess: Bool = false
+    
+    private let store = LifeWeekStore.shared
+    private let dateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "MMM d"
+        return f
+    }()
     
     private var weekDate: Date {
         let calendar = Calendar.current
         let birthDate = settings.birthDate
-        var components = calendar.dateComponents([.year, .month, .day], from: birthDate)
-        components.year = week.year
-        components.weekOfYear = week.week + 1
-        
-        // Estimate the date
         let weekOfYear = week.week + 1
         let daysOffset = weekOfYear * 7
         return calendar.date(byAdding: .day, value: daysOffset, to: birthDate) ?? birthDate
     }
     
     private var dateRangeText: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d"
         let start = weekDate
         let end = Calendar.current.date(byAdding: .day, value: 6, to: weekDate) ?? weekDate
-        return "\(formatter.string(from: start))-\(formatter.string(from: end)), \(week.year + settings.age)"
+        return "\(dateFormatter.string(from: start))-\(dateFormatter.string(from: end)), Age \(week.year + settings.age)"
     }
     
     var body: some View {
         NavigationStack {
-            VStack(spacing: 24) {
-                // Week info
-                VStack(spacing: 8) {
-                    Text("Week \(week.week + 1), Age \(week.year)")
-                        .font(.title2)
-                        .fontWeight(.semibold)
+            ScrollView {
+                VStack(spacing: 24) {
+                    // Week info
+                    VStack(spacing: 8) {
+                        Text("Week \(week.week + 1), Age \(week.year)")
+                            .font(.title2)
+                            .fontWeight(.semibold)
+                        
+                        Text(dateRangeText)
+                            .font(.subheadline)
+                            .foregroundColor(MoriColors.secondary)
+                    }
+                    .padding(.top)
                     
-                    Text(dateRangeText)
-                        .font(.subheadline)
-                        .foregroundColor(MoriColors.secondary)
-                }
-                .padding(.top)
-                
-                // Memory placeholder
-                VStack(spacing: 12) {
-                    Image(systemName: "note.text")
-                        .font(.system(size: 40))
-                        .foregroundColor(MoriColors.secondary)
+                    // Memory section
+                    VStack(alignment: .leading, spacing: 12) {
+                        HStack {
+                            Image(systemName: "note.text")
+                                .foregroundColor(MoriColors.accentAmber)
+                            Text("本周记忆")
+                                .font(.headline)
+                                .foregroundColor(MoriColors.text)
+                            Spacer()
+                            if existingNote != nil && !isEditing {
+                                Button("编辑") {
+                                    isEditing = true
+                                }
+                                .font(.subheadline)
+                                .foregroundColor(MoriColors.accentAmber)
+                            }
+                        }
+                        
+                        if isEditing || existingNote == nil {
+                            TextEditor(text: $memoryText)
+                                .frame(minHeight: 120)
+                                .padding(12)
+                                .background(MoriColors.cardBackground)
+                                .cornerRadius(12)
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12)
+                                        .stroke(MoriColors.accentAmber.opacity(0.3), lineWidth: 1)
+                                )
+                                .foregroundColor(MoriColors.text)
+                                .scrollContentBackground(.hidden)
+                            
+                            Button(action: saveMemory) {
+                                HStack {
+                                    Image(systemName: "checkmark.circle.fill")
+                                    Text("保存记忆")
+                                }
+                                .font(.headline)
+                                .foregroundColor(.white)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(memoryText.isEmpty ? MoriColors.secondary : MoriColors.accentAmber)
+                                .cornerRadius(12)
+                            }
+                            .disabled(memoryText.isEmpty)
+                        } else {
+                            Text(existingNote ?? "")
+                                .font(.custom("Caveat", size: 18))
+                                .foregroundColor(MoriColors.text)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(16)
+                                .background(MoriColors.cardBackground)
+                                .cornerRadius(12)
+                        }
+                    }
+                    .padding(.horizontal)
                     
-                    Text("No memory logged")
-                        .font(.subheadline)
-                        .foregroundColor(MoriColors.secondary)
+                    // Reflection prompts
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text("反思提示")
+                            .font(.headline)
+                            .foregroundColor(MoriColors.secondary)
+                            .padding(.horizontal)
+                        
+                        ForEach(reflectionPrompts, id: \.self) { prompt in
+                            HStack(alignment: .top, spacing: 12) {
+                                Image(systemName: "lightbulb")
+                                    .foregroundColor(MoriColors.morningGold)
+                                    .font(.system(size: 16))
+                                Text(prompt)
+                                    .font(.subheadline)
+                                    .foregroundColor(MoriColors.secondary)
+                                Spacer()
+                            }
+                            .padding(.horizontal)
+                        }
+                    }
+                    
+                    Spacer(minLength: 40)
                 }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 40)
-                .background(MoriColors.cardBackground)
-                .cornerRadius(16)
-                .padding(.horizontal)
-                
-                // Add memory button
-                Button(action: {
-                    // TODO: Implement memory logging
-                    isPresented = false
-                }) {
-                    Text("Add Memory")
-                        .font(.headline)
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding()
-                        .background(MoriColors.accentAmber)
-                        .cornerRadius(12)
-                }
-                .padding(.horizontal)
-                
-                Spacer()
             }
             .background(MoriColors.background)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
+                    Button("完成") {
                         isPresented = false
                     }
                 }
             }
         }
-        .presentationDetents([.medium])
+        .presentationDetents([.large])
+        .onAppear(perform: loadExistingNote)
+    }
+    
+    private var reflectionPrompts: [String] {
+        if week.year + settings.age < 10 {
+            return [
+                "这周发生了什么有趣的事?",
+                "你学到了什么新东西?",
+                "什么事情让你感到开心?"
+            ]
+        } else if week.year + settings.age < 30 {
+            return [
+                "这周你最大的收获是什么?",
+                "有什么挑战?你是如何应对的?",
+                "你想对下周说什么?"
+            ]
+        } else {
+            return [
+                "这周你最感谢的是什么?",
+                "有什么值得记住的时刻?",
+                "你想留下什么?"
+            ]
+        }
+    }
+    
+    private func loadExistingNote() {
+        guard let userID = UserManager.shared.currentUser?.id else { return }
+        if let lifeWeek = store.fetchWeek(userID: userID, yearIndex: week.year, weekIndex: week.week) {
+            existingNote = lifeWeek.note
+            memoryText = lifeWeek.note ?? ""
+            weekID = lifeWeek.id
+        }
+    }
+    
+    private func saveMemory() {
+        guard let userID = UserManager.shared.currentUser?.id else { return }
+        
+        let trimmed = memoryText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return }
+        
+        if let id = weekID {
+            store.updateNote(weekID: id, note: trimmed)
+        } else {
+            // Create a new LifeWeek with the note
+            let calendar = Calendar.current
+            let birthDate = settings.birthDate
+            let startDate = calendar.date(byAdding: .day, value: week.week * 7, to: birthDate) ?? birthDate
+            let endDate = calendar.date(byAdding: .day, value: 6, to: startDate) ?? startDate
+            
+            let newWeek = LifeWeek(
+                weekIndex: week.week,
+                yearIndex: week.year,
+                weekOfYear: week.week + 1,
+                startDate: startDate,
+                endDate: endDate,
+                isLived: week.year * 52 + week.week < settings.weeksLived,
+                note: trimmed
+            )
+            store.saveWeek(newWeek, userID: userID)
+        }
+        
+        existingNote = trimmed
+        isEditing = false
+        showSaveSuccess = true
+        
+        // Auto-dismiss after short delay
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            isPresented = false
+        }
     }
 }
 

@@ -58,13 +58,13 @@ struct GratitudeJournalScreen: View {
                 }
                 .padding(.top, 16)
             }
-            .background(Color(hex: "FDF5E6"))
+            .background(MoriColors.background)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     NavigationLink(destination: GratitudeHistoryView()) {
                         Image(systemName: "book.fill")
-                            .foregroundColor(Color(hex: "333333"))
+                            .foregroundColor(MoriColors.text)
                     }
                 }
             }
@@ -101,7 +101,7 @@ struct GratitudeJournalScreen: View {
     private var titleSection: some View {
         Text("What are you grateful for today?")
             .font(.custom("Cormorant Garamond", size: 32))
-            .foregroundColor(Color(hex: "333333"))
+            .foregroundColor(MoriColors.text)
             .multilineTextAlignment(.center)
             .padding(.horizontal, 24)
     }
@@ -118,7 +118,7 @@ struct GratitudeJournalScreen: View {
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 12)
-        .background(toastType == .success ? Color(hex: "788c5d") : Color(hex: "DC3545"))
+        .background(toastType == .success ? MoriColors.sageGreen : MoriColors.warmClay)
         .cornerRadius(8)
         .shadow(color: Color.black.opacity(0.15), radius: 8, x: 0, y: 4)
         .padding(.bottom, 32)

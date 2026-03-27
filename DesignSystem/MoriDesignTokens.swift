@@ -365,3 +365,16 @@ extension MoriColors {
 // --sage-green: #788c5d
 // --mist-blue: #6a9bcc
 // --ember-orange: #FF6B35
+
+// MARK: - Dark Theme Colors (Design Brief v1.0)
+// Clock and contemplative screens use warm dark theme
+extension MoriColors {
+    /// Deep Black - Dark theme background (#0A0A0A)
+    static let moriDark = Color(hex: "#0A0A0A")
+    
+    /// Soft Cream - Text on dark backgrounds (#FDF5E6)
+    static let moriCream = Color(hex: "#FDF5E6")
+    
+    /// Mori Cream Light - Subtle cream (#FFF8E7)
+    static let moriCreamLight = Color(hex: "#FFF8E7")
+}
