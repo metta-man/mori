@@ -149,8 +149,8 @@ final class LifeWeekStore {
     }
     
     func markAsSynced(weekID: UUID, remoteID: String) {
-        fetchWeekEntity(id: weekID) else { return }
- guard let entity =        entity.remoteID = remoteID
+    guard let entity = fetchWeekEntity(id: weekID) else { return }
+        entity.remoteID = remoteID
         entity.syncStatus = "synced"
         entity.lastSyncedAt = Date()
         save()

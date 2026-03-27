@@ -64,6 +64,22 @@ struct LifeWeek: Identifiable, Hashable {
 }
 
 struct LifeWeekCalculator {
+    static let totalLifeWeeks = 80 * 52
+
+    static func weeksLived(from birthDate: Date) -> Int {
+        let calendar = Calendar.current
+        let now = Date()
+        let components = calendar.dateComponents([.day], from: birthDate, to: now)
+        let daysLived = components.day ?? 0
+        return max(0, daysLived / 7)
+    }
+
+    static func weeksRemaining(from birthDate: Date, lifeExpectancy: Int = 80) -> Int {
+        let total = lifeExpectancy * 52
+        let lived = weeksLived(from: birthDate)
+        return max(0, total - lived)
+    }
+
     static func generateWeeks(birthDate: Date, lifeExpectancy: Int = 80) -> [LifeWeek] {
         let totalWeeks = lifeExpectancy * 52
         var weeks: [LifeWeek] = []
