@@ -87,9 +87,6 @@ struct LifeWeekCalculator {
         let today = Date()
         let calendar = Calendar.current
         
-        // Start from birth date
-        var currentDate = birthDate
-        
         for weekIndex in 0..<totalWeeks {
             // Calculate start and end of this week
             let weekStart = calendar.date(byAdding: .day, value: weekIndex * 7, to: birthDate)!

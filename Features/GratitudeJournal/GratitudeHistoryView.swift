@@ -26,7 +26,7 @@ struct GratitudeHistoryView: View {
             .padding(24)
         }
         .background(Color(hex: "FDF5E6"))
-        .navigationTitle("Gratitude History")
+        .navigationTitle("Journal History")
         .navigationBarTitleDisplayMode(.large)
         .sheet(item: $selectedEntry) { entry in
             GratitudeDetailView(entry: entry)
@@ -99,17 +99,21 @@ struct GratitudeHistoryView: View {
                 
                 // Content
                 VStack(alignment: .leading, spacing: 4) {
-                    if let prompt = entry.promptType {
-                        Text(prompt.shortName)
+                    Label(entry.sourceLabel, systemImage: entry.sourceSymbolName)
+                        .font(.custom("Poppins", size: 11))
+                        .foregroundColor(sourceColor(for: entry))
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 2)
+                        .background(Color(hex: "FDF5E6"))
+                        .cornerRadius(4)
+
+                    if !entry.photoAttachments.isEmpty {
+                        Label("\(entry.photoAttachments.count)", systemImage: "photo")
                             .font(.custom("Poppins", size: 11))
-                            .foregroundColor(Color(hex: "D4AF37"))
-                            .padding(.horizontal, 8)
-                            .padding(.vertical, 2)
-                            .background(Color(hex: "FDF5E6"))
-                            .cornerRadius(4)
+                            .foregroundColor(Color(hex: "888888"))
                     }
                     
-                    Text(entry.content)
+                    Text(entry.displayContent)
                         .font(.custom("Poppins", size: 14))
                         .foregroundColor(Color(hex: "666666"))
                         .lineLimit(2)
@@ -149,6 +153,14 @@ struct GratitudeHistoryView: View {
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM"
         return formatter.string(from: date)
+    }
+
+    private func sourceColor(for entry: GratitudeEntry) -> Color {
+        switch entry.sourceKind {
+        case .journal: return Color(hex: "D4AF37")
+        case .dailySpark: return Color(hex: "B8942D")
+        case .weeklyIntention: return Color(hex: "788c5d")
+        }
     }
 }
 

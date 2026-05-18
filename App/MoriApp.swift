@@ -7,6 +7,7 @@ struct MoriApp: App {
     init() {
         // Initialize analytics
         AnalyticsManager.shared.configure()
+        MoriWatchSettingsSync.shared.activate()
     }
     
     var body: some Scene {

@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import UIKit
 
 // MARK: - Gratitude Detail View
 struct GratitudeDetailView: View {
@@ -30,28 +31,45 @@ struct GratitudeDetailView: View {
                     }
                     .padding(.top, 8)
                     
-                    // Prompt (if used)
-                    if let prompt = entry.promptType {
-                        HStack(spacing: 8) {
-                            Text("💡")
-                                .font(.system(size: 16))
-                            
-                            Text(prompt.displayText)
-                                .font(.custom("Poppins", size: 14))
-                                .foregroundColor(Color(hex: "666666"))
-                        }
-                        .padding(12)
-                        .background(Color(hex: "F5F5F5"))
-                        .cornerRadius(8)
+                    HStack(spacing: 8) {
+                        Image(systemName: entry.sourceSymbolName)
+                            .font(.system(size: 14, weight: .semibold))
+
+                        Text(sourceDisplayText)
+                            .font(.custom("Poppins", size: 14))
                     }
+                    .foregroundColor(sourceColor)
+                    .padding(12)
+                    .background(Color(hex: "F5F5F5"))
+                    .cornerRadius(8)
                     
                     // Content
-                    Text(entry.content)
+                    Text(entry.displayContent)
                         .font(.custom("Poppins", size: 15))
                         .foregroundColor(Color(hex: "333333"))
                         .lineSpacing(1.6)
                         .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
+
+                    if !entry.photoAttachments.isEmpty {
+                        LazyVGrid(
+                            columns: [
+                                GridItem(.flexible(), spacing: 10),
+                                GridItem(.flexible(), spacing: 10)
+                            ],
+                            spacing: 10
+                        ) {
+                            ForEach(entry.photoAttachments) { attachment in
+                                if let image = UIImage(contentsOfFile: attachment.fileURL.path) {
+                                    Image(uiImage: image)
+                                        .resizable()
+                                        .scaledToFill()
+                                        .frame(height: 150)
+                                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                                }
+                            }
+                        }
+                    }
                     
                     // Metadata
                     VStack(alignment: .leading, spacing: 8) {
@@ -132,6 +150,22 @@ struct GratitudeDetailView: View {
         formatter.dateStyle = .medium
         formatter.timeStyle = .short
         return formatter.string(from: date)
+    }
+
+    private var sourceDisplayText: String {
+        if entry.sourceKind == .journal, let prompt = entry.promptType {
+            return prompt.displayText
+        }
+
+        return entry.sourceLabel
+    }
+
+    private var sourceColor: Color {
+        switch entry.sourceKind {
+        case .journal: return Color(hex: "666666")
+        case .dailySpark: return Color(hex: "B8942D")
+        case .weeklyIntention: return Color(hex: "788c5d")
+        }
     }
 }
 

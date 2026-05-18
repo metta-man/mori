@@ -6,18 +6,25 @@
 //
 
 import SwiftUI
+import PhotosUI
+import UIKit
 
 // MARK: - Gratitude Editor View
 struct GratitudeEditorView: View {
     @Binding var content: String
     let selectedPrompt: GratitudePrompt?
+    let attachedPhotos: [GratitudePhotoAttachment]
+    var onAddPhoto: (Data) -> Void
+    var onRemovePhoto: (GratitudePhotoAttachment) -> Void
     var onSave: () -> Void
     
     @State private var charCountStatus: CharacterCountStatus = .normal
+    @State private var selectedPhotoItems: [PhotosPickerItem] = []
+    @FocusState private var isEditorFocused: Bool
     
     private var isValid: Bool {
         let trimmed = content.trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.count >= 10 && trimmed.count <= 500
+        return trimmed.count >= 10 && trimmed.count <= GratitudeEntry.maxContentCharacterCount
     }
     
     private var placeholder: String {
@@ -30,20 +37,22 @@ struct GratitudeEditorView: View {
             ZStack(alignment: .topLeading) {
                 if content.isEmpty {
                     Text(placeholder)
-                        .font(.custom("Poppins", size: 15))
-                        .foregroundColor(Color(hex: "AAAAAA"))
+                        .font(.system(size: 15, weight: .regular))
+                        .foregroundColor(MoriColors.moriCreamMuted)
                         .italic()
                         .padding(.horizontal, 20)
                         .padding(.vertical, 20)
                 }
                 
                 TextEditor(text: $content)
-                    .font(.custom("Poppins", size: 15))
-                    .foregroundColor(Color(hex: "333333"))
+                    .font(.system(size: 15, weight: .regular))
+                    .foregroundColor(MoriColors.moriCream)
                     .scrollContentBackground(.hidden)
+                    .background(Color.clear)
                     .frame(minHeight: 80)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 16)
+                    .focused($isEditorFocused)
                     .onChange(of: content) { newValue in
                         charCountStatus = CharacterCountStatus.status(for: newValue.count)
                     }
@@ -51,25 +60,43 @@ struct GratitudeEditorView: View {
             .frame(minHeight: 120)
             
             Divider()
-                .background(Color(hex: "E8E8E8"))
+                .background(MoriColors.moriHairline)
+
+            if !attachedPhotos.isEmpty {
+                photoStrip
+
+                Divider()
+                    .background(MoriColors.moriHairline)
+            }
             
             // Footer
             HStack {
                 // Character count
-                Text("\(content.count)/500")
-                    .font(.custom("Poppins", size: 12))
-                    .foregroundColor(Color(hex: charCountStatus.color))
+                Text("\(content.count)/\(GratitudeEntry.maxContentCharacterCount.formatted())")
+                    .font(.system(size: 12, weight: .regular))
+                    .foregroundColor(characterCountColor)
+
+                PhotosPicker(
+                    selection: $selectedPhotoItems,
+                    maxSelectionCount: 6,
+                    matching: .images
+                ) {
+                    Label("Add photos", systemImage: "photo.on.rectangle.angled")
+                        .font(.system(size: 13, weight: .medium))
+                        .foregroundColor(MoriColors.moriGold)
+                }
+                .accessibility(label: Text("Add photos to journal entry"))
                 
                 Spacer()
                 
                 // Save button
-                Button(action: onSave) {
+                Button(action: save) {
                     Text("Save")
-                        .font(.custom("Poppins", size: 14))
-                        .foregroundColor(.white)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(MoriColors.moriDark)
                         .padding(.horizontal, 24)
                         .padding(.vertical, 8)
-                        .background(isValid ? Color(hex: "788c5d") : Color.gray)
+                        .background(isValid ? MoriColors.moriGold : MoriColors.moriCreamMuted.opacity(0.45))
                         .cornerRadius(8)
                 }
                 .disabled(!isValid)
@@ -77,14 +104,102 @@ struct GratitudeEditorView: View {
             }
             .padding(20)
         }
-        .background(Color.white)
+        .background(MoriColors.moriDarkSurface)
         .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
         .overlay(
             RoundedRectangle(cornerRadius: 16)
-                .stroke(Color(hex: "E8E8E8"), lineWidth: 1)
+                .stroke(MoriColors.moriHairline, lineWidth: 1)
         )
+        .onChange(of: selectedPhotoItems) { newItems in
+            importPhotos(from: newItems)
+        }
         .accessibilityElement(children: .combine)
+    }
+
+    private var photoStrip: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
+            HStack(spacing: 10) {
+                ForEach(attachedPhotos) { attachment in
+                    JournalPhotoThumbnail(
+                        attachment: attachment,
+                        onRemove: {
+                            onRemovePhoto(attachment)
+                        }
+                    )
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 12)
+        }
+    }
+
+    private func save() {
+        isEditorFocused = false
+        onSave()
+    }
+
+    private func importPhotos(from items: [PhotosPickerItem]) {
+        guard !items.isEmpty else { return }
+
+        Task {
+            for item in items {
+                if let data = try? await item.loadTransferable(type: Data.self) {
+                    await MainActor.run {
+                        onAddPhoto(data)
+                    }
+                }
+            }
+
+            await MainActor.run {
+                selectedPhotoItems = []
+            }
+        }
+    }
+
+    private var characterCountColor: Color {
+        switch charCountStatus {
+        case .normal:
+            return MoriColors.moriCreamMuted
+        case .warning:
+            return MoriColors.moriGold
+        case .error:
+            return MoriColors.warmClay
+        }
+    }
+}
+
+private struct JournalPhotoThumbnail: View {
+    let attachment: GratitudePhotoAttachment
+    var onRemove: () -> Void
+
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            Group {
+                if let image = UIImage(contentsOfFile: attachment.fileURL.path) {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    Image(systemName: "photo")
+                        .font(.system(size: 22))
+                        .foregroundColor(MoriColors.moriCreamMuted)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(MoriColors.moriDark.opacity(0.4))
+                }
+            }
+            .frame(width: 76, height: 76)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
+
+            Button(action: onRemove) {
+                Image(systemName: "xmark.circle.fill")
+                    .font(.system(size: 18, weight: .semibold))
+                    .symbolRenderingMode(.palette)
+                    .foregroundStyle(MoriColors.moriCream, Color.black.opacity(0.62))
+            }
+            .offset(x: 6, y: -6)
+            .accessibility(label: Text("Remove photo"))
+        }
+        .frame(width: 82, height: 82)
     }
 }
 
@@ -94,12 +209,18 @@ struct GratitudeEditorView: View {
         GratitudeEditorView(
             content: .constant(""),
             selectedPrompt: .today,
+            attachedPhotos: [],
+            onAddPhoto: { _ in },
+            onRemovePhoto: { _ in },
             onSave: {}
         )
         
         GratitudeEditorView(
             content: .constant("Today I'm grateful for the warm sunshine that greeted me this morning."),
             selectedPrompt: .today,
+            attachedPhotos: [],
+            onAddPhoto: { _ in },
+            onRemovePhoto: { _ in },
             onSave: {}
         )
     }

@@ -3,77 +3,189 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
 		00234EEDF469D1CA204EE432 /* UserSettings.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B6CFFC3CA93D05495D77C1C /* UserSettings.swift */; };
+		006F82FABBA02F286D03E8FA /* DailySparkStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = FC9AF52755FBBDEF6B426FD3 /* DailySparkStore.swift */; };
+		037FA0DE3792BB64B2827D59 /* MoriWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = B60CA46B944982651BC758FA /* MoriWatchApp.swift */; };
+		04074EB8875A960F138E8068 /* LifeWeekStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6744370AAFBD55B72FD7169C /* LifeWeekStore.swift */; };
+		0714B3889EEB362A971569FF /* OnboardingLocationProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = EEC3A7F41D7FE1B59F5EFA12 /* OnboardingLocationProvider.swift */; };
+		11C2AD38E1D142AD95555BC3 /* MoriWidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09CE9366BEF6089FBC6E4DFB /* MoriWidgetSnapshot.swift */; };
 		1298BD9B5E11070978162C28 /* GratitudeJournalScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2F7D19BF81C42C5E875BD840 /* GratitudeJournalScreen.swift */; };
 		183351573C7A22604790B161 /* UserManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8EF57A39723BA1E0A5A74225 /* UserManager.swift */; };
+		1A6EFE03758615FBB3C26407 /* MoriWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1994BC59159554AB67F72B49 /* MoriWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		203E3A0225C7CEFC0ABF95FD /* LifeWeekCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01E60EA12441479B980BADC1 /* LifeWeekCalculator.swift */; };
 		24C4021E9E1AEE9641BB3DA6 /* RandomMemoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0AFD524B54D362EA8FE9584 /* RandomMemoryView.swift */; };
 		2987ABA2BB18A42EA887A093 /* MoriOnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 38B026B3EB86B49946F5BC6E /* MoriOnboardingView.swift */; };
+		2E8A5D4AF3A717BCDA5396A1 /* MoriWatch.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = 4802AA3982177F501E0BBF44 /* MoriWatch.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		2EBDC9A729FEACA37A036D25 /* LifeExpectancyService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8605725A1C3E33EC0FB554F4 /* LifeExpectancyService.swift */; };
+		2FD4C9D7BEC8856B829D3DDD /* MoriWatchSettingsSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = BB0BE33C71F066F20E8D40AC /* MoriWatchSettingsSync.swift */; };
+		38241877FEBA15829F317796 /* MoriWidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09CE9366BEF6089FBC6E4DFB /* MoriWidgetSnapshot.swift */; };
+		3F0AEBF882B7B91E18848594 /* MoriWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = D19D77819AA4610DA097E9F0 /* MoriWidgets.swift */; };
 		44965ED901F401C3F2A498B3 /* GratitudeHistoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 081FF2F571622BD08165894E /* GratitudeHistoryView.swift */; };
 		52131B1C8B9B8F4285BACDEB /* HabitDataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = B52F275CDC73EF58846EA0EC /* HabitDataManager.swift */; };
 		534AA3CB3A00D9DB75E06C05 /* MoriApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 825C762CE11E6B9C7F4D2FA3 /* MoriApp.swift */; };
 		584F43D7952C2BE4BD15A0CE /* MoriComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3DC26513C06171D04EAF7994 /* MoriComponents.swift */; };
+		5B4C9F362A78AF0A34E71A55 /* MoriWatchWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85CB8CBA78E59A31E7AF7900 /* MoriWatchWidgets.swift */; };
 		640473D4246C3E8B64579986 /* MoriDesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = F2A439F1A1AD419A6D10525B /* MoriDesignTokens.swift */; };
 		69940530286A51A25BAB8E4E /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7B42E8B55302412AF9670425 /* SettingsView.swift */; };
 		73D265F2BC53FA6813B593EC /* GratitudeDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0D8B239D556ED25FBED01C8C /* GratitudeDetailView.swift */; };
+		77A43534AE9CB7F7BC1E5786 /* MoriWatchWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 74DE9B56698ACCD79DD96465 /* MoriWatchWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		78918D0D848CBF9141425A03 /* DailySparkCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 80CB61AC5AA8506E8BA6ED27 /* DailySparkCard.swift */; };
 		84281970D02B2AC6EC3D03DC /* OnboardingView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5A11BBA25A260729CD860A97 /* OnboardingView.swift */; };
 		859A36A80FD54C037064F2E2 /* GratitudeListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6935EB5F294F2B20BBC3BA4 /* GratitudeListView.swift */; };
 		87804C798B0B69E2636E5E28 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D03791AE11DCBD24B35A851 /* PersistenceController.swift */; };
+		89796B9E9201AD228BC273A3 /* MoriWatchSettingsReceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F001E7427FBD7B261E1A767 /* MoriWatchSettingsReceiver.swift */; };
+		8FDDC7E23E1E179ACAB80752 /* MoriWidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09CE9366BEF6089FBC6E4DFB /* MoriWidgetSnapshot.swift */; };
 		94FF18E97D58F555072F5BA6 /* PromptChipView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AA97FD878DD528A87B832DDF /* PromptChipView.swift */; };
 		96710BF35CB94BDD93503CF0 /* HabitTrackerView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A00DB74C52010158F02928AD /* HabitTrackerView.swift */; };
 		9830ED9E80D31E10390686DE /* AnalyticsManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 79B3BCE16448FB92A06B48E7 /* AnalyticsManager.swift */; };
 		B893F4D68858ACAF596C69AE /* MoriViewModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = 099B70CB170D0B13085FEA01 /* MoriViewModifiers.swift */; };
 		B91DA351EACF087A91D17B76 /* GratitudeJournalViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CA6CA90897574C322C9A118 /* GratitudeJournalViewModel.swift */; };
 		BB2C0B88FF2769E5399CAFC6 /* MoriTabView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2643880213A70AB6540D6171 /* MoriTabView.swift */; };
+		C0C48AACA8E6FF74635C3385 /* PostHog in Frameworks */ = {isa = PBXBuildFile; productRef = 5A8EAA2EA6C97F5C50C2384D /* PostHog */; };
 		C8402E570C0BC5F1530DAD83 /* GratitudeEditorView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24FB204AE3E93DD1C8964516 /* GratitudeEditorView.swift */; };
 		CB0BC1A09D464C89869B079F /* Mori.xcdatamodeld in Sources */ = {isa = PBXBuildFile; fileRef = 1390F6223B93D3335688EA02 /* Mori.xcdatamodeld */; };
 		D80CDD974DBCF49ED4B43508 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9CF9BE047811945D5C472DDD /* ContentView.swift */; };
+		DA42A65C37B6ADE93BFDD12C /* MoriWidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09CE9366BEF6089FBC6E4DFB /* MoriWidgetSnapshot.swift */; };
 		EBE9BC6E5083160251343B46 /* GratitudeEntry.swift in Sources */ = {isa = PBXBuildFile; fileRef = B2E3AECC174BC68EF721D9EC /* GratitudeEntry.swift */; };
 		F4CDB33F7B3D12E5907DE05C /* ClockView.swift in Sources */ = {isa = PBXBuildFile; fileRef = B9F472A5AEE02CC5FBC71434 /* ClockView.swift */; };
+		F91C29CCA9283862DFC0CA85 /* HealthProfileProvider.swift in Sources */ = {isa = PBXBuildFile; fileRef = 47AC55F7355730C836810E0F /* HealthProfileProvider.swift */; };
 		FE7B08BCE7BDA2E7E855ACD2 /* LifeGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1192CF8DC2AADBD34CC554D0 /* LifeGridView.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		34F117DB0D825F42497DB8C6 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6D1B5DB9018D9D4FB4962AFF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = E3B598FD83F77B5AD3708644;
+			remoteInfo = MoriWidgets;
+		};
+		B82BB421200042201973006F /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6D1B5DB9018D9D4FB4962AFF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 922E64334CDA1FE7165A6441;
+			remoteInfo = MoriWatch;
+		};
+		C650AD944EF3E9C94E9DEA27 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 6D1B5DB9018D9D4FB4962AFF /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = D42BE5FD4DEE0BCB60B6746E;
+			remoteInfo = MoriWatchWidgets;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		2228B6413EE3A45EAC167B70 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				1A6EFE03758615FBB3C26407 /* MoriWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		4E65523FF04462D302A366F7 /* Embed Foundation Extensions */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				77A43534AE9CB7F7BC1E5786 /* MoriWatchWidgets.appex in Embed Foundation Extensions */,
+			);
+			name = "Embed Foundation Extensions";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E86DEC2B6E8B52F0FC2CF490 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "$(CONTENTS_FOLDER_PATH)/Watch";
+			dstSubfolderSpec = 16;
+			files = (
+				2E8A5D4AF3A717BCDA5396A1 /* MoriWatch.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		01E60EA12441479B980BADC1 /* LifeWeekCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeWeekCalculator.swift; sourceTree = "<group>"; };
 		081FF2F571622BD08165894E /* GratitudeHistoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GratitudeHistoryView.swift; sourceTree = "<group>"; };
 		099B70CB170D0B13085FEA01 /* MoriViewModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriViewModifiers.swift; sourceTree = "<group>"; };
+		09CE9366BEF6089FBC6E4DFB /* MoriWidgetSnapshot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriWidgetSnapshot.swift; sourceTree = "<group>"; };
 		0CA6CA90897574C322C9A118 /* GratitudeJournalViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GratitudeJournalViewModel.swift; sourceTree = "<group>"; };
 		0D8B239D556ED25FBED01C8C /* GratitudeDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GratitudeDetailView.swift; sourceTree = "<group>"; };
 		10A97F908067E2B6CAD27AAE /* Mori.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Mori.xcdatamodel; sourceTree = "<group>"; };
 		1192CF8DC2AADBD34CC554D0 /* LifeGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeGridView.swift; sourceTree = "<group>"; };
+		1994BC59159554AB67F72B49 /* MoriWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MoriWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		2012303D3AAE3563D23C9374 /* MoriWatch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MoriWatch.entitlements; sourceTree = "<group>"; };
 		24FB204AE3E93DD1C8964516 /* GratitudeEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GratitudeEditorView.swift; sourceTree = "<group>"; };
 		2643880213A70AB6540D6171 /* MoriTabView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriTabView.swift; sourceTree = "<group>"; };
 		2D03791AE11DCBD24B35A851 /* PersistenceController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PersistenceController.swift; sourceTree = "<group>"; };
+		2D375D389DF5E95019E21CC7 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		2F7D19BF81C42C5E875BD840 /* GratitudeJournalScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GratitudeJournalScreen.swift; sourceTree = "<group>"; };
+		34334BB88C596EE5622171B1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		38B026B3EB86B49946F5BC6E /* MoriOnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriOnboardingView.swift; sourceTree = "<group>"; };
 		3DC26513C06171D04EAF7994 /* MoriComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriComponents.swift; sourceTree = "<group>"; };
+		47AC55F7355730C836810E0F /* HealthProfileProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HealthProfileProvider.swift; sourceTree = "<group>"; };
+		4802AA3982177F501E0BBF44 /* MoriWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MoriWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5A11BBA25A260729CD860A97 /* OnboardingView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingView.swift; sourceTree = "<group>"; };
-		62F9120F39BD4552A01D2CFB /* Mori.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Mori.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		62F9120F39BD4552A01D2CFB /* Mori.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Mori.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		6744370AAFBD55B72FD7169C /* LifeWeekStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeWeekStore.swift; sourceTree = "<group>"; };
+		74DE9B56698ACCD79DD96465 /* MoriWatchWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MoriWatchWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		79B3BCE16448FB92A06B48E7 /* AnalyticsManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsManager.swift; sourceTree = "<group>"; };
 		7B42E8B55302412AF9670425 /* SettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettingsView.swift; sourceTree = "<group>"; };
+		80CB61AC5AA8506E8BA6ED27 /* DailySparkCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailySparkCard.swift; sourceTree = "<group>"; };
+		80D36005C8150C40E01E6CF2 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		81404869ED3F558D0D22FE71 /* MoriWatchWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MoriWatchWidgets.entitlements; sourceTree = "<group>"; };
 		825C762CE11E6B9C7F4D2FA3 /* MoriApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriApp.swift; sourceTree = "<group>"; };
+		85CB8CBA78E59A31E7AF7900 /* MoriWatchWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriWatchWidgets.swift; sourceTree = "<group>"; };
+		8605725A1C3E33EC0FB554F4 /* LifeExpectancyService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LifeExpectancyService.swift; sourceTree = "<group>"; };
 		8EF57A39723BA1E0A5A74225 /* UserManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserManager.swift; sourceTree = "<group>"; };
+		8F001E7427FBD7B261E1A767 /* MoriWatchSettingsReceiver.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriWatchSettingsReceiver.swift; sourceTree = "<group>"; };
+		9811FAC893F0B70395FD6790 /* MoriWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MoriWidgets.entitlements; sourceTree = "<group>"; };
 		9B6CFFC3CA93D05495D77C1C /* UserSettings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = UserSettings.swift; sourceTree = "<group>"; };
 		9CF9BE047811945D5C472DDD /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
 		A00DB74C52010158F02928AD /* HabitTrackerView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitTrackerView.swift; sourceTree = "<group>"; };
 		AA97FD878DD528A87B832DDF /* PromptChipView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PromptChipView.swift; sourceTree = "<group>"; };
 		B2E3AECC174BC68EF721D9EC /* GratitudeEntry.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GratitudeEntry.swift; sourceTree = "<group>"; };
 		B52F275CDC73EF58846EA0EC /* HabitDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitDataManager.swift; sourceTree = "<group>"; };
+		B60CA46B944982651BC758FA /* MoriWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriWatchApp.swift; sourceTree = "<group>"; };
 		B9F472A5AEE02CC5FBC71434 /* ClockView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ClockView.swift; sourceTree = "<group>"; };
+		BB0BE33C71F066F20E8D40AC /* MoriWatchSettingsSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriWatchSettingsSync.swift; sourceTree = "<group>"; };
+		D19D77819AA4610DA097E9F0 /* MoriWidgets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriWidgets.swift; sourceTree = "<group>"; };
 		E6935EB5F294F2B20BBC3BA4 /* GratitudeListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GratitudeListView.swift; sourceTree = "<group>"; };
+		EEC3A7F41D7FE1B59F5EFA12 /* OnboardingLocationProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OnboardingLocationProvider.swift; sourceTree = "<group>"; };
 		F0AFD524B54D362EA8FE9584 /* RandomMemoryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RandomMemoryView.swift; sourceTree = "<group>"; };
 		F2A439F1A1AD419A6D10525B /* MoriDesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriDesignTokens.swift; sourceTree = "<group>"; };
+		FC9AF52755FBBDEF6B426FD3 /* DailySparkStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailySparkStore.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		CD1AE3121DEBE10F7FF4A0AA /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				C0C48AACA8E6FF74635C3385 /* PostHog in Frameworks */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
 		04CB97C8FFDB2AA03FE65B31 /* Features */ = {
 			isa = PBXGroup;
 			children = (
 				5470A253CEDD112A19AEEF06 /* Clock */,
+				F062A462596D141F203A00EE /* DailySpark */,
 				F2E1B3141BBCA19C9011748D /* GratitudeJournal */,
 				F036D9A24F0D8AE1E6BBEB22 /* HabitTracker */,
 				5CBA0876E25F26AD31D3A586 /* LifeGrid */,
@@ -109,9 +221,22 @@
 			isa = PBXGroup;
 			children = (
 				79B3BCE16448FB92A06B48E7 /* AnalyticsManager.swift */,
+				47AC55F7355730C836810E0F /* HealthProfileProvider.swift */,
+				8605725A1C3E33EC0FB554F4 /* LifeExpectancyService.swift */,
+				6744370AAFBD55B72FD7169C /* LifeWeekStore.swift */,
+				BB0BE33C71F066F20E8D40AC /* MoriWatchSettingsSync.swift */,
+				EEC3A7F41D7FE1B59F5EFA12 /* OnboardingLocationProvider.swift */,
 				2D03791AE11DCBD24B35A851 /* PersistenceController.swift */,
 			);
 			path = Services;
+			sourceTree = "<group>";
+		};
+		527BA604EECD125C1F4A32AF /* Shared */ = {
+			isa = PBXGroup;
+			children = (
+				09CE9366BEF6089FBC6E4DFB /* MoriWidgetSnapshot.swift */,
+			);
+			path = Shared;
 			sourceTree = "<group>";
 		};
 		5470A253CEDD112A19AEEF06 /* Clock */ = {
@@ -131,10 +256,24 @@
 			path = LifeGrid;
 			sourceTree = "<group>";
 		};
+		A59B30E2BE7C2B4DD0DE8D44 /* WatchApp */ = {
+			isa = PBXGroup;
+			children = (
+				34334BB88C596EE5622171B1 /* Info.plist */,
+				2012303D3AAE3563D23C9374 /* MoriWatch.entitlements */,
+				B60CA46B944982651BC758FA /* MoriWatchApp.swift */,
+				8F001E7427FBD7B261E1A767 /* MoriWatchSettingsReceiver.swift */,
+			);
+			path = WatchApp;
+			sourceTree = "<group>";
+		};
 		A6E4849ADFD1B41BA2C9A6CB /* Products */ = {
 			isa = PBXGroup;
 			children = (
 				62F9120F39BD4552A01D2CFB /* Mori.app */,
+				4802AA3982177F501E0BBF44 /* MoriWatch.app */,
+				74DE9B56698ACCD79DD96465 /* MoriWatchWidgets.appex */,
+				1994BC59159554AB67F72B49 /* MoriWidgets.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -147,6 +286,10 @@
 				04CB97C8FFDB2AA03FE65B31 /* Features */,
 				2BB4B1E5E41202A4BA8BE49F /* Models */,
 				4B8C22CD5E1D29ED65016B98 /* Services */,
+				527BA604EECD125C1F4A32AF /* Shared */,
+				A59B30E2BE7C2B4DD0DE8D44 /* WatchApp */,
+				B462382728DE60C67CACD993 /* WatchWidgets */,
+				B434B35A96E8024AD772D647 /* Widgets */,
 				A6E4849ADFD1B41BA2C9A6CB /* Products */,
 			);
 			sourceTree = "<group>";
@@ -158,6 +301,26 @@
 				825C762CE11E6B9C7F4D2FA3 /* MoriApp.swift */,
 			);
 			path = App;
+			sourceTree = "<group>";
+		};
+		B434B35A96E8024AD772D647 /* Widgets */ = {
+			isa = PBXGroup;
+			children = (
+				2D375D389DF5E95019E21CC7 /* Info.plist */,
+				9811FAC893F0B70395FD6790 /* MoriWidgets.entitlements */,
+				D19D77819AA4610DA097E9F0 /* MoriWidgets.swift */,
+			);
+			path = Widgets;
+			sourceTree = "<group>";
+		};
+		B462382728DE60C67CACD993 /* WatchWidgets */ = {
+			isa = PBXGroup;
+			children = (
+				80D36005C8150C40E01E6CF2 /* Info.plist */,
+				81404869ED3F558D0D22FE71 /* MoriWatchWidgets.entitlements */,
+				85CB8CBA78E59A31E7AF7900 /* MoriWatchWidgets.swift */,
+			);
+			path = WatchWidgets;
 			sourceTree = "<group>";
 		};
 		E292F79DE86259A11C0D64E8 /* Onboarding */ = {
@@ -175,6 +338,15 @@
 				A00DB74C52010158F02928AD /* HabitTrackerView.swift */,
 			);
 			path = HabitTracker;
+			sourceTree = "<group>";
+		};
+		F062A462596D141F203A00EE /* DailySpark */ = {
+			isa = PBXGroup;
+			children = (
+				80CB61AC5AA8506E8BA6ED27 /* DailySparkCard.swift */,
+				FC9AF52755FBBDEF6B426FD3 /* DailySparkStore.swift */,
+			);
+			path = DailySpark;
 			sourceTree = "<group>";
 		};
 		F2E1B3141BBCA19C9011748D /* GratitudeJournal */ = {
@@ -201,17 +373,76 @@
 			buildConfigurationList = CD36627C70BAD78946F45A35 /* Build configuration list for PBXNativeTarget "Mori" */;
 			buildPhases = (
 				60BEF08E62A77FC8F707C97E /* Sources */,
+				CD1AE3121DEBE10F7FF4A0AA /* Frameworks */,
+				2228B6413EE3A45EAC167B70 /* Embed Foundation Extensions */,
+				E86DEC2B6E8B52F0FC2CF490 /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				641392C2F9B5800DE61C08B7 /* PBXTargetDependency */,
+				528592BFA1E238A20ED5065E /* PBXTargetDependency */,
+			);
+			name = Mori;
+			packageProductDependencies = (
+				5A8EAA2EA6C97F5C50C2384D /* PostHog */,
+			);
+			productName = Mori;
+			productReference = 62F9120F39BD4552A01D2CFB /* Mori.app */;
+			productType = "com.apple.product-type.application";
+		};
+		922E64334CDA1FE7165A6441 /* MoriWatch */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = EFD13370F4D72A2AF2E65DDF /* Build configuration list for PBXNativeTarget "MoriWatch" */;
+			buildPhases = (
+				888D576A9A431C5F030F7B22 /* Sources */,
+				4E65523FF04462D302A366F7 /* Embed Foundation Extensions */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				42EB5E27547FBFDADDD1EAFA /* PBXTargetDependency */,
+			);
+			name = MoriWatch;
+			packageProductDependencies = (
+			);
+			productName = MoriWatch;
+			productReference = 4802AA3982177F501E0BBF44 /* MoriWatch.app */;
+			productType = "com.apple.product-type.application";
+		};
+		D42BE5FD4DEE0BCB60B6746E /* MoriWatchWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 548637EC9CB0162A42C9E830 /* Build configuration list for PBXNativeTarget "MoriWatchWidgets" */;
+			buildPhases = (
+				F4DA379EBC3727F8996926D4 /* Sources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = Mori;
+			name = MoriWatchWidgets;
 			packageProductDependencies = (
 			);
-			productName = Mori;
-			productReference = 62F9120F39BD4552A01D2CFB /* Mori.app */;
-			productType = "com.apple.product-type.application";
+			productName = MoriWatchWidgets;
+			productReference = 74DE9B56698ACCD79DD96465 /* MoriWatchWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
+		E3B598FD83F77B5AD3708644 /* MoriWidgets */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 448A1A8D6146E8B205FAAE20 /* Build configuration list for PBXNativeTarget "MoriWidgets" */;
+			buildPhases = (
+				E301A5ECE5DE520E067DC65D /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = MoriWidgets;
+			packageProductDependencies = (
+			);
+			productName = MoriWidgets;
+			productReference = 1994BC59159554AB67F72B49 /* MoriWidgets.appex */;
+			productType = "com.apple.product-type.app-extension";
 		};
 /* End PBXNativeTarget section */
 
@@ -220,10 +451,18 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 1500;
+				LastUpgradeCheck = 2630;
 				TargetAttributes = {
 					555F06634E0DCC958AE3C40D = {
-						DevelopmentTeam = "";
+						ProvisioningStyle = Automatic;
+					};
+					922E64334CDA1FE7165A6441 = {
+						ProvisioningStyle = Automatic;
+					};
+					D42BE5FD4DEE0BCB60B6746E = {
+						ProvisioningStyle = Automatic;
+					};
+					E3B598FD83F77B5AD3708644 = {
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -238,11 +477,16 @@
 			);
 			mainGroup = A717644E1D08484C44791969;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
+			packageReferences = (
+				4A4EBF23529CF385C7BB5077 /* XCRemoteSwiftPackageReference "posthog-ios" */,
+			);
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				555F06634E0DCC958AE3C40D /* Mori */,
+				922E64334CDA1FE7165A6441 /* MoriWatch */,
+				D42BE5FD4DEE0BCB60B6746E /* MoriWatchWidgets */,
+				E3B598FD83F77B5AD3708644 /* MoriWidgets */,
 			);
 		};
 /* End PBXProject section */
@@ -255,6 +499,8 @@
 				9830ED9E80D31E10390686DE /* AnalyticsManager.swift in Sources */,
 				F4CDB33F7B3D12E5907DE05C /* ClockView.swift in Sources */,
 				D80CDD974DBCF49ED4B43508 /* ContentView.swift in Sources */,
+				78918D0D848CBF9141425A03 /* DailySparkCard.swift in Sources */,
+				006F82FABBA02F286D03E8FA /* DailySparkStore.swift in Sources */,
 				73D265F2BC53FA6813B593EC /* GratitudeDetailView.swift in Sources */,
 				C8402E570C0BC5F1530DAD83 /* GratitudeEditorView.swift in Sources */,
 				EBE9BC6E5083160251343B46 /* GratitudeEntry.swift in Sources */,
@@ -264,8 +510,11 @@
 				859A36A80FD54C037064F2E2 /* GratitudeListView.swift in Sources */,
 				52131B1C8B9B8F4285BACDEB /* HabitDataManager.swift in Sources */,
 				96710BF35CB94BDD93503CF0 /* HabitTrackerView.swift in Sources */,
+				F91C29CCA9283862DFC0CA85 /* HealthProfileProvider.swift in Sources */,
+				2EBDC9A729FEACA37A036D25 /* LifeExpectancyService.swift in Sources */,
 				FE7B08BCE7BDA2E7E855ACD2 /* LifeGridView.swift in Sources */,
 				203E3A0225C7CEFC0ABF95FD /* LifeWeekCalculator.swift in Sources */,
+				04074EB8875A960F138E8068 /* LifeWeekStore.swift in Sources */,
 				CB0BC1A09D464C89869B079F /* Mori.xcdatamodeld in Sources */,
 				534AA3CB3A00D9DB75E06C05 /* MoriApp.swift in Sources */,
 				584F43D7952C2BE4BD15A0CE /* MoriComponents.swift in Sources */,
@@ -273,6 +522,9 @@
 				2987ABA2BB18A42EA887A093 /* MoriOnboardingView.swift in Sources */,
 				BB2C0B88FF2769E5399CAFC6 /* MoriTabView.swift in Sources */,
 				B893F4D68858ACAF596C69AE /* MoriViewModifiers.swift in Sources */,
+				2FD4C9D7BEC8856B829D3DDD /* MoriWatchSettingsSync.swift in Sources */,
+				38241877FEBA15829F317796 /* MoriWidgetSnapshot.swift in Sources */,
+				0714B3889EEB362A971569FF /* OnboardingLocationProvider.swift in Sources */,
 				84281970D02B2AC6EC3D03DC /* OnboardingView.swift in Sources */,
 				87804C798B0B69E2636E5E28 /* PersistenceController.swift in Sources */,
 				94FF18E97D58F555072F5BA6 /* PromptChipView.swift in Sources */,
@@ -283,18 +535,100 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		888D576A9A431C5F030F7B22 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				037FA0DE3792BB64B2827D59 /* MoriWatchApp.swift in Sources */,
+				89796B9E9201AD228BC273A3 /* MoriWatchSettingsReceiver.swift in Sources */,
+				11C2AD38E1D142AD95555BC3 /* MoriWidgetSnapshot.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E301A5ECE5DE520E067DC65D /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				DA42A65C37B6ADE93BFDD12C /* MoriWidgetSnapshot.swift in Sources */,
+				3F0AEBF882B7B91E18848594 /* MoriWidgets.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		F4DA379EBC3727F8996926D4 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				5B4C9F362A78AF0A34E71A55 /* MoriWatchWidgets.swift in Sources */,
+				8FDDC7E23E1E179ACAB80752 /* MoriWidgetSnapshot.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 /* End PBXSourcesBuildPhase section */
 
+/* Begin PBXTargetDependency section */
+		42EB5E27547FBFDADDD1EAFA /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = D42BE5FD4DEE0BCB60B6746E /* MoriWatchWidgets */;
+			targetProxy = C650AD944EF3E9C94E9DEA27 /* PBXContainerItemProxy */;
+		};
+		528592BFA1E238A20ED5065E /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 922E64334CDA1FE7165A6441 /* MoriWatch */;
+			targetProxy = B82BB421200042201973006F /* PBXContainerItemProxy */;
+		};
+		641392C2F9B5800DE61C08B7 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = E3B598FD83F77B5AD3708644 /* MoriWidgets */;
+			targetProxy = 34F117DB0D825F42497DB8C6 /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
+
 /* Begin XCBuildConfiguration section */
+		20526F36C55DB0BFA66960E3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Widgets/MoriWidgets.entitlements;
+				INFOPLIST_FILE = Widgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mettalabs.mori.widgets;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Debug;
+		};
+		366DB4D9769827DAB4842CEB /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = WatchApp/MoriWatch.entitlements;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = WatchApp/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mettalabs.mori.watch;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = Debug;
+		};
 		3A246219AB8AD5C66DD954CF /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Mori/Mori.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Mori/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Mori;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Mori can use your birth date and biological sex from Apple Health to personalize your life timeline. You can enter them manually instead.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Mori uses your location during onboarding to estimate life expectancy for your country. Your precise location is not stored.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Mori lets you choose photos to attach to your private journal entries.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -305,15 +639,68 @@
 			};
 			name = Release;
 		};
+		437B0040C31D6A4C2720BE39 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = Widgets/MoriWidgets.entitlements;
+				INFOPLIST_FILE = Widgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mettalabs.mori.widgets;
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = "1,2";
+			};
+			name = Release;
+		};
+		70F53AC8FBBD7FF364147B85 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = WatchApp/MoriWatch.entitlements;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = WatchApp/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mettalabs.mori.watch;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = Release;
+		};
+		7A01EB3726AC70B9F1C34A3A /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = WatchWidgets/MoriWatchWidgets.entitlements;
+				INFOPLIST_FILE = WatchWidgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mettalabs.mori.watch.widgets;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = Release;
+		};
 		A8B0A5FC9530D0F8A2251C09 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = Mori/Mori.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				GENERATE_INFOPLIST_FILE = YES;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = Mori/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Mori;
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.lifestyle";
+				INFOPLIST_KEY_NSHealthShareUsageDescription = "Mori can use your birth date and biological sex from Apple Health to personalize your life timeline. You can enter them manually instead.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Mori uses your location during onboarding to estimate life expectancy for your country. Your precise location is not stored.";
+				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Mori lets you choose photos to attach to your private journal entries.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -328,6 +715,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -360,10 +748,12 @@
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = VU5N8NSBSN;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -382,17 +772,36 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.9;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Release;
+		};
+		D21A46BF1F6054754DC9DE6A /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				CODE_SIGN_ENTITLEMENTS = WatchWidgets/MoriWatchWidgets.entitlements;
+				INFOPLIST_FILE = WatchWidgets/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.mettalabs.mori.watch.widgets;
+				SDKROOT = watchos;
+				SKIP_INSTALL = YES;
+				TARGETED_DEVICE_FAMILY = 4;
+			};
+			name = Debug;
 		};
 		ECA9C868A06A1531138928A4 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_GENERATE_SWIFT_ASSET_SYMBOL_EXTENSIONS = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -425,10 +834,12 @@
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 1;
+				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = "";
+				DEVELOPMENT_TEAM = VU5N8NSBSN;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
+				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -454,10 +865,11 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = iphoneos;
+				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.9;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Debug;
 		};
@@ -473,6 +885,24 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
+		448A1A8D6146E8B205FAAE20 /* Build configuration list for PBXNativeTarget "MoriWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				20526F36C55DB0BFA66960E3 /* Debug */,
+				437B0040C31D6A4C2720BE39 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		548637EC9CB0162A42C9E830 /* Build configuration list for PBXNativeTarget "MoriWatchWidgets" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				D21A46BF1F6054754DC9DE6A /* Debug */,
+				7A01EB3726AC70B9F1C34A3A /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 		CD36627C70BAD78946F45A35 /* Build configuration list for PBXNativeTarget "Mori" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -482,7 +912,35 @@
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;
 		};
+		EFD13370F4D72A2AF2E65DDF /* Build configuration list for PBXNativeTarget "MoriWatch" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				366DB4D9769827DAB4842CEB /* Debug */,
+				70F53AC8FBBD7FF364147B85 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		4A4EBF23529CF385C7BB5077 /* XCRemoteSwiftPackageReference "posthog-ios" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/PostHog/posthog-ios";
+			requirement = {
+				kind = exactVersion;
+				version = 2.1.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		5A8EAA2EA6C97F5C50C2384D /* PostHog */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 4A4EBF23529CF385C7BB5077 /* XCRemoteSwiftPackageReference "posthog-ios" */;
+			productName = PostHog;
+		};
+/* End XCSwiftPackageProductDependency section */
 
 /* Begin XCVersionGroup section */
 		1390F6223B93D3335688EA02 /* Mori.xcdatamodeld */ = {

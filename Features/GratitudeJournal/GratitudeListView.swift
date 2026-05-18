@@ -15,15 +15,23 @@ struct GratitudeEntryPreview: View {
     var body: some View {
         Button(action: { onTap?() }) {
             VStack(alignment: .leading, spacing: 4) {
-                // Date
-                Text(formatDate(entry.date))
-                    .font(.custom("Poppins", size: 12))
-                    .foregroundColor(Color(hex: "788c5d"))
-                
-                // Content preview
-                Text(entry.content)
-                    .font(.custom("Poppins", size: 14))
-                    .foregroundColor(Color(hex: "666666"))
+                HStack(spacing: 8) {
+                    Text(formatDate(entry.date))
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(MoriColors.moriGold)
+
+                    EntrySourceBadge(entry: entry)
+
+                    if !entry.photoAttachments.isEmpty {
+                        Label("\(entry.photoAttachments.count)", systemImage: "photo")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(MoriColors.moriCreamMuted)
+                    }
+                }
+
+                Text(entry.displayContent)
+                    .font(.system(size: 14, weight: .regular))
+                    .foregroundColor(MoriColors.moriCream.opacity(0.82))
                     .lineLimit(3)
                     .multilineTextAlignment(.leading)
             }
@@ -31,7 +39,7 @@ struct GratitudeEntryPreview: View {
             .padding(.vertical, 12)
         }
         .buttonStyle(PlainButtonStyle())
-        .accessibility(label: Text("\(formatDate(entry.date)) entry: \(entry.content.prefix(50))..."))
+        .accessibility(label: Text("\(formatDate(entry.date)) \(entry.sourceLabel): \(entry.displayContent.prefix(50))..."))
     }
     
     private func formatDate(_ date: Date) -> String {
@@ -51,42 +59,43 @@ struct RecentEntriesSection: View {
         VStack(alignment: .leading, spacing: 16) {
             // Header
             HStack {
-                Text("📅")
-                    .font(.system(size: 18))
+                Image(systemName: "calendar")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(MoriColors.moriGold)
                 
-                Text("Recent Gratitude")
-                    .font(.custom("Poppins", size: 14))
-                    .foregroundColor(Color(hex: "333333"))
+                Text("Recent Journal")
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(MoriColors.moriCream)
                 
                 Spacer()
                 
                 if entries.count > 3 {
                     Button(action: { onViewAll?() }) {
                         Text("View All →")
-                            .font(.custom("Poppins", size: 14))
-                            .foregroundColor(Color(hex: "788c5d"))
+                            .font(.system(size: 14, weight: .medium))
+                            .foregroundColor(MoriColors.moriGold)
                     }
                     .accessibility(label: Text("View all gratitude entries"))
                 }
             }
             
             Divider()
-                .background(Color(hex: "E8E8E8"))
+                .background(MoriColors.moriHairline)
             
             if entries.isEmpty {
                 // Empty state
                 VStack(spacing: 8) {
                     Image(systemName: "book.closed")
                         .font(.system(size: 32))
-                        .foregroundColor(Color(hex: "CCCCCC"))
+                        .foregroundColor(MoriColors.moriCreamMuted)
                     
                     Text("No entries yet")
-                        .font(.custom("Poppins", size: 14))
-                        .foregroundColor(Color(hex: "666666"))
+                        .font(.system(size: 14, weight: .medium))
+                        .foregroundColor(MoriColors.moriCream)
                     
                     Text("Start your gratitude journey today")
-                        .font(.custom("Poppins", size: 12))
-                        .foregroundColor(Color(hex: "888888"))
+                        .font(.system(size: 12, weight: .regular))
+                        .foregroundColor(MoriColors.moriCreamMuted)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 24)
@@ -99,19 +108,37 @@ struct RecentEntriesSection: View {
                     
                     if entry.id != entries.prefix(3).last?.id {
                         Divider()
-                            .background(Color(hex: "F5F5F5"))
+                            .background(MoriColors.moriHairline)
                     }
                 }
             }
         }
         .padding(20)
-        .background(Color.white)
+        .background(MoriColors.moriDarkSurface)
         .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
         .overlay(
             RoundedRectangle(cornerRadius: 16)
-                .stroke(Color(hex: "E8E8E8"), lineWidth: 1)
+                .stroke(MoriColors.moriHairline, lineWidth: 1)
         )
+    }
+}
+
+private struct EntrySourceBadge: View {
+    let entry: GratitudeEntry
+
+    var body: some View {
+        Label(entry.sourceLabel, systemImage: entry.sourceSymbolName)
+            .font(.system(size: 11, weight: .semibold))
+            .foregroundColor(foregroundColor)
+            .lineLimit(1)
+    }
+
+    private var foregroundColor: Color {
+        switch entry.sourceKind {
+        case .journal: return MoriColors.moriCreamMuted
+        case .dailySpark: return MoriColors.moriGold
+        case .weeklyIntention: return MoriColors.sageGreen
+        }
     }
 }
 

@@ -16,21 +16,21 @@ struct PromptChipView: View {
     var body: some View {
         Button(action: { onTap?() }) {
             Text(prompt.shortName)
-                .font(.custom("Poppins", size: 13))
-                .foregroundColor(isSelected ? .white : Color(hex: "666666"))
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(isSelected ? MoriColors.moriDark : MoriColors.moriCreamMuted)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
                 .background(
                     isSelected 
-                        ? Color(hex: "788c5d") 
-                        : Color(hex: "F5F5F5")
+                        ? MoriColors.moriGold
+                        : MoriColors.moriDarkElevated
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 20)
                         .stroke(
                             isSelected 
-                                ? Color(hex: "788c5d") 
-                                : Color(hex: "E0E0E0"),
+                                ? MoriColors.moriGold
+                                : MoriColors.moriHairline,
                             lineWidth: 1
                         )
                 )
@@ -49,12 +49,13 @@ struct PromptSelectionSection: View {
         VStack(alignment: .leading, spacing: 12) {
             // Header
             HStack {
-                Text("💡")
-                    .font(.system(size: 18))
+                Image(systemName: "sparkle")
+                    .font(.system(size: 16, weight: .medium))
+                    .foregroundColor(MoriColors.moriGold)
                 
                 Text("Choose a prompt")
-                    .font(.custom("Poppins", size: 14))
-                    .foregroundColor(Color(hex: "666666"))
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(MoriColors.moriCreamMuted)
             }
             
             // Chips
@@ -72,12 +73,11 @@ struct PromptSelectionSection: View {
             }
         }
         .padding(20)
-        .background(Color.white)
+        .background(MoriColors.moriDarkSurface)
         .cornerRadius(16)
-        .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 2)
         .overlay(
             RoundedRectangle(cornerRadius: 16)
-                .stroke(Color(hex: "E8E8E8"), lineWidth: 1)
+                .stroke(MoriColors.moriHairline, lineWidth: 1)
         )
     }
 }

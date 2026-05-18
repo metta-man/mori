@@ -3,6 +3,7 @@ options:
   bundleIdPrefix: com.mettalabs
   deploymentTarget:
     iOS: "16.0"
+    watchOS: "10.0"
   xcodeVersion: "15.0"
   generateEmptyDirectories: true
 
@@ -19,21 +20,133 @@ settings:
     INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait"
     INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
 
+packages:
+  PostHog:
+    url: https://github.com/PostHog/posthog-ios
+    exactVersion: 2.1.0
+
 targets:
   Mori:
     type: application
     platform: iOS
     sources:
       - path: App
+        excludes:
+          - DemoContentView.swift
       - path: Features
+        excludes:
+          - DesignSystemDemo/**
+          - FocusGuard/**
       - path: Models
       - path: DesignSystem
+        excludes:
+          - MoriCompleteComponents.swift
+          - MoriDesignSystemDocumentation.md
       - path: Services
+      - path: Shared
+    dependencies:
+      - package: PostHog
+      - target: MoriWidgets
+        embed: true
+      - target: MoriWatch
+        embed: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.mettalabs.mori
         ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
+        CODE_SIGN_ENTITLEMENTS: Mori/Mori.entitlements
+        INFOPLIST_FILE: Mori/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
         INFOPLIST_KEY_CFBundleDisplayName: Mori
-        GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_KEY_LSApplicationCategoryType: "public.app-category.lifestyle"
+        INFOPLIST_KEY_NSHealthShareUsageDescription: "Mori can use your birth date and biological sex from Apple Health to personalize your life timeline. You can enter them manually instead."
+        INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "Mori uses your location during onboarding to estimate life expectancy for your country. Your precise location is not stored."
+        INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "Mori lets you choose photos to attach to your private journal entries."
+
+  MoriWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Widgets
+      - path: Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mettalabs.mori.widgets
+        CODE_SIGN_ENTITLEMENTS: Widgets/MoriWidgets.entitlements
+        INFOPLIST_FILE: Widgets/Info.plist
+        SKIP_INSTALL: YES
+
+  MoriWatch:
+    type: application
+    platform: watchOS
+    sources:
+      - path: WatchApp
+      - path: Shared
+    dependencies:
+      - target: MoriWatchWidgets
+        embed: true
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mettalabs.mori.watch
+        CODE_SIGN_ENTITLEMENTS: WatchApp/MoriWatch.entitlements
+        INFOPLIST_FILE: WatchApp/Info.plist
+        GENERATE_INFOPLIST_FILE: NO
+
+  MoriWatchWidgets:
+    type: app-extension
+    platform: watchOS
+    sources:
+      - path: WatchWidgets
+      - path: Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mettalabs.mori.watch.widgets
+        CODE_SIGN_ENTITLEMENTS: WatchWidgets/MoriWatchWidgets.entitlements
+        INFOPLIST_FILE: WatchWidgets/Info.plist
+        SKIP_INSTALL: YES
+
+schemes:
+  Mori:
+    build:
+      targets:
+        Mori: all
+    run:
+      config: Debug
+    profile:
+      config: Release
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  MoriWidgets:
+    build:
+      targets:
+        MoriWidgets: all
+        Mori: all
+    run:
+      config: Debug
+      askForAppToLaunch: true
+    profile:
+      config: Release
+      executable: Mori
+    analyze:
+      config: Debug
+    archive:
+      config: Release
+
+  MoriWatch:
+    build:
+      targets:
+        MoriWatch: all
+        MoriWatchWidgets: all
+    run:
+      config: Debug
+    profile:
+      config: Release
+      executable: MoriWatch
+    analyze:
+      config: Debug
+    archive:
+      config: Release

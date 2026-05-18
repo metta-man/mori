@@ -355,6 +355,15 @@ extension MoriColors {
     static let shadowSoft = Color.black.opacity(0.05)
     static let shadowMedium = Color.black.opacity(0.1)
     static let shadowStrong = Color.black.opacity(0.15)
+
+    static let gray = textSecondary
+    static let gold = moriGold
+}
+
+extension MoriTypography {
+    static let headline1 = Font.system(size: 34, weight: .semibold)
+    static let display2 = Font.system(size: 44, weight: .light, design: .rounded)
+    static let subhead = Font.system(size: 17, weight: .semibold)
 }
 
 // MARK: - CSS Variable Names (for documentation)
@@ -371,10 +380,15 @@ extension MoriColors {
 extension MoriColors {
     /// Deep Black - Dark theme background (#0A0A0A)
     static let moriDark = Color(hex: "#0A0A0A")
+    static let moriDarkElevated = Color(hex: "#111111")
+    static let moriDarkSurface = Color(hex: "#171717")
     
     /// Soft Cream - Text on dark backgrounds (#FDF5E6)
     static let moriCream = Color(hex: "#FDF5E6")
     
     /// Mori Cream Light - Subtle cream (#FFF8E7)
     static let moriCreamLight = Color(hex: "#FFF8E7")
+
+    static let moriCreamMuted = Color(hex: "#A9A39A")
+    static let moriHairline = moriGold.opacity(0.18)
 }

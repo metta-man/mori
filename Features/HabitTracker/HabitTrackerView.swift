@@ -11,12 +11,14 @@ struct HabitTrackerView: View {
     @State private var showToast = false
     @State private var toastMessage = ""
     @State private var showSettings = false
+    @State private var showPatternLog = false
     
     init() {
         _streak = State(initialValue: HabitStreak(currentStreak: 0, longestStreak: 0, lastWeekTrend: .stable))
         _monthlyStats = State(initialValue: MonthlyStats(
             month: Date(),
             positiveDays: 0,
+            neutralDays: 0,
             negativeDays: 0,
             bestStreak: 0,
             trend: .stable
@@ -27,26 +29,39 @@ struct HabitTrackerView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 32) {
-                    // Title
-                    Text("How was your day?")
-                        .font(.custom("CormorantGaramond-Regular", size: 36))
-                        .foregroundColor(MoriColors.text)
-                        .padding(.top, 32)
+                    VStack(spacing: 10) {
+                        Text("Daily Check-In")
+                            .font(.system(size: 34, weight: .semibold, design: .rounded))
+                            .foregroundColor(MoriColors.moriCream)
+
+                        Text("Mark the tone of today. Small records become a clearer memory.")
+                            .font(.system(size: 15, weight: .regular))
+                            .foregroundColor(MoriColors.moriCreamMuted)
+                            .multilineTextAlignment(.center)
+                    }
+                    .padding(.top, 32)
                     
                     // Habit buttons
-                    HStack(spacing: 48) {
+                    HStack(spacing: 22) {
                         HabitButton(
                             type: .positive,
-                            isSelected: todayEntry?.isPositive == true
+                            isSelected: todayEntry?.tone == .positive
                         ) {
-                            selectEntry(isPositive: true)
+                            selectEntry(tone: .positive)
+                        }
+
+                        HabitButton(
+                            type: .neutral,
+                            isSelected: todayEntry?.tone == .neutral
+                        ) {
+                            selectEntry(tone: .neutral)
                         }
                         
                         HabitButton(
                             type: .negative,
-                            isSelected: todayEntry?.isPositive == false
+                            isSelected: todayEntry?.tone == .negative
                         ) {
-                            selectEntry(isPositive: false)
+                            selectEntry(tone: .negative)
                         }
                     }
                     .padding(.vertical, 16)
@@ -65,26 +80,50 @@ struct HabitTrackerView: View {
                         .padding(.bottom, 48)
                 }
             }
-            .background(MoriColors.background.ignoresSafeArea())
+            .background(MoriColors.moriDark.ignoresSafeArea())
             .navigationTitle("Mori")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbarBackground(MoriColors.moriDark, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         showSettings = true
                     } label: {
                         Image(systemName: "gearshape")
-                            .foregroundColor(MoriColors.secondary)
+                            .foregroundColor(MoriColors.moriGold.opacity(0.8))
                     }
                 }
             }
             .sheet(isPresented: $showSettings) {
-                HabitSettingsSheet(isPresented: $showSettings)
+                SettingsView()
+                    .environmentObject(settings)
+            }
+            .sheet(isPresented: $showPatternLog) {
+                PatternLogSheet(
+                    existingEntry: todayEntry,
+                    onSave: { trigger, thought, feeling, responsePlan in
+                        saveTone(
+                            .negative,
+                            note: PatternLogSheet.summary(
+                                trigger: trigger,
+                                thought: thought,
+                                feeling: feeling,
+                                responsePlan: responsePlan
+                            ),
+                            trigger: trigger,
+                            thought: thought,
+                            feeling: feeling,
+                            responsePlan: responsePlan
+                        )
+                    }
+                )
             }
             .overlay(alignment: .bottom) {
                 if showToast {
                     Text(toastMessage)
-                        .font(.custom("Poppins-Regular", size: 14))
+                        .font(.system(size: 14, weight: .medium))
                         .foregroundColor(.white)
                         .padding(.horizontal, 24)
                         .padding(.vertical, 12)
@@ -96,6 +135,9 @@ struct HabitTrackerView: View {
                 }
             }
             .onAppear {
+                loadData()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: .habitDataDidChange)) { _ in
                 loadData()
             }
         }
@@ -115,28 +157,202 @@ struct HabitTrackerView: View {
         monthlyStats = HabitDataManager.shared.getMonthlyStats()
     }
     
-    private func selectEntry(isPositive: Bool) {
+    private func selectEntry(tone: HabitDayTone) {
         // Haptic feedback
         let generator = UIImpactFeedbackGenerator(style: .light)
         generator.impactOccurred()
-        
+
+        if tone == .negative {
+            showPatternLog = true
+            return
+        }
+
+        saveTone(tone)
+    }
+
+    private func saveTone(
+        _ tone: HabitDayTone,
+        note: String? = nil,
+        trigger: String? = nil,
+        thought: String? = nil,
+        feeling: String? = nil,
+        responsePlan: String? = nil
+    ) {
         // Save entry
-        let entry = HabitDataManager.shared.saveEntry(isPositive: isPositive)
-        
+        let entry = HabitDataManager.shared.saveEntry(
+            tone: tone,
+            note: note,
+            trigger: trigger,
+            thought: thought,
+            feeling: feeling,
+            responsePlan: responsePlan
+        )
+
         // Update local state
         todayEntry = entry
-        
+
         // Reload data
         streak = HabitDataManager.shared.getStreak()
         weeklyData = HabitDataManager.shared.getWeeklyEntries()
         monthlyStats = HabitDataManager.shared.getMonthlyStats()
-        
+
         // Show toast
-        toastMessage = isPositive ? "Day recorded as good" : "Day recorded as bad"
+        toastMessage = tone.toastMessage
         showToast = true
-        
+
         DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
             showToast = false
+        }
+    }
+}
+
+private struct PatternLogSheet: View {
+    let existingEntry: HabitEntry?
+    let onSave: (String, String, String, String) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var trigger: String
+    @State private var thought: String
+    @State private var feeling: String
+    @State private var responsePlan: String
+
+    init(
+        existingEntry: HabitEntry?,
+        onSave: @escaping (String, String, String, String) -> Void
+    ) {
+        self.existingEntry = existingEntry
+        self.onSave = onSave
+        _trigger = State(initialValue: existingEntry?.trigger ?? "")
+        _thought = State(initialValue: existingEntry?.thought ?? "")
+        _feeling = State(initialValue: existingEntry?.feeling ?? "")
+        _responsePlan = State(initialValue: existingEntry?.responsePlan ?? "")
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 18) {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Pattern Log")
+                            .font(.system(size: 28, weight: .semibold, design: .rounded))
+                            .foregroundColor(MoriColors.moriCream)
+
+                        Text("Notice the loop, then choose the next small move.")
+                            .font(.system(size: 15, weight: .regular))
+                            .foregroundColor(MoriColors.moriCreamMuted)
+                    }
+
+                    PatternLogField(
+                        title: "Trigger",
+                        placeholder: "What set it off?",
+                        text: $trigger
+                    )
+
+                    PatternLogField(
+                        title: "Thought",
+                        placeholder: "What did your mind say?",
+                        text: $thought
+                    )
+
+                    PatternLogField(
+                        title: "Feeling",
+                        placeholder: "Name the feeling or body signal.",
+                        text: $feeling
+                    )
+
+                    PatternLogField(
+                        title: "Next response",
+                        placeholder: "If this shows up again, I will...",
+                        text: $responsePlan
+                    )
+
+                    Button(action: save) {
+                        Label("Save pattern log", systemImage: "checkmark.circle.fill")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundColor(MoriColors.moriDark)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 14)
+                            .background(MoriColors.moriGold)
+                            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                    }
+                }
+                .padding(24)
+            }
+            .background(MoriColors.moriDark.ignoresSafeArea())
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarColorScheme(.dark, for: .navigationBar)
+            .toolbarBackground(MoriColors.moriDark, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Done", action: save)
+                        .foregroundColor(MoriColors.moriGold)
+                }
+            }
+        }
+        .presentationDetents([.large])
+    }
+
+    private func save() {
+        onSave(trigger, thought, feeling, responsePlan)
+        dismiss()
+    }
+
+    static func summary(
+        trigger: String,
+        thought: String,
+        feeling: String,
+        responsePlan: String
+    ) -> String? {
+        let rows = [
+            ("Trigger", trigger),
+            ("Thought", thought),
+            ("Feeling", feeling),
+            ("Next response", responsePlan)
+        ]
+            .map { label, value in (label, value.trimmingCharacters(in: .whitespacesAndNewlines)) }
+            .filter { !$0.1.isEmpty }
+
+        guard !rows.isEmpty else { return nil }
+        return rows.map { "\($0.0): \($0.1)" }.joined(separator: "\n")
+    }
+}
+
+private struct PatternLogField: View {
+    let title: String
+    let placeholder: String
+    @Binding var text: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(MoriColors.moriCreamMuted)
+
+            ZStack(alignment: .topLeading) {
+                if text.isEmpty {
+                    Text(placeholder)
+                        .font(.system(size: 15, weight: .regular))
+                        .foregroundColor(MoriColors.moriCreamMuted.opacity(0.76))
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 13)
+                }
+
+                TextEditor(text: $text)
+                    .font(.system(size: 15, weight: .regular))
+                    .foregroundColor(MoriColors.moriCream)
+                    .scrollContentBackground(.hidden)
+                    .background(Color.clear)
+                    .frame(minHeight: 74)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 8)
+            }
+            .background(MoriColors.moriDarkSurface)
+            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                    .stroke(MoriColors.moriHairline, lineWidth: 1)
+            )
         }
     }
 }
@@ -145,11 +361,13 @@ struct HabitTrackerView: View {
 struct HabitButton: View {
     enum ButtonType {
         case positive
+        case neutral
         case negative
         
         var symbol: String {
             switch self {
             case .positive: return "plus"
+            case .neutral: return "equal"
             case .negative: return "minus"
             }
         }
@@ -157,20 +375,23 @@ struct HabitButton: View {
         var label: String {
             switch self {
             case .positive: return "Good day"
-            case .negative: return "Bad day"
+            case .neutral: return "Neutral day"
+            case .negative: return "Difficult day"
             }
         }
         
         var color: Color {
             switch self {
-            case .positive: return Color(hex: "#788c5d")
-            case .negative: return Color(hex: "#FF6B35")
+            case .positive: return HabitDayTone.positive.color
+            case .neutral: return HabitDayTone.neutral.color
+            case .negative: return HabitDayTone.negative.color
             }
         }
         
         var backgroundColor: Color {
             switch self {
             case .positive: return Color(hex: "#F0F5EB")
+            case .neutral: return Color(hex: "#F5F1E8")
             case .negative: return Color(hex: "#FFF5F0")
             }
         }
@@ -212,8 +433,8 @@ struct HabitButton: View {
             .buttonStyle(PlainButtonStyle())
             
             Text(type.label)
-                .font(.custom("Poppins-Medium", size: 12))
-                .foregroundColor(MoriColors.secondary)
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(MoriColors.moriCreamMuted)
         }
     }
 }
@@ -226,18 +447,18 @@ struct StreakCard: View {
         VStack(spacing: 16) {
             HStack {
                 Text("Current Streak")
-                    .font(.custom("Poppins-Medium", size: 14))
-                    .foregroundColor(MoriColors.text)
+                    .font(.system(size: 14, weight: .medium))
+                    .foregroundColor(MoriColors.moriCream)
                 
                 Spacer()
                 
                 HStack(spacing: 4) {
                     Text("\(streak.currentStreak)")
-                        .font(.custom("CormorantGaramond-SemiBold", size: 24))
-                        .foregroundColor(MoriColors.accentAmber)
+                        .font(.system(size: 24, weight: .semibold, design: .rounded))
+                        .foregroundColor(MoriColors.moriGold)
                     Text("days")
-                        .font(.custom("Poppins-Regular", size: 12))
-                        .foregroundColor(MoriColors.secondary)
+                        .font(.system(size: 12, weight: .regular))
+                        .foregroundColor(MoriColors.moriCreamMuted)
                     
                     if streak.currentStreak >= 7 {
                         Text("🔥")
@@ -248,20 +469,23 @@ struct StreakCard: View {
             
             HStack {
                 Text("Longest Streak")
-                    .font(.custom("Poppins-Regular", size: 12))
-                    .foregroundColor(MoriColors.secondary)
+                    .font(.system(size: 12, weight: .regular))
+                    .foregroundColor(MoriColors.moriCreamMuted)
                 
                 Spacer()
                 
                 Text("\(streak.longestStreak) days")
-                    .font(.custom("Poppins-Regular", size: 12))
-                    .foregroundColor(MoriColors.secondary)
+                    .font(.system(size: 12, weight: .regular))
+                    .foregroundColor(MoriColors.moriCreamMuted)
             }
         }
         .padding(24)
-        .background(Color.white)
+        .background(MoriColors.moriDarkSurface)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(MoriColors.moriHairline, lineWidth: 1)
+        )
         .cornerRadius(16)
-        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
     }
 }
 
@@ -274,8 +498,8 @@ struct WeekVisualization: View {
     var body: some View {
         VStack(spacing: 16) {
             Text("Last 7 Days")
-                .font(.custom("Poppins-Medium", size: 14))
-                .foregroundColor(MoriColors.secondary)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(MoriColors.moriCreamMuted)
                 .frame(maxWidth: .infinity, alignment: .leading)
             
             HStack(spacing: 12) {
@@ -285,7 +509,7 @@ struct WeekVisualization: View {
                     
                     VStack(spacing: 8) {
                         Circle()
-                            .fill(dotColor(for: entry?.isPositive))
+                            .fill(entry?.tone.color ?? HabitDayTone.neutral.color.opacity(0.35))
                             .frame(width: 24, height: 24)
                             .overlay(
                                 Circle()
@@ -295,23 +519,19 @@ struct WeekVisualization: View {
                         
                         Text(dayLabels[index])
                             .font(.custom("Poppins-Regular", size: 10))
-                            .foregroundColor(MoriColors.softTaupe)
+                            .foregroundColor(MoriColors.moriCreamMuted)
                     }
                     .frame(maxWidth: .infinity)
                 }
             }
         }
         .padding(24)
-        .background(Color.white)
+        .background(MoriColors.moriDarkSurface)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(MoriColors.moriHairline, lineWidth: 1)
+        )
         .cornerRadius(16)
-        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
-    }
-    
-    private func dotColor(for isPositive: Bool?) -> Color {
-        guard let isPositive = isPositive else {
-            return MoriColors.warmGray
-        }
-        return isPositive ? Color(hex: "#788c5d") : Color(hex: "#FF6B35")
     }
     
     private func getWeekDate(offset: Int) -> Date {
@@ -332,7 +552,7 @@ struct MonthlyStatsCard: View {
     }
     
     private var percentage: Int {
-        let total = stats.positiveDays + stats.negativeDays
+        let total = stats.positiveDays + stats.neutralDays + stats.negativeDays
         guard total > 0 else { return 0 }
         return Int((Double(stats.positiveDays) / Double(total)) * 100)
     }
@@ -359,15 +579,16 @@ struct MonthlyStatsCard: View {
                 Image(systemName: "chart.bar")
                     .foregroundColor(MoriColors.secondary)
                 Text(monthString)
-                    .font(.custom("Poppins-SemiBold", size: 14))
-                    .foregroundColor(MoriColors.text)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(MoriColors.moriCream)
                 Spacer()
             }
             
             Divider()
             
-            StatRow(label: "Good days", value: "\(stats.positiveDays) (\(percentage)%)", valueColor: Color(hex: "#788c5d"))
-            StatRow(label: "Bad days", value: "\(stats.negativeDays)", valueColor: Color(hex: "#FF6B35"))
+            StatRow(label: "Good days", value: "\(stats.positiveDays) (\(percentage)%)", valueColor: HabitDayTone.positive.color)
+            StatRow(label: "Neutral days", value: "\(stats.neutralDays)", valueColor: HabitDayTone.neutral.color)
+            StatRow(label: "Bad days", value: "\(stats.negativeDays)", valueColor: HabitDayTone.negative.color)
             StatRow(label: "Best streak", value: "\(stats.bestStreak) days", valueColor: MoriColors.text)
             
             HStack {
@@ -384,15 +605,18 @@ struct MonthlyStatsCard: View {
             }
         }
         .padding(24)
-        .background(Color.white)
+        .background(MoriColors.moriDarkSurface)
+        .overlay(
+            RoundedRectangle(cornerRadius: 16)
+                .stroke(MoriColors.moriHairline, lineWidth: 1)
+        )
         .cornerRadius(16)
-        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
     }
     
     private var trendColor: Color {
         switch stats.trend {
-        case .improving: return Color(hex: "#788c5d")
-        case .declining: return Color(hex: "#FF6B35")
+        case .improving: return HabitDayTone.positive.color
+        case .declining: return HabitDayTone.negative.color
         case .stable: return MoriColors.secondary
         }
     }
@@ -407,38 +631,12 @@ struct StatRow: View {
     var body: some View {
         HStack {
             Text(label)
-                .font(.custom("Poppins-Regular", size: 14))
-                .foregroundColor(MoriColors.secondary)
+                .font(.system(size: 14, weight: .regular))
+                .foregroundColor(MoriColors.moriCreamMuted)
             Spacer()
             Text(value)
-                .font(.custom("Poppins-SemiBold", size: 14))
+                .font(.system(size: 14, weight: .semibold))
                 .foregroundColor(valueColor)
-        }
-    }
-}
-
-// MARK: - Habit Settings Sheet
-struct HabitSettingsSheet: View {
-    @Binding var isPresented: Bool
-    
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section("Data") {
-                    Button("Clear All Data", role: .destructive) {
-                        // Clear data
-                    }
-                }
-            }
-            .navigationTitle("Habit Settings")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button("Done") {
-                        isPresented = false
-                    }
-                }
-            }
         }
     }
 }
@@ -447,4 +645,34 @@ struct HabitSettingsSheet: View {
 #Preview {
     HabitTrackerView()
         .environmentObject(UserSettings())
+}
+
+extension HabitDayTone {
+    var color: Color {
+        switch self {
+        case .positive: return Color(hex: "#788C5D")
+        case .neutral: return MoriColors.morningGold
+        case .negative: return Color(hex: "#FF6B35")
+        }
+    }
+
+    var mutedColor: Color {
+        color.opacity(0.42)
+    }
+
+    var title: String {
+        switch self {
+        case .positive: return "Good"
+        case .neutral: return "Neutral"
+        case .negative: return "Difficult"
+        }
+    }
+
+    var toastMessage: String {
+        switch self {
+        case .positive: return "Recorded as a good day"
+        case .neutral: return "Recorded as a neutral day"
+        case .negative: return "Recorded as a difficult day"
+        }
+    }
 }

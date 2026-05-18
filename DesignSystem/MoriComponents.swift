@@ -351,7 +351,7 @@ struct MoriErrorState: View {
                 .font(.system(size: 48))
                 .foregroundColor(MoriColors.softTaupe.opacity(0.6))
             
-            Text("網絡有點不穩定")
+            Text("The connection is unstable")
                 .font(MoriTypography.title2)
                 .foregroundColor(MoriColors.warmCharcoal)
             
@@ -360,7 +360,7 @@ struct MoriErrorState: View {
                 .foregroundColor(MoriColors.softTaupe)
                 .multilineTextAlignment(.center)
             
-            MoriSecondaryButton(title: "重試", action: retryAction)
+            MoriSecondaryButton(title: "Retry", action: retryAction)
                 .padding(.horizontal, MoriSpacing.space7)
                 .padding(.top, MoriSpacing.space3)
         }
@@ -444,9 +444,9 @@ struct MoriComponents_Previews: PreviewProvider {
             
             MoriEmptyState(
                 icon: "book.closed",
-                title: "開始你的第一篇日記",
-                message: "記錄你的想法和感受",
-                buttonTitle: "寫日記"
+                title: "Start your first journal entry",
+                message: "Record your thoughts and feelings",
+                buttonTitle: "Write"
             ) {
                 print("Tapped")
             }

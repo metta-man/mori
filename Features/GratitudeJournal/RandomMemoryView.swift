@@ -71,20 +71,14 @@ struct RandomMemoryModal: View {
                     .foregroundColor(Color(hex: "788c5d"))
                     .padding(.top, 24)
                 
-                // Prompt (if any)
-                if let prompt = entry.promptType {
-                    HStack {
-                        Text("💡")
-                        Text(prompt.displayText)
-                    }
+                Label(entry.sourceLabel, systemImage: entry.sourceSymbolName)
                     .font(.custom("Poppins", size: 14))
-                    .foregroundColor(Color(hex: "666666"))
+                    .foregroundColor(sourceColor(for: entry))
                     .padding(.top, 4)
-                }
                 
                 // Content
                 ScrollView {
-                    Text(entry.content)
+                    Text(entry.displayContent)
                         .font(.custom("Poppins", size: 15))
                         .foregroundColor(Color(hex: "333333"))
                         .lineSpacing(1.6)
@@ -143,6 +137,14 @@ struct RandomMemoryModal: View {
         let formatter = DateFormatter()
         formatter.dateStyle = .long
         return formatter.string(from: date)
+    }
+
+    private func sourceColor(for entry: GratitudeEntry) -> Color {
+        switch entry.sourceKind {
+        case .journal: return Color(hex: "666666")
+        case .dailySpark: return Color(hex: "B8942D")
+        case .weeklyIntention: return Color(hex: "788c5d")
+        }
     }
 }
 
