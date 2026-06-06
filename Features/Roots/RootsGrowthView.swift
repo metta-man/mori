@@ -290,8 +290,11 @@ private struct RecentSeedRow: View {
         case .urgeCheckIn: return "hand.raised"
         case .replacementAction: return "arrow.triangle.turn.up.right.circle"
         case .dailyFocus: return "target"
+        case .dailySpark: return "sparkle.magnifyingglass"
         case .lifeGridProof: return "square.grid.3x3"
         case .journal: return "book.closed"
+        case .screenTimeLimitKept: return "lock.shield"
+        case .screenTimeThresholdReached: return "exclamationmark.triangle"
         }
     }
 }

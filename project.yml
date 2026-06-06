@@ -48,6 +48,8 @@ targets:
       - package: PostHog
       - target: MoriWidgets
         embed: true
+      - target: MoriScreenTimeMonitor
+        embed: true
       - target: MoriWatch
         embed: true
     settings:
@@ -63,6 +65,19 @@ targets:
         INFOPLIST_KEY_NSHealthShareUsageDescription: "Mori can use your birth date and biological sex from Apple Health to personalize your life timeline. You can enter them manually instead."
         INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "Mori uses your location during onboarding to estimate life expectancy for your country. Your precise location is not stored."
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "Mori lets you choose photos to attach to your private journal entries."
+
+  MoriScreenTimeMonitor:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: ScreenTimeMonitor
+      - path: Shared
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mettalabs.mori.screentimemonitor
+        CODE_SIGN_ENTITLEMENTS: ScreenTimeMonitor/MoriScreenTimeMonitor.entitlements
+        INFOPLIST_FILE: ScreenTimeMonitor/Info.plist
+        SKIP_INSTALL: YES
 
   MoriWidgets:
     type: app-extension

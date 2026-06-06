@@ -7,12 +7,15 @@ final class MoriClarityStore: ObservableObject {
     @Published private(set) var actions: [MoriMindfulAction] = []
     @Published private(set) var selectedTopics: Set<PulseTopic> = PulseTopic.defaultSelected
     @Published private(set) var customTopics: [String] = []
+    @Published private(set) var customTopicSymbols: [String: String] = [:]
     @Published private(set) var latestPulse: MoriDailyPulse?
 
     private let actionsKey = "mori_clarity_actions"
     private let topicsKey = "mori_pulse_selected_topics"
     private let customTopicsKey = "mori_pulse_custom_topics"
+    private let customTopicSymbolsKey = "mori_pulse_custom_topic_symbols"
     private let latestPulseKey = "mori_latest_pulse"
+    private let firstSeedBonus = 2
     private let userDefaults = UserDefaults.standard
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
@@ -21,6 +24,7 @@ final class MoriClarityStore: ObservableObject {
         actions = load([MoriMindfulAction].self, forKey: actionsKey) ?? []
         selectedTopics = sanitizedTopics(Set(load([PulseTopic].self, forKey: topicsKey) ?? Array(selectedTopics)))
         customTopics = load([String].self, forKey: customTopicsKey) ?? []
+        customTopicSymbols = load([String: String].self, forKey: customTopicSymbolsKey) ?? [:]
         if !customTopics.isEmpty {
             selectedTopics.insert(.custom)
         }
@@ -39,7 +43,7 @@ final class MoriClarityStore: ObservableObject {
     }
 
     func toggleTopic(_ topic: PulseTopic) {
-        if selectedTopics.contains(topic), selectedTopics.count > 1 {
+        if selectedTopics.contains(topic), selectedTopicLabels.count > 1 {
             selectedTopics.remove(topic)
         } else {
             selectedTopics.insert(topic)
@@ -58,24 +62,60 @@ final class MoriClarityStore: ObservableObject {
         )
     }
 
-    func addCustomTopic(_ topic: String) {
+    @discardableResult
+    func recordDailyOnce(
+        kind: MoriMindfulActionKind,
+        title: String,
+        seeds: Int,
+        minutes: Int = 0,
+        note: String? = nil,
+        date: Date = Date()
+    ) -> MoriMindfulAction? {
+        let key = MoriDateKey.value(for: date)
+        let alreadyRecorded = actions.contains { action in
+            action.dateKey == key &&
+            action.kind == kind &&
+            action.title.caseInsensitiveCompare(title) == .orderedSame
+        }
+
+        guard !alreadyRecorded else { return nil }
+
+        return record(
+            kind: kind,
+            title: title,
+            seeds: seeds,
+            minutes: minutes,
+            note: note,
+            createdAt: date
+        )
+    }
+
+    func addCustomTopic(_ topic: String, symbolName: String = MoriCustomPulseTopicIcon.leaf.rawValue) {
         let trimmed = topic.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !trimmed.isEmpty else { return }
         guard !customTopics.contains(where: { $0.caseInsensitiveCompare(trimmed) == .orderedSame }) else { return }
 
         customTopics.append(trimmed)
+        customTopicSymbols[trimmed] = symbolName
         selectedTopics.insert(.custom)
         persist(customTopics, forKey: customTopicsKey)
+        persist(customTopicSymbols, forKey: customTopicSymbolsKey)
         persist(Array(selectedTopics), forKey: topicsKey)
     }
 
     func removeCustomTopic(_ topic: String) {
         customTopics.removeAll { $0 == topic }
+        customTopicSymbols.removeValue(forKey: topic)
         if customTopics.isEmpty {
             selectedTopics.remove(.custom)
         }
         persist(customTopics, forKey: customTopicsKey)
+        persist(customTopicSymbols, forKey: customTopicSymbolsKey)
         persist(Array(selectedTopics), forKey: topicsKey)
+    }
+
+    func symbolName(forCustomTopic topic: String) -> String {
+        customTopicSymbols[topic] ?? MoriCustomPulseTopicIcon.leaf.rawValue
     }
 
     func savePulse(_ pulse: MoriDailyPulse) {
@@ -89,14 +129,18 @@ final class MoriClarityStore: ObservableObject {
         title: String,
         seeds: Int,
         minutes: Int = 0,
-        note: String? = nil
+        note: String? = nil,
+        createdAt: Date = Date()
     ) -> MoriMindfulAction {
+        let baseSeeds = max(0, seeds)
+        let bonus = firstSeedBonusIfNeeded(for: baseSeeds, on: createdAt)
         let action = MoriMindfulAction(
             kind: kind,
             title: title,
-            seeds: max(0, seeds),
+            seeds: baseSeeds + bonus,
             minutes: max(0, minutes),
-            note: note?.trimmingCharacters(in: .whitespacesAndNewlines)
+            note: note?.trimmingCharacters(in: .whitespacesAndNewlines),
+            createdAt: createdAt
         )
         actions.insert(action, at: 0)
         pruneOldActions()
@@ -111,20 +155,25 @@ final class MoriClarityStore: ObservableObject {
 
     func nourishedDomains(for date: Date = Date()) -> [LifeDomain: Int] {
         var scores = Dictionary(uniqueKeysWithValues: LifeDomain.allCases.map { ($0, 0) })
+        let dateActions = actions(for: date)
 
-        for action in actions(for: date) {
+        for action in dateActions {
             let weight = max(1, action.seeds)
             for domain in MoriPractice.domains(for: action) {
                 scores[domain, default: 0] += weight
             }
         }
 
-        if Calendar.current.isDateInToday(date), DailySparkStore.shared.todayEntry != nil {
+        if Calendar.current.isDateInToday(date),
+           DailySparkStore.shared.todayEntry != nil,
+           !dateActions.contains(where: { $0.kind == .dailySpark }) {
             scores[.mind, default: 0] += 1
             scores[.craft, default: 0] += 1
         }
 
-        if Calendar.current.isDateInToday(date), HabitDataManager.shared.getTodayEntry() != nil {
+        if Calendar.current.isDateInToday(date),
+           HabitDataManager.shared.getTodayEntry() != nil,
+           !dateActions.contains(where: { $0.kind == .dailyFocus }) {
             scores[.body, default: 0] += 1
             scores[.rest, default: 0] += 1
         }
@@ -166,12 +215,19 @@ final class MoriClarityStore: ObservableObject {
         let reclaimedMinutes = todayActions
             .filter { $0.kind == .pulseRead || $0.kind == .resetAction }
             .reduce(pulseMinutes) { $0 + $1.minutes }
+        let protectedFocusMinutes = todayActions
+            .filter { $0.kind == .screenTimeLimitKept }
+            .reduce(0) { $0 + $1.minutes }
+        let screenTimeThresholdsReached = MoriScreenTimeSignalStore.signals().count +
+            todayActions.filter { $0.kind == .screenTimeThresholdReached }.count
 
-        let sparkBonus = DailySparkStore.shared.todayEntry == nil ? 0 : 2
-        let habitBonus = habitScoreBonus()
-        let weeklyBonus = settings.hasCompletedWeeklyIntention ? 4 : 0
+        let sparkBonus = DailySparkStore.shared.todayEntry == nil || todayActions.contains(where: { $0.kind == .dailySpark }) ? 0 : 2
+        let habitBonus = HabitDataManager.shared.getTodayEntry() == nil || todayActions.contains(where: { $0.kind == .dailyFocus }) ? 0 : habitScoreBonus()
+        let weeklyBonus = settings.hasCompletedWeeklyIntention && !todayActions.contains(where: { $0.kind == .lifeGridProof }) ? 4 : 0
         let seeds = actionSeeds + sparkBonus + habitBonus + weeklyBonus
-        let clarityScore = min(100, 46 + seeds * 4 + min(16, quietMinutes / 2) + min(12, reclaimedMinutes / 5) + min(10, settleMinutes / 3))
+        let screenTimeReward = min(10, protectedFocusMinutes / 5)
+        let screenTimePenalty = min(12, screenTimeThresholdsReached * 4)
+        let clarityScore = max(0, min(100, 46 + seeds * 4 + min(16, quietMinutes / 2) + min(12, reclaimedMinutes / 5) + min(10, settleMinutes / 3) + screenTimeReward - screenTimePenalty))
         let bloom = min(1, Double(seeds) / 24.0 + (settings.hasCompletedWeeklyIntention ? 0.18 : 0))
 
         return MoriClarityMetrics(
@@ -183,7 +239,11 @@ final class MoriClarityStore: ObservableObject {
             settleMinutesToday: settleMinutes,
             settleSessionsToday: settleActions.count,
             reclaimedMinutesToday: reclaimedMinutes,
-            mindfulActionsToday: todayActions.count + (DailySparkStore.shared.todayEntry == nil ? 0 : 1)
+            screenTimeThresholdsReachedToday: screenTimeThresholdsReached,
+            protectedFocusMinutesToday: protectedFocusMinutes,
+            mindfulActionsToday: todayActions.count +
+                (DailySparkStore.shared.todayEntry == nil || todayActions.contains(where: { $0.kind == .dailySpark }) ? 0 : 1) +
+                (HabitDataManager.shared.getTodayEntry() == nil || todayActions.contains(where: { $0.kind == .dailyFocus }) ? 0 : 1)
         )
     }
 
@@ -252,6 +312,15 @@ final class MoriClarityStore: ObservableObject {
     private func pruneOldActions() {
         guard let cutoff = Calendar.current.date(byAdding: .day, value: -90, to: Date()) else { return }
         actions.removeAll { $0.createdAt < cutoff }
+    }
+
+    private func firstSeedBonusIfNeeded(for baseSeeds: Int, on date: Date) -> Int {
+        guard baseSeeds > 0 else { return 0 }
+        let key = MoriDateKey.value(for: date)
+        let hasSeedToday = actions.contains { action in
+            action.dateKey == key && action.seeds > 0
+        }
+        return hasSeedToday ? 0 : firstSeedBonus
     }
 
     private func sanitizedTopics(_ topics: Set<PulseTopic>) -> Set<PulseTopic> {

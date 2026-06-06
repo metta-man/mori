@@ -5,12 +5,14 @@ struct QuietModeView: View {
 
     @EnvironmentObject var settings: UserSettings
     @StateObject private var clarityStore = MoriClarityStore.shared
+    @StateObject private var shieldManager = FocusShieldManager.shared
     @State private var selectedMinutes = 10
     @State private var secondsRemaining = 10 * 60
     @State private var isRunning = false
     @State private var urgeReason = ""
     @State private var selectedReplacement: QuietReplacementAction?
     @State private var didCompleteTimer = false
+    @State private var quietShieldWasActive = false
 
     private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     private let minuteOptions = [5, 10, 20, 30]
@@ -33,6 +35,8 @@ struct QuietModeView: View {
                         settleSuggestion
 
                         timerCard
+
+                        ScreenTimeLimitControls(contextTitle: "Quiet Mode")
 
                         urgeCheckIn
 
@@ -159,9 +163,12 @@ struct QuietModeView: View {
 
             HStack(spacing: 12) {
                 Button {
-                    isRunning.toggle()
                     if isRunning {
+                        isRunning = false
+                    } else {
+                        isRunning = true
                         didCompleteTimer = false
+                        startQuietShieldIfPossible()
                     }
                 } label: {
                     Label(isRunning ? "Pause" : "Start", systemImage: isRunning ? "pause.fill" : "play.fill")
@@ -178,6 +185,8 @@ struct QuietModeView: View {
                     isRunning = false
                     secondsRemaining = selectedMinutes * 60
                     didCompleteTimer = false
+                    quietShieldWasActive = false
+                    shieldManager.endShield(mode: .quiet)
                 } label: {
                     Image(systemName: "arrow.counterclockwise")
                         .font(.system(size: 15, weight: .bold))
@@ -329,6 +338,22 @@ struct QuietModeView: View {
                     symbolName: "clock",
                     tint: MoriColors.forestClay
                 )
+
+                MoriMetricTile(
+                    title: "Protected",
+                    value: "\(metrics.protectedFocusMinutesToday)m",
+                    detail: "app-limited focus",
+                    symbolName: "lock.shield",
+                    tint: MoriColors.forestFern
+                )
+
+                MoriMetricTile(
+                    title: "Limits",
+                    value: "\(metrics.screenTimeThresholdsReachedToday)",
+                    detail: "threshold alerts",
+                    symbolName: "exclamationmark.triangle",
+                    tint: MoriColors.forestRoot
+                )
             }
         }
     }
@@ -355,6 +380,7 @@ struct QuietModeView: View {
         isRunning = false
         guard !didCompleteTimer else { return }
         didCompleteTimer = true
+        shieldManager.endShield(mode: .quiet)
         clarityStore.record(
             kind: .quietTimer,
             title: "\(selectedMinutes) minute quiet timer",
@@ -362,6 +388,27 @@ struct QuietModeView: View {
             minutes: selectedMinutes,
             note: "Completed a social detox timer"
         )
+        if quietShieldWasActive {
+            clarityStore.record(
+                kind: .screenTimeLimitKept,
+                title: "Protected Quiet Mode",
+                seeds: 1,
+                minutes: selectedMinutes,
+                note: "Kept selected apps limited during Quiet Mode"
+            )
+            quietShieldWasActive = false
+        }
+    }
+
+    private func startQuietShieldIfPossible() {
+        guard shieldManager.isAuthorized, shieldManager.hasSelection else {
+            quietShieldWasActive = false
+            return
+        }
+
+        let endDate = Date().addingTimeInterval(TimeInterval(max(1, secondsRemaining)))
+        shieldManager.startShield(mode: .quiet, endDate: endDate)
+        quietShieldWasActive = shieldManager.activeSession?.mode == .quiet
     }
 }
 

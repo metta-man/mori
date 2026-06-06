@@ -193,6 +193,7 @@ private struct SettleTimerDetailView: View {
     @State private var sessionStartedAt: Date?
     @State private var lastIntervalBellElapsed = 0
     @State private var completedSession: SettleSession?
+    @State private var completedSettleSeeds: Int?
     @State private var showLeaveDialog = false
 
     private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
@@ -229,6 +230,7 @@ private struct SettleTimerDetailView: View {
                             selectedMinutes = recommendedMinutes
                             secondsRemaining = recommendedMinutes * 60
                             completedSession = nil
+                            completedSettleSeeds = nil
                         },
                         onStartRecommendation: {
                             guard timerState.canChangeDuration else { return }
@@ -273,6 +275,7 @@ private struct SettleTimerDetailView: View {
             guard timerState.canChangeDuration else { return }
             secondsRemaining = newValue * 60
             completedSession = nil
+            completedSettleSeeds = nil
         }
         .onReceive(ticker) { _ in
             tick()
@@ -351,7 +354,7 @@ private struct SettleTimerDetailView: View {
             .accessibilityLabel("Settle timer \(timeText), \(timerState.label)")
 
             if let completedSession {
-                completionBanner(completedSession)
+                completionBanner(completedSession, seedsOverride: completedSettleSeeds)
             }
 
             controlRow
@@ -537,6 +540,7 @@ private struct SettleTimerDetailView: View {
         secondsRemaining = selectedMinutes * 60
         timerState = .idle
         completedSession = nil
+        completedSettleSeeds = nil
         lastIntervalBellElapsed = 0
     }
 
@@ -566,7 +570,7 @@ private struct SettleTimerDetailView: View {
             intervalBellMinutes: activeIntervalBellMinutes
         )
 
-        clarityStore.record(
+        let action = clarityStore.record(
             kind: .settleSession,
             title: session.title,
             seeds: session.seedsEarned,
@@ -575,6 +579,7 @@ private struct SettleTimerDetailView: View {
         )
 
         completedSession = session
+        completedSettleSeeds = action.seeds
         sessionStartedAt = nil
         lastIntervalBellElapsed = 0
 
@@ -949,7 +954,7 @@ private struct BreathingPracticeDetailView: View {
         cleanupCues()
 
         let seeds = max(1, breathingMinutes / 2)
-        clarityStore.record(
+        let action = clarityStore.record(
             kind: .breathingSession,
             title: "\(breathingPreset.title) breathing",
             seeds: seeds,
@@ -958,7 +963,7 @@ private struct BreathingPracticeDetailView: View {
         )
         completedBreathingSummary = MindfulCompletionSummary(
             title: "Breath settled",
-            seeds: seeds,
+            seeds: action.seeds,
             minutes: breathingMinutes,
             symbolName: "wind.circle.fill",
             tint: MoriColors.forestMist
@@ -1032,12 +1037,14 @@ private struct BreathingPracticeDetailView: View {
 private struct PomodoroPracticeDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var clarityStore = MoriClarityStore.shared
+    @StateObject private var shieldManager = FocusShieldManager.shared
 
     @AppStorage("mori_settle_sound_enabled") private var soundEnabled: Bool = true
     @AppStorage("mori_settle_pomodoro_focus_minutes") private var pomodoroFocusMinutes: Int = 25
     @AppStorage("mori_settle_pomodoro_short_break_minutes") private var pomodoroShortBreakMinutes: Int = 5
     @AppStorage("mori_settle_pomodoro_long_break_minutes") private var pomodoroLongBreakMinutes: Int = 15
     @AppStorage("mori_settle_pomodoro_cycles") private var pomodoroCycles: Int = 4
+    @AppStorage("mori_settle_pomodoro_break_breathing") private var pomodoroBreakBreathingRaw: String = MoriPomodoroBreakBreathing.none.rawValue
 
     @State private var pomodoroState: SettleTimerState = .idle
     @State private var pomodoroPhase: MoriPomodoroPhase = .focus
@@ -1046,9 +1053,16 @@ private struct PomodoroPracticeDetailView: View {
     @State private var pomodoroFocusSecondsCompleted = 0
     @State private var pomodoroBreakSecondsCompleted = 0
     @State private var completedPomodoroSummary: MindfulCompletionSummary?
+    @State private var lastBreakBreathingPhase: BreathingCyclePhase?
     @State private var showLeaveDialog = false
+    @State private var pomodoroShieldWasActive = false
 
     private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+
+    private var pomodoroBreakBreathing: MoriPomodoroBreakBreathing {
+        get { MoriPomodoroBreakBreathing(rawValue: pomodoroBreakBreathingRaw) ?? .none }
+        nonmutating set { pomodoroBreakBreathingRaw = newValue.rawValue }
+    }
 
     var body: some View {
         MoriForestBackground {
@@ -1190,9 +1204,13 @@ private struct PomodoroPracticeDetailView: View {
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Pomodoro timer \(pomodoroTimeText), \(pomodoroPhase.title)")
 
+            pomodoroBreakBreathingCue
+
             if pomodoroState.canChangeDuration {
                 pomodoroSettings
             }
+
+            ScreenTimeLimitControls(contextTitle: "Pomodoro")
 
             if let completedPomodoroSummary {
                 mindfulCompletionBanner(completedPomodoroSummary)
@@ -1209,6 +1227,29 @@ private struct PomodoroPracticeDetailView: View {
             Stepper("Short break \(pomodoroShortBreakMinutes)m", value: $pomodoroShortBreakMinutes, in: 1...30, step: 1)
             Stepper("Long break \(pomodoroLongBreakMinutes)m", value: $pomodoroLongBreakMinutes, in: 5...45, step: 5)
             Stepper("Cycles \(pomodoroCycles)", value: $pomodoroCycles, in: 1...8, step: 1)
+
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Break breathing")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(MoriColors.forestMuted)
+
+                FlowLayout(spacing: 8) {
+                    ForEach(MoriPomodoroBreakBreathing.allCases) { option in
+                        Button {
+                            pomodoroBreakBreathing = option
+                            lastBreakBreathingPhase = nil
+                        } label: {
+                            MoriPill(
+                                title: option.title,
+                                symbolName: option.symbolName,
+                                isSelected: pomodoroBreakBreathing == option,
+                                tint: option.tint
+                            )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
         }
         .font(.system(size: 15, weight: .medium))
         .foregroundColor(MoriColors.forestCanopy)
@@ -1293,10 +1334,50 @@ private struct PomodoroPracticeDetailView: View {
         formatTime(pomodoroSecondsRemaining)
     }
 
+    @ViewBuilder
+    private var pomodoroBreakBreathingCue: some View {
+        if pomodoroPhase.isBreak,
+           let preset = pomodoroBreakBreathing.preset {
+            let state = preset.phase(at: pomodoroCurrentPhaseElapsedSeconds)
+            HStack(alignment: .center, spacing: 12) {
+                Image(systemName: preset.symbolName)
+                    .font(.system(size: 17, weight: .semibold))
+                    .foregroundColor(preset.tint)
+                    .frame(width: 36, height: 36)
+                    .background(preset.tint.opacity(0.12))
+                    .clipShape(Circle())
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(state.label)
+                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                        .foregroundColor(MoriColors.forestCanopy)
+
+                    Text("\(preset.title) · \(preset.timingDescription)")
+                        .font(.system(size: 12, weight: .regular))
+                        .foregroundColor(MoriColors.forestMuted)
+                }
+
+                Spacer(minLength: 0)
+            }
+            .padding(12)
+            .background(preset.tint.opacity(0.10))
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+    }
+
+    private var pomodoroCurrentPhaseElapsedSeconds: Int {
+        max(0, pomodoroPhase.durationSeconds(
+            focusMinutes: pomodoroFocusMinutes,
+            shortBreakMinutes: pomodoroShortBreakMinutes,
+            longBreakMinutes: pomodoroLongBreakMinutes
+        ) - pomodoroSecondsRemaining)
+    }
+
     private func startPomodoro() {
         resetPomodoroClock()
         pomodoroState = .running
         completedPomodoroSummary = nil
+        startPomodoroShieldIfPossible()
 
         if soundEnabled {
             SettleBellService.shared.playStartBell()
@@ -1310,6 +1391,10 @@ private struct PomodoroPracticeDetailView: View {
         pomodoroCompletedCycles = 0
         pomodoroFocusSecondsCompleted = 0
         pomodoroBreakSecondsCompleted = 0
+        lastBreakBreathingPhase = nil
+        pomodoroShieldWasActive = false
+        shieldManager.endShield(mode: .pomodoro)
+        SettleBellService.shared.stopBreathingCues()
     }
 
     private func tickPomodoro() {
@@ -1321,6 +1406,7 @@ private struct PomodoroPracticeDetailView: View {
                 pomodoroFocusSecondsCompleted += 1
             } else if pomodoroPhase.isBreak {
                 pomodoroBreakSecondsCompleted += 1
+                emitPomodoroBreakBreathingCue()
             }
         }
 
@@ -1339,18 +1425,26 @@ private struct PomodoroPracticeDetailView: View {
                 endPomodoro(recordCompletion: true)
             } else if pomodoroCompletedCycles.isMultiple(of: 4) {
                 playPomodoroTransitionBell()
+                shieldManager.endShield(mode: .pomodoro)
                 pomodoroPhase = .longBreak
                 pomodoroSecondsRemaining = pomodoroLongBreakMinutes * 60
+                lastBreakBreathingPhase = nil
+                emitPomodoroBreakBreathingCue(force: true)
             } else {
                 playPomodoroTransitionBell()
+                shieldManager.endShield(mode: .pomodoro)
                 pomodoroPhase = .shortBreak
                 pomodoroSecondsRemaining = pomodoroShortBreakMinutes * 60
+                lastBreakBreathingPhase = nil
+                emitPomodoroBreakBreathingCue(force: true)
             }
 
         case .shortBreak, .longBreak:
+            SettleBellService.shared.stopBreathingCues()
             playPomodoroTransitionBell()
             pomodoroPhase = .focus
             pomodoroSecondsRemaining = pomodoroFocusMinutes * 60
+            startPomodoroShieldIfPossible()
 
         case .completed:
             endPomodoro(recordCompletion: true)
@@ -1366,23 +1460,37 @@ private struct PomodoroPracticeDetailView: View {
     private func endPomodoro(recordCompletion: Bool) {
         let actualMinutes = max(1, Int((Double(pomodoroFocusSecondsCompleted + pomodoroBreakSecondsCompleted) / 60.0).rounded(.up)))
         let completedCycles = pomodoroCompletedCycles
+        let hadProtectedFocus = pomodoroShieldWasActive
 
         pomodoroState = recordCompletion ? .completed : .idle
+        pomodoroShieldWasActive = false
+        shieldManager.endShield(mode: .pomodoro)
         SettleBellService.shared.stop()
+        SettleBellService.shared.stopBreathingCues()
+        lastBreakBreathingPhase = nil
 
         if recordCompletion, pomodoroFocusSecondsCompleted > 0 {
             let focusMinutes = Int((Double(pomodoroFocusSecondsCompleted) / 60.0).rounded(.down))
             let seeds = min(12, max(2, focusMinutes / 10 + completedCycles))
-            clarityStore.record(
+            let action = clarityStore.record(
                 kind: .pomodoroSession,
                 title: "\(completedCycles)-cycle Pomodoro",
                 seeds: seeds,
                 minutes: actualMinutes,
                 note: "Completed a mindful focus cycle"
             )
+            if hadProtectedFocus {
+                clarityStore.record(
+                    kind: .screenTimeLimitKept,
+                    title: "Protected Pomodoro",
+                    seeds: 1,
+                    minutes: focusMinutes,
+                    note: "Kept selected apps limited during Pomodoro focus"
+                )
+            }
             completedPomodoroSummary = MindfulCompletionSummary(
                 title: "Focus cycle complete",
-                seeds: seeds,
+                seeds: action.seeds,
                 minutes: actualMinutes,
                 symbolName: "timer.circle.fill",
                 tint: MoriColors.forestClay
@@ -1396,12 +1504,43 @@ private struct PomodoroPracticeDetailView: View {
         }
     }
 
+    private func startPomodoroShieldIfPossible() {
+        guard pomodoroPhase == .focus,
+              shieldManager.isAuthorized,
+              shieldManager.hasSelection
+        else {
+            return
+        }
+
+        let endDate = Date().addingTimeInterval(TimeInterval(max(1, pomodoroSecondsRemaining)))
+        shieldManager.startShield(mode: .pomodoro, endDate: endDate)
+        if shieldManager.activeSession?.mode == .pomodoro {
+            pomodoroShieldWasActive = true
+        }
+    }
+
     private func requestClose() {
         if pomodoroState == .running || pomodoroState == .paused {
             showLeaveDialog = true
         } else {
             dismiss()
         }
+    }
+
+    private func emitPomodoroBreakBreathingCue(force: Bool = false) {
+        guard soundEnabled,
+              pomodoroState == .running,
+              pomodoroPhase.isBreak,
+              let preset = pomodoroBreakBreathing.preset
+        else {
+            return
+        }
+
+        let phase = preset.phase(at: pomodoroCurrentPhaseElapsedSeconds).phase
+        guard force || phase != lastBreakBreathingPhase else { return }
+
+        lastBreakBreathingPhase = phase
+        SettleBellService.shared.playBreathingCue(phase.breathingCue)
     }
 }
 
@@ -1490,7 +1629,7 @@ private struct SettlePracticeCard: View {
     }
 }
 
-private func completionBanner(_ session: SettleSession) -> some View {
+private func completionBanner(_ session: SettleSession, seedsOverride: Int? = nil) -> some View {
     HStack(alignment: .center, spacing: 12) {
         Image(systemName: "checkmark.seal.fill")
             .font(.system(size: 20, weight: .semibold))
@@ -1501,7 +1640,8 @@ private func completionBanner(_ session: SettleSession) -> some View {
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundColor(MoriColors.forestCanopy)
 
-            Text("\(session.durationText) planted \(session.seedsEarned) Seeds.")
+            let seeds = seedsOverride ?? session.seedsEarned
+            Text("\(session.durationText) planted \(seeds) Seeds.")
                 .font(.system(size: 13, weight: .regular))
                 .foregroundColor(MoriColors.forestMuted)
         }
@@ -1638,6 +1778,51 @@ private enum MoriBreathingPreset: String, CaseIterable, Identifiable {
         segments
             .map { "\($0.label) \($0.duration)s" }
             .joined(separator: " · ")
+    }
+}
+
+private enum MoriPomodoroBreakBreathing: String, CaseIterable, Identifiable {
+    case none
+    case calm
+    case box
+    case reset
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .none: return "None"
+        case .calm: return MoriBreathingPreset.calm.title
+        case .box: return MoriBreathingPreset.box.title
+        case .reset: return MoriBreathingPreset.reset.title
+        }
+    }
+
+    var symbolName: String {
+        switch self {
+        case .none: return "nosign"
+        case .calm: return MoriBreathingPreset.calm.symbolName
+        case .box: return MoriBreathingPreset.box.symbolName
+        case .reset: return MoriBreathingPreset.reset.symbolName
+        }
+    }
+
+    var tint: Color {
+        switch self {
+        case .none: return MoriColors.forestMuted
+        case .calm: return MoriBreathingPreset.calm.tint
+        case .box: return MoriBreathingPreset.box.tint
+        case .reset: return MoriBreathingPreset.reset.tint
+        }
+    }
+
+    var preset: MoriBreathingPreset? {
+        switch self {
+        case .none: return nil
+        case .calm: return .calm
+        case .box: return .box
+        case .reset: return .reset
+        }
     }
 }
 

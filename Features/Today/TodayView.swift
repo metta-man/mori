@@ -61,7 +61,7 @@ struct TodayView: View {
 
                         TodayPracticeGarden(
                             onOpenSettle: onOpenSettle,
-                            onComplete: completePractice
+                            onStartVerification: startManualVerification
                         )
                     }
                     .padding(.horizontal, 20)
@@ -84,10 +84,15 @@ struct TodayView: View {
                         title: "Ways to Plant Seeds",
                         subtitle: "Choose one small practice. Each Seed nourishes part of your Life Grid.",
                         practices: MoriPractice.plantSeedChoices,
+                        onStartVerification: startManualVerification
+                    )
+                case .verification(let practice):
+                    MoriPracticeVerificationSheet(
+                        practice: practice,
                         onComplete: completePractice
                     )
-                case .completion(let practice):
-                    MoriPracticeCompletionSheet(practice: practice)
+                case .completion(let practice, let seeds):
+                    MoriPracticeCompletionSheet(practice: practice, seeds: seeds)
                 }
             }
         }
@@ -130,23 +135,36 @@ struct TodayView: View {
         return inputs
     }
 
+    private func startManualVerification(_ practice: MoriPractice) {
+        activePracticeSheet = .verification(practice)
+    }
+
     private func completePractice(_ practice: MoriPractice) {
-        clarityStore.recordPractice(practice)
-        activePracticeSheet = .completion(practice)
+        let action = clarityStore.recordPractice(practice)
+        activePracticeSheet = .completion(practice, action.seeds)
     }
 }
 
 enum MoriPracticeSheet: Identifiable {
     case selection
-    case completion(MoriPractice)
+    case verification(MoriPractice)
+    case completion(MoriPractice, Int)
 
     var id: String {
         switch self {
         case .selection:
             return "selection"
-        case .completion(let practice):
-            return "completion-\(practice.id)"
+        case .verification(let practice):
+            return "verification-\(practice.id)"
+        case .completion(let practice, let seeds):
+            return "completion-\(practice.id)-\(seeds)"
         }
+    }
+}
+
+extension MoriPractice {
+    var manualVerificationRequired: Bool {
+        route == .quickComplete
     }
 }
 
@@ -531,7 +549,7 @@ private struct MoriLifeGridNodePreview: View {
 
 private struct TodayPracticeGarden: View {
     let onOpenSettle: () -> Void
-    let onComplete: (MoriPractice) -> Void
+    let onStartVerification: (MoriPractice) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -558,8 +576,13 @@ private struct TodayPracticeGarden: View {
         switch practice.route {
         case .quickComplete:
             Button {
-                onComplete(practice)
+                onStartVerification(practice)
             } label: {
+                PracticeGardenRow(practice: practice)
+            }
+            .buttonStyle(.plain)
+        case .breathing:
+            NavigationLink(destination: MoriBreathingLibraryView()) {
                 PracticeGardenRow(practice: practice)
             }
             .buttonStyle(.plain)
@@ -641,7 +664,7 @@ struct MoriPracticeSelectionSheet: View {
     let title: String
     let subtitle: String
     let practices: [MoriPractice]
-    let onComplete: (MoriPractice) -> Void
+    let onStartVerification: (MoriPractice) -> Void
 
     @Environment(\.dismiss) private var dismiss
 
@@ -657,12 +680,7 @@ struct MoriPracticeSelectionSheet: View {
                         )
 
                         ForEach(practices) { practice in
-                            Button {
-                                onComplete(practice)
-                            } label: {
-                                PracticeGardenRow(practice: practice)
-                            }
-                            .buttonStyle(.plain)
+                            practiceRow(for: practice)
                         }
                     }
                     .padding(.horizontal, 20)
@@ -686,10 +704,246 @@ struct MoriPracticeSelectionSheet: View {
             }
         }
     }
+
+    @ViewBuilder
+    private func practiceRow(for practice: MoriPractice) -> some View {
+        switch practice.route {
+        case .quickComplete:
+            Button {
+                onStartVerification(practice)
+            } label: {
+                PracticeGardenRow(practice: practice)
+            }
+            .buttonStyle(.plain)
+        case .breathing:
+            NavigationLink(destination: MoriBreathingLibraryView()) {
+                PracticeGardenRow(practice: practice)
+            }
+            .buttonStyle(.plain)
+        case .settle, .focusCycle:
+            NavigationLink(destination: SettleView()) {
+                PracticeGardenRow(practice: practice)
+            }
+            .buttonStyle(.plain)
+        case .quietMode:
+            NavigationLink(destination: QuietModeView()) {
+                PracticeGardenRow(practice: practice)
+            }
+            .buttonStyle(.plain)
+        case .journal:
+            NavigationLink(destination: GratitudeJournalScreen()) {
+                PracticeGardenRow(practice: practice)
+            }
+            .buttonStyle(.plain)
+        case .dailyCheckIn:
+            NavigationLink(destination: HabitTrackerView()) {
+                PracticeGardenRow(practice: practice)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+}
+
+struct MoriPracticeVerificationSheet: View {
+    let practice: MoriPractice
+    let onComplete: (MoriPractice) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var secondsRemaining = 0
+    @State private var isRunning = false
+    @State private var showCompletionConfirm = false
+
+    private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+
+    private var verificationSeconds: Int {
+        max(30, practice.minutes * 60)
+    }
+
+    private var canConfirmCompletion: Bool {
+        secondsRemaining == 0 && !isRunning
+    }
+
+    private var progress: Double {
+        guard verificationSeconds > 0 else { return 1 }
+        return Double(verificationSeconds - secondsRemaining) / Double(verificationSeconds)
+    }
+
+    var body: some View {
+        NavigationStack {
+            MoriForestBackground {
+                VStack(alignment: .leading, spacing: 22) {
+                    Spacer(minLength: 12)
+
+                    MoriPageHeader(
+                        eyebrow: "Verify",
+                        title: practice.title,
+                        subtitle: "Finish the practice first. Mori plants the Seed only after the timer and your confirmation."
+                    )
+
+                    VStack(alignment: .leading, spacing: 18) {
+                        HStack(alignment: .top, spacing: 12) {
+                            Image(systemName: practice.symbolName)
+                                .font(.system(size: 18, weight: .semibold))
+                                .foregroundColor(MoriColors.forestMoss)
+                                .frame(width: 40, height: 40)
+                                .background(MoriColors.forestMoss.opacity(0.12))
+                                .clipShape(Circle())
+
+                            VStack(alignment: .leading, spacing: 5) {
+                                Text(practice.description)
+                                    .font(.system(size: 18, weight: .semibold, design: .rounded))
+                                    .foregroundColor(MoriColors.forestCanopy)
+
+                                Text("Expected time \(practice.durationText).")
+                                    .font(.system(size: 14, weight: .regular))
+                                    .foregroundColor(MoriColors.forestMuted)
+                            }
+                        }
+
+                        ZStack {
+                            Circle()
+                                .stroke(MoriColors.forestLine.opacity(0.62), lineWidth: 12)
+
+                            Circle()
+                                .trim(from: 0, to: CGFloat(progress))
+                                .stroke(MoriColors.forestMoss, style: StrokeStyle(lineWidth: 12, lineCap: .round))
+                                .rotationEffect(.degrees(-90))
+                                .animation(.easeInOut(duration: 0.25), value: progress)
+
+                            VStack(spacing: 6) {
+                                Text(timeText)
+                                    .font(.system(size: 46, weight: .semibold, design: .rounded))
+                                    .foregroundColor(MoriColors.forestCanopy)
+                                    .monospacedDigit()
+
+                                Text(canConfirmCompletion ? "ready to confirm" : isRunning ? "practice in progress" : "ready")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundColor(MoriColors.forestMuted)
+                            }
+                        }
+                        .frame(maxWidth: .infinity)
+                        .frame(height: 230)
+
+                        FlowLayout(spacing: 8) {
+                            MoriPill(title: practice.seedText, symbolName: "circle.hexagongrid.fill", tint: MoriColors.forestSeed)
+                            MoriPill(title: practice.domainText, symbolName: "square.grid.3x3.fill", tint: MoriColors.forestMoss)
+                        }
+
+                        HStack(spacing: 12) {
+                            Button {
+                                if isRunning {
+                                    isRunning = false
+                                } else {
+                                    if secondsRemaining == 0 {
+                                        secondsRemaining = verificationSeconds
+                                    }
+                                    isRunning = true
+                                }
+                            } label: {
+                                Label(isRunning ? "Pause" : secondsRemaining == 0 ? "Restart" : "Start", systemImage: isRunning ? "pause.fill" : "play.fill")
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .foregroundColor(MoriColors.forestCard)
+                                    .frame(maxWidth: .infinity)
+                                    .padding(.vertical, 14)
+                                    .background(MoriColors.forestCanopy)
+                                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            }
+                            .buttonStyle(.plain)
+
+                            Button {
+                                secondsRemaining = verificationSeconds
+                                isRunning = false
+                            } label: {
+                                Image(systemName: "arrow.counterclockwise")
+                                    .font(.system(size: 15, weight: .bold))
+                                    .foregroundColor(MoriColors.forestCanopy)
+                                    .frame(width: 50, height: 50)
+                                    .background(MoriColors.forestCanopy.opacity(0.08))
+                                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel("Reset verification timer")
+                        }
+
+                        Button {
+                            showCompletionConfirm = true
+                        } label: {
+                            Label("Confirm completion", systemImage: "checkmark.seal.fill")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(canConfirmCompletion ? MoriColors.forestCard : MoriColors.forestMuted)
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 14)
+                                .background(canConfirmCompletion ? MoriColors.forestMoss : MoriColors.forestCanopy.opacity(0.08))
+                                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        }
+                        .buttonStyle(.plain)
+                        .disabled(!canConfirmCompletion)
+                    }
+                    .moriSanctuaryCard(cornerRadius: 24, padding: 18)
+
+                    Spacer(minLength: 0)
+                }
+                .padding(.horizontal, 20)
+                .padding(.bottom, 28)
+            }
+            .navigationTitle("Plant Seed")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(MoriColors.forestPaper, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarColorScheme(.light, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Close") {
+                        dismiss()
+                    }
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(MoriColors.forestCanopy)
+                }
+            }
+            .onAppear {
+                secondsRemaining = verificationSeconds
+            }
+            .onReceive(ticker) { _ in
+                tick()
+            }
+            .confirmationDialog(
+                "Plant this Seed?",
+                isPresented: $showCompletionConfirm,
+                titleVisibility: .visible
+            ) {
+                Button("Yes, plant Seed") {
+                    onComplete(practice)
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Only confirm if you completed the practice.")
+            }
+        }
+    }
+
+    private var timeText: String {
+        let minutes = secondsRemaining / 60
+        let seconds = secondsRemaining % 60
+        return String(format: "%02d:%02d", minutes, seconds)
+    }
+
+    private func tick() {
+        guard isRunning else { return }
+        guard secondsRemaining > 0 else {
+            isRunning = false
+            return
+        }
+
+        secondsRemaining -= 1
+        if secondsRemaining == 0 {
+            isRunning = false
+        }
+    }
 }
 
 struct MoriPracticeCompletionSheet: View {
     let practice: MoriPractice
+    let seeds: Int
 
     @Environment(\.dismiss) private var dismiss
 
@@ -724,7 +978,7 @@ struct MoriPracticeCompletionSheet: View {
                     }
 
                     FlowLayout(spacing: 8) {
-                        MoriPill(title: practice.seedText, symbolName: "circle.hexagongrid.fill", tint: MoriColors.forestSeed)
+                        MoriPill(title: "+\(seeds) Seed\(seeds == 1 ? "" : "s")", symbolName: "circle.hexagongrid.fill", tint: MoriColors.forestSeed)
                         MoriPill(title: practice.durationText, symbolName: "timer", tint: MoriColors.forestMist)
                         MoriPill(title: practice.domainText, symbolName: "square.grid.3x3.fill", tint: MoriColors.forestMoss)
                     }

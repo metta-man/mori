@@ -1101,7 +1101,7 @@ private struct MoriBreathingSessionView: View {
         UIApplication.shared.isIdleTimerDisabled = false
 
         let seeds = max(1, durationMinutes / 2)
-        clarityStore.record(
+        let action = clarityStore.record(
             kind: .breathingSession,
             title: technique.name,
             seeds: seeds,
@@ -1111,7 +1111,7 @@ private struct MoriBreathingSessionView: View {
 
         completedSummary = MoriBreathingCompletionSummary(
             title: "Breath settled",
-            seeds: seeds,
+            seeds: action.seeds,
             minutes: durationMinutes,
             symbolName: "wind.circle.fill",
             tint: MoriColors.forestMist

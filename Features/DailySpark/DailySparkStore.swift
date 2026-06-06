@@ -109,6 +109,13 @@ final class DailySparkStore: ObservableObject {
         entries.sort { $0.dateKey > $1.dateKey }
         persist()
         GratitudeEntry.saveDailySpark(entry)
+        MoriClarityStore.shared.recordDailyOnce(
+            kind: .dailySpark,
+            title: "Daily Spark",
+            seeds: 2,
+            minutes: 3,
+            note: "Set the lens for today"
+        )
         NotificationCenter.default.post(name: .dailySparkDataDidChange, object: nil)
         return entry
     }

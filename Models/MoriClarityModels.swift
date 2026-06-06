@@ -79,8 +79,26 @@ enum PulseTopic: String, CaseIterable, Codable, Identifiable {
     }
 }
 
+enum MoriCustomPulseTopicIcon: String, CaseIterable, Identifiable, Codable {
+    case leaf = "leaf"
+    case sparkles = "sparkles"
+    case brain = "brain.head.profile"
+    case heart = "heart"
+    case book = "book"
+    case briefcase = "briefcase"
+    case chart = "chart.line.uptrend.xyaxis"
+    case paint = "paintpalette"
+    case globe = "globe.asia.australia"
+    case location = "location"
+    case tag = "tag"
+    case star = "star"
+
+    var id: String { rawValue }
+}
+
 enum MoriPracticeRoute: String, Equatable {
     case quickComplete
+    case breathing
     case settle
     case quietMode
     case journal
@@ -120,7 +138,7 @@ struct MoriPractice: Identifiable, Equatable {
         kind: .breathingSession,
         note: "Completed a short breath reset",
         domains: [.body, .rest],
-        route: .quickComplete
+        route: .breathing
     )
 
     static let settleThree = MoriPractice(
@@ -279,10 +297,16 @@ struct MoriPractice: Identifiable, Equatable {
             return [.body, .rest]
         case .dailyFocus:
             return dailyCheckIn.domains
+        case .dailySpark:
+            return [.craft, .mind]
         case .lifeGridProof:
             return [.mind]
         case .journal:
             return quietNote.domains
+        case .screenTimeLimitKept:
+            return [.craft, .mind]
+        case .screenTimeThresholdReached:
+            return [.rest, .mind]
         }
     }
 }
@@ -407,8 +431,11 @@ enum MoriMindfulActionKind: String, Codable, CaseIterable, Identifiable {
     case urgeCheckIn
     case replacementAction
     case dailyFocus
+    case dailySpark
     case lifeGridProof
     case journal
+    case screenTimeLimitKept
+    case screenTimeThresholdReached
 
     var id: String { rawValue }
 
@@ -423,8 +450,11 @@ enum MoriMindfulActionKind: String, Codable, CaseIterable, Identifiable {
         case .urgeCheckIn: return "Urge check-in"
         case .replacementAction: return "Replacement action"
         case .dailyFocus: return "Daily focus"
+        case .dailySpark: return "Daily Spark"
         case .lifeGridProof: return "Life Grid proof"
         case .journal: return "Journal"
+        case .screenTimeLimitKept: return "Screen Time limit kept"
+        case .screenTimeThresholdReached: return "Screen Time threshold reached"
         }
     }
 }
@@ -470,6 +500,8 @@ struct MoriClarityMetrics: Equatable {
     let settleMinutesToday: Int
     let settleSessionsToday: Int
     let reclaimedMinutesToday: Int
+    let screenTimeThresholdsReachedToday: Int
+    let protectedFocusMinutesToday: Int
     let mindfulActionsToday: Int
 
     var bloomPercentText: String {

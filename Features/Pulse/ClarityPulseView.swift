@@ -8,6 +8,7 @@ struct ClarityPulseView: View {
     @State private var pulse: MoriDailyPulse = .mock()
     @State private var isLoading = false
     @State private var customTopic = ""
+    @State private var selectedCustomTopicIcon: MoriCustomPulseTopicIcon = .leaf
     @State private var activePracticeSheet: MoriPracticeSheet?
 
     private var metrics: MoriClarityMetrics {
@@ -66,10 +67,15 @@ struct ClarityPulseView: View {
                         title: "Reset with a Practice",
                         subtitle: "Close the Pulse with one grounded action instead of another scan.",
                         practices: MoriPractice.plantSeedChoices,
+                        onStartVerification: startManualVerification
+                    )
+                case .verification(let practice):
+                    MoriPracticeVerificationSheet(
+                        practice: practice,
                         onComplete: completePractice
                     )
-                case .completion(let practice):
-                    MoriPracticeCompletionSheet(practice: practice)
+                case .completion(let practice, let seeds):
+                    MoriPracticeCompletionSheet(practice: practice, seeds: seeds)
                 }
             }
         }
@@ -83,7 +89,7 @@ struct ClarityPulseView: View {
             )
 
             FlowLayout(spacing: 8) {
-                ForEach(PulseTopic.allCases) { topic in
+                ForEach(PulseTopic.allCases.filter { $0 != .custom }) { topic in
                     Button {
                         clarityStore.toggleTopic(topic)
                     } label: {
@@ -91,7 +97,7 @@ struct ClarityPulseView: View {
                             title: topic.title,
                             symbolName: topic.symbolName,
                             isSelected: clarityStore.selectedTopics.contains(topic),
-                            tint: topic == .custom ? MoriColors.forestClay : MoriColors.forestMoss
+                            tint: MoriColors.forestMoss
                         )
                     }
                     .buttonStyle(.plain)
@@ -99,6 +105,23 @@ struct ClarityPulseView: View {
             }
 
             HStack(spacing: 10) {
+                Menu {
+                    ForEach(MoriCustomPulseTopicIcon.allCases) { icon in
+                        Button {
+                            selectedCustomTopicIcon = icon
+                        } label: {
+                            Label(icon.rawValue, systemImage: icon.rawValue)
+                        }
+                    }
+                } label: {
+                    Image(systemName: selectedCustomTopicIcon.rawValue)
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(MoriColors.forestCanopy)
+                        .frame(width: 40, height: 40)
+                        .background(MoriColors.forestCanopy.opacity(0.08))
+                        .clipShape(Circle())
+                }
+
                 TextField("Add custom topic", text: $customTopic)
                     .font(.system(size: 14, weight: .regular))
                     .foregroundColor(MoriColors.forestCanopy)
@@ -108,7 +131,7 @@ struct ClarityPulseView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
 
                 Button {
-                    clarityStore.addCustomTopic(customTopic)
+                    clarityStore.addCustomTopic(customTopic, symbolName: selectedCustomTopicIcon.rawValue)
                     customTopic = ""
                 } label: {
                     Image(systemName: "plus")
@@ -125,10 +148,19 @@ struct ClarityPulseView: View {
             if !clarityStore.customTopics.isEmpty {
                 FlowLayout(spacing: 8) {
                     ForEach(clarityStore.customTopics, id: \.self) { topic in
-                        Button {
-                            clarityStore.removeCustomTopic(topic)
+                        Menu {
+                            Button(role: .destructive) {
+                                clarityStore.removeCustomTopic(topic)
+                            } label: {
+                                Label("Remove topic", systemImage: "trash")
+                            }
                         } label: {
-                            MoriPill(title: topic, symbolName: "xmark", isSelected: true, tint: MoriColors.forestClay)
+                            MoriPill(
+                                title: topic,
+                                symbolName: clarityStore.symbolName(forCustomTopic: topic),
+                                isSelected: true,
+                                tint: MoriColors.forestMoss
+                            )
                         }
                         .buttonStyle(.plain)
                         .accessibilityLabel("Remove \(topic)")
@@ -236,8 +268,12 @@ struct ClarityPulseView: View {
     }
 
     private func completePractice(_ practice: MoriPractice) {
-        clarityStore.recordPractice(practice)
-        activePracticeSheet = .completion(practice)
+        let action = clarityStore.recordPractice(practice)
+        activePracticeSheet = .completion(practice, action.seeds)
+    }
+
+    private func startManualVerification(_ practice: MoriPractice) {
+        activePracticeSheet = .verification(practice)
     }
 }
 
