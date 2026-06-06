@@ -173,6 +173,7 @@ class HabitDataManager {
     // MARK: - Save Entry
     func saveEntry(
         habitName: String? = nil,
+        on date: Date = Date(),
         tone: HabitDayTone,
         note: String? = nil,
         trigger: String? = nil,
@@ -180,10 +181,12 @@ class HabitDataManager {
         feeling: String? = nil,
         responsePlan: String? = nil
     ) -> HabitEntry {
+        let calendar = Calendar.current
+        let entryDate = calendar.startOfDay(for: date)
         let entry = HabitEntry(
             habitName: habitName,
             id: UUID(),
-            date: Date(),
+            date: entryDate,
             tone: tone,
             createdAt: Date(),
             note: Self.normalizedOptionalText(note),
@@ -195,9 +198,8 @@ class HabitDataManager {
         
         var entries = getAllEntries()
         
-        // Remove existing entry for today if exists
-        let calendar = Calendar.current
-        entries.removeAll { calendar.isDate($0.date, inSameDayAs: Date()) }
+        // Remove existing entry for the selected day if it exists.
+        entries.removeAll { calendar.isDate($0.date, inSameDayAs: entryDate) }
         
         // Add new entry
         entries.append(entry)

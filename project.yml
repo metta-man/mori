@@ -23,7 +23,7 @@ settings:
 packages:
   PostHog:
     url: https://github.com/PostHog/posthog-ios
-    exactVersion: 2.1.0
+    exactVersion: 3.9.1
 
 targets:
   Mori:

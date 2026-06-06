@@ -136,47 +136,25 @@ class GratitudeJournalViewModel: ObservableObject {
     
     // MARK: - Save Entry
     func saveEntry() -> Result<GratitudeEntry, GratitudeError> {
-        // Validate content
-        let validation = GratitudeEntry.validate(content)
-        guard validation.isValid else {
-            return .failure(GratitudeError.validationFailed(validation.errorMessage ?? "Invalid content"))
+        let result = GratitudeEntry.saveJournalEntry(
+            on: Date(),
+            content: content,
+            promptType: selectedPrompt,
+            photoAttachments: attachedPhotos
+        )
+
+        switch result {
+        case .success(let entry):
+            entries = GratitudeEntry.loadAllStored()
+            todayEntry = entry
+            hasExistingEntryToday = true
+            clearDraft()
+            recentEntries = Array(entries.prefix(10))
+        case .failure:
+            break
         }
-        
-        let calendar = Calendar.current
-        let today = calendar.startOfDay(for: Date())
-        
-        // Check for existing entry today
-        if let existingIndex = entries.firstIndex(where: { calendar.isDate($0.date, inSameDayAs: today) && $0.sourceID == nil }) {
-            // Update existing entry
-            entries[existingIndex].content = content
-            entries[existingIndex].promptType = selectedPrompt
-            entries[existingIndex].photoAttachments = attachedPhotos
-            entries[existingIndex].updatedAt = Date()
-            todayEntry = entries[existingIndex]
-        } else {
-            // Create new entry
-            let newEntry = GratitudeEntry(
-                date: today,
-                content: content,
-                promptType: selectedPrompt,
-                photoAttachments: attachedPhotos
-            )
-            entries.insert(newEntry, at: 0)
-            todayEntry = newEntry
-        }
-        
-        hasExistingEntryToday = true
-        
-        // Save to storage
-        saveEntries()
-        
-        // Clear draft
-        clearDraft()
-        
-        // Reload recent entries
-        recentEntries = Array(entries.prefix(10))
-        
-        return .success(todayEntry!)
+
+        return result
     }
     
     // MARK: - Random Entry

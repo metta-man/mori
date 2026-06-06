@@ -4,6 +4,7 @@ import UIKit
 
 struct LifeGridView: View {
     @EnvironmentObject var settings: UserSettings
+    @StateObject private var clarityStore = MoriClarityStore.shared
     @State private var selectedWeek: WeekCoordinate?
     @State private var showWeekDetail = false
     @State private var showSettings = false
@@ -14,6 +15,7 @@ struct LifeGridView: View {
     @State private var focusedYear = Date()
     @State private var habitEntries: [HabitEntry] = []
     @State private var journalEntries: [GratitudeEntry] = []
+    @State private var weekTones: [Int: HabitDayTone] = [:]
     @State private var selectedMonthDay: MonthDaySelection?
     
     private let weekColumns = 52
@@ -23,7 +25,7 @@ struct LifeGridView: View {
     var body: some View {
         NavigationStack {
             ZStack {
-                MoriColors.moriDark.ignoresSafeArea()
+                MoriColors.forestPaper.ignoresSafeArea()
 
                 ScrollView {
                     VStack(alignment: .leading, spacing: 24) {
@@ -32,6 +34,8 @@ struct LifeGridView: View {
                             totalWeeks: settings.totalWeeks,
                             weeksRemaining: settings.weeksRemaining
                         )
+
+                        LifeGridGrowthCard(metrics: clarityStore.metrics(settings: settings))
 
                         WeeklyIntentionCard(
                             intentions: settings.activeWeeklyIntentions,
@@ -42,6 +46,13 @@ struct LifeGridView: View {
                             },
                             onComplete: { intention in
                                 settings.completeWeeklyIntention(intention)
+                                clarityStore.record(
+                                    kind: .lifeGridProof,
+                                    title: "Completed weekly proof",
+                                    seeds: 4,
+                                    minutes: 0,
+                                    note: intention.action
+                                )
                             },
                             onReopen: { intention in
                                 settings.reopenWeeklyIntention(intention)
@@ -54,7 +65,7 @@ struct LifeGridView: View {
                             }
                         }
                         .pickerStyle(.segmented)
-                        .tint(MoriColors.moriGold)
+                        .tint(MoriColors.forestCanopy)
 
                         gridContent
 
@@ -62,7 +73,7 @@ struct LifeGridView: View {
 
                         Text(selectedView.helperText)
                             .font(.system(size: 13, weight: .regular))
-                            .foregroundColor(MoriColors.moriCreamMuted)
+                            .foregroundColor(MoriColors.forestMuted)
                             .fixedSize(horizontal: false, vertical: true)
                     }
                     .padding(.horizontal, 20)
@@ -70,10 +81,10 @@ struct LifeGridView: View {
                     .padding(.bottom, 48)
                 }
             }
-            .navigationTitle("Mori")
+            .navigationTitle("Life Grid")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarColorScheme(.dark, for: .navigationBar)
-            .toolbarBackground(MoriColors.moriDark, for: .navigationBar)
+            .toolbarColorScheme(.light, for: .navigationBar)
+            .toolbarBackground(MoriColors.forestPaper, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -81,7 +92,7 @@ struct LifeGridView: View {
                         showSettings = true
                     } label: {
                         Image(systemName: "gearshape")
-                            .foregroundColor(MoriColors.moriGold.opacity(0.8))
+                            .foregroundColor(MoriColors.forestCanopy.opacity(0.82))
                     }
                 }
             }
@@ -90,6 +101,8 @@ struct LifeGridView: View {
                     WeekDetailSheet(
                         week: week,
                         settings: settings,
+                        habitEntries: entries(for: week, in: habitEntries),
+                        journalEntries: entries(for: week, in: journalEntries),
                         isPresented: $showWeekDetail
                     )
                 }
@@ -135,25 +148,26 @@ struct LifeGridView: View {
                     )
                     .frame(width: ageLabelWidth)
 
-                    LifeWeeksGrid(
+                    LifeWeeksCanvasGrid(
                         lifeExpectancy: settings.lifeExpectancy,
-                        weeksLived: settings.weeksLived,
-                        currentWeekIndex: settings.currentWeekIndex,
+                        weeksLived: displayCurrentWeekIndex,
+                        currentWeekIndex: displayCurrentWeekIndex,
                         currentWeekDomain: settings.activeWeeklyIntentionDomain,
                         isCurrentWeekMeaningful: settings.hasCompletedWeeklyIntention,
-                        weekTones: weekToneMap,
+                        weekTones: weekTones,
                         dotSize: dotSize,
                         spacing: weekGap,
                         onWeekTap: handleWeekTap
                     )
                 }
                 .padding(16)
-                .background(MoriColors.moriDarkSurface)
+                .background(MoriColors.forestCard)
                 .overlay(
                     RoundedRectangle(cornerRadius: 18)
-                        .stroke(MoriColors.moriHairline, lineWidth: 1)
+                        .stroke(MoriColors.forestHairline, lineWidth: 1)
                 )
                 .cornerRadius(18)
+                .shadow(color: MoriColors.forestShadow.opacity(0.45), radius: 18, x: 0, y: 10)
             }
             .frame(height: gridHeight(for: settings.lifeExpectancy))
         case .year:
@@ -176,15 +190,19 @@ struct LifeGridView: View {
         }
     }
 
-    private var weekToneMap: [Int: HabitDayTone] {
+    private func makeWeekToneMap(from entries: [HabitEntry]) -> [Int: HabitDayTone] {
         var tones: [Int: [HabitDayTone]] = [:]
 
-        for entry in habitEntries {
+        for entry in entries {
             guard let weekIndex = visualWeekIndex(for: entry.date) else { continue }
             tones[weekIndex, default: []].append(entry.tone)
         }
 
         return tones.compactMapValues { majorityTone(in: $0) }
+    }
+
+    private var displayCurrentWeekIndex: Int {
+        visualWeekIndex(for: Date()) ?? settings.currentWeekIndex
     }
 
     private func gridHeight(for lifeExpectancy: Int) -> CGFloat {
@@ -197,7 +215,7 @@ struct LifeGridView: View {
         let weekIndex = year * 52 + week
         
         // Don't allow tapping future weeks
-        if weekIndex >= settings.weeksLived {
+        if weekIndex > displayCurrentWeekIndex {
             return
         }
         
@@ -211,14 +229,29 @@ struct LifeGridView: View {
 
     private func loadHabitEntries() {
         habitEntries = HabitDataManager.shared.getEntries(from: settings.birthDate, to: Date())
+        weekTones = makeWeekToneMap(from: habitEntries)
     }
 
     private func loadJournalEntries() {
         journalEntries = GratitudeEntry.loadAllStored()
     }
 
+    private func entries(for week: WeekCoordinate, in entries: [HabitEntry]) -> [HabitEntry] {
+        entries
+            .filter { visualWeekIndex(for: $0.date) == week.linearIndex }
+            .sorted { $0.date < $1.date }
+    }
+
+    private func entries(for week: WeekCoordinate, in entries: [GratitudeEntry]) -> [GratitudeEntry] {
+        entries
+            .filter { visualWeekIndex(for: $0.date) == week.linearIndex }
+            .sorted { $0.date < $1.date }
+    }
+
     private func visualWeekIndex(for date: Date) -> Int? {
-        let calendar = Calendar.current
+        var calendar = Calendar.current
+        calendar.firstWeekday = 2
+
         let birthDay = calendar.startOfDay(for: settings.birthDate)
         let entryDay = calendar.startOfDay(for: date)
         guard entryDay >= birthDay else { return nil }
@@ -227,8 +260,10 @@ struct LifeGridView: View {
         guard ageAtEntry < settings.lifeExpectancy else { return nil }
 
         let ageStart = calendar.date(byAdding: .year, value: ageAtEntry, to: birthDay) ?? birthDay
-        let daysIntoAgeYear = calendar.dateComponents([.day], from: ageStart, to: entryDay).day ?? 0
-        let weekIntoAgeYear = max(0, min(51, daysIntoAgeYear / 7))
+        let ageWeekStart = moriMondayWeekStart(for: ageStart)
+        let entryWeekStart = moriMondayWeekStart(for: entryDay)
+        let weeksIntoAgeYear = calendar.dateComponents([.weekOfYear], from: ageWeekStart, to: entryWeekStart).weekOfYear ?? 0
+        let weekIntoAgeYear = max(0, min(51, weeksIntoAgeYear))
 
         return ageAtEntry * 52 + weekIntoAgeYear
     }
@@ -249,6 +284,26 @@ struct LifeGridView: View {
     }
 }
 
+private func moriMondayWeekStart(for date: Date) -> Date {
+    var calendar = Calendar.current
+    calendar.firstWeekday = 2
+
+    let day = calendar.startOfDay(for: date)
+    let weekday = calendar.component(.weekday, from: day)
+    let daysFromMonday = (weekday - calendar.firstWeekday + 7) % 7
+    return calendar.date(byAdding: .day, value: -daysFromMonday, to: day) ?? day
+}
+
+private func moriMondayWeekStart(for week: WeekCoordinate, birthDate: Date) -> Date {
+    var calendar = Calendar.current
+    calendar.firstWeekday = 2
+
+    let birthDay = calendar.startOfDay(for: birthDate)
+    let ageStart = calendar.date(byAdding: .year, value: week.year, to: birthDay) ?? birthDay
+    let ageWeekStart = moriMondayWeekStart(for: ageStart)
+    return calendar.date(byAdding: .weekOfYear, value: week.week, to: ageWeekStart) ?? ageWeekStart
+}
+
 private enum LifeGridZoom: String, CaseIterable, Identifiable {
     case life
     case year
@@ -267,7 +322,7 @@ private enum LifeGridZoom: String, CaseIterable, Identifiable {
     var helperText: String {
         switch self {
         case .life:
-            return "Each dot is one week. Colored lived weeks use the majority tone from daily check-ins."
+            return "Each dot is one week. Colored lived weeks reflect the majority tone from daily check-ins."
         case .year:
             return "Each square is one day in the selected year."
         case .month:
@@ -288,7 +343,7 @@ struct AgeLabelsColumn: View {
                 if age.isMultiple(of: 5) || age == lifeExpectancy - 1 {
                     Text("\(age)")
                         .font(.system(size: 9, weight: .medium, design: .rounded))
-                        .foregroundColor(MoriColors.moriCreamMuted)
+                        .foregroundColor(MoriColors.forestMuted)
                         .frame(height: rowHeight, alignment: .trailing)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 } else {
@@ -309,17 +364,98 @@ private struct LifeGridHeader: View {
         VStack(alignment: .leading, spacing: 10) {
             Text("Life Grid")
                 .font(.system(size: 34, weight: .semibold, design: .rounded))
-                .foregroundColor(MoriColors.moriCream)
+                .foregroundColor(MoriColors.forestCanopy)
 
             Text("\(weeksRemaining.formatted()) weeks remaining")
                 .font(.system(size: 18, weight: .regular, design: .rounded))
-                .foregroundColor(MoriColors.moriGold)
+                .foregroundColor(MoriColors.forestMoss)
 
             ProgressView(value: Double(weeksLived), total: Double(max(totalWeeks, 1)))
-                .tint(MoriColors.moriGold)
-                .background(MoriColors.moriCream.opacity(0.12))
+                .tint(MoriColors.forestMoss)
+                .background(MoriColors.forestLine.opacity(0.6))
                 .clipShape(Capsule())
         }
+    }
+}
+
+private struct LifeGridGrowthCard: View {
+    let metrics: MoriClarityMetrics
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            MoriSectionTitle(
+                title: "This week is alive",
+                subtitle: "Seeds from Settle, Quiet, Pulse, check-ins, and weekly proofs feed today's Bloom."
+            )
+
+            HStack(spacing: 12) {
+                GrowthStatPill(
+                    title: "Seeds",
+                    value: "\(metrics.seedsToday)",
+                    symbolName: "circle.hexagongrid.fill",
+                    tint: MoriColors.forestSeed
+                )
+
+                GrowthStatPill(
+                    title: "Clarity",
+                    value: "\(metrics.clarityScore)",
+                    symbolName: "leaf.fill",
+                    tint: MoriColors.forestMoss
+                )
+
+                GrowthStatPill(
+                    title: "Bloom",
+                    value: metrics.bloomPercentText,
+                    symbolName: "camera.macro",
+                    tint: MoriColors.forestFern
+                )
+            }
+
+            MoriForestProgressBar(value: metrics.bloomProgress, tint: MoriColors.forestFern)
+
+            HStack(spacing: 10) {
+                MoriPill(
+                    title: "Settle \(metrics.settleMinutesToday)m",
+                    symbolName: "figure.mind.and.body",
+                    tint: MoriColors.forestMoss
+                )
+
+                MoriPill(
+                    title: "\(metrics.settleSessionsToday) sessions",
+                    symbolName: "leaf.fill",
+                    tint: MoriColors.forestSeed
+                )
+            }
+        }
+        .moriSanctuaryCard(cornerRadius: 22, padding: 18)
+    }
+}
+
+private struct GrowthStatPill: View {
+    let title: String
+    let value: String
+    let symbolName: String
+    let tint: Color
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 7) {
+            Image(systemName: symbolName)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(tint)
+
+            Text(value)
+                .font(.system(size: 20, weight: .semibold, design: .rounded))
+                .foregroundColor(MoriColors.forestCanopy)
+                .minimumScaleFactor(0.75)
+
+            Text(title)
+                .font(.system(size: 11, weight: .semibold))
+                .foregroundColor(MoriColors.forestMuted)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(12)
+        .background(tint.opacity(0.10))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
 
@@ -352,11 +488,11 @@ private struct WeeklyIntentionCard: View {
                 VStack(alignment: .leading, spacing: 5) {
                     Text(intentions.isEmpty ? "This Week Must Matter" : "This week is being written")
                         .font(.system(size: 17, weight: .semibold, design: .rounded))
-                        .foregroundColor(MoriColors.moriCream)
+                        .foregroundColor(MoriColors.forestCanopy)
 
                     Text(intentions.isEmpty ? "Choose one small proof that this square was lived." : "\(intentions.filter(\.isCompleted).count)/\(intentions.count) actions for every day done")
                         .font(.system(size: 14, weight: .regular))
-                        .foregroundColor(MoriColors.moriCreamMuted)
+                        .foregroundColor(MoriColors.forestMuted)
                         .fixedSize(horizontal: false, vertical: true)
                 }
 
@@ -382,10 +518,10 @@ private struct WeeklyIntentionCard: View {
                                 )
                             }
                             .font(.system(size: 13, weight: .semibold))
-                            .foregroundColor(intention.isCompleted ? MoriColors.moriDark : MoriColors.moriGold)
+                            .foregroundColor(intention.isCompleted ? MoriColors.forestCard : MoriColors.forestCanopy)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 8)
-                            .background(intention.isCompleted ? MoriColors.moriGold : MoriColors.moriDarkElevated)
+                            .background(intention.isCompleted ? MoriColors.forestCanopy : MoriColors.forestCanopy.opacity(0.08))
                             .clipShape(Capsule())
                             .accessibilityLabel(intention.isCompleted ? "Weekly intention completed" : "Mark weekly intention done")
                         }
@@ -405,10 +541,10 @@ private struct WeeklyIntentionCard: View {
                         } label: {
                             Label(domain.title, systemImage: domain.symbolName)
                                 .font(.system(size: 13, weight: .medium))
-                                .foregroundColor(selectedDomain == domain ? MoriColors.moriDark : MoriColors.moriCreamMuted)
+                                .foregroundColor(selectedDomain == domain ? MoriColors.forestCard : MoriColors.forestMuted)
                                 .padding(.horizontal, 12)
                                 .padding(.vertical, 8)
-                                .background(selectedDomain == domain ? domain.moriColor : MoriColors.moriDarkElevated)
+                                .background(selectedDomain == domain ? domain.moriColor : MoriColors.forestCanopy.opacity(0.08))
                                 .clipShape(Capsule())
                         }
                         .buttonStyle(.plain)
@@ -425,41 +561,35 @@ private struct WeeklyIntentionCard: View {
                     HStack(spacing: 10) {
                         Text(trimmedAction.isEmpty ? "Pick a tiny action" : actionText)
                             .font(.system(size: 15, weight: .regular))
-                            .foregroundColor(MoriColors.moriCream)
+                            .foregroundColor(MoriColors.forestCanopy)
                             .frame(maxWidth: .infinity, alignment: .leading)
 
                         Image(systemName: "chevron.up.chevron.down")
                             .font(.system(size: 12, weight: .semibold))
-                            .foregroundColor(MoriColors.moriCreamMuted)
+                            .foregroundColor(MoriColors.forestMuted)
                     }
                     .padding(14)
-                    .background(MoriColors.moriDarkElevated)
+                    .background(MoriColors.forestPaperDeep.opacity(0.72))
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
 
                 Button(action: onSave) {
                     Label(intentions.isEmpty ? "Set weekly proof" : "Add weekly proof", systemImage: "plus.circle.fill")
                         .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(MoriColors.moriDark)
+                        .foregroundColor(MoriColors.forestCard)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 13)
-                        .background(trimmedAction.isEmpty ? MoriColors.moriCreamMuted.opacity(0.45) : MoriColors.moriGold)
+                        .background(trimmedAction.isEmpty ? MoriColors.forestMuted.opacity(0.35) : MoriColors.forestCanopy)
                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
                 .disabled(trimmedAction.isEmpty)
             }
         }
-        .padding(18)
-        .background(MoriColors.moriDarkSurface)
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(MoriColors.moriHairline, lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .moriSanctuaryCard(cornerRadius: 22, padding: 18)
     }
 }
 
-private struct LifeWeeksGrid: View {
+private struct LifeWeeksCanvasGrid: View {
     let lifeExpectancy: Int
     let weeksLived: Int
     let currentWeekIndex: Int
@@ -471,100 +601,97 @@ private struct LifeWeeksGrid: View {
     let onWeekTap: (Int, Int) -> Void
 
     var body: some View {
-        VStack(spacing: spacing) {
-            ForEach(0..<lifeExpectancy, id: \.self) { year in
-                HStack(spacing: spacing) {
-                    ForEach(0..<52, id: \.self) { week in
-                        let weekIndex = year * 52 + week
-                        WeekSquare(
-                            year: year,
-                            week: week,
-                            size: dotSize,
-                            isPast: weekIndex < weeksLived,
-                            isCurrent: weekIndex == currentWeekIndex,
-                            currentWeekDomain: currentWeekDomain,
-                            tone: weekTones[weekIndex],
-                            isMeaningful: weekIndex == currentWeekIndex && isCurrentWeekMeaningful
+        Canvas { context, _ in
+            for year in 0..<lifeExpectancy {
+                for week in 0..<52 {
+                    let weekIndex = year * 52 + week
+                    let rect = dotRect(year: year, week: week)
+                    let dotPath = Path(ellipseIn: rect)
+
+                    context.fill(dotPath, with: .color(dotColor(for: weekIndex)))
+
+                    if weekIndex == currentWeekIndex {
+                        let ringInset = isCurrentWeekMeaningful ? -2.5 : -1.5
+                        let ringRect = rect.insetBy(dx: ringInset, dy: ringInset)
+                        let ringPath = Path(ellipseIn: ringRect)
+                        let ringColor = (currentWeekDomain?.moriColor ?? MoriColors.forestMoss).opacity(0.95)
+                        context.stroke(
+                            ringPath,
+                            with: .color(ringColor),
+                            lineWidth: isCurrentWeekMeaningful ? 2 : 1.5
                         )
-                        .onTapGesture {
-                            onWeekTap(year, week)
-                        }
                     }
                 }
             }
         }
-    }
-}
-
-// MARK: - Week Square
-struct WeekSquare: View {
-    let year: Int
-    let week: Int
-    let size: CGFloat
-    let isPast: Bool
-    let isCurrent: Bool
-    let currentWeekDomain: LifeDomain?
-    let tone: HabitDayTone?
-    let isMeaningful: Bool
-    
-    @State private var isPressed = false
-    @Environment(\.accessibilityReduceMotion) var reduceMotion
-    
-    var body: some View {
-        ZStack {
-            Circle()
-                .fill(squareColor)
-                .frame(width: size, height: size)
-                .scaleEffect(isPressed ? 1.2 : 1.0)
-                .animation(.spring(response: 0.2, dampingFraction: 0.7), value: isPressed)
-        }
-        .frame(width: size, height: size)
-        .overlay {
-            if isCurrent {
-                Circle()
-                    .stroke((currentWeekDomain?.moriColor ?? MoriColors.moriGold).opacity(0.95), lineWidth: isMeaningful ? 2 : 1.5)
-                    .frame(width: size + (isMeaningful ? 5 : 3), height: size + (isMeaningful ? 5 : 3))
-                    .opacity(reduceMotion ? 1 : 0.85)
-                    .animation(
-                        reduceMotion ? .none :
-                        Animation.easeInOut(duration: 2.0).repeatForever(autoreverses: true),
-                        value: isCurrent
-                    )
-                    .allowsHitTesting(false)
-            }
-        }
-        .onTapGesture {
-            withAnimation(.spring(response: 0.2, dampingFraction: 0.7)) {
-                isPressed = true
-            }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
-                isPressed = false
-            }
-        }
+        .frame(width: gridWidth, height: gridHeight)
+        .contentShape(Rectangle())
+        .gesture(
+            SpatialTapGesture(coordinateSpace: .local)
+                .onEnded { value in
+                    guard let coordinate = weekCoordinate(at: value.location) else { return }
+                    onWeekTap(coordinate.year, coordinate.week)
+                }
+        )
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(accessibilityLabel)
-        .accessibilityHint("Double tap to add memory")
-    }
-    
-    private var squareColor: Color {
-        if let tone {
-            return tone.color
-        } else if isCurrent {
-            return currentWeekDomain?.moriColor ?? MoriColors.moriGold
-        } else if isPast {
-            return MoriColors.moriCream.opacity(0.74)
-        } else {
-            return MoriColors.moriCream.opacity(0.13)
+        .accessibilityLabel("Life grid")
+        .accessibilityValue("\(min(weeksLived, lifeExpectancy * 52)) lived weeks out of \(lifeExpectancy * 52)")
+        .accessibilityHint("Tap a lived week to add or view a memory")
+        .accessibilityAddTraits(.isButton)
+        .accessibilityAction {
+            let accessibleWeekIndex = min(max(currentWeekIndex, 0), max(lifeExpectancy * 52 - 1, 0))
+            onWeekTap(accessibleWeekIndex / 52, accessibleWeekIndex % 52)
         }
     }
-    
-    private var accessibilityLabel: String {
-        if isCurrent {
-            return "Current week, week \(week + 1) of age \(year)"
-        } else if isPast {
-            return "Lived week \(week + 1) of age \(year)"
+
+    private var gridWidth: CGFloat {
+        CGFloat(52) * dotSize + CGFloat(51) * spacing
+    }
+
+    private var gridHeight: CGFloat {
+        CGFloat(lifeExpectancy) * dotSize + CGFloat(max(0, lifeExpectancy - 1)) * spacing
+    }
+
+    private func dotRect(year: Int, week: Int) -> CGRect {
+        CGRect(
+            x: CGFloat(week) * (dotSize + spacing),
+            y: CGFloat(year) * (dotSize + spacing),
+            width: dotSize,
+            height: dotSize
+        )
+    }
+
+    private func weekCoordinate(at location: CGPoint) -> WeekCoordinate? {
+        guard location.x >= 0, location.y >= 0 else { return nil }
+
+        let stride = dotSize + spacing
+        let week = Int(location.x / stride)
+        let year = Int(location.y / stride)
+        guard year >= 0, year < lifeExpectancy, week >= 0, week < 52 else { return nil }
+
+        let dotOriginX = CGFloat(week) * stride
+        let dotOriginY = CGFloat(year) * stride
+        let hitSlop = max(2, spacing)
+        let hitRect = CGRect(
+            x: dotOriginX - hitSlop,
+            y: dotOriginY - hitSlop,
+            width: dotSize + hitSlop * 2,
+            height: dotSize + hitSlop * 2
+        )
+        guard hitRect.contains(location) else { return nil }
+
+        return WeekCoordinate(year: year, week: week)
+    }
+
+    private func dotColor(for weekIndex: Int) -> Color {
+        if let tone = weekTones[weekIndex] {
+            return tone.color
+        } else if weekIndex == currentWeekIndex {
+            return MoriColors.forestCanopy.opacity(0.78)
+        } else if weekIndex < weeksLived {
+            return MoriColors.forestCanopy.opacity(0.52)
         } else {
-            return "Future week \(week + 1) of age \(year)"
+            return MoriColors.forestLine.opacity(0.60)
         }
     }
 }
@@ -580,7 +707,7 @@ private struct HabitToneLegend: View {
 
                     Text(tone.title)
                         .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(MoriColors.moriCreamMuted)
+                        .foregroundColor(MoriColors.forestMuted)
                 }
             }
 
@@ -624,7 +751,7 @@ private struct YearToneGrid: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Text(monthFormatter.string(from: month))
                                 .font(.system(size: 12, weight: .semibold))
-                                .foregroundColor(MoriColors.moriCreamMuted)
+                                .foregroundColor(MoriColors.forestMuted)
 
                             LazyVGrid(columns: columns, spacing: 5) {
                                 ForEach(Array(monthCells(for: month).enumerated()), id: \.offset) { _, day in
@@ -644,10 +771,10 @@ private struct YearToneGrid: View {
                         }
                         .padding(12)
                         .frame(maxWidth: .infinity, minHeight: 116, alignment: .topLeading)
-                        .background(MoriColors.moriDarkSurface)
+                        .background(MoriColors.forestCard)
                         .overlay(
                             RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                .stroke(MoriColors.moriHairline, lineWidth: 1)
+                                .stroke(MoriColors.forestHairline, lineWidth: 1)
                         )
                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }
@@ -708,7 +835,12 @@ private struct MonthToneGrid: View {
         formatter.dateFormat = "MMMM yyyy"
         return formatter
     }()
-    private let weekdaySymbols = Calendar.current.shortStandaloneWeekdaySymbols
+    private var weekdaySymbols: [String] {
+        let calendar = Calendar.current
+        let symbols = calendar.shortStandaloneWeekdaySymbols
+        let startIndex = max(0, min(symbols.count - 1, calendar.firstWeekday - 1))
+        return Array(symbols[startIndex...]) + Array(symbols[..<startIndex])
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -723,7 +855,7 @@ private struct MonthToneGrid: View {
                     ForEach(weekdaySymbols, id: \.self) { symbol in
                         Text(String(symbol.prefix(1)))
                             .font(.system(size: 11, weight: .semibold))
-                            .foregroundColor(MoriColors.moriCreamMuted)
+                            .foregroundColor(MoriColors.forestMuted)
                             .frame(maxWidth: .infinity)
                     }
 
@@ -749,7 +881,7 @@ private struct MonthToneGrid: View {
                                 )
                             }
                             .buttonStyle(.plain)
-                            .disabled(journalEntry == nil && habitEntry?.hasPatternLog != true)
+                            .disabled(journalEntry == nil && habitEntry == nil)
                         } else {
                             Color.clear
                                 .frame(height: 34)
@@ -758,10 +890,10 @@ private struct MonthToneGrid: View {
                 }
             }
             .padding(16)
-            .background(MoriColors.moriDarkSurface)
+            .background(MoriColors.forestCard)
             .overlay(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(MoriColors.moriHairline, lineWidth: 1)
+                    .stroke(MoriColors.forestHairline, lineWidth: 1)
             )
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
 
@@ -809,16 +941,16 @@ private struct DayToneSquare: View {
 
     var body: some View {
         RoundedRectangle(cornerRadius: min(7, size * 0.22), style: .continuous)
-            .fill(tone?.color ?? MoriColors.moriCream.opacity(0.12))
+            .fill(tone?.color ?? MoriColors.forestLine.opacity(0.58))
             .frame(height: size)
             .overlay(
                 RoundedRectangle(cornerRadius: min(7, size * 0.22), style: .continuous)
-                    .stroke(isToday ? MoriColors.moriGold : Color.clear, lineWidth: 1.5)
+                    .stroke(isToday ? MoriColors.forestMoss : Color.clear, lineWidth: 1.5)
             )
             .overlay(alignment: .topTrailing) {
                 if hasJournal {
                     Circle()
-                        .fill(MoriColors.moriCream)
+                        .fill(MoriColors.forestCanopy)
                         .frame(width: max(4, size * 0.18), height: max(4, size * 0.18))
                         .padding(max(2, size * 0.08))
                         .accessibilityHidden(true)
@@ -827,7 +959,7 @@ private struct DayToneSquare: View {
             .overlay(alignment: .bottomLeading) {
                 if hasPatternLog {
                     RoundedRectangle(cornerRadius: 2, style: .continuous)
-                        .fill(MoriColors.moriGold)
+                        .fill(MoriColors.forestSeed)
                         .frame(width: max(8, size * 0.28), height: max(3, size * 0.1))
                         .padding(max(2, size * 0.08))
                         .accessibilityHidden(true)
@@ -855,7 +987,7 @@ private struct MonthGridLegend: View {
         HStack(spacing: 14) {
             HStack(spacing: 6) {
                 Circle()
-                    .fill(MoriColors.moriCream)
+                    .fill(MoriColors.forestCanopy)
                     .frame(width: 7, height: 7)
 
                 Text("Journal")
@@ -863,7 +995,7 @@ private struct MonthGridLegend: View {
 
             HStack(spacing: 6) {
                 RoundedRectangle(cornerRadius: 2, style: .continuous)
-                    .fill(MoriColors.moriGold)
+                    .fill(MoriColors.forestSeed)
                     .frame(width: 12, height: 4)
 
                 Text("Pattern Log")
@@ -872,7 +1004,7 @@ private struct MonthGridLegend: View {
             Spacer(minLength: 0)
         }
         .font(.system(size: 12, weight: .medium))
-        .foregroundColor(MoriColors.moriCreamMuted)
+        .foregroundColor(MoriColors.forestMuted)
         .padding(.horizontal, 2)
     }
 }
@@ -913,7 +1045,7 @@ private struct MonthDayDetailSheet: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text(dateFormatter.string(from: selection.date))
                             .font(.system(size: 22, weight: .semibold, design: .rounded))
-                            .foregroundColor(MoriColors.moriCream)
+                            .foregroundColor(MoriColors.forestCanopy)
                             .fixedSize(horizontal: false, vertical: true)
 
                         if let tone = selection.habitEntry?.tone {
@@ -927,23 +1059,29 @@ private struct MonthDayDetailSheet: View {
                         PatternLogSummaryCard(entry: habitEntry)
                     }
 
+                    if let habitEntry = selection.habitEntry,
+                       let note = habitEntry.note?.trimmingCharacters(in: .whitespacesAndNewlines),
+                       !note.isEmpty {
+                        HabitNoteSummaryCard(note: note)
+                    }
+
                     if let journalEntry = selection.journalEntry {
                         JournalSummaryCard(entry: journalEntry)
                     }
                 }
                 .padding(24)
             }
-            .background(MoriColors.moriDark.ignoresSafeArea())
+            .background(MoriColors.forestPaper.ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarColorScheme(.dark, for: .navigationBar)
-            .toolbarBackground(MoriColors.moriDark, for: .navigationBar)
+            .toolbarColorScheme(.light, for: .navigationBar)
+            .toolbarBackground(MoriColors.forestPaper, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
                         dismiss()
                     }
-                    .foregroundColor(MoriColors.moriGold)
+                    .foregroundColor(MoriColors.forestCanopy)
                 }
             }
         }
@@ -968,7 +1106,7 @@ private struct PatternLogSummaryCard: View {
         VStack(alignment: .leading, spacing: 14) {
             Label("Pattern Log", systemImage: "arrow.triangle.2.circlepath")
                 .font(.system(size: 16, weight: .semibold, design: .rounded))
-                .foregroundColor(MoriColors.moriGold)
+                .foregroundColor(MoriColors.forestMoss)
 
             PatternLogRow(title: "Trigger", value: entry.trigger)
             PatternLogRow(title: "Thought", value: entry.thought)
@@ -976,11 +1114,11 @@ private struct PatternLogSummaryCard: View {
             PatternLogRow(title: "Next response", value: entry.responsePlan)
         }
         .padding(16)
-        .background(MoriColors.moriDarkSurface)
+        .background(MoriColors.forestCard)
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(MoriColors.moriHairline, lineWidth: 1)
+                .stroke(MoriColors.forestHairline, lineWidth: 1)
         )
     }
 }
@@ -995,14 +1133,39 @@ private struct PatternLogRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 Text(title)
                     .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(MoriColors.moriCreamMuted)
+                    .foregroundColor(MoriColors.forestMuted)
 
                 Text(value)
                     .font(.system(size: 15, weight: .regular))
-                    .foregroundColor(MoriColors.moriCream)
+                    .foregroundColor(MoriColors.forestCanopy)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
+    }
+}
+
+private struct HabitNoteSummaryCard: View {
+    let note: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Label("Day Note", systemImage: "note.text")
+                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                .foregroundColor(MoriColors.forestCanopy)
+
+            Text(note)
+                .font(.system(size: 15, weight: .regular))
+                .foregroundColor(MoriColors.forestCanopy)
+                .lineSpacing(2)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(16)
+        .background(MoriColors.forestCard)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(MoriColors.forestHairline, lineWidth: 1)
+        )
     }
 }
 
@@ -1013,20 +1176,20 @@ private struct JournalSummaryCard: View {
         VStack(alignment: .leading, spacing: 12) {
             Label(entry.sourceLabel, systemImage: entry.sourceSymbolName)
                 .font(.system(size: 16, weight: .semibold, design: .rounded))
-                .foregroundColor(MoriColors.moriCream)
+                .foregroundColor(MoriColors.forestCanopy)
 
             Text(entry.displayContent)
                 .font(.system(size: 15, weight: .regular))
-                .foregroundColor(MoriColors.moriCream)
+                .foregroundColor(MoriColors.forestCanopy)
                 .lineSpacing(2)
                 .fixedSize(horizontal: false, vertical: true)
         }
         .padding(16)
-        .background(MoriColors.moriDarkSurface)
+        .background(MoriColors.forestCard)
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 14, style: .continuous)
-                .stroke(MoriColors.moriHairline, lineWidth: 1)
+                .stroke(MoriColors.forestHairline, lineWidth: 1)
         )
     }
 }
@@ -1054,8 +1217,9 @@ private func preferredJournalEntry(
 private func journalEntryPriority(_ entry: GratitudeEntry) -> Int {
     switch entry.sourceKind {
     case .journal: return 0
-    case .dailySpark: return 1
-    case .weeklyIntention: return 2
+    case .dayLog: return 1
+    case .dailySpark: return 2
+    case .weeklyIntention: return 3
     }
 }
 
@@ -1072,11 +1236,11 @@ private struct PeriodNavigator: View {
                     .frame(width: 34, height: 34)
             }
             .buttonStyle(.plain)
-            .foregroundColor(MoriColors.moriGold)
+            .foregroundColor(MoriColors.forestCanopy)
 
             Text(title)
                 .font(.system(size: 18, weight: .semibold, design: .rounded))
-                .foregroundColor(MoriColors.moriCream)
+                .foregroundColor(MoriColors.forestCanopy)
                 .frame(maxWidth: .infinity)
 
             Button(action: nextAction) {
@@ -1085,7 +1249,7 @@ private struct PeriodNavigator: View {
                     .frame(width: 34, height: 34)
             }
             .buttonStyle(.plain)
-            .foregroundColor(MoriColors.moriGold)
+            .foregroundColor(MoriColors.forestCanopy)
         }
     }
 }
@@ -1093,14 +1257,14 @@ private struct PeriodNavigator: View {
 private extension LifeDomain {
     var moriColor: Color {
         switch self {
-        case .body: return MoriColors.sageGreen
-        case .mind: return MoriColors.mistBlue
-        case .love: return MoriColors.warmClay
-        case .craft: return MoriColors.moriGold
-        case .courage: return MoriColors.emberOrange
-        case .service: return MoriColors.softSage
+        case .body: return MoriColors.forestFern
+        case .mind: return MoriColors.forestMist
+        case .love: return MoriColors.forestClay
+        case .craft: return MoriColors.forestSeed
+        case .courage: return MoriColors.forestRoot
+        case .service: return MoriColors.forestSage
         case .wonder: return MoriColors.morningGold
-        case .rest: return MoriColors.softTaupe
+        case .rest: return MoriColors.forestMuted
         }
     }
 }
@@ -1109,12 +1273,18 @@ private extension LifeDomain {
 struct WeekCoordinate: Equatable {
     let year: Int
     let week: Int
+
+    var linearIndex: Int {
+        year * 52 + week
+    }
 }
 
 // MARK: - Week Detail Sheet
 struct WeekDetailSheet: View {
     let week: WeekCoordinate
     let settings: UserSettings
+    let habitEntries: [HabitEntry]
+    let journalEntries: [GratitudeEntry]
     @Binding var isPresented: Bool
     
     @State private var memoryText: String = ""
@@ -1131,10 +1301,7 @@ struct WeekDetailSheet: View {
     }()
     
     private var weekDate: Date {
-        let calendar = Calendar.current
-        let birthDate = settings.birthDate
-        let daysOffset = (week.year * 52 + week.week) * 7
-        return calendar.date(byAdding: .day, value: daysOffset, to: birthDate) ?? birthDate
+        moriMondayWeekStart(for: week, birthDate: settings.birthDate)
     }
     
     private var dateRangeText: String {
@@ -1152,29 +1319,37 @@ struct WeekDetailSheet: View {
                         Text("Week \(week.week + 1), Age \(week.year)")
                             .font(.title2)
                             .fontWeight(.semibold)
-                            .foregroundColor(MoriColors.moriCream)
-                        
+                            .foregroundColor(MoriColors.forestCanopy)
+
                         Text(dateRangeText)
                             .font(.subheadline)
-                            .foregroundColor(MoriColors.moriCreamMuted)
+                            .foregroundColor(MoriColors.forestMuted)
                     }
                     .padding(.top)
+
+                    if hasWeekActivity {
+                        WeekActivitySection(
+                            habitEntries: habitEntries,
+                            journalEntries: journalEntries
+                        )
+                        .padding(.horizontal)
+                    }
                     
                     // Memory section
                     VStack(alignment: .leading, spacing: 12) {
                         HStack {
                             Image(systemName: "note.text")
-                                .foregroundColor(MoriColors.moriGold)
+                                .foregroundColor(MoriColors.forestMoss)
                             Text("Memory from this week")
                                 .font(.headline)
-                                .foregroundColor(MoriColors.moriCream)
+                                .foregroundColor(MoriColors.forestCanopy)
                             Spacer()
                             if existingNote != nil && !isEditing {
                                 Button("Edit") {
                                     isEditing = true
                                 }
                                 .font(.subheadline)
-                                .foregroundColor(MoriColors.moriGold)
+                                .foregroundColor(MoriColors.forestCanopy)
                             }
                         }
                         
@@ -1182,13 +1357,13 @@ struct WeekDetailSheet: View {
                             TextEditor(text: $memoryText)
                                 .frame(minHeight: 120)
                                 .padding(12)
-                                .background(MoriColors.moriDarkSurface)
+                                .background(MoriColors.forestCard)
                                 .cornerRadius(12)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 12)
-                                        .stroke(MoriColors.moriHairline, lineWidth: 1)
+                                        .stroke(MoriColors.forestHairline, lineWidth: 1)
                                 )
-                                .foregroundColor(MoriColors.moriCream)
+                                .foregroundColor(MoriColors.forestCanopy)
                                 .scrollContentBackground(.hidden)
                             
                             Button(action: saveMemory) {
@@ -1197,20 +1372,20 @@ struct WeekDetailSheet: View {
                                     Text("Save Memory")
                                 }
                                 .font(.headline)
-                                .foregroundColor(MoriColors.moriDark)
+                                .foregroundColor(MoriColors.forestCard)
                                 .frame(maxWidth: .infinity)
                                 .padding()
-                                .background(memoryText.isEmpty ? MoriColors.moriCreamMuted.opacity(0.45) : MoriColors.moriGold)
+                                .background(memoryText.isEmpty ? MoriColors.forestMuted.opacity(0.35) : MoriColors.forestCanopy)
                                 .cornerRadius(12)
                             }
                             .disabled(memoryText.isEmpty)
                         } else {
                             Text(existingNote ?? "")
                                 .font(.system(size: 18, weight: .regular, design: .serif))
-                                .foregroundColor(MoriColors.moriCream)
+                                .foregroundColor(MoriColors.forestCanopy)
                                 .frame(maxWidth: .infinity, alignment: .leading)
                                 .padding(16)
-                                .background(MoriColors.moriDarkSurface)
+                                .background(MoriColors.forestCard)
                                 .cornerRadius(12)
                         }
                     }
@@ -1220,17 +1395,17 @@ struct WeekDetailSheet: View {
                     VStack(alignment: .leading, spacing: 12) {
                         Text("Reflection prompts")
                             .font(.headline)
-                            .foregroundColor(MoriColors.moriCreamMuted)
+                            .foregroundColor(MoriColors.forestMuted)
                             .padding(.horizontal)
                         
                         ForEach(reflectionPrompts, id: \.self) { prompt in
                             HStack(alignment: .top, spacing: 12) {
                                 Image(systemName: "lightbulb")
-                                    .foregroundColor(MoriColors.morningGold)
+                                    .foregroundColor(MoriColors.forestSeed)
                                     .font(.system(size: 16))
                                 Text(prompt)
                                     .font(.subheadline)
-                                    .foregroundColor(MoriColors.moriCreamMuted)
+                                    .foregroundColor(MoriColors.forestMuted)
                                 Spacer()
                             }
                             .padding(.horizontal)
@@ -1240,17 +1415,17 @@ struct WeekDetailSheet: View {
                     Spacer(minLength: 40)
                 }
             }
-            .background(MoriColors.moriDark)
+            .background(MoriColors.forestPaper)
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarColorScheme(.dark, for: .navigationBar)
-            .toolbarBackground(MoriColors.moriDark, for: .navigationBar)
+            .toolbarColorScheme(.light, for: .navigationBar)
+            .toolbarBackground(MoriColors.forestPaper, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
                         isPresented = false
                     }
-                    .foregroundColor(MoriColors.moriGold)
+                    .foregroundColor(MoriColors.forestCanopy)
                 }
 
                 ToolbarItemGroup(placement: .keyboard) {
@@ -1259,7 +1434,7 @@ struct WeekDetailSheet: View {
                     Button("Done") {
                         dismissKeyboard()
                     }
-                    .foregroundColor(MoriColors.moriGold)
+                    .foregroundColor(MoriColors.forestCanopy)
                 }
             }
         }
@@ -1311,8 +1486,7 @@ struct WeekDetailSheet: View {
         } else {
             // Create a new LifeWeek with the note
             let calendar = Calendar.current
-            let birthDate = settings.birthDate
-            let startDate = calendar.date(byAdding: .day, value: week.week * 7, to: birthDate) ?? birthDate
+            let startDate = moriMondayWeekStart(for: week, birthDate: settings.birthDate)
             let endDate = calendar.date(byAdding: .day, value: 6, to: startDate) ?? startDate
             
             let newWeek = LifeWeek(
@@ -1344,6 +1518,120 @@ struct WeekDetailSheet: View {
             from: nil,
             for: nil
         )
+    }
+
+    private var hasWeekActivity: Bool {
+        !habitEntries.isEmpty || !journalEntries.isEmpty
+    }
+}
+
+private struct WeekActivitySection: View {
+    let habitEntries: [HabitEntry]
+    let journalEntries: [GratitudeEntry]
+
+    private let dateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEE, MMM d"
+        return formatter
+    }()
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("Already captured this week", systemImage: "sparkles")
+                .font(.headline)
+                .foregroundColor(MoriColors.forestMoss)
+
+            ForEach(journalEntries.prefix(4)) { entry in
+                WeekActivityRow(
+                    symbolName: entry.sourceSymbolName,
+                    tint: entry.photoAttachments.isEmpty ? MoriColors.forestCanopy : MoriColors.forestMist,
+                    title: entry.sourceLabel,
+                    subtitle: dateFormatter.string(from: entry.date),
+                    bodyText: entry.displayContent
+                )
+            }
+
+            ForEach(habitEntries.filter(\.hasPatternLog).prefix(3)) { entry in
+                WeekActivityRow(
+                    symbolName: "arrow.triangle.2.circlepath",
+                    tint: MoriColors.forestSeed,
+                    title: "Pattern Log",
+                    subtitle: "\(dateFormatter.string(from: entry.date)) · \(entry.tone.title)",
+                    bodyText: patternSummary(for: entry)
+                )
+            }
+
+            let noteEntries = habitEntries.filter { entry in
+                entry.note?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false && !entry.hasPatternLog
+            }
+
+            ForEach(noteEntries.prefix(3)) { entry in
+                WeekActivityRow(
+                    symbolName: "note.text",
+                    tint: entry.tone.color,
+                    title: "\(entry.tone.title) day",
+                    subtitle: dateFormatter.string(from: entry.date),
+                    bodyText: entry.note ?? ""
+                )
+            }
+        }
+        .padding(16)
+        .background(MoriColors.forestCard)
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(MoriColors.forestHairline, lineWidth: 1)
+        )
+    }
+
+    private func patternSummary(for entry: HabitEntry) -> String {
+        [
+            entry.trigger.map { "Trigger: \($0)" },
+            entry.feeling.map { "Feeling: \($0)" },
+            entry.responsePlan.map { "Next: \($0)" }
+        ]
+        .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+        .filter { !$0.isEmpty }
+        .joined(separator: "\n")
+    }
+}
+
+private struct WeekActivityRow: View {
+    let symbolName: String
+    let tint: Color
+    let title: String
+    let subtitle: String
+    let bodyText: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            Image(systemName: symbolName)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(tint)
+                .frame(width: 24, height: 24)
+                .background(tint.opacity(0.14))
+                .clipShape(Circle())
+
+            VStack(alignment: .leading, spacing: 4) {
+                HStack(spacing: 8) {
+                    Text(title)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(MoriColors.forestCanopy)
+
+                    Text(subtitle)
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(MoriColors.forestMuted)
+                }
+
+                Text(bodyText)
+                    .font(.system(size: 14, weight: .regular))
+                    .foregroundColor(MoriColors.forestMuted)
+                    .lineLimit(3)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: 0)
+        }
     }
 }
 

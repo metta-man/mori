@@ -136,6 +136,7 @@ private struct EntrySourceBadge: View {
     private var foregroundColor: Color {
         switch entry.sourceKind {
         case .journal: return MoriColors.moriCreamMuted
+        case .dayLog: return MoriColors.warmClay
         case .dailySpark: return MoriColors.moriGold
         case .weeklyIntention: return MoriColors.sageGreen
         }

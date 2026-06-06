@@ -12,6 +12,8 @@ struct HabitTrackerView: View {
     @State private var toastMessage = ""
     @State private var showSettings = false
     @State private var showPatternLog = false
+    @State private var showLogbook = false
+    @State private var patternLogTone: HabitDayTone = .neutral
     
     init() {
         _streak = State(initialValue: HabitStreak(currentStreak: 0, longestStreak: 0, lastWeekTrend: .stable))
@@ -88,11 +90,29 @@ struct HabitTrackerView: View {
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
-                    Button {
-                        showSettings = true
-                    } label: {
-                        Image(systemName: "gearshape")
-                            .foregroundColor(MoriColors.moriGold.opacity(0.8))
+                    HStack(spacing: 16) {
+                        Button {
+                            openPatternLog()
+                        } label: {
+                            Image(systemName: "arrow.triangle.2.circlepath")
+                                .foregroundColor(MoriColors.moriGold.opacity(0.8))
+                        }
+                        .accessibility(label: Text("Open pattern log"))
+
+                        Button {
+                            showLogbook = true
+                        } label: {
+                            Image(systemName: "calendar.badge.plus")
+                                .foregroundColor(MoriColors.moriGold.opacity(0.8))
+                        }
+                        .accessibility(label: Text("Log a previous day"))
+
+                        Button {
+                            showSettings = true
+                        } label: {
+                            Image(systemName: "gearshape")
+                                .foregroundColor(MoriColors.moriGold.opacity(0.8))
+                        }
                     }
                 }
             }
@@ -100,12 +120,28 @@ struct HabitTrackerView: View {
                 SettingsView()
                     .environmentObject(settings)
             }
+            .sheet(isPresented: $showLogbook) {
+                LogbookEntrySheet { date, tone, note, trigger, thought, feeling, responsePlan, journalText, photoAttachments in
+                    saveBackdatedEntry(
+                        date: date,
+                        tone: tone,
+                        note: note,
+                        trigger: trigger,
+                        thought: thought,
+                        feeling: feeling,
+                        responsePlan: responsePlan,
+                        journalText: journalText,
+                        photoAttachments: photoAttachments
+                    )
+                }
+            }
             .sheet(isPresented: $showPatternLog) {
                 PatternLogSheet(
                     existingEntry: todayEntry,
-                    onSave: { trigger, thought, feeling, responsePlan in
+                    initialTone: patternLogTone,
+                    onSave: { tone, trigger, thought, feeling, responsePlan in
                         saveTone(
-                            .negative,
+                            tone,
                             note: PatternLogSheet.summary(
                                 trigger: trigger,
                                 thought: thought,
@@ -163,11 +199,17 @@ struct HabitTrackerView: View {
         generator.impactOccurred()
 
         if tone == .negative {
+            patternLogTone = tone
             showPatternLog = true
             return
         }
 
         saveTone(tone)
+    }
+
+    private func openPatternLog() {
+        patternLogTone = todayEntry?.tone ?? .neutral
+        showPatternLog = true
     }
 
     private func saveTone(
@@ -204,13 +246,65 @@ struct HabitTrackerView: View {
             showToast = false
         }
     }
+
+    private func saveBackdatedEntry(
+        date: Date,
+        tone: HabitDayTone,
+        note: String?,
+        trigger: String?,
+        thought: String?,
+        feeling: String?,
+        responsePlan: String?,
+        journalText: String?,
+        photoAttachments: [GratitudePhotoAttachment]
+    ) {
+        _ = HabitDataManager.shared.saveEntry(
+            on: date,
+            tone: tone,
+            note: note,
+            trigger: trigger,
+            thought: thought,
+            feeling: feeling,
+            responsePlan: responsePlan
+        )
+
+        let dayLogPhotos = journalText == nil ? photoAttachments : []
+        GratitudeEntry.saveDayLogEntry(
+            on: date,
+            tone: tone,
+            note: note,
+            trigger: trigger,
+            thought: thought,
+            feeling: feeling,
+            responsePlan: responsePlan,
+            photoAttachments: dayLogPhotos
+        )
+
+        if let journalText {
+            _ = GratitudeEntry.saveJournalEntry(
+                on: date,
+                content: journalText,
+                promptType: .moment,
+                photoAttachments: photoAttachments
+            )
+        }
+
+        loadData()
+        toastMessage = "Previous day logged"
+        showToast = true
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            showToast = false
+        }
+    }
 }
 
 private struct PatternLogSheet: View {
     let existingEntry: HabitEntry?
-    let onSave: (String, String, String, String) -> Void
+    let onSave: (HabitDayTone, String, String, String, String) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    @State private var selectedTone: HabitDayTone
     @State private var trigger: String
     @State private var thought: String
     @State private var feeling: String
@@ -218,10 +312,12 @@ private struct PatternLogSheet: View {
 
     init(
         existingEntry: HabitEntry?,
-        onSave: @escaping (String, String, String, String) -> Void
+        initialTone: HabitDayTone,
+        onSave: @escaping (HabitDayTone, String, String, String, String) -> Void
     ) {
         self.existingEntry = existingEntry
         self.onSave = onSave
+        _selectedTone = State(initialValue: initialTone)
         _trigger = State(initialValue: existingEntry?.trigger ?? "")
         _thought = State(initialValue: existingEntry?.thought ?? "")
         _feeling = State(initialValue: existingEntry?.feeling ?? "")
@@ -241,6 +337,14 @@ private struct PatternLogSheet: View {
                             .font(.system(size: 15, weight: .regular))
                             .foregroundColor(MoriColors.moriCreamMuted)
                     }
+
+                    Picker("Day tone", selection: $selectedTone) {
+                        ForEach(HabitDayTone.allCases) { tone in
+                            Text(tone.title).tag(tone)
+                        }
+                    }
+                    .pickerStyle(.segmented)
+                    .tint(MoriColors.moriGold)
 
                     PatternLogField(
                         title: "Trigger",
@@ -294,7 +398,7 @@ private struct PatternLogSheet: View {
     }
 
     private func save() {
-        onSave(trigger, thought, feeling, responsePlan)
+        onSave(selectedTone, trigger, thought, feeling, responsePlan)
         dismiss()
     }
 
@@ -492,9 +596,7 @@ struct StreakCard: View {
 // MARK: - Week Visualization
 struct WeekVisualization: View {
     let entries: [HabitEntry]
-    
-    private let dayLabels = ["M", "T", "W", "T", "F", "S", "S"]
-    
+
     var body: some View {
         VStack(spacing: 16) {
             Text("Last 7 Days")
@@ -504,9 +606,10 @@ struct WeekVisualization: View {
             
             HStack(spacing: 12) {
                 ForEach(0..<7, id: \.self) { index in
-                    let entry = entries.first { Calendar.current.isDate($0.date, inSameDayAs: getWeekDate(offset: index)) }
-                    let isToday = index == 6
-                    
+                    let date = getWeekDate(offset: index)
+                    let entry = entries.first { Calendar.current.isDate($0.date, inSameDayAs: date) }
+                    let isToday = Calendar.current.isDateInToday(date)
+
                     VStack(spacing: 8) {
                         Circle()
                             .fill(entry?.tone.color ?? HabitDayTone.neutral.color.opacity(0.35))
@@ -516,8 +619,8 @@ struct WeekVisualization: View {
                                     .stroke(isToday ? MoriColors.accentAmber : .clear, lineWidth: 2)
                             )
                             .opacity(isToday ? 1 : 0.7)
-                        
-                        Text(dayLabels[index])
+
+                        Text(dayLabel(for: date))
                             .font(.custom("Poppins-Regular", size: 10))
                             .foregroundColor(MoriColors.moriCreamMuted)
                     }
@@ -538,6 +641,12 @@ struct WeekVisualization: View {
         let calendar = Calendar.current
         let today = calendar.startOfDay(for: Date())
         return calendar.date(byAdding: .day, value: -(6 - offset), to: today) ?? today
+    }
+
+    private func dayLabel(for date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "EEEEE"
+        return formatter.string(from: date)
     }
 }
 
@@ -650,9 +759,9 @@ struct StatRow: View {
 extension HabitDayTone {
     var color: Color {
         switch self {
-        case .positive: return Color(hex: "#788C5D")
-        case .neutral: return MoriColors.morningGold
-        case .negative: return Color(hex: "#FF6B35")
+        case .positive: return MoriColors.forestMoss
+        case .neutral: return MoriColors.forestSeed
+        case .negative: return MoriColors.forestClay
         }
     }
 

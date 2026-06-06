@@ -304,6 +304,35 @@ extension MoriColors {
     static let emptyDot = warmGray
 }
 
+// MARK: - Forest Sanctuary Palette
+extension MoriColors {
+    /// Soft paper background used by the refreshed Mori sanctuary screens.
+    static let forestPaper = Color(hex: "#F7F5F0")
+    static let forestPaperDeep = Color(hex: "#EFE8DA")
+    static let forestCard = Color(hex: "#FFFDF7")
+    static let forestCream = Color(hex: "#FFF8EA")
+
+    /// Deep forest ink for primary text and selected controls.
+    static let forestCanopy = Color(hex: "#173D32")
+    static let forestCanopyLight = Color(hex: "#254F43")
+    static let forestMuted = Color(hex: "#657168")
+
+    /// Botanical accents.
+    static let forestMoss = Color(hex: "#687E5E")
+    static let forestFern = Color(hex: "#7E9A74")
+    static let forestSage = Color(hex: "#A8B5A0")
+    static let forestMist = Color(hex: "#82929A")
+    static let forestMistSoft = Color(hex: "#DCE5E4")
+    static let forestSeed = Color(hex: "#D8B86F")
+    static let forestClay = Color(hex: "#B9856D")
+    static let forestRoot = Color(hex: "#6F5946")
+
+    /// Lines and shadows tuned for the premium paper UI.
+    static let forestLine = Color(hex: "#D9D3C5")
+    static let forestHairline = Color(hex: "#173D32").opacity(0.10)
+    static let forestShadow = Color(hex: "#173D32").opacity(0.10)
+}
+
 // MARK: - Design Spec v1.0 Compatibility Layer
 // These aliases map the spec-required names to our implemented colors
 // This ensures compatibility with the Flare design system v1.0

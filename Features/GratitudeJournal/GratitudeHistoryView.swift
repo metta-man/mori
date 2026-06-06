@@ -158,6 +158,7 @@ struct GratitudeHistoryView: View {
     private func sourceColor(for entry: GratitudeEntry) -> Color {
         switch entry.sourceKind {
         case .journal: return Color(hex: "D4AF37")
+        case .dayLog: return MoriColors.warmClay
         case .dailySpark: return Color(hex: "B8942D")
         case .weeklyIntention: return Color(hex: "788c5d")
         }

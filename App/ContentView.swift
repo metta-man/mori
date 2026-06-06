@@ -2,7 +2,7 @@ import SwiftUI
 
 struct ContentView: View {
     @EnvironmentObject var settings: UserSettings
-    @State private var selectedTab: AppTab = .grid
+    @State private var selectedTab: AppTab = .today
     
     var body: some View {
         Group {
@@ -16,46 +16,63 @@ struct ContentView: View {
     
     private var mainTabView: some View {
         TabView(selection: $selectedTab) {
+            TodayView(onOpenSettle: {
+                selectedTab = .settle
+            })
+                .tabItem {
+                    Label("Today", systemImage: "leaf.fill")
+                }
+                .tag(AppTab.today)
+
             LifeGridView()
                 .tabItem {
-                    Label("Grid", systemImage: "square.grid.3x3.fill")
+                    Label("Life Grid", systemImage: "square.grid.3x3.fill")
                 }
                 .tag(AppTab.grid)
-            
-            HabitTrackerView()
+
+            SettleView()
                 .tabItem {
-                    Label("Days", systemImage: "plus.forwardslash.minus")
+                    Label("Settle", systemImage: "figure.mind.and.body")
                 }
-                .tag(AppTab.habits)
-            
-            ClockView()
+                .tag(AppTab.settle)
+
+            ClarityPulseView(onOpenSettle: {
+                selectedTab = .settle
+            })
                 .tabItem {
-                    Label("Clock", systemImage: "clock.fill")
+                    Label("Pulse", systemImage: "sparkles")
                 }
-                .tag(AppTab.clock)
-            
-            GratitudeJournalScreen()
+                .tag(AppTab.pulse)
+
+            RootsGrowthView()
                 .tabItem {
-                    Label("Journal", systemImage: "heart.text.square.fill")
+                    Label("Roots", systemImage: "chart.bar.fill")
                 }
-                .tag(AppTab.journal)
+                .tag(AppTab.roots)
         }
-        .tint(MoriColors.moriGold)
+        .tint(MoriColors.forestCanopy)
         .onOpenURL { url in
             if url.host == "journal" || url.path.contains("journal") {
-                selectedTab = .journal
+                selectedTab = .roots
             } else if url.host == "spark" || url.path.contains("spark") {
-                selectedTab = .clock
+                selectedTab = .today
+            } else if url.host == "pulse" || url.path.contains("pulse") {
+                selectedTab = .pulse
+            } else if url.host == "settle" || url.path.contains("settle") {
+                selectedTab = .settle
+            } else if url.host == "quiet" || url.path.contains("quiet") {
+                selectedTab = .today
             }
         }
         .onAppear {
             let appearance = UITabBarAppearance()
             appearance.configureWithOpaqueBackground()
-            appearance.backgroundColor = UIColor(MoriColors.moriDark)
-            appearance.stackedLayoutAppearance.selected.iconColor = UIColor(MoriColors.moriGold)
-            appearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor(MoriColors.moriGold)]
-            appearance.stackedLayoutAppearance.normal.iconColor = UIColor(MoriColors.moriCreamMuted)
-            appearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor(MoriColors.moriCreamMuted)]
+            appearance.backgroundColor = UIColor(MoriColors.forestCard)
+            appearance.shadowColor = UIColor(MoriColors.forestLine.opacity(0.65))
+            appearance.stackedLayoutAppearance.selected.iconColor = UIColor(MoriColors.forestCanopy)
+            appearance.stackedLayoutAppearance.selected.titleTextAttributes = [.foregroundColor: UIColor(MoriColors.forestCanopy)]
+            appearance.stackedLayoutAppearance.normal.iconColor = UIColor(MoriColors.forestMuted)
+            appearance.stackedLayoutAppearance.normal.titleTextAttributes = [.foregroundColor: UIColor(MoriColors.forestMuted)]
             UITabBar.appearance().standardAppearance = appearance
             UITabBar.appearance().scrollEdgeAppearance = appearance
         }
@@ -63,10 +80,11 @@ struct ContentView: View {
 }
 
 private enum AppTab: Hashable {
+    case today
     case grid
-    case habits
-    case clock
-    case journal
+    case settle
+    case pulse
+    case roots
 }
 
 #Preview {

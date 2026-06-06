@@ -70,6 +70,7 @@ struct GratitudeEntry: Identifiable, Codable {
 
 enum GratitudeEntrySourceKind: Equatable {
     case journal
+    case dayLog
     case dailySpark
     case weeklyIntention
 }
@@ -156,6 +157,10 @@ extension GratitudeEntry {
     var sourceKind: GratitudeEntrySourceKind {
         guard let sourceID else { return .journal }
 
+        if sourceID.hasPrefix("day-log-") {
+            return .dayLog
+        }
+
         if sourceID.hasPrefix("daily-spark-") {
             return .dailySpark
         }
@@ -170,6 +175,7 @@ extension GratitudeEntry {
     var sourceLabel: String {
         switch sourceKind {
         case .journal: return promptType?.shortName ?? "Journal"
+        case .dayLog: return "Day Log"
         case .dailySpark: return "Daily Spark"
         case .weeklyIntention: return "Weekly Proof"
         }
@@ -178,6 +184,7 @@ extension GratitudeEntry {
     var sourceSymbolName: String {
         switch sourceKind {
         case .journal: return "book.closed"
+        case .dayLog: return "calendar.badge.clock"
         case .dailySpark: return "sparkle.magnifyingglass"
         case .weeklyIntention: return "square.grid.3x3"
         }
@@ -187,7 +194,7 @@ extension GratitudeEntry {
         switch sourceKind {
         case .dailySpark:
             return content.removingDailySparkTitle
-        case .journal, .weeklyIntention:
+        case .journal, .dayLog, .weeklyIntention:
             return content
         }
     }
@@ -219,6 +226,95 @@ extension GratitudeEntry {
             try? await GratitudeCloudBackup.shared.save(entries: entries)
         }
         NotificationCenter.default.post(name: .gratitudeDataDidChange, object: nil)
+    }
+
+    static func saveJournalEntry(
+        on date: Date,
+        content: String,
+        promptType: GratitudePrompt? = nil,
+        photoAttachments: [GratitudePhotoAttachment] = []
+    ) -> Result<GratitudeEntry, GratitudeError> {
+        let validation = validate(content)
+        guard validation.isValid else {
+            return .failure(GratitudeError.validationFailed(validation.errorMessage ?? "Invalid content"))
+        }
+
+        let calendar = Calendar.current
+        let entryDate = calendar.startOfDay(for: date)
+        var entries = loadAllStored()
+        let entry: GratitudeEntry
+
+        if let existingIndex = entries.firstIndex(where: {
+            calendar.isDate($0.date, inSameDayAs: entryDate) && $0.sourceID == nil
+        }) {
+            entries[existingIndex].content = content
+            entries[existingIndex].promptType = promptType
+            entries[existingIndex].photoAttachments = photoAttachments
+            entries[existingIndex].updatedAt = Date()
+            entry = entries[existingIndex]
+        } else {
+            entry = GratitudeEntry(
+                date: entryDate,
+                content: content,
+                promptType: promptType,
+                photoAttachments: photoAttachments
+            )
+            entries.insert(entry, at: 0)
+        }
+
+        entries.sort { $0.date > $1.date }
+        persist(entries)
+
+        return .success(entry)
+    }
+
+    static func saveDayLogEntry(
+        on date: Date,
+        tone: HabitDayTone,
+        note: String?,
+        trigger: String?,
+        thought: String?,
+        feeling: String?,
+        responsePlan: String?,
+        photoAttachments: [GratitudePhotoAttachment] = []
+    ) {
+        let calendar = Calendar.current
+        let entryDate = calendar.startOfDay(for: date)
+        let sourceID = "day-log-\(dayLogDateKey(for: entryDate))"
+        let content = dayLogContent(
+            tone: tone,
+            note: note,
+            trigger: trigger,
+            thought: thought,
+            feeling: feeling,
+            responsePlan: responsePlan,
+            hasPhotos: !photoAttachments.isEmpty
+        )
+        var entries = loadAllStored()
+
+        if let existingIndex = entries.firstIndex(where: { $0.sourceID == sourceID }) {
+            if entries[existingIndex].photoAttachments != photoAttachments {
+                entries[existingIndex].photoAttachments.forEach(GratitudePhotoStore.deletePhoto)
+            }
+
+            entries[existingIndex].content = content
+            entries[existingIndex].sourceID = sourceID
+            entries[existingIndex].photoAttachments = photoAttachments
+            entries[existingIndex].updatedAt = Date()
+        } else {
+            entries.insert(
+                GratitudeEntry(
+                    date: entryDate,
+                    content: content,
+                    sourceID: sourceID,
+                    photoAttachments: photoAttachments
+                ),
+                at: 0
+            )
+        }
+
+        entries.sort { $0.date > $1.date }
+        persist(entries)
     }
 
     static func saveWeeklyIntention(_ intention: WeeklyIntention) {
@@ -319,6 +415,62 @@ private extension String {
             .trimmingCharacters(in: .whitespacesAndNewlines)
 
         return stripped.isEmpty ? self : stripped
+    }
+}
+
+private func dayLogDateKey(for date: Date) -> String {
+    let formatter = DateFormatter()
+    formatter.calendar = Calendar(identifier: .gregorian)
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.dateFormat = "yyyy-MM-dd"
+    return formatter.string(from: date)
+}
+
+private func dayLogContent(
+    tone: HabitDayTone,
+    note: String?,
+    trigger: String?,
+    thought: String?,
+    feeling: String?,
+    responsePlan: String?,
+    hasPhotos: Bool
+) -> String {
+    var rows = ["\(tone.dayLogTitle) day logged."]
+
+    if let note = note?.trimmingCharacters(in: .whitespacesAndNewlines), !note.isEmpty {
+        rows.append("Note: \(note)")
+    }
+
+    if let trigger = trigger?.trimmingCharacters(in: .whitespacesAndNewlines), !trigger.isEmpty {
+        rows.append("Trigger: \(trigger)")
+    }
+
+    if let thought = thought?.trimmingCharacters(in: .whitespacesAndNewlines), !thought.isEmpty {
+        rows.append("Thought: \(thought)")
+    }
+
+    if let feeling = feeling?.trimmingCharacters(in: .whitespacesAndNewlines), !feeling.isEmpty {
+        rows.append("Feeling: \(feeling)")
+    }
+
+    if let responsePlan = responsePlan?.trimmingCharacters(in: .whitespacesAndNewlines), !responsePlan.isEmpty {
+        rows.append("Next response: \(responsePlan)")
+    }
+
+    if hasPhotos {
+        rows.append("Photo memory attached.")
+    }
+
+    return rows.joined(separator: "\n")
+}
+
+private extension HabitDayTone {
+    var dayLogTitle: String {
+        switch self {
+        case .positive: return "Good"
+        case .neutral: return "Neutral"
+        case .negative: return "Difficult"
+        }
     }
 }
 

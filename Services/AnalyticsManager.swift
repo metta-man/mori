@@ -93,7 +93,7 @@ struct AnalyticsConfig {
 final class AnalyticsManager {
     static let shared = AnalyticsManager()
     
-    private var postHog: PHGPostHog?
+    private var postHog: PostHogSDK?
     private var isConfigured = false
     private var sessionStartTime: Date?
     private var currentLoopStep: Int = 0
@@ -113,17 +113,17 @@ final class AnalyticsManager {
             return
         }
 
-        let config = PHGPostHogConfiguration(
+        let config = PostHogConfig(
             apiKey: AnalyticsConfig.apiKey,
             host: AnalyticsConfig.endpoint
         )
-        config.recordScreenViews = false
+        config.captureScreenViews = false
         config.captureApplicationLifecycleEvents = true
+        config.debug = true
 
-        PHGPostHog.setup(with: config)
-        postHog = PHGPostHog.shared()
-        PHGPostHog.debug(true)
-            isConfigured = true
+        PostHogSDK.shared.setup(config)
+        postHog = PostHogSDK.shared
+        isConfigured = true
             
         #if DEBUG
         print("[Analytics] PostHog configured successfully")
@@ -152,7 +152,7 @@ final class AnalyticsManager {
             return
         }
         
-        postHog?.identify(userId, properties: properties)
+        postHog?.identify(userId, userProperties: properties)
     }
     
     // MARK: - Loop-Level Analytics (Core Feature)
