@@ -12,7 +12,7 @@ struct ClockView: View {
     @State private var showSettings = false
     @State private var messageTimer: Timer?
     @State private var showSparkSaved = false
-    
+
     let timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
     let motivationalMessages = [
         "Make a memory worth keeping",
@@ -41,87 +41,64 @@ struct ClockView: View {
         "Stay close to what is real",
         "Begin again without ceremony"
     ]
-    
+
     var body: some View {
         NavigationStack {
-            ZStack {
-                // Dark background with subtle radial gradient per design spec
-                MoriColors.moriDark
-                    .ignoresSafeArea()
-                
-                // Subtle radial gradient overlay
-                RadialGradient(
-                    colors: [
-                        MoriColors.moriGold.opacity(0.03),
-                        Color.clear
-                    ],
-                    center: .center,
-                    startRadius: 0,
-                    endRadius: 400
-                )
-                .ignoresSafeArea()
-                
+            MoriForestBackground {
                 ScrollView(showsIndicators: false) {
-                    VStack(spacing: 0) {
-                        Text("You have")
-                            .font(.system(size: 20, weight: .medium, design: .rounded))
-                            .foregroundColor(MoriColors.moriCream.opacity(0.6))
-                            .tracking(0.1)
-                        
-                        // Main countdown number - DM Mono style, gold, per design spec
-                        VStack(spacing: 8) {
-                            Text("\(primaryCountdownValue)")
-                                .font(.system(size: 64, weight: .light, design: .monospaced))
-                                .foregroundColor(MoriColors.moriGold)
-                                .contentTransition(.numericText())
-                                .animation(.easeInOut(duration: 0.3), value: primaryCountdownValue)
-                            
-                            Text(primaryCountdownLabel)
-                                .font(.system(size: 24, weight: .medium, design: .rounded))
-                                .foregroundColor(MoriColors.moriCream)
+                    VStack(alignment: .leading, spacing: 22) {
+                        MoriPageHeader(
+                            eyebrow: "Clock",
+                            title: "Time",
+                            subtitle: "Hold the day in view, then spend the next hour deliberately."
+                        )
+
+                        VStack(alignment: .leading, spacing: 18) {
+                            Text("You have")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(MoriColors.forestMuted)
+
+                            VStack(alignment: .leading, spacing: 6) {
+                                Text("\(primaryCountdownValue)")
+                                    .font(.system(size: 64, weight: .semibold, design: .rounded))
+                                    .foregroundColor(MoriColors.forestCanopy)
+                                    .monospacedDigit()
+                                    .contentTransition(.numericText())
+                                    .animation(.easeInOut(duration: 0.3), value: primaryCountdownValue)
+
+                                Text(primaryCountdownLabel)
+                                    .font(.system(size: 24, weight: .semibold, design: .rounded))
+                                    .foregroundColor(MoriColors.forestMoss)
+                            }
+
+                            HStack(spacing: 14) {
+                                TimeUnitViewDark(value: countdown.hours, label: "hours")
+                                TimeUnitViewDark(value: countdown.minutes, label: "min")
+                                TimeUnitViewDark(value: countdown.seconds, label: "sec")
+                            }
+
+                            Text(motivationalMessages[currentMessageIndex])
+                                .font(.system(size: 16, weight: .regular, design: .serif))
+                                .foregroundColor(MoriColors.forestMuted)
+                                .lineSpacing(2)
+                                .transition(.opacity)
+                                .animation(.easeInOut(duration: 0.5), value: currentMessageIndex)
                         }
-                        .padding(.bottom, 16)
-                        
-                        // Time breakdown - hours, minutes, seconds
-                        HStack(spacing: 20) {
-                            TimeUnitViewDark(value: countdown.hours, label: "hours")
-                            Text(":")
-                                .font(.system(size: 36, weight: .light))
-                                .foregroundColor(MoriColors.moriCream.opacity(0.4))
-                                .opacity(countdown.seconds % 2 == 0 ? 1 : 0.3)
-                            TimeUnitViewDark(value: countdown.minutes, label: "min")
-                            Text(":")
-                                .font(.system(size: 36, weight: .light))
-                                .foregroundColor(MoriColors.moriCream.opacity(0.4))
-                                .opacity(countdown.seconds % 2 == 0 ? 1 : 0.3)
-                            TimeUnitViewDark(value: countdown.seconds, label: "sec")
-                        }
-                        .padding(.top, 32)
-                        
-                        // Motivational message - Crimson Pro Italic per design spec
-                        Text(motivationalMessages[currentMessageIndex])
-                            .font(.system(size: 18, weight: .regular, design: .serif))
-                            .foregroundColor(MoriColors.moriCream.opacity(0.5))
-                            .multilineTextAlignment(.center)
-                            .frame(maxWidth: 300)
-                            .padding(.top, 48)
-                            .transition(.opacity)
-                            .animation(.easeInOut(duration: 0.5), value: currentMessageIndex)
+                        .moriSanctuaryCard(cornerRadius: 24, padding: 18)
 
                         DailySparkCard(store: dailySparkStore, onSaved: { _ in
                             showSparkSavedToast()
                         })
-                        .padding(.top, 28)
                     }
-                    .padding(.horizontal, 24)
-                    .padding(.top, 42)
-                    .padding(.bottom, 132)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 18)
+                    .padding(.bottom, 40)
                 }
             }
             .navigationTitle("Mori")
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarColorScheme(.dark, for: .navigationBar)
-            .toolbarBackground(MoriColors.moriDark, for: .navigationBar)
+            .toolbarColorScheme(.light, for: .navigationBar)
+            .toolbarBackground(MoriColors.forestPaper, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -129,7 +106,7 @@ struct ClockView: View {
                         showSettings = true
                     } label: {
                         Image(systemName: "gearshape")
-                            .foregroundColor(MoriColors.moriGold.opacity(0.8))
+                            .foregroundColor(MoriColors.forestCanopy.opacity(0.82))
                     }
                 }
             }
@@ -151,18 +128,18 @@ struct ClockView: View {
                 if showSparkSaved {
                     Text("Saved to Journal")
                         .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(MoriColors.moriDark)
+                        .foregroundColor(MoriColors.forestCard)
                         .padding(.horizontal, 16)
                         .padding(.vertical, 10)
-                        .background(MoriColors.moriGold)
+                        .background(MoriColors.forestCanopy)
                         .cornerRadius(10)
-                        .padding(.bottom, 124)
+                        .padding(.bottom, 24)
                         .transition(.move(edge: .bottom).combined(with: .opacity))
                 }
             }
         }
     }
-    
+
     private func updateCountdown() {
         countdown = calculateCountdown()
     }
@@ -183,19 +160,19 @@ struct ClockView: View {
     private var primaryCountdownLabel: String {
         primaryCountdownValue == 1 ? settings.clockTimeUnit.singularLabel : settings.clockTimeUnit.pluralLabel
     }
-    
+
     private func calculateCountdown() -> CountdownResult {
         let now = Date()
         let calendar = Calendar.current
-        
+
         // Calculate expected end date based on birthdate + life expectancy
         let birthDate = settings.birthDate
         let lifeExpectancy = settings.lifeExpectancy
         let endDate = calendar.date(byAdding: .year, value: lifeExpectancy, to: birthDate) ?? birthDate
-        
+
         // Calculate difference
         let components = calendar.dateComponents([.day, .hour, .minute, .second], from: now, to: endDate)
-        
+
         let days = max(0, components.day ?? 0)
         let weeks = max(0, days / 7)
         let months = max(0, calendar.dateComponents([.month], from: now, to: endDate).month ?? 0)
@@ -203,10 +180,10 @@ struct ClockView: View {
         let hours = max(0, components.hour ?? 0)
         let minutes = max(0, components.minute ?? 0)
         let seconds = max(0, components.second ?? 0)
-        
+
         return CountdownResult(days: days, weeks: weeks, months: months, years: years, hours: hours, minutes: minutes, seconds: seconds)
     }
-    
+
     private func startMessageRotation() {
         stopMessageRotation()
 
@@ -246,23 +223,26 @@ struct CountdownResult {
     let seconds: Int
 }
 
-// MARK: - Time Unit View (Dark Theme)
+// MARK: - Time Unit View
 struct TimeUnitViewDark: View {
     let value: Int
     let label: String
-    
+
     var body: some View {
         VStack(spacing: 4) {
             Text(String(format: "%02d", value))
-                .font(.system(size: 36, weight: .light, design: .monospaced))
-                .foregroundColor(MoriColors.moriCream)
+                .font(.system(size: 28, weight: .semibold, design: .rounded))
+                .foregroundColor(MoriColors.forestCanopy)
                 .monospacedDigit()
-            
+
             Text(label)
-                .font(.custom("CrimsonPro", size: 12))
-                .foregroundColor(MoriColors.moriCream.opacity(0.5))
+                .font(.system(size: 12, weight: .medium))
+                .foregroundColor(MoriColors.forestMuted)
         }
-        .frame(minWidth: 60)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 12)
+        .background(MoriColors.forestCanopy.opacity(0.07))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }
 }
 

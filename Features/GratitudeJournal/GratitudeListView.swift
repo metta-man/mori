@@ -18,20 +18,20 @@ struct GratitudeEntryPreview: View {
                 HStack(spacing: 8) {
                     Text(formatDate(entry.date))
                         .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(MoriColors.moriGold)
+                        .foregroundColor(MoriColors.forestMoss)
 
                     EntrySourceBadge(entry: entry)
 
                     if !entry.photoAttachments.isEmpty {
                         Label("\(entry.photoAttachments.count)", systemImage: "photo")
                             .font(.system(size: 11, weight: .medium))
-                            .foregroundColor(MoriColors.moriCreamMuted)
+                            .foregroundColor(MoriColors.forestMuted)
                     }
                 }
 
                 Text(entry.displayContent)
                     .font(.system(size: 14, weight: .regular))
-                    .foregroundColor(MoriColors.moriCream.opacity(0.82))
+                    .foregroundColor(MoriColors.forestCanopy)
                     .lineLimit(3)
                     .multilineTextAlignment(.leading)
             }
@@ -61,11 +61,11 @@ struct RecentEntriesSection: View {
             HStack {
                 Image(systemName: "calendar")
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(MoriColors.moriGold)
+                    .foregroundColor(MoriColors.forestMoss)
                 
                 Text("Recent Journal")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(MoriColors.moriCream)
+                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .foregroundColor(MoriColors.forestCanopy)
                 
                 Spacer()
                 
@@ -73,29 +73,29 @@ struct RecentEntriesSection: View {
                     Button(action: { onViewAll?() }) {
                         Text("View All →")
                             .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(MoriColors.moriGold)
+                            .foregroundColor(MoriColors.forestCanopy)
                     }
                     .accessibility(label: Text("View all gratitude entries"))
                 }
             }
             
             Divider()
-                .background(MoriColors.moriHairline)
+                .background(MoriColors.forestLine.opacity(0.58))
             
             if entries.isEmpty {
                 // Empty state
                 VStack(spacing: 8) {
                     Image(systemName: "book.closed")
                         .font(.system(size: 32))
-                        .foregroundColor(MoriColors.moriCreamMuted)
+                        .foregroundColor(MoriColors.forestMuted)
                     
                     Text("No entries yet")
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(MoriColors.moriCream)
+                        .foregroundColor(MoriColors.forestCanopy)
                     
                     Text("Start your gratitude journey today")
                         .font(.system(size: 12, weight: .regular))
-                        .foregroundColor(MoriColors.moriCreamMuted)
+                        .foregroundColor(MoriColors.forestMuted)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 24)
@@ -108,18 +108,12 @@ struct RecentEntriesSection: View {
                     
                     if entry.id != entries.prefix(3).last?.id {
                         Divider()
-                            .background(MoriColors.moriHairline)
+                            .background(MoriColors.forestLine.opacity(0.58))
                     }
                 }
             }
         }
-        .padding(20)
-        .background(MoriColors.moriDarkSurface)
-        .cornerRadius(16)
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(MoriColors.moriHairline, lineWidth: 1)
-        )
+        .moriSanctuaryCard(cornerRadius: 22, padding: 18)
     }
 }
 
@@ -135,10 +129,10 @@ private struct EntrySourceBadge: View {
 
     private var foregroundColor: Color {
         switch entry.sourceKind {
-        case .journal: return MoriColors.moriCreamMuted
-        case .dayLog: return MoriColors.warmClay
-        case .dailySpark: return MoriColors.moriGold
-        case .weeklyIntention: return MoriColors.sageGreen
+        case .journal: return MoriColors.forestMuted
+        case .dayLog: return MoriColors.forestClay
+        case .dailySpark: return MoriColors.forestSeed
+        case .weeklyIntention: return MoriColors.forestMoss
         }
     }
 }
@@ -167,5 +161,5 @@ private struct EntrySourceBadge: View {
         RecentEntriesSection(entries: [])
     }
     .padding()
-    .background(Color(hex: "FDF5E6"))
+    .background(MoriColors.forestPaper)
 }

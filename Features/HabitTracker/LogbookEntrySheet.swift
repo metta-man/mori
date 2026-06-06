@@ -35,16 +35,17 @@ struct LogbookEntrySheet: View {
 
     var body: some View {
         NavigationStack {
-            ScrollView {
+            MoriForestBackground {
+                ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 20) {
                     VStack(alignment: .leading, spacing: 8) {
                         Text("Log Previous Day")
                             .font(.system(size: 28, weight: .semibold, design: .rounded))
-                            .foregroundColor(MoriColors.moriCream)
+                            .foregroundColor(MoriColors.forestCanopy)
 
                         Text("Add a missed day, then attach a memory if there is one.")
                             .font(.system(size: 15, weight: .regular))
-                            .foregroundColor(MoriColors.moriCreamMuted)
+                            .foregroundColor(MoriColors.forestMuted)
                     }
 
                     DatePicker(
@@ -54,8 +55,8 @@ struct LogbookEntrySheet: View {
                         displayedComponents: .date
                     )
                     .datePickerStyle(.compact)
-                    .tint(MoriColors.moriGold)
-                    .foregroundColor(MoriColors.moriCream)
+                    .tint(MoriColors.forestMoss)
+                    .foregroundColor(MoriColors.forestCanopy)
 
                     Picker("Day tone", selection: $selectedTone) {
                         ForEach(HabitDayTone.allCases) { tone in
@@ -63,7 +64,7 @@ struct LogbookEntrySheet: View {
                         }
                     }
                     .pickerStyle(.segmented)
-                    .tint(MoriColors.moriGold)
+                    .tint(MoriColors.forestMoss)
 
                     LogbookTextField(
                         title: "Note",
@@ -75,7 +76,7 @@ struct LogbookEntrySheet: View {
                     VStack(alignment: .leading, spacing: 14) {
                         Label("Pattern Log", systemImage: "arrow.triangle.2.circlepath")
                             .font(.system(size: 15, weight: .semibold))
-                            .foregroundColor(MoriColors.moriGold)
+                            .foregroundColor(MoriColors.forestMoss)
 
                         LogbookTextField(title: "Trigger", placeholder: "What set it off?", text: $trigger)
                         LogbookTextField(title: "Thought", placeholder: "What did your mind say?", text: $thought)
@@ -101,7 +102,7 @@ struct LogbookEntrySheet: View {
                     ) {
                         Label("Add photos", systemImage: "photo.on.rectangle.angled")
                             .font(.system(size: 14, weight: .semibold))
-                            .foregroundColor(MoriColors.moriGold)
+                            .foregroundColor(MoriColors.forestCanopy)
                     }
                     .accessibility(label: Text("Add photos to logbook entry"))
 
@@ -114,24 +115,24 @@ struct LogbookEntrySheet: View {
                     Button(action: save) {
                         Label("Save to logbook", systemImage: "checkmark.circle.fill")
                             .font(.system(size: 15, weight: .semibold))
-                            .foregroundColor(MoriColors.moriDark)
+                            .foregroundColor(MoriColors.forestCard)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 14)
-                            .background(MoriColors.moriGold)
+                            .background(MoriColors.forestCanopy)
                             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                     }
                 }
                 .padding(24)
+                }
             }
-            .background(MoriColors.moriDark.ignoresSafeArea())
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarColorScheme(.dark, for: .navigationBar)
-            .toolbarBackground(MoriColors.moriDark, for: .navigationBar)
+            .toolbarColorScheme(.light, for: .navigationBar)
+            .toolbarBackground(MoriColors.forestPaper, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done", action: save)
-                        .foregroundColor(MoriColors.moriGold)
+                        .foregroundColor(MoriColors.forestCanopy)
                 }
             }
         }
@@ -219,31 +220,31 @@ private struct LogbookTextField: View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(MoriColors.moriCreamMuted)
+                .foregroundColor(MoriColors.forestMuted)
 
             ZStack(alignment: .topLeading) {
                 if text.isEmpty {
                     Text(placeholder)
                         .font(.system(size: 15, weight: .regular))
-                        .foregroundColor(MoriColors.moriCreamMuted.opacity(0.76))
+                        .foregroundColor(MoriColors.forestMuted.opacity(0.72))
                         .padding(.horizontal, 14)
                         .padding(.vertical, 13)
                 }
 
                 TextEditor(text: $text)
                     .font(.system(size: 15, weight: .regular))
-                    .foregroundColor(MoriColors.moriCream)
+                    .foregroundColor(MoriColors.forestCanopy)
                     .scrollContentBackground(.hidden)
                     .background(Color.clear)
                     .frame(minHeight: minHeight)
                     .padding(.horizontal, 10)
                     .padding(.vertical, 8)
             }
-            .background(MoriColors.moriDarkSurface)
+            .background(MoriColors.forestPaperDeep.opacity(0.58))
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(MoriColors.moriHairline, lineWidth: 1)
+                    .stroke(MoriColors.forestLine.opacity(0.55), lineWidth: 1)
             )
         }
     }
@@ -263,9 +264,9 @@ private struct LogbookPhotoThumbnail: View {
                 } else {
                     Image(systemName: "photo")
                         .font(.system(size: 22))
-                        .foregroundColor(MoriColors.moriCreamMuted)
+                        .foregroundColor(MoriColors.forestMuted)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(MoriColors.moriDark.opacity(0.4))
+                        .background(MoriColors.forestPaperDeep.opacity(0.72))
                 }
             }
             .frame(width: 76, height: 76)
@@ -275,7 +276,7 @@ private struct LogbookPhotoThumbnail: View {
                 Image(systemName: "xmark.circle.fill")
                     .font(.system(size: 18, weight: .semibold))
                     .symbolRenderingMode(.palette)
-                    .foregroundStyle(MoriColors.moriCream, Color.black.opacity(0.62))
+                    .foregroundStyle(MoriColors.forestCard, MoriColors.forestCanopy.opacity(0.72))
             }
             .offset(x: 6, y: -6)
             .accessibility(label: Text("Remove photo"))

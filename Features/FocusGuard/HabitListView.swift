@@ -21,8 +21,9 @@ struct HabitListView: View {
     
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 24) {
+            MoriForestBackground {
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 24) {
                     // Focus Guard Status Banner (if enabled)
                     if focusGuard.isFocusGuardEnabled {
                         focusGuardBanner
@@ -37,18 +38,22 @@ struct HabitListView: View {
                     // Add Habit Button
                     addHabitButton
                 }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 48)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 18)
+                    .padding(.bottom, 40)
+                }
             }
-            .background(MoriColors.background.ignoresSafeArea())
             .navigationTitle("Daily Habits")
+            .toolbarBackground(MoriColors.forestPaper, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarColorScheme(.light, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button {
                         showFocusGuard = true
                     } label: {
                         Image(systemName: focusGuard.isFocusGuardEnabled ? "shield.fill" : "shield")
-                            .foregroundColor(focusGuard.isFocusGuardEnabled ? MoriColors.accentAmber : MoriColors.secondary)
+                            .foregroundColor(focusGuard.isFocusGuardEnabled ? MoriColors.forestSeed : MoriColors.forestMuted)
                     }
                 }
             }
@@ -72,29 +77,29 @@ struct HabitListView: View {
             HStack(spacing: 12) {
                 Image(systemName: focusGuard.shieldActive ? "shield.fill" : "lock.open")
                     .font(.system(size: 18))
-                    .foregroundColor(focusGuard.shieldActive ? .white : Color(hex: "#788c5d"))
+                    .foregroundColor(focusGuard.shieldActive ? MoriColors.forestCard : MoriColors.forestMoss)
                 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(focusGuard.shieldActive ? "Apps Locked" : "Apps Unlocked")
-                        .font(.custom("Poppins-SemiBold", size: 13))
-                        .foregroundColor(focusGuard.shieldActive ? .white : Color(hex: "#788c5d"))
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundColor(focusGuard.shieldActive ? MoriColors.forestCard : MoriColors.forestMoss)
                     
                     Text(focusGuard.shieldActive
                          ? "\(habitManager.completedCount)/\(habitManager.totalHabits) habits done"
                          : "All habits complete — enjoy!"
                     )
-                        .font(.custom("Poppins-Regular", size: 11))
-                        .foregroundColor(focusGuard.shieldActive ? .white.opacity(0.8) : MoriColors.secondary)
+                        .font(.system(size: 11, weight: .regular))
+                        .foregroundColor(focusGuard.shieldActive ? MoriColors.forestCard.opacity(0.82) : MoriColors.forestMuted)
                 }
                 
                 Spacer()
                 
                 Image(systemName: "chevron.right")
                     .font(.system(size: 12))
-                    .foregroundColor(focusGuard.shieldActive ? .white.opacity(0.6) : MoriColors.secondary)
+                    .foregroundColor(focusGuard.shieldActive ? MoriColors.forestCard.opacity(0.62) : MoriColors.forestMuted)
             }
             .padding(16)
-            .background(focusGuard.shieldActive ? MoriColors.primary : Color(hex: "#F0F5EB"))
+            .background(focusGuard.shieldActive ? MoriColors.forestCanopy : MoriColors.forestMoss.opacity(0.10))
             .cornerRadius(12)
         }
     }
@@ -105,14 +110,14 @@ struct HabitListView: View {
             ZStack {
                 // Background circle
                 Circle()
-                    .stroke(MoriColors.warmGray.opacity(0.3), lineWidth: 8)
+                    .stroke(MoriColors.forestLine.opacity(0.55), lineWidth: 8)
                     .frame(width: 120, height: 120)
                 
                 // Progress circle
                 Circle()
                     .trim(from: 0, to: habitManager.progressFraction)
                     .stroke(
-                        habitManager.allCompleted ? Color(hex: "#788c5d") : MoriColors.accentAmber,
+                        habitManager.allCompleted ? MoriColors.forestMoss : MoriColors.forestSeed,
                         style: StrokeStyle(lineWidth: 8, lineCap: .round)
                     )
                     .frame(width: 120, height: 120)
@@ -122,19 +127,19 @@ struct HabitListView: View {
                 // Center text
                 VStack(spacing: 4) {
                     Text("\(habitManager.completedCount)")
-                        .font(.custom("CormorantGaramond-SemiBold", size: 36))
-                        .foregroundColor(MoriColors.text)
+                        .font(.system(size: 36, weight: .semibold, design: .rounded))
+                        .foregroundColor(MoriColors.forestCanopy)
                     
                     Text("of \(habitManager.totalHabits)")
-                        .font(.custom("Poppins-Regular", size: 12))
-                        .foregroundColor(MoriColors.secondary)
+                        .font(.system(size: 12, weight: .regular))
+                        .foregroundColor(MoriColors.forestMuted)
                 }
             }
             
             if habitManager.allCompleted && habitManager.totalHabits > 0 {
-                Text("All habits complete! 🎉")
-                    .font(.custom("Poppins-Medium", size: 14))
-                    .foregroundColor(Color(hex: "#788c5d"))
+                Text("All habits complete")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(MoriColors.forestMoss)
             }
         }
         .padding(.top, 8)
@@ -148,15 +153,15 @@ struct HabitListView: View {
                 VStack(spacing: 16) {
                     Image(systemName: "list.bullet.circle")
                         .font(.system(size: 40))
-                        .foregroundColor(MoriColors.warmGray)
+                        .foregroundColor(MoriColors.forestMuted.opacity(0.62))
                     
                     Text("No habits yet")
-                        .font(.custom("Poppins-Medium", size: 16))
-                        .foregroundColor(MoriColors.secondary)
+                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                        .foregroundColor(MoriColors.forestCanopy)
                     
                     Text("Add habits to start building your daily routine.\nComplete them to unlock your apps!")
-                        .font(.custom("Poppins-Regular", size: 13))
-                        .foregroundColor(MoriColors.secondary)
+                        .font(.system(size: 13, weight: .regular))
+                        .foregroundColor(MoriColors.forestMuted)
                         .multilineTextAlignment(.center)
                 }
                 .padding(.vertical, 32)
@@ -186,16 +191,16 @@ struct HabitListView: View {
                     .font(.system(size: 20))
                 
                 Text("Add Habit")
-                    .font(.custom("Poppins-Medium", size: 14))
+                    .font(.system(size: 14, weight: .semibold))
             }
-            .foregroundColor(MoriColors.primary)
+            .foregroundColor(MoriColors.forestCanopy)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .background(Color.white)
+            .background(MoriColors.forestCard.opacity(0.96))
             .cornerRadius(12)
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
-                    .stroke(MoriColors.primary.opacity(0.3), lineWidth: 1)
+                    .stroke(MoriColors.forestCanopy.opacity(0.18), lineWidth: 1)
             )
         }
     }
@@ -207,8 +212,8 @@ struct HabitListView: View {
                 // Icon picker
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Choose an icon")
-                        .font(.custom("Poppins-Medium", size: 14))
-                        .foregroundColor(MoriColors.text)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(MoriColors.forestCanopy)
                     
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 5), spacing: 12) {
                         ForEach(habitIcons, id: \.self) { icon in
@@ -217,12 +222,12 @@ struct HabitListView: View {
                             } label: {
                                 ZStack {
                                     Circle()
-                                        .fill(newHabitIcon == icon ? MoriColors.primary : MoriColors.warmGray.opacity(0.3))
+                                        .fill(newHabitIcon == icon ? MoriColors.forestCanopy : MoriColors.forestCanopy.opacity(0.08))
                                         .frame(width: 44, height: 44)
                                     
                                     Image(systemName: icon)
                                         .font(.system(size: 18))
-                                        .foregroundColor(newHabitIcon == icon ? .white : MoriColors.secondary)
+                                        .foregroundColor(newHabitIcon == icon ? MoriColors.forestCard : MoriColors.forestMuted)
                                 }
                             }
                         }
@@ -233,13 +238,13 @@ struct HabitListView: View {
                 // Name input
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Habit name")
-                        .font(.custom("Poppins-Medium", size: 14))
-                        .foregroundColor(MoriColors.text)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(MoriColors.forestCanopy)
                     
                     TextField("e.g., Meditate 10 minutes", text: $newHabitName)
-                        .font(.custom("Poppins-Regular", size: 14))
+                        .font(.system(size: 14, weight: .regular))
                         .padding(16)
-                        .background(MoriColors.warmGray.opacity(0.2))
+                        .background(MoriColors.forestPaperDeep.opacity(0.58))
                         .cornerRadius(12)
                 }
                 .padding(.horizontal, 24)
@@ -247,8 +252,8 @@ struct HabitListView: View {
                 // Suggestions
                 VStack(alignment: .leading, spacing: 8) {
                     Text("Quick add")
-                        .font(.custom("Poppins-Medium", size: 14))
-                        .foregroundColor(MoriColors.secondary)
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(MoriColors.forestMuted)
                     
                     FlowLayout(spacing: 8) {
                         ForEach(["Meditate", "Exercise", "Read", "Journal", "No phone 1hr", "Drink water", "Walk outside", "Gratitude"], id: \.self) { suggestion in
@@ -256,14 +261,14 @@ struct HabitListView: View {
                                 newHabitName = suggestion
                             } label: {
                                 Text(suggestion)
-                                    .font(.custom("Poppins-Regular", size: 12))
-                                    .foregroundColor(MoriColors.secondary)
+                                    .font(.system(size: 12, weight: .regular))
+                                    .foregroundColor(MoriColors.forestCanopy)
                                     .padding(.horizontal, 14)
                                     .padding(.vertical, 8)
-                                    .background(Color.white)
+                                    .background(MoriColors.forestCanopy.opacity(0.08))
                                     .cornerRadius(20)
                                     .overlay(
-                                        Capsule().stroke(MoriColors.warmGray.opacity(0.5), lineWidth: 1)
+                                        Capsule().stroke(MoriColors.forestLine.opacity(0.58), lineWidth: 1)
                                     )
                             }
                         }
@@ -274,8 +279,12 @@ struct HabitListView: View {
                 Spacer()
             }
             .padding(.top, 24)
+            .background(MoriColors.forestPaper)
             .navigationTitle("New Habit")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(MoriColors.forestPaper, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarColorScheme(.light, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button("Cancel") { showAddHabit = false }
@@ -288,7 +297,7 @@ struct HabitListView: View {
                         newHabitIcon = "circle"
                         showAddHabit = false
                     }
-                    .font(.custom("Poppins-SemiBold", size: 14))
+                    .font(.system(size: 14, weight: .semibold))
                     .disabled(newHabitName.trimmingCharacters(in: .whitespaces).isEmpty)
                 }
             }
@@ -322,17 +331,17 @@ struct HabitRow: View {
                 // Check circle
                 ZStack {
                     Circle()
-                        .stroke(isCompleted ? Color(hex: "#788c5d") : MoriColors.warmGray, lineWidth: 2)
+                        .stroke(isCompleted ? MoriColors.forestMoss : MoriColors.forestLine, lineWidth: 2)
                         .frame(width: 32, height: 32)
                     
                     if isCompleted {
                         Circle()
-                            .fill(Color(hex: "#788c5d"))
+                            .fill(MoriColors.forestMoss)
                             .frame(width: 32, height: 32)
                         
                         Image(systemName: "checkmark")
                             .font(.system(size: 14, weight: .bold))
-                            .foregroundColor(.white)
+                            .foregroundColor(MoriColors.forestCard)
                             .transition(.scale.combined(with: .opacity))
                     }
                 }
@@ -340,13 +349,13 @@ struct HabitRow: View {
                 // Icon
                 Image(systemName: habit.icon)
                     .font(.system(size: 18))
-                    .foregroundColor(isCompleted ? MoriColors.secondary : MoriColors.text)
+                    .foregroundColor(isCompleted ? MoriColors.forestMuted : MoriColors.forestCanopy)
                     .frame(width: 24)
                 
                 // Name
                 Text(habit.name)
-                    .font(.custom("Poppins-Medium", size: 15))
-                    .foregroundColor(isCompleted ? MoriColors.secondary : MoriColors.text)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(isCompleted ? MoriColors.forestMuted : MoriColors.forestCanopy)
                     .strikethrough(isCompleted)
                 
                 Spacer()
@@ -355,13 +364,13 @@ struct HabitRow: View {
                 if isCompleted {
                     Text("✓")
                         .font(.system(size: 14))
-                        .foregroundColor(Color(hex: "#788c5d"))
+                        .foregroundColor(MoriColors.forestMoss)
                 }
             }
             .padding(16)
-            .background(isCompleted ? MoriColors.warmGray.opacity(0.2) : Color.white)
+            .background(isCompleted ? MoriColors.forestLine.opacity(0.28) : MoriColors.forestCard.opacity(0.96))
             .cornerRadius(12)
-            .shadow(color: .black.opacity(isCompleted ? 0 : 0.05), radius: 4, x: 0, y: 2)
+            .shadow(color: MoriColors.forestShadow.opacity(isCompleted ? 0 : 0.28), radius: 8, x: 0, y: 4)
         }
         .scaleEffect(isPressed ? 0.98 : 1.0)
         .animation(.easeInOut(duration: 0.15), value: isPressed)

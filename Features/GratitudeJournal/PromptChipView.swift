@@ -17,20 +17,20 @@ struct PromptChipView: View {
         Button(action: { onTap?() }) {
             Text(prompt.shortName)
                 .font(.system(size: 13, weight: .medium))
-                .foregroundColor(isSelected ? MoriColors.moriDark : MoriColors.moriCreamMuted)
+                .foregroundColor(isSelected ? MoriColors.forestCard : MoriColors.forestCanopy)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
                 .background(
                     isSelected 
-                        ? MoriColors.moriGold
-                        : MoriColors.moriDarkElevated
+                        ? MoriColors.forestCanopy
+                        : MoriColors.forestCanopy.opacity(0.08)
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 20)
                         .stroke(
                             isSelected 
-                                ? MoriColors.moriGold
-                                : MoriColors.moriHairline,
+                                ? MoriColors.forestCanopy
+                                : MoriColors.forestLine.opacity(0.48),
                             lineWidth: 1
                         )
                 )
@@ -51,11 +51,11 @@ struct PromptSelectionSection: View {
             HStack {
                 Image(systemName: "sparkle")
                     .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(MoriColors.moriGold)
+                    .foregroundColor(MoriColors.forestMoss)
                 
                 Text("Choose a prompt")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(MoriColors.moriCreamMuted)
+                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .foregroundColor(MoriColors.forestCanopy)
             }
             
             // Chips
@@ -72,13 +72,7 @@ struct PromptSelectionSection: View {
                 }
             }
         }
-        .padding(20)
-        .background(MoriColors.moriDarkSurface)
-        .cornerRadius(16)
-        .overlay(
-            RoundedRectangle(cornerRadius: 16)
-                .stroke(MoriColors.moriHairline, lineWidth: 1)
-        )
+        .moriSanctuaryCard(cornerRadius: 22, padding: 18)
     }
 }
 
@@ -147,5 +141,5 @@ struct FlowLayout: Layout {
         }
     }
     .padding()
-    .background(Color(hex: "FDF5E6"))
+    .background(MoriColors.forestPaper)
 }

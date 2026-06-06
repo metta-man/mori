@@ -9,8 +9,9 @@ struct FocusGuardView: View {
     
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 28) {
+            MoriForestBackground {
+                ScrollView(showsIndicators: false) {
+                    VStack(spacing: 24) {
                     // Hero Section
                     heroSection
                     
@@ -31,12 +32,16 @@ struct FocusGuardView: View {
                         previewSection
                     }
                 }
-                .padding(.horizontal, 24)
-                .padding(.bottom, 48)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 18)
+                    .padding(.bottom, 40)
+                }
             }
-            .background(MoriColors.background.ignoresSafeArea())
             .navigationTitle("Focus Guard")
             .navigationBarTitleDisplayMode(.large)
+            .toolbarBackground(MoriColors.forestPaper, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarColorScheme(.light, for: .navigationBar)
             .sheet(isPresented: $showAppPicker) {
                 FamilyActivityPickerWrapper { selection in
                     manager.setSelectedApps(selection)
@@ -52,26 +57,26 @@ struct FocusGuardView: View {
                 Circle()
                     .fill(
                         manager.shieldActive
-                        ? MoriColors.accentAmber.opacity(0.15)
-                        : MoriColors.warmGray.opacity(0.3)
+                        ? MoriColors.forestSeed.opacity(0.15)
+                        : MoriColors.forestLine.opacity(0.45)
                     )
                     .frame(width: 80, height: 80)
                 
                 Image(systemName: manager.shieldActive ? "shield.fill" : "shield")
                     .font(.system(size: 36))
-                    .foregroundColor(manager.shieldActive ? MoriColors.accentAmber : MoriColors.secondary)
+                    .foregroundColor(manager.shieldActive ? MoriColors.forestSeed : MoriColors.forestMuted)
             }
             
             Text(manager.shieldActive ? "Apps Locked" : manager.allHabitsCompleted ? "All Clear" : "Focus Guard")
-                .font(.custom("CormorantGaramond-SemiBold", size: 28))
-                .foregroundColor(MoriColors.text)
+                .font(.system(size: 34, weight: .semibold, design: .rounded))
+                .foregroundColor(MoriColors.forestCanopy)
             
             Text(manager.shieldActive
                  ? "Complete your daily habits to unlock"
                  : "Block distracting apps until you finish your habits"
             )
-                .font(.custom("Poppins-Regular", size: 14))
-                .foregroundColor(MoriColors.secondary)
+                .font(.system(size: 15, weight: .regular))
+                .foregroundColor(MoriColors.forestMuted)
                 .multilineTextAlignment(.center)
         }
         .padding(.top, 16)
@@ -83,12 +88,12 @@ struct FocusGuardView: View {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Enable Focus Guard")
-                        .font(.custom("Poppins-SemiBold", size: 16))
-                        .foregroundColor(MoriColors.text)
+                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                        .foregroundColor(MoriColors.forestCanopy)
                     
                     Text("Lock selected apps until habits are done")
-                        .font(.custom("Poppins-Regular", size: 12))
-                        .foregroundColor(MoriColors.secondary)
+                        .font(.system(size: 12, weight: .regular))
+                        .foregroundColor(MoriColors.forestMuted)
                 }
                 
                 Spacer()
@@ -97,13 +102,10 @@ struct FocusGuardView: View {
                     get: { manager.isFocusGuardEnabled },
                     set: { manager.setFocusGuardEnabled($0) }
                 ))
-                .tint(MoriColors.accentAmber)
+                .tint(MoriColors.forestMoss)
                 .labelsHidden()
             }
-            .padding(20)
-            .background(Color.white)
-            .cornerRadius(16)
-            .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+            .moriSanctuaryCard(cornerRadius: 22, padding: 18)
         }
     }
     
@@ -112,15 +114,15 @@ struct FocusGuardView: View {
         VStack(spacing: 12) {
             HStack {
                 Text("Blocked Apps")
-                    .font(.custom("Poppins-SemiBold", size: 16))
-                    .foregroundColor(MoriColors.text)
+                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                    .foregroundColor(MoriColors.forestCanopy)
                 
                 Spacer()
                 
                 if manager.hasSelectedApps {
                     Text("\(manager.blockedCount) selected")
-                        .font(.custom("Poppins-Regular", size: 12))
-                        .foregroundColor(MoriColors.secondary)
+                        .font(.system(size: 12, weight: .regular))
+                        .foregroundColor(MoriColors.forestMuted)
                 }
             }
             
@@ -132,12 +134,12 @@ struct FocusGuardView: View {
                         .font(.system(size: 20))
                     
                     Text(manager.hasSelectedApps ? "Edit Blocked Apps" : "Select Apps to Block")
-                        .font(.custom("Poppins-Medium", size: 14))
+                    .font(.system(size: 14, weight: .semibold))
                 }
-                .foregroundColor(.white)
+                .foregroundColor(MoriColors.forestCard)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 16)
-                .background(MoriColors.primary)
+                .background(MoriColors.forestCanopy)
                 .cornerRadius(12)
             }
             
@@ -147,15 +149,12 @@ struct FocusGuardView: View {
                     Image(systemName: "lock.shield")
                         .font(.system(size: 12))
                     Text("App names hidden for privacy")
-                        .font(.custom("Poppins-Regular", size: 11))
+                        .font(.system(size: 11, weight: .regular))
                 }
-                .foregroundColor(MoriColors.secondary)
+                .foregroundColor(MoriColors.forestMuted)
             }
         }
-        .padding(20)
-        .background(Color.white)
-        .cornerRadius(16)
-        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+        .moriSanctuaryCard(cornerRadius: 22, padding: 18)
     }
     
     // MARK: - Status Card
@@ -163,40 +162,37 @@ struct FocusGuardView: View {
         VStack(spacing: 16) {
             HStack {
                 Circle()
-                    .fill(manager.shieldActive ? Color(hex: "#FF6B35") : Color(hex: "#788c5d"))
+                    .fill(manager.shieldActive ? MoriColors.forestClay : MoriColors.forestMoss)
                     .frame(width: 12, height: 12)
                 
                 Text(manager.shieldActive ? "Shield Active" : "Shield Off — Habits Complete")
-                    .font(.custom("Poppins-Medium", size: 14))
-                    .foregroundColor(MoriColors.text)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(MoriColors.forestCanopy)
                 
                 Spacer()
             }
             
             if manager.shieldActive {
                 Text("Your selected apps are locked. Complete all daily habits to regain access.")
-                    .font(.custom("Poppins-Regular", size: 13))
-                    .foregroundColor(MoriColors.secondary)
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundColor(MoriColors.forestMuted)
                     .frame(maxWidth: .infinity, alignment: .leading)
             } else if manager.isFocusGuardEnabled {
                 Text("Great work! All habits completed — your apps are unlocked for today.")
-                    .font(.custom("Poppins-Regular", size: 13))
-                    .foregroundColor(Color(hex: "#788c5d"))
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundColor(MoriColors.forestMoss)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
-        .padding(20)
-        .background(Color.white)
-        .cornerRadius(16)
-        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+        .moriSanctuaryCard(cornerRadius: 22, padding: 18)
     }
     
     // MARK: - How It Works
     private var howItWorksSection: some View {
         VStack(spacing: 20) {
             Text("How It Works")
-                .font(.custom("Poppins-SemiBold", size: 16))
-                .foregroundColor(MoriColors.text)
+                .font(.system(size: 16, weight: .semibold, design: .rounded))
+                .foregroundColor(MoriColors.forestCanopy)
                 .frame(maxWidth: .infinity, alignment: .leading)
             
             StepRow(
@@ -220,18 +216,15 @@ struct FocusGuardView: View {
                 icon: "lock.open"
             )
         }
-        .padding(20)
-        .background(Color.white)
-        .cornerRadius(16)
-        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+        .moriSanctuaryCard(cornerRadius: 22, padding: 18)
     }
     
     // MARK: - Preview (when disabled)
     private var previewSection: some View {
         VStack(spacing: 16) {
             Text("When enabled, Focus Guard will:")
-                .font(.custom("Poppins-Medium", size: 14))
-                .foregroundColor(MoriColors.secondary)
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(MoriColors.forestMuted)
             
             VStack(alignment: .leading, spacing: 12) {
                 BenefitRow(icon: "shield.fill", text: "Block apps you choose (social media, games, etc.)")
@@ -240,13 +233,10 @@ struct FocusGuardView: View {
                 BenefitRow(icon: "brain.head.profile", text: "Build intentional phone habits over time")
             }
             .padding(16)
-            .background(MoriColors.warmGray.opacity(0.3))
+            .background(MoriColors.forestPaperDeep.opacity(0.58))
             .cornerRadius(12)
         }
-        .padding(20)
-        .background(Color.white)
-        .cornerRadius(16)
-        .shadow(color: .black.opacity(0.05), radius: 8, x: 0, y: 2)
+        .moriSanctuaryCard(cornerRadius: 22, padding: 18)
     }
 }
 
@@ -262,22 +252,22 @@ struct StepRow: View {
         HStack(spacing: 16) {
             ZStack {
                 Circle()
-                    .fill(MoriColors.accentAmber.opacity(0.15))
+                    .fill(MoriColors.forestMoss.opacity(0.12))
                     .frame(width: 40, height: 40)
                 
                 Image(systemName: icon)
                     .font(.system(size: 16))
-                    .foregroundColor(MoriColors.accentAmber)
+                    .foregroundColor(MoriColors.forestMoss)
             }
             
             VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.custom("Poppins-SemiBold", size: 14))
-                    .foregroundColor(MoriColors.text)
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(MoriColors.forestCanopy)
                 
                 Text(subtitle)
-                    .font(.custom("Poppins-Regular", size: 12))
-                    .foregroundColor(MoriColors.secondary)
+                    .font(.system(size: 12, weight: .regular))
+                    .foregroundColor(MoriColors.forestMuted)
             }
         }
     }
@@ -291,12 +281,12 @@ struct BenefitRow: View {
         HStack(spacing: 12) {
             Image(systemName: icon)
                 .font(.system(size: 14))
-                .foregroundColor(MoriColors.accentAmber)
+                .foregroundColor(MoriColors.forestMoss)
                 .frame(width: 20)
             
             Text(text)
-                .font(.custom("Poppins-Regular", size: 13))
-                .foregroundColor(MoriColors.text)
+                .font(.system(size: 13, weight: .regular))
+                .foregroundColor(MoriColors.forestCanopy)
         }
     }
 }

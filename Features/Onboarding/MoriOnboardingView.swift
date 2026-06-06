@@ -19,7 +19,7 @@ struct MoriOnboardingView: View {
     var body: some View {
         ZStack {
             // Background
-            MoriColors.creamWhite
+            MoriColors.forestPaper
                 .ignoresSafeArea()
             
             VStack(spacing: 0) {
@@ -125,12 +125,12 @@ struct LifeGridIntroductionScreen: View {
                 VStack(spacing: 12) {
                     Text("Make your weeks visible")
                         .font(MoriTypography.headline1)
-                        .foregroundColor(MoriColors.charcoal)
+                        .foregroundColor(MoriColors.forestCanopy)
                         .multilineTextAlignment(.center)
 
                     Text("Mori turns time into a quiet weekly ritual: see the grid, notice the week, choose one thing that matters.")
                         .font(MoriTypography.body)
-                        .foregroundColor(MoriColors.gray)
+                        .foregroundColor(MoriColors.forestMuted)
                         .multilineTextAlignment(.center)
                         .lineSpacing(3)
                 }
@@ -187,29 +187,29 @@ private struct LifeGridHeroCard: View {
     var body: some View {
         ZStack(alignment: .bottomLeading) {
             RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .fill(MoriColors.charcoal)
-                .shadow(color: MoriColors.shadowMedium, radius: 18, x: 0, y: 10)
+                .fill(MoriColors.forestCanopy)
+                .shadow(color: MoriColors.forestShadow.opacity(0.45), radius: 18, x: 0, y: 10)
 
             VStack(alignment: .leading, spacing: 22) {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("One life")
                             .font(MoriTypography.caption)
-                            .foregroundColor(MoriColors.moriGold)
+                            .foregroundColor(MoriColors.forestSeed)
                             .textCase(.uppercase)
 
                         Text("in weeks")
                             .font(MoriTypography.title1)
-                            .foregroundColor(MoriColors.zenCream)
+                            .foregroundColor(MoriColors.forestCard)
                     }
 
                     Spacer()
 
                     Image(systemName: "hourglass")
                         .font(.system(size: 26, weight: .semibold))
-                        .foregroundColor(MoriColors.moriGold)
+                        .foregroundColor(MoriColors.forestSeed)
                         .frame(width: 48, height: 48)
-                        .background(MoriColors.moriGold.opacity(0.14))
+                        .background(MoriColors.forestSeed.opacity(0.14))
                         .clipShape(Circle())
                 }
 
@@ -218,7 +218,7 @@ private struct LifeGridHeroCard: View {
 
                     ZStack {
                         RoundedRectangle(cornerRadius: 14, style: .continuous)
-                            .fill(MoriColors.moriCream.opacity(0.08))
+                            .fill(MoriColors.forestCard.opacity(0.08))
 
                         LifeGridVisualization(
                             rows: 6,
@@ -226,8 +226,8 @@ private struct LifeGridHeroCard: View {
                             filledRatio: 0.25,
                             animate: showAnimation,
                             showLabels: false,
-                            filledColor: MoriColors.moriGold,
-                            emptyColor: MoriColors.moriCream.opacity(0.18)
+                            filledColor: MoriColors.forestSeed,
+                            emptyColor: MoriColors.forestCard.opacity(0.18)
                         )
                         .opacity(gridOpacity)
                         .scaleEffect(showAnimation ? 1 : 0.8)
@@ -239,12 +239,12 @@ private struct LifeGridHeroCard: View {
 
                 HStack(spacing: 8) {
                     Circle()
-                        .fill(MoriColors.moriGold)
+                        .fill(MoriColors.forestSeed)
                         .frame(width: 7, height: 7)
 
                     Text("Every dot is a week. This one is yours.")
                         .font(MoriTypography.caption)
-                        .foregroundColor(MoriColors.moriCreamMuted)
+                        .foregroundColor(MoriColors.forestMuted)
                 }
             }
             .padding(22)
@@ -264,19 +264,19 @@ private struct OnboardingValueRow: View {
         HStack(alignment: .top, spacing: 14) {
             Image(systemName: iconName)
                 .font(.system(size: 17, weight: .semibold))
-                .foregroundColor(MoriColors.moriGold)
+                .foregroundColor(MoriColors.forestSeed)
                 .frame(width: 34, height: 34)
-                .background(MoriColors.moriGold.opacity(0.12))
+                .background(MoriColors.forestSeed.opacity(0.12))
                 .clipShape(Circle())
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
                     .font(MoriTypography.subhead)
-                    .foregroundColor(MoriColors.charcoal)
+                    .foregroundColor(MoriColors.forestCanopy)
 
                 Text(subtitle)
                     .font(MoriTypography.caption)
-                    .foregroundColor(MoriColors.gray)
+                    .foregroundColor(MoriColors.forestMuted)
                     .fixedSize(horizontal: false, vertical: true)
             }
         }
@@ -298,12 +298,12 @@ struct LifeCountdownScreen: View {
                 VStack(spacing: 16) {
                     Text("Your Life, Visualized")
                         .font(MoriTypography.headline1)
-                        .foregroundColor(MoriColors.charcoal)
+                        .foregroundColor(MoriColors.forestCanopy)
                         .multilineTextAlignment(.center)
                     
                     Text("Time is the one thing you can't get back")
                         .font(MoriTypography.body)
-                        .foregroundColor(MoriColors.gray)
+                        .foregroundColor(MoriColors.forestMuted)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 40)
                 }
@@ -323,7 +323,7 @@ struct LifeCountdownScreen: View {
                 VStack(spacing: 12) {
                     Text("What matters most to you with this time?")
                         .font(MoriTypography.subhead)
-                        .foregroundColor(MoriColors.charcoal)
+                        .foregroundColor(MoriColors.forestCanopy)
                         .multilineTextAlignment(.center)
                 }
                 
@@ -353,17 +353,17 @@ struct LifeCountdownScreen: View {
             HStack(spacing: 10) {
                 Image(systemName: viewModel.birthDateSourceIcon)
                     .font(.body)
-                    .foregroundColor(MoriColors.gold)
+                    .foregroundColor(MoriColors.forestSeed)
 
                 Text(viewModel.birthDateStatusText)
                     .font(MoriTypography.caption)
-                    .foregroundColor(MoriColors.gray)
+                    .foregroundColor(MoriColors.forestMuted)
                     .frame(maxWidth: .infinity, alignment: .leading)
             }
 
             if viewModel.isLoadingHealthBirthDate {
                 ProgressView()
-                    .tint(MoriColors.gold)
+                    .tint(MoriColors.forestSeed)
             }
 
             if viewModel.shouldShowManualBirthDatePicker {
@@ -382,15 +382,15 @@ struct LifeCountdownScreen: View {
                     viewModel.showManualBirthDateOverride()
                 }
                 .font(MoriTypography.caption)
-                .foregroundColor(MoriColors.softTaupe)
+                .foregroundColor(MoriColors.forestMuted)
             }
         }
         .padding(18)
-        .background(Color.white)
+        .background(MoriColors.forestCard)
         .cornerRadius(12)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(MoriColors.gray.opacity(0.18), lineWidth: 1)
+                .stroke(MoriColors.forestMuted.opacity(0.18), lineWidth: 1)
         )
     }
 
@@ -399,16 +399,16 @@ struct LifeCountdownScreen: View {
             HStack(spacing: 10) {
                 Image(systemName: "person.text.rectangle")
                     .font(.body)
-                    .foregroundColor(MoriColors.gold)
+                    .foregroundColor(MoriColors.forestSeed)
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Estimate details")
                         .font(MoriTypography.subhead)
-                        .foregroundColor(MoriColors.charcoal)
+                        .foregroundColor(MoriColors.forestCanopy)
 
                     Text(viewModel.lifeExpectancyStatusText)
                         .font(MoriTypography.caption)
-                        .foregroundColor(MoriColors.gray)
+                        .foregroundColor(MoriColors.forestMuted)
                 }
                 .frame(maxWidth: .infinity, alignment: .leading)
             }
@@ -444,19 +444,19 @@ struct LifeCountdownScreen: View {
                 Label("\(viewModel.lifeExpectancy) year estimate", systemImage: "heart")
             }
             .font(MoriTypography.caption)
-            .foregroundColor(MoriColors.softTaupe)
+            .foregroundColor(MoriColors.forestMuted)
 
             if viewModel.isLoadingLocation || viewModel.isLoadingLifeExpectancy {
                 ProgressView()
-                    .tint(MoriColors.gold)
+                    .tint(MoriColors.forestSeed)
             }
         }
         .padding(18)
-        .background(Color.white)
+        .background(MoriColors.forestCard)
         .cornerRadius(12)
         .overlay(
             RoundedRectangle(cornerRadius: 12)
-                .stroke(MoriColors.gray.opacity(0.18), lineWidth: 1)
+                .stroke(MoriColors.forestMuted.opacity(0.18), lineWidth: 1)
         )
     }
 }
@@ -482,12 +482,12 @@ struct FirstGratitudeScreen: View {
                 VStack(spacing: 16) {
                     Text("Make This Week Real")
                         .font(MoriTypography.headline1)
-                        .foregroundColor(MoriColors.charcoal)
+                        .foregroundColor(MoriColors.forestCanopy)
                         .multilineTextAlignment(.center)
                     
                     Text("One square is being written now. Choose one small proof that you lived it on purpose.")
                         .font(MoriTypography.body)
-                        .foregroundColor(MoriColors.gray)
+                        .foregroundColor(MoriColors.forestMuted)
                         .multilineTextAlignment(.center)
                         .padding(.horizontal, 40)
                 }
@@ -495,7 +495,7 @@ struct FirstGratitudeScreen: View {
                 VStack(alignment: .leading, spacing: 14) {
                     Text("What part of life deserves attention?")
                         .font(MoriTypography.subhead)
-                        .foregroundColor(MoriColors.charcoal)
+                        .foregroundColor(MoriColors.forestCanopy)
 
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 8) {
                         ForEach(LifeDomain.allCases) { domain in
@@ -509,14 +509,14 @@ struct FirstGratitudeScreen: View {
                                         .lineLimit(1)
                                 }
                                 .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(viewModel.firstIntentionDomain == domain ? .white : MoriColors.charcoal)
+                                .foregroundColor(viewModel.firstIntentionDomain == domain ? .white : MoriColors.forestCanopy)
                                 .frame(maxWidth: .infinity)
                                 .padding(.vertical, 11)
-                                .background(viewModel.firstIntentionDomain == domain ? MoriColors.charcoal : Color.white)
+                                .background(viewModel.firstIntentionDomain == domain ? MoriColors.forestCanopy : MoriColors.forestCard)
                                 .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 10, style: .continuous)
-                                        .stroke(MoriColors.gray.opacity(0.18), lineWidth: 1)
+                                        .stroke(MoriColors.forestMuted.opacity(0.18), lineWidth: 1)
                                 )
                             }
                             .buttonStyle(.plain)
@@ -528,12 +528,12 @@ struct FirstGratitudeScreen: View {
                 VStack(spacing: 16) {
                     Text("This week, I will...")
                         .font(MoriTypography.subhead)
-                        .foregroundColor(MoriColors.charcoal)
+                        .foregroundColor(MoriColors.forestCanopy)
                     
                     ZStack(alignment: .topLeading) {
                         if viewModel.firstIntentionAction.isEmpty {
                             Text("Choose or write one tiny action...")
-                                .foregroundColor(MoriColors.gray)
+                                .foregroundColor(MoriColors.forestMuted)
                                 .font(MoriTypography.body)
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 12)
@@ -543,14 +543,14 @@ struct FirstGratitudeScreen: View {
                             .frame(height: 120)
                             .padding(8)
                             .scrollContentBackground(.hidden)
-                            .background(Color.white)
+                            .background(MoriColors.forestCard)
                             .cornerRadius(12)
                             .overlay(
                                 RoundedRectangle(cornerRadius: 12)
-                                    .stroke(MoriColors.gray.opacity(0.2), lineWidth: 1)
+                                    .stroke(MoriColors.forestMuted.opacity(0.2), lineWidth: 1)
                             )
                             .font(MoriTypography.body)
-                            .foregroundColor(MoriColors.charcoal)
+                            .foregroundColor(MoriColors.forestCanopy)
                             .focused($isFocused)
                             .onChange(of: viewModel.firstIntentionAction) { newValue in
                                 if newValue.count > 500 {
@@ -562,7 +562,7 @@ struct FirstGratitudeScreen: View {
                     // Character count
                     Text("\(viewModel.firstIntentionAction.count) / 500")
                         .font(MoriTypography.caption)
-                        .foregroundColor(MoriColors.gray)
+                        .foregroundColor(MoriColors.forestMuted)
                         .frame(maxWidth: .infinity, alignment: .trailing)
                 }
                 
@@ -570,7 +570,7 @@ struct FirstGratitudeScreen: View {
                 VStack(alignment: .leading, spacing: 12) {
                     Text("Tiny actions")
                         .font(MoriTypography.subhead)
-                        .foregroundColor(MoriColors.charcoal)
+                        .foregroundColor(MoriColors.forestCanopy)
                     
                     LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 8) {
                         ForEach(viewModel.firstIntentionDomain.suggestedActions, id: \.self) { action in
@@ -607,7 +607,7 @@ struct FirstGratitudeScreen: View {
                     onComplete()
                 }
                 .font(MoriTypography.caption)
-                .foregroundColor(MoriColors.softTaupe)
+                .foregroundColor(MoriColors.forestMuted)
             }
             .padding(.horizontal, 24)
             .padding(.top, 12)
@@ -645,9 +645,9 @@ struct OnboardingHeader: View {
             Button(action: onBack) {
                 Image(systemName: "chevron.left")
                     .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(MoriColors.charcoal)
+                    .foregroundColor(MoriColors.forestCanopy)
                     .frame(width: 40, height: 40)
-                    .background(Color.white.opacity(currentStep == 0 ? 0 : 0.7))
+                    .background(MoriColors.forestCard.opacity(currentStep == 0 ? 0 : 0.7))
                     .clipShape(Circle())
             }
             .opacity(currentStep == 0 ? 0 : 1)
@@ -670,7 +670,7 @@ struct OnboardingHeader: View {
                     onSkip()
                 }
                 .font(MoriTypography.caption)
-                .foregroundColor(MoriColors.softTaupe)
+                .foregroundColor(MoriColors.forestMuted)
                 .frame(width: 40, height: 40)
                 .accessibilityHint("Closes onboarding")
             } else {
@@ -687,14 +687,14 @@ private struct MoriWordmark: View {
         HStack(spacing: 10) {
             Image(systemName: "hourglass")
                 .font(.system(size: 18, weight: .semibold))
-                .foregroundColor(MoriColors.moriDark)
+                .foregroundColor(MoriColors.forestCanopy)
                 .frame(width: 38, height: 38)
-                .background(MoriColors.moriGold)
+                .background(MoriColors.forestSeed)
                 .clipShape(Circle())
 
             Text("MORI")
                 .font(.system(size: 18, weight: .semibold))
-                .foregroundColor(MoriColors.charcoal)
+                .foregroundColor(MoriColors.forestCanopy)
                 .tracking(2)
         }
         .accessibilityElement(children: .combine)
@@ -710,7 +710,7 @@ struct MoriProgressBar: View {
         HStack(spacing: 8) {
             ForEach(0..<totalSteps, id: \.self) { step in
                 Circle()
-                    .fill(step <= currentStep ? MoriColors.gold : MoriColors.gray.opacity(0.3))
+                    .fill(step <= currentStep ? MoriColors.forestSeed : MoriColors.forestMuted.opacity(0.3))
                     .frame(width: step <= currentStep ? 8 : 6)
                     .animation(.easeInOut(duration: 0.3), value: currentStep)
             }
@@ -873,20 +873,20 @@ struct TimeRemainingSummary: View {
                 HStack(alignment: .firstTextBaseline) {
                     Text("Time remaining")
                         .font(MoriTypography.caption)
-                        .foregroundColor(MoriColors.softTaupe)
+                        .foregroundColor(MoriColors.forestMuted)
                         .textCase(.uppercase)
 
                     Spacer()
 
                     Text("\(Int(progress * 100))% lived")
                         .font(MoriTypography.caption)
-                        .foregroundColor(MoriColors.softTaupe)
+                        .foregroundColor(MoriColors.forestMuted)
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(weeksRemaining)
                         .font(.system(size: 56, weight: .semibold, design: .rounded))
-                        .foregroundColor(MoriColors.warmCharcoal)
+                        .foregroundColor(MoriColors.forestCanopy)
                         .monospacedDigit()
                         .minimumScaleFactor(0.72)
                         .lineLimit(1)
@@ -896,7 +896,7 @@ struct TimeRemainingSummary: View {
 
                     Text("weeks of life")
                         .font(MoriTypography.body)
-                        .foregroundColor(MoriColors.gray)
+                        .foregroundColor(MoriColors.forestMuted)
                 }
 
                 LifeProgressRail(progress: progress, isRevealed: isRevealed, reduceMotion: reduceMotion)
@@ -905,22 +905,22 @@ struct TimeRemainingSummary: View {
             .padding(24)
             .background(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color.white.opacity(0.7))
+                    .fill(MoriColors.forestCard.opacity(0.7))
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .stroke(MoriColors.warmGray.opacity(0.35), lineWidth: 1)
+                    .stroke(MoriColors.forestLine.opacity(0.35), lineWidth: 1)
             )
-            .shadow(color: MoriColors.shadowSoft, radius: 16, x: 0, y: 8)
+            .shadow(color: MoriColors.forestShadow.opacity(0.42), radius: 16, x: 0, y: 8)
 
             HStack(spacing: 10) {
                 TimeMarker(label: "Born", isActive: true)
                 Rectangle()
-                    .fill(MoriColors.warmGray.opacity(0.35))
+                    .fill(MoriColors.forestLine.opacity(0.35))
                     .frame(height: 1)
                 TimeMarker(label: "Today", isActive: true)
                 Rectangle()
-                    .fill(MoriColors.warmGray.opacity(0.35))
+                    .fill(MoriColors.forestLine.opacity(0.35))
                     .frame(height: 1)
                 TimeMarker(label: "Estimated", isActive: false)
             }
@@ -941,20 +941,20 @@ struct LifeProgressRail: View {
 
             ZStack(alignment: .leading) {
                 Capsule()
-                    .fill(MoriColors.warmGray.opacity(0.22))
+                    .fill(MoriColors.forestLine.opacity(0.22))
                     .frame(height: 10)
 
                 Capsule()
-                    .fill(MoriColors.accentAmber)
+                    .fill(MoriColors.forestSeed)
                     .frame(width: max(10, width * (isRevealed ? progress : 0)), height: 10)
                     .animation(reduceMotion ? .none : .easeOut(duration: 0.7), value: isRevealed)
 
                 Circle()
-                    .fill(Color.white)
+                    .fill(MoriColors.forestCard)
                     .frame(width: 22, height: 22)
                     .overlay(
                         Circle()
-                            .stroke(MoriColors.accentAmber, lineWidth: 4)
+                            .stroke(MoriColors.forestSeed, lineWidth: 4)
                     )
                     .offset(x: min(max(0, width * progress - 11), max(0, width - 22)))
                     .opacity(isRevealed ? 1 : 0)
@@ -973,12 +973,12 @@ struct TimeMarker: View {
     var body: some View {
         VStack(spacing: 6) {
             Circle()
-                .fill(isActive ? MoriColors.accentAmber : MoriColors.warmGray.opacity(0.4))
+                .fill(isActive ? MoriColors.forestSeed : MoriColors.forestLine.opacity(0.4))
                 .frame(width: 8, height: 8)
 
             Text(label)
                 .font(.system(size: 11, weight: .medium))
-                .foregroundColor(isActive ? MoriColors.warmCharcoal : MoriColors.softTaupe)
+                .foregroundColor(isActive ? MoriColors.forestCanopy : MoriColors.forestMuted)
         }
         .frame(width: 68)
     }
@@ -990,8 +990,8 @@ struct LifeGridVisualization: View {
     let filledRatio: Double
     let animate: Bool
     let showLabels: Bool
-    var filledColor: Color = MoriColors.warmCharcoal
-    var emptyColor: Color = MoriColors.warmGray.opacity(0.35)
+    var filledColor: Color = MoriColors.forestCanopy
+    var emptyColor: Color = MoriColors.forestLine.opacity(0.35)
 
     var body: some View {
         VStack(spacing: 5) {
@@ -1021,22 +1021,22 @@ struct LifeProgressArc: View {
         ZStack {
             Circle()
                 .trim(from: 0.12, to: 0.88)
-                .stroke(MoriColors.warmGray.opacity(0.25), style: StrokeStyle(lineWidth: 14, lineCap: .round))
+                .stroke(MoriColors.forestLine.opacity(0.25), style: StrokeStyle(lineWidth: 14, lineCap: .round))
                 .rotationEffect(.degrees(90))
 
             Circle()
                 .trim(from: 0.12, to: 0.12 + (0.76 * progress))
-                .stroke(MoriColors.accentAmber, style: StrokeStyle(lineWidth: 14, lineCap: .round))
+                .stroke(MoriColors.forestSeed, style: StrokeStyle(lineWidth: 14, lineCap: .round))
                 .rotationEffect(.degrees(90))
                 .animation(animate ? .easeOut(duration: 0.8) : .none, value: progress)
 
             VStack(spacing: 4) {
                 Text("\(Int(progress * 100))%")
                     .font(MoriTypography.title1)
-                    .foregroundColor(MoriColors.warmCharcoal)
+                    .foregroundColor(MoriColors.forestCanopy)
                 Text("lived")
                     .font(MoriTypography.caption)
-                    .foregroundColor(MoriColors.softTaupe)
+                    .foregroundColor(MoriColors.forestMuted)
             }
         }
     }
@@ -1046,10 +1046,10 @@ struct MoriPrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(.system(size: 17, weight: .semibold))
-            .foregroundColor(MoriColors.deepEspresso)
+            .foregroundColor(MoriColors.forestCard)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .background(MoriColors.accentAmber)
+            .background(MoriColors.forestCanopy)
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             .opacity(configuration.isPressed ? 0.82 : 1)
             .scaleEffect(configuration.isPressed ? 0.98 : 1)
@@ -1060,16 +1060,16 @@ struct MoriChipButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(MoriTypography.caption)
-            .foregroundColor(MoriColors.warmCharcoal)
+            .foregroundColor(MoriColors.forestCanopy)
             .lineLimit(1)
             .minimumScaleFactor(0.85)
             .frame(maxWidth: .infinity)
             .padding(.horizontal, 12)
             .padding(.vertical, 10)
-            .background(MoriColors.softCream)
+            .background(MoriColors.forestCanopy.opacity(0.08))
             .overlay(
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .stroke(MoriColors.warmGray.opacity(0.7), lineWidth: 1)
+                    .stroke(MoriColors.forestLine.opacity(0.7), lineWidth: 1)
             )
             .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
             .opacity(configuration.isPressed ? 0.78 : 1)

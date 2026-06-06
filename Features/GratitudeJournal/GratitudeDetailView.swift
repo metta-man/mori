@@ -17,17 +17,18 @@ struct GratitudeDetailView: View {
     
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 24) {
+            MoriForestBackground {
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 24) {
                     // Date & Time
                     VStack(alignment: .leading, spacing: 4) {
                         Text(formatFullDate(entry.date))
-                            .font(.custom("Poppins", size: 18))
-                            .foregroundColor(Color(hex: "333333"))
+                            .font(.system(size: 22, weight: .semibold, design: .rounded))
+                            .foregroundColor(MoriColors.forestCanopy)
                         
                         Text(formatTime(entry.createdAt))
-                            .font(.custom("Poppins", size: 14))
-                            .foregroundColor(Color(hex: "888888"))
+                            .font(.system(size: 14, weight: .regular))
+                            .foregroundColor(MoriColors.forestMuted)
                     }
                     .padding(.top, 8)
                     
@@ -36,17 +37,17 @@ struct GratitudeDetailView: View {
                             .font(.system(size: 14, weight: .semibold))
 
                         Text(sourceDisplayText)
-                            .font(.custom("Poppins", size: 14))
+                            .font(.system(size: 14, weight: .semibold))
                     }
                     .foregroundColor(sourceColor)
                     .padding(12)
-                    .background(Color(hex: "F5F5F5"))
+                    .background(sourceColor.opacity(0.10))
                     .cornerRadius(8)
                     
                     // Content
                     Text(entry.displayContent)
-                        .font(.custom("Poppins", size: 15))
-                        .foregroundColor(Color(hex: "333333"))
+                        .font(.system(size: 15, weight: .regular))
+                        .foregroundColor(MoriColors.forestCanopy)
                         .lineSpacing(1.6)
                         .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -74,41 +75,46 @@ struct GratitudeDetailView: View {
                     // Metadata
                     VStack(alignment: .leading, spacing: 8) {
                         Divider()
-                            .background(Color(hex: "E8E8E8"))
+                            .background(MoriColors.forestLine.opacity(0.58))
                         
                         HStack {
                             Text("Created:")
-                                .font(.custom("Poppins", size: 12))
-                                .foregroundColor(Color(hex: "888888"))
+                                .font(.system(size: 12, weight: .regular))
+                                .foregroundColor(MoriColors.forestMuted)
                             
                             Text(formatDateTime(entry.createdAt))
-                                .font(.custom("Poppins", size: 12))
-                                .foregroundColor(Color(hex: "666666"))
+                                .font(.system(size: 12, weight: .regular))
+                                .foregroundColor(MoriColors.forestCanopy)
                         }
                         
                         if entry.updatedAt != entry.createdAt {
                             HStack {
                                 Text("Updated:")
-                                    .font(.custom("Poppins", size: 12))
-                                    .foregroundColor(Color(hex: "888888"))
+                                    .font(.system(size: 12, weight: .regular))
+                                    .foregroundColor(MoriColors.forestMuted)
                                 
                                 Text(formatDateTime(entry.updatedAt))
-                                    .font(.custom("Poppins", size: 12))
-                                    .foregroundColor(Color(hex: "666666"))
+                                    .font(.system(size: 12, weight: .regular))
+                                    .foregroundColor(MoriColors.forestCanopy)
                             }
                         }
                     }
                     .padding(.top, 16)
                 }
-                .padding(24)
+                .padding(20)
+                .moriSanctuaryCard(cornerRadius: 24, padding: 18)
+                .padding(20)
+                }
             }
-            .background(Color(hex: "FDF5E6"))
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(MoriColors.forestPaper, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarColorScheme(.light, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: { dismiss() }) {
                         Image(systemName: "chevron.left")
-                            .foregroundColor(Color(hex: "333333"))
+                            .foregroundColor(MoriColors.forestCanopy)
                     }
                 }
                 
@@ -116,7 +122,7 @@ struct GratitudeDetailView: View {
                     HStack(spacing: 16) {
                         Button(action: { showDeleteConfirmation = true }) {
                             Image(systemName: "trash")
-                                .foregroundColor(Color(hex: "DC3545"))
+                                .foregroundColor(MoriColors.forestClay)
                         }
                     }
                 }
@@ -162,10 +168,10 @@ struct GratitudeDetailView: View {
 
     private var sourceColor: Color {
         switch entry.sourceKind {
-        case .journal: return Color(hex: "666666")
-        case .dayLog: return MoriColors.warmClay
-        case .dailySpark: return Color(hex: "B8942D")
-        case .weeklyIntention: return Color(hex: "788c5d")
+        case .journal: return MoriColors.forestMuted
+        case .dayLog: return MoriColors.forestClay
+        case .dailySpark: return MoriColors.forestSeed
+        case .weeklyIntention: return MoriColors.forestMoss
         }
     }
 }

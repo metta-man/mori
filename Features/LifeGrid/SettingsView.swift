@@ -44,7 +44,7 @@ struct SettingsView: View {
                     } else if !lifeExpectancyStatusText.isEmpty {
                         Text(lifeExpectancyStatusText)
                             .font(.footnote)
-                            .foregroundColor(MoriColors.secondary)
+                            .foregroundColor(MoriColors.forestMuted)
                     }
                 } header: {
                     Text("Your Life")
@@ -98,13 +98,19 @@ struct SettingsView: View {
                 Section {
                     Text("Mori reminds us that time is precious. Use this grid to visualize your life and make each week count.")
                         .font(.footnote)
-                        .foregroundColor(MoriColors.secondary)
+                        .foregroundColor(MoriColors.forestMuted)
                 } header: {
                     Text("About")
                 }
             }
+            .scrollContentBackground(.hidden)
+            .background(MoriColors.forestPaper)
+            .tint(MoriColors.forestCanopy)
             .navigationTitle("Settings")
             .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(MoriColors.forestPaper, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarColorScheme(.light, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
                     Button("Done") {
@@ -334,7 +340,7 @@ private struct ReminderSettingsRow: View {
                     Text(title)
                     Text(subtitle)
                         .font(.caption)
-                        .foregroundColor(MoriColors.secondary)
+                        .foregroundColor(MoriColors.forestMuted)
                 }
             }
             .onChange(of: isEnabled, perform: onToggle)

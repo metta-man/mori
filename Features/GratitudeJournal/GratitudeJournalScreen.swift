@@ -26,66 +26,63 @@ struct GratitudeJournalScreen: View {
     
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 24) {
-                    titleSection
+            MoriForestBackground {
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 22) {
+                        MoriPageHeader(
+                            eyebrow: "Journal",
+                            title: "Journal",
+                            subtitle: "Capture one thing worth remembering from today."
+                        )
 
-                    DailySparkCard(store: dailySparkStore, onSaved: { _ in
-                        toastMessage = "Daily Spark saved to Journal"
-                        toastType = .success
+                        DailySparkCard(store: dailySparkStore, onSaved: { _ in
+                            toastMessage = "Daily Spark saved to Journal"
+                            toastType = .success
 
-                        withAnimation {
-                            showToast = true
+                            withAnimation {
+                                showToast = true
+                            }
+                        })
+
+                        PromptSelectionSection(selectedPrompt: $viewModel.selectedPrompt)
+
+                        GratitudeEditorView(
+                            content: $viewModel.content,
+                            selectedPrompt: viewModel.selectedPrompt,
+                            attachedPhotos: viewModel.attachedPhotos,
+                            onAddPhoto: { data in
+                                viewModel.addPhotoData(data)
+                            },
+                            onRemovePhoto: { attachment in
+                                viewModel.removePhoto(attachment)
+                            },
+                            onSave: saveEntry
+                        )
+
+                        RandomMemoryButton {
+                            showRandomMemory = true
                         }
-                    })
-                    .padding(.horizontal, 24)
+                        .disabled(viewModel.recentEntries.isEmpty)
+                        .opacity(viewModel.recentEntries.isEmpty ? 0.5 : 1)
 
-                    // Prompt Selection
-                    PromptSelectionSection(selectedPrompt: $viewModel.selectedPrompt)
-                        .padding(.horizontal, 24)
-                    
-                    // Editor
-                    GratitudeEditorView(
-                        content: $viewModel.content,
-                        selectedPrompt: viewModel.selectedPrompt,
-                        attachedPhotos: viewModel.attachedPhotos,
-                        onAddPhoto: { data in
-                            viewModel.addPhotoData(data)
-                        },
-                        onRemovePhoto: { attachment in
-                            viewModel.removePhoto(attachment)
-                        },
-                        onSave: saveEntry
-                    )
-                    .padding(.horizontal, 24)
-                    
-                    // Random Memory Button
-                    RandomMemoryButton {
-                        showRandomMemory = true
+                        RecentEntriesSection(
+                            entries: viewModel.recentEntries,
+                            onViewAll: { showHistory = true },
+                            onEntryTap: { entry in
+                                selectedEntry = entry
+                            }
+                        )
+                        .padding(.bottom, 40)
                     }
-                    .padding(.horizontal, 24)
-                    .disabled(viewModel.recentEntries.isEmpty)
-                    .opacity(viewModel.recentEntries.isEmpty ? 0.5 : 1)
-                    
-                    // Recent Entries
-                    RecentEntriesSection(
-                        entries: viewModel.recentEntries,
-                        onViewAll: { showHistory = true },
-                        onEntryTap: { entry in
-                            selectedEntry = entry
-                        }
-                    )
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 48)
+                    .padding(.horizontal, 20)
+                    .padding(.top, 18)
                 }
-                .padding(.top, 16)
             }
             .scrollDismissesKeyboard(.interactively)
-            .background(MoriColors.moriDark)
             .navigationBarTitleDisplayMode(.inline)
             .navigationTitle("Mori")
-            .toolbarColorScheme(.dark, for: .navigationBar)
-            .toolbarBackground(MoriColors.moriDark, for: .navigationBar)
+            .toolbarColorScheme(.light, for: .navigationBar)
+            .toolbarBackground(MoriColors.forestPaper, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarTrailing) {
@@ -104,13 +101,13 @@ struct GratitudeJournalScreen: View {
                             }
                         } label: {
                             Image(systemName: "ellipsis.circle")
-                                .foregroundColor(MoriColors.moriGold.opacity(0.8))
+                                .foregroundColor(MoriColors.forestCanopy.opacity(0.82))
                         }
                         .accessibility(label: Text("Journal backup options"))
 
                         NavigationLink(destination: GratitudeHistoryView()) {
                             Image(systemName: "book.fill")
-                                .foregroundColor(MoriColors.moriGold.opacity(0.8))
+                                .foregroundColor(MoriColors.forestCanopy.opacity(0.82))
                         }
                     }
                 }
@@ -121,7 +118,7 @@ struct GratitudeJournalScreen: View {
                     Button("Done") {
                         dismissKeyboard()
                     }
-                    .foregroundColor(MoriColors.moriGold)
+                    .foregroundColor(MoriColors.forestCanopy)
                 }
             }
             .sheet(isPresented: $showRandomMemory) {
@@ -174,36 +171,21 @@ struct GratitudeJournalScreen: View {
         }
     }
     
-    // MARK: - Title Section
-    private var titleSection: some View {
-        VStack(spacing: 10) {
-            Text("Journal")
-                .font(.system(size: 34, weight: .semibold, design: .rounded))
-                .foregroundColor(MoriColors.moriCream)
-
-            Text("Capture one thing worth remembering from today.")
-                .font(.system(size: 15, weight: .regular))
-                .foregroundColor(MoriColors.moriCreamMuted)
-                .multilineTextAlignment(.center)
-        }
-        .padding(.horizontal, 24)
-    }
-    
     // MARK: - Toast View
     private var toastView: some View {
         HStack {
-            Text(toastType == .success ? "✨" : "⚠️")
-                .font(.system(size: 16))
+            Image(systemName: toastType == .success ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
+                .font(.system(size: 15, weight: .semibold))
             
             Text(toastMessage)
                 .font(.system(size: 14, weight: .medium))
-                .foregroundColor(.white)
         }
+        .foregroundColor(MoriColors.forestCard)
         .padding(.horizontal, 24)
         .padding(.vertical, 12)
-        .background(toastType == .success ? MoriColors.sageGreen : MoriColors.warmClay)
+        .background(toastType == .success ? MoriColors.forestMoss : MoriColors.forestClay)
         .cornerRadius(8)
-        .shadow(color: Color.black.opacity(0.15), radius: 8, x: 0, y: 4)
+        .shadow(color: MoriColors.forestShadow.opacity(0.35), radius: 8, x: 0, y: 4)
         .padding(.bottom, 32)
     }
     
@@ -213,7 +195,8 @@ struct GratitudeJournalScreen: View {
         
         switch result {
         case .success:
-            toastMessage = "Entry saved!"
+            let action = MoriClarityStore.shared.recordPractice(MoriPractice.quietNote)
+            toastMessage = "Entry saved! · +\(action.seeds) Seeds"
             toastType = .success
         case .failure(let error):
             toastMessage = error.localizedDescription

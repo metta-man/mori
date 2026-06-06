@@ -13,21 +13,25 @@ struct GratitudeHistoryView: View {
     @State private var selectedEntry: GratitudeEntry?
     
     var body: some View {
-        ScrollView {
-            LazyVStack(spacing: 16) {
-                if viewModel.getAllEntries().isEmpty {
-                    emptyState
-                } else {
-                    ForEach(groupedEntries.keys.sorted(by: >), id: \.self) { month in
-                        monthSection(month: month)
+        MoriForestBackground {
+            ScrollView(showsIndicators: false) {
+                LazyVStack(spacing: 18) {
+                    if viewModel.getAllEntries().isEmpty {
+                        emptyState
+                    } else {
+                        ForEach(groupedEntries.keys.sorted(by: >), id: \.self) { month in
+                            monthSection(month: month)
+                        }
                     }
                 }
+                .padding(20)
             }
-            .padding(24)
         }
-        .background(Color(hex: "FDF5E6"))
         .navigationTitle("Journal History")
         .navigationBarTitleDisplayMode(.large)
+        .toolbarBackground(MoriColors.forestPaper, for: .navigationBar)
+        .toolbarBackground(.visible, for: .navigationBar)
+        .toolbarColorScheme(.light, for: .navigationBar)
         .sheet(item: $selectedEntry) { entry in
             GratitudeDetailView(entry: entry)
         }
@@ -41,15 +45,15 @@ struct GratitudeHistoryView: View {
         VStack(spacing: 16) {
             Image(systemName: "book.closed")
                 .font(.system(size: 64))
-                .foregroundColor(Color(hex: "CCCCCC"))
+                .foregroundColor(MoriColors.forestMuted.opacity(0.62))
             
             Text("No entries yet")
-                .font(.custom("Poppins", size: 18))
-                .foregroundColor(Color(hex: "666666"))
+                .font(.system(size: 20, weight: .semibold, design: .rounded))
+                .foregroundColor(MoriColors.forestCanopy)
             
             Text("Start your gratitude journey today.\nEvery small note makes a difference.")
-                .font(.custom("Poppins", size: 14))
-                .foregroundColor(Color(hex: "888888"))
+                .font(.system(size: 14, weight: .regular))
+                .foregroundColor(MoriColors.forestMuted)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
@@ -61,8 +65,8 @@ struct GratitudeHistoryView: View {
         VStack(alignment: .leading, spacing: 12) {
             // Month Header
             Text(month)
-                .font(.custom("Poppins", size: 14))
-                .foregroundColor(Color(hex: "333333"))
+                .font(.system(size: 17, weight: .semibold, design: .rounded))
+                .foregroundColor(MoriColors.forestCanopy)
             
             // Entries for this month
             VStack(spacing: 0) {
@@ -71,13 +75,11 @@ struct GratitudeHistoryView: View {
                     
                     if entry.id != groupedEntries[month]?.last?.id {
                         Divider()
-                            .background(Color(hex: "F5F5F5"))
+                            .background(MoriColors.forestLine.opacity(0.58))
                     }
                 }
             }
-            .background(Color.white)
-            .cornerRadius(12)
-            .shadow(color: Color.black.opacity(0.05), radius: 4, x: 0, y: 2)
+            .moriSanctuaryCard(cornerRadius: 22, padding: 0)
         }
     }
     
@@ -88,34 +90,34 @@ struct GratitudeHistoryView: View {
                 // Date
                 VStack(alignment: .center, spacing: 2) {
                     Text(dayOfMonth(entry.date))
-                        .font(.custom("Poppins", size: 18))
-                        .foregroundColor(Color(hex: "788c5d"))
+                        .font(.system(size: 20, weight: .semibold, design: .rounded))
+                        .foregroundColor(MoriColors.forestMoss)
                     
                     Text(shortMonth(entry.date))
-                        .font(.custom("Poppins", size: 12))
-                        .foregroundColor(Color(hex: "888888"))
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(MoriColors.forestMuted)
                 }
                 .frame(width: 44)
                 
                 // Content
                 VStack(alignment: .leading, spacing: 4) {
                     Label(entry.sourceLabel, systemImage: entry.sourceSymbolName)
-                        .font(.custom("Poppins", size: 11))
+                        .font(.system(size: 11, weight: .semibold))
                         .foregroundColor(sourceColor(for: entry))
                         .padding(.horizontal, 8)
                         .padding(.vertical, 2)
-                        .background(Color(hex: "FDF5E6"))
+                        .background(sourceColor(for: entry).opacity(0.10))
                         .cornerRadius(4)
 
                     if !entry.photoAttachments.isEmpty {
                         Label("\(entry.photoAttachments.count)", systemImage: "photo")
-                            .font(.custom("Poppins", size: 11))
-                            .foregroundColor(Color(hex: "888888"))
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(MoriColors.forestMuted)
                     }
                     
                     Text(entry.displayContent)
-                        .font(.custom("Poppins", size: 14))
-                        .foregroundColor(Color(hex: "666666"))
+                        .font(.system(size: 14, weight: .regular))
+                        .foregroundColor(MoriColors.forestCanopy)
                         .lineLimit(2)
                         .multilineTextAlignment(.leading)
                 }
@@ -124,7 +126,7 @@ struct GratitudeHistoryView: View {
                 
                 Image(systemName: "chevron.right")
                     .font(.system(size: 14))
-                    .foregroundColor(Color(hex: "CCCCCC"))
+                    .foregroundColor(MoriColors.forestMuted.opacity(0.58))
             }
             .padding(16)
         }
@@ -157,10 +159,10 @@ struct GratitudeHistoryView: View {
 
     private func sourceColor(for entry: GratitudeEntry) -> Color {
         switch entry.sourceKind {
-        case .journal: return Color(hex: "D4AF37")
-        case .dayLog: return MoriColors.warmClay
-        case .dailySpark: return Color(hex: "B8942D")
-        case .weeklyIntention: return Color(hex: "788c5d")
+        case .journal: return MoriColors.forestMuted
+        case .dayLog: return MoriColors.forestClay
+        case .dailySpark: return MoriColors.forestSeed
+        case .weeklyIntention: return MoriColors.forestMoss
         }
     }
 }

@@ -29,22 +29,23 @@ struct RandomMemoryButton: View {
                     .animation(.easeInOut(duration: 0.6), value: isPressed)
                 
                 Text("Random Memory")
-                    .font(.custom("Poppins", size: 16))
-                    .foregroundColor(Color(hex: "D4AF37"))
+                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .foregroundColor(MoriColors.forestCanopy)
                 
                 Text("Rediscover a past moment")
-                    .font(.custom("Poppins", size: 12))
-                    .foregroundColor(Color(hex: "888888"))
+                    .font(.system(size: 12, weight: .regular))
+                    .foregroundColor(MoriColors.forestMuted)
             }
             .frame(maxWidth: .infinity)
             .padding(24)
-            .background(Color(hex: "FDF5E6"))
+            .background(MoriColors.forestCard.opacity(0.96))
             .cornerRadius(16)
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
                     .stroke(style: StrokeStyle(lineWidth: 2, dash: [8]))
-                    .foregroundColor(Color(hex: "D4AF37"))
+                    .foregroundColor(MoriColors.forestMoss.opacity(0.45))
             )
+            .shadow(color: MoriColors.forestShadow.opacity(0.28), radius: 14, x: 0, y: 8)
         }
         .buttonStyle(PlainButtonStyle())
         .accessibility(label: Text("Show a random past gratitude entry"))
@@ -60,27 +61,27 @@ struct RandomMemoryModal: View {
         VStack(spacing: 0) {
             // Handle
             RoundedRectangle(cornerRadius: 2.5)
-                .fill(Color.gray.opacity(0.4))
+                .fill(MoriColors.forestMuted.opacity(0.34))
                 .frame(width: 36, height: 5)
                 .padding(.top, 8)
             
             if let entry = entry {
                 // Date
                 Text(formatDate(entry.date))
-                    .font(.custom("Poppins", size: 14))
-                    .foregroundColor(Color(hex: "788c5d"))
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(MoriColors.forestMoss)
                     .padding(.top, 24)
                 
                 Label(entry.sourceLabel, systemImage: entry.sourceSymbolName)
-                    .font(.custom("Poppins", size: 14))
+                    .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(sourceColor(for: entry))
                     .padding(.top, 4)
                 
                 // Content
                 ScrollView {
                     Text(entry.displayContent)
-                        .font(.custom("Poppins", size: 15))
-                        .foregroundColor(Color(hex: "333333"))
+                        .font(.system(size: 15, weight: .regular))
+                        .foregroundColor(MoriColors.forestCanopy)
                         .lineSpacing(1.6)
                         .multilineTextAlignment(.leading)
                         .padding(.horizontal, 24)
@@ -91,11 +92,11 @@ struct RandomMemoryModal: View {
                 // Close button
                 Button(action: { dismiss() }) {
                     Text("Close")
-                        .font(.custom("Poppins", size: 14))
-                        .foregroundColor(Color(hex: "788c5d"))
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(MoriColors.forestCanopy)
                         .padding(.vertical, 12)
                         .padding(.horizontal, 32)
-                        .background(Color(hex: "F5F5F5"))
+                        .background(MoriColors.forestCanopy.opacity(0.08))
                         .cornerRadius(8)
                 }
                 .padding(.top, 24)
@@ -105,31 +106,31 @@ struct RandomMemoryModal: View {
                 VStack(spacing: 16) {
                     Image(systemName: "photo.on.rectangle.angled")
                         .font(.system(size: 48))
-                        .foregroundColor(Color(hex: "CCCCCC"))
+                        .foregroundColor(MoriColors.forestMuted.opacity(0.62))
                     
                     Text("No memories yet")
-                        .font(.custom("Poppins", size: 16))
-                        .foregroundColor(Color(hex: "666666"))
+                        .font(.system(size: 17, weight: .semibold, design: .rounded))
+                        .foregroundColor(MoriColors.forestCanopy)
                     
                     Text("Start writing to build your collection!")
-                        .font(.custom("Poppins", size: 14))
-                        .foregroundColor(Color(hex: "888888"))
+                        .font(.system(size: 14, weight: .regular))
+                        .foregroundColor(MoriColors.forestMuted)
                 }
                 .frame(height: 300)
                 
                 Button(action: { dismiss() }) {
                     Text("Close")
-                        .font(.custom("Poppins", size: 14))
-                        .foregroundColor(Color(hex: "788c5d"))
+                        .font(.system(size: 14, weight: .semibold))
+                        .foregroundColor(MoriColors.forestCanopy)
                         .padding(.vertical, 12)
                         .padding(.horizontal, 32)
-                        .background(Color(hex: "F5F5F5"))
+                        .background(MoriColors.forestCanopy.opacity(0.08))
                         .cornerRadius(8)
                 }
                 .padding(.bottom, 32)
             }
         }
-        .background(Color.white)
+        .background(MoriColors.forestCard)
         .cornerRadius(20, corners: [.topLeft, .topRight])
     }
     
@@ -141,10 +142,10 @@ struct RandomMemoryModal: View {
 
     private func sourceColor(for entry: GratitudeEntry) -> Color {
         switch entry.sourceKind {
-        case .journal: return Color(hex: "666666")
-        case .dayLog: return MoriColors.warmClay
-        case .dailySpark: return Color(hex: "B8942D")
-        case .weeklyIntention: return Color(hex: "788c5d")
+        case .journal: return MoriColors.forestMuted
+        case .dayLog: return MoriColors.forestClay
+        case .dailySpark: return MoriColors.forestSeed
+        case .weeklyIntention: return MoriColors.forestMoss
         }
     }
 }
@@ -176,5 +177,5 @@ struct RoundedCorner: Shape {
         RandomMemoryButton(onTap: {})
     }
     .padding()
-    .background(Color(hex: "FDF5E6"))
+    .background(MoriColors.forestPaper)
 }

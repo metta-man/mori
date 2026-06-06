@@ -22,13 +22,7 @@ struct DailySparkCard: View {
                 editor
             }
         }
-        .padding(16)
-        .background(MoriColors.moriDark.opacity(0.52))
-        .overlay(
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(MoriColors.moriGold.opacity(0.18), lineWidth: 1)
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .moriSanctuaryCard(cornerRadius: 22, padding: 18)
         .onAppear(perform: loadToday)
         .onReceive(NotificationCenter.default.publisher(for: .dailySparkDataDidChange)) { _ in
             loadToday()
@@ -38,16 +32,20 @@ struct DailySparkCard: View {
     private var header: some View {
         HStack(spacing: 10) {
             Image(systemName: "sparkle.magnifyingglass")
-                .foregroundColor(MoriColors.moriGold)
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundColor(MoriColors.forestMoss)
+                .frame(width: 36, height: 36)
+                .background(MoriColors.forestMoss.opacity(0.12))
+                .clipShape(Circle())
 
             VStack(alignment: .leading, spacing: 2) {
                 Text("Daily Spark")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(MoriColors.moriCream)
+                    .font(.system(size: 17, weight: .semibold, design: .rounded))
+                    .foregroundColor(MoriColors.forestCanopy)
 
                 Text("Set the lens for today.")
                     .font(.system(size: 12, weight: .regular))
-                    .foregroundColor(MoriColors.moriCreamMuted)
+                    .foregroundColor(MoriColors.forestMuted)
             }
 
             Spacer()
@@ -60,9 +58,9 @@ struct DailySparkCard: View {
                 } label: {
                     Image(systemName: isEditing ? "xmark" : "pencil")
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(MoriColors.moriGold)
+                        .foregroundColor(MoriColors.forestCanopy)
                         .frame(width: 32, height: 32)
-                        .background(MoriColors.moriDarkElevated)
+                        .background(MoriColors.forestCanopy.opacity(0.08))
                         .clipShape(Circle())
                 }
                 .buttonStyle(.plain)
@@ -80,17 +78,17 @@ struct DailySparkCard: View {
             if !entry.ifThenPlan.isEmpty {
                 Text(entry.ifThenPlan)
                     .font(.system(size: 13, weight: .regular))
-                    .foregroundColor(MoriColors.moriCream.opacity(0.78))
+                    .foregroundColor(MoriColors.forestMuted)
                     .lineLimit(3)
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .padding(12)
-                    .background(MoriColors.moriDarkElevated)
+                    .background(MoriColors.forestPaperDeep.opacity(0.58))
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
 
             Label("Saved to Journal", systemImage: "book.closed")
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundColor(MoriColors.moriGold)
+                .foregroundColor(MoriColors.forestMoss)
                 .padding(.top, 2)
         }
     }
@@ -119,10 +117,10 @@ struct DailySparkCard: View {
                         } label: {
                             Text(feeling)
                                 .font(.system(size: 12, weight: .medium))
-                                .foregroundColor(desiredFeeling == feeling ? MoriColors.moriDark : MoriColors.moriCreamMuted)
+                                .foregroundColor(desiredFeeling == feeling ? MoriColors.forestCard : MoriColors.forestCanopy)
                                 .padding(.horizontal, 10)
                                 .padding(.vertical, 7)
-                                .background(desiredFeeling == feeling ? MoriColors.moriGold : MoriColors.moriDarkElevated)
+                                .background(desiredFeeling == feeling ? MoriColors.forestCanopy : MoriColors.forestCanopy.opacity(0.08))
                                 .clipShape(Capsule())
                         }
                         .buttonStyle(.plain)
@@ -149,10 +147,10 @@ struct DailySparkCard: View {
             } label: {
                 Label("Save Daily Spark", systemImage: "checkmark.circle.fill")
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(canSave ? MoriColors.moriDark : MoriColors.moriCreamMuted)
+                    .foregroundColor(canSave ? MoriColors.forestCard : MoriColors.forestMuted)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
-                    .background(canSave ? MoriColors.moriGold : MoriColors.moriDarkElevated)
+                    .background(canSave ? MoriColors.forestCanopy : MoriColors.forestCanopy.opacity(0.08))
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
             .buttonStyle(.plain)
@@ -215,15 +213,19 @@ private struct DailySparkField: View {
         VStack(alignment: .leading, spacing: 7) {
             Label(title, systemImage: symbolName)
                 .font(.system(size: 12, weight: .semibold))
-                .foregroundColor(MoriColors.moriCreamMuted)
+                .foregroundColor(MoriColors.forestMuted)
 
             TextField(placeholder, text: $text, axis: .vertical)
                 .font(.system(size: 14, weight: .regular))
-                .foregroundColor(MoriColors.moriCream)
+                .foregroundColor(MoriColors.forestCanopy)
                 .lineLimit(1...3)
                 .padding(11)
-                .background(MoriColors.moriDarkElevated)
+                .background(MoriColors.forestPaperDeep.opacity(0.58))
                 .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(MoriColors.forestLine.opacity(0.55), lineWidth: 1)
+                )
                 .submitLabel(.next)
         }
     }
@@ -238,17 +240,17 @@ private struct SparkSummaryRow: View {
         HStack(alignment: .top, spacing: 10) {
             Image(systemName: symbol)
                 .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(MoriColors.moriGold)
+                .foregroundColor(MoriColors.forestMoss)
                 .frame(width: 18, height: 18)
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
                     .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(MoriColors.moriCreamMuted)
+                    .foregroundColor(MoriColors.forestMuted)
 
                 Text(value)
                     .font(.system(size: 14, weight: .regular))
-                    .foregroundColor(MoriColors.moriCream)
+                    .foregroundColor(MoriColors.forestCanopy)
                     .lineLimit(2)
             }
         }
@@ -262,8 +264,7 @@ private extension String {
 }
 
 #Preview {
-    ZStack {
-        MoriColors.moriDark.ignoresSafeArea()
+    MoriForestBackground {
         DailySparkCard(store: .shared)
             .padding()
     }
