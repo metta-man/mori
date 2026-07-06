@@ -27,19 +27,27 @@ final class MoriWatchSettingsReceiver: NSObject {
 
         let defaults = MoriSharedDefaults.shared
 
-        if let birthDate = context["birthDate"] as? Date {
-            defaults.set(birthDate, forKey: "birthDate")
+        if let archiveStartDate = context["archiveStartDate"] as? Date {
+            defaults.set(archiveStartDate, forKey: "archiveStartDate")
+        } else if let legacyArchiveStartDate = context["birthDate"] as? Date {
+            defaults.set(legacyArchiveStartDate, forKey: "archiveStartDate")
         }
 
-        if let lifeExpectancy = context["lifeExpectancy"] as? Int {
-            defaults.set(lifeExpectancy, forKey: "lifeExpectancy")
+        if let archiveSpanYears = context["archiveSpanYears"] as? Int {
+            defaults.set(archiveSpanYears, forKey: "archiveSpanYears")
         }
 
-        if let timeUnit = context["clockTimeUnit"] as? String {
-            defaults.set(timeUnit, forKey: "clockTimeUnit")
+        if let localePreference = context[MoriLocalePreference.defaultsKey] as? String {
+            defaults.set(localePreference, forKey: MoriLocalePreference.defaultsKey)
+        }
+
+        if let data = context[MoriWidgetContextSnapshot.watchApplicationContextKey] as? Data,
+           let snapshot = MoriWidgetContextSnapshot.decode(data) {
+            snapshot.save(defaults: defaults)
         }
 
         WidgetCenter.shared.reloadTimelines(ofKind: "MoriWatchWidgets")
+        WidgetCenter.shared.reloadTimelines(ofKind: "MoriWatchPulseWidget")
     }
 }
 

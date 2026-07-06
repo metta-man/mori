@@ -11,7 +11,7 @@ settings:
   base:
     SWIFT_VERSION: "5.9"
     MARKETING_VERSION: "0.1.0"
-    CURRENT_PROJECT_VERSION: "1"
+    CURRENT_PROJECT_VERSION: "2"
     DEVELOPMENT_TEAM: ""
     CODE_SIGN_STYLE: Automatic
     INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
@@ -31,24 +31,24 @@ targets:
     platform: iOS
     sources:
       - path: App
-        excludes:
-          - DemoContentView.swift
       - path: Features
-        excludes:
-          - DesignSystemDemo/**
-          - FocusGuard/**
       - path: Models
       - path: DesignSystem
         excludes:
-          - MoriCompleteComponents.swift
           - MoriDesignSystemDocumentation.md
       - path: Services
       - path: Shared
+      - path: Localization
     dependencies:
       - package: PostHog
+      - sdk: AppIntents.framework
       - target: MoriWidgets
         embed: true
       - target: MoriScreenTimeMonitor
+        embed: true
+      - target: MoriShieldConfiguration
+        embed: true
+      - target: MoriShieldAction
         embed: true
       - target: MoriWatch
         embed: true
@@ -59,11 +59,13 @@ targets:
         ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: AccentColor
         CODE_SIGN_ENTITLEMENTS: Mori/Mori.entitlements
         INFOPLIST_FILE: Mori/Info.plist
+        MORI_PULSE_PROXY_BASE_URL: "https://mori-gray.vercel.app"
         GENERATE_INFOPLIST_FILE: NO
         INFOPLIST_KEY_CFBundleDisplayName: Mori
         INFOPLIST_KEY_LSApplicationCategoryType: "public.app-category.lifestyle"
-        INFOPLIST_KEY_NSHealthShareUsageDescription: "Mori can use your birth date and biological sex from Apple Health to personalize your life timeline. You can enter them manually instead."
-        INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "Mori uses your location during onboarding to estimate life expectancy for your country. Your precise location is not stored."
+        INFOPLIST_KEY_MORI_PULSE_PROXY_BASE_URL: "$(MORI_PULSE_PROXY_BASE_URL)"
+        INFOPLIST_KEY_NSHealthShareUsageDescription: "Mori can read Apple Health data you approve, including HRV, heart rate, resting heart rate, sleep, respiratory rate, temperature, workouts, active energy, and walking or running distance, to personalize recovery readiness and attention signals."
+        INFOPLIST_KEY_NSHealthUpdateUsageDescription: "Mori does not write data to Apple Health. Recovery features only read the Apple Health data you approve."
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "Mori lets you choose photos to attach to your private journal entries."
 
   MoriScreenTimeMonitor:
@@ -71,12 +73,58 @@ targets:
     platform: iOS
     sources:
       - path: ScreenTimeMonitor
+      - path: Services/BeforeFeedGateStore.swift
+      - path: Services/AttentionShieldActivityNames.swift
+      - path: Services/AttentionShieldActiveSessionStore.swift
+      - path: Services/AttentionShieldApplier.swift
+      - path: Services/AttentionShieldPassiveGatePolicy.swift
+      - path: Services/AttentionShieldStateStore.swift
+      - path: Services/ScreenTimeSelectionPersistence.swift
+      - path: Services/ScreenTimeSelectionStore.swift
       - path: Shared
+      - path: Localization
+    dependencies:
+      - sdk: AppIntents.framework
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.mettalabs.mori.screentimemonitor
         CODE_SIGN_ENTITLEMENTS: ScreenTimeMonitor/MoriScreenTimeMonitor.entitlements
         INFOPLIST_FILE: ScreenTimeMonitor/Info.plist
+        SKIP_INSTALL: YES
+
+  MoriShieldConfiguration:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: ShieldConfiguration
+      - path: Services/AttentionShieldStateStore.swift
+      - path: Shared
+      - path: Localization
+    dependencies:
+      - sdk: AppIntents.framework
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mettalabs.mori.shieldconfiguration
+        CODE_SIGN_ENTITLEMENTS: ShieldConfiguration/MoriShieldConfiguration.entitlements
+        INFOPLIST_FILE: ShieldConfiguration/Info.plist
+        SKIP_INSTALL: YES
+
+  MoriShieldAction:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: ShieldAction
+      - path: Services/BeforeFeedGateStore.swift
+      - path: Services/AttentionShieldStateStore.swift
+      - path: Shared
+      - path: Localization
+    dependencies:
+      - sdk: AppIntents.framework
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mettalabs.mori.shieldaction
+        CODE_SIGN_ENTITLEMENTS: ShieldAction/MoriShieldAction.entitlements
+        INFOPLIST_FILE: ShieldAction/Info.plist
         SKIP_INSTALL: YES
 
   MoriWidgets:
@@ -85,6 +133,7 @@ targets:
     sources:
       - path: Widgets
       - path: Shared
+      - path: Localization
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.mettalabs.mori.widgets
@@ -98,12 +147,15 @@ targets:
     sources:
       - path: WatchApp
       - path: Shared
+      - path: Localization
     dependencies:
       - target: MoriWatchWidgets
         embed: true
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.mettalabs.mori.watch
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: ""
         CODE_SIGN_ENTITLEMENTS: WatchApp/MoriWatch.entitlements
         INFOPLIST_FILE: WatchApp/Info.plist
         GENERATE_INFOPLIST_FILE: NO
@@ -114,9 +166,12 @@ targets:
     sources:
       - path: WatchWidgets
       - path: Shared
+      - path: Localization
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.mettalabs.mori.watch.widgets
+        ASSETCATALOG_COMPILER_APPICON_NAME: ""
+        ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME: ""
         CODE_SIGN_ENTITLEMENTS: WatchWidgets/MoriWatchWidgets.entitlements
         INFOPLIST_FILE: WatchWidgets/Info.plist
         SKIP_INSTALL: YES
@@ -139,13 +194,11 @@ schemes:
     build:
       targets:
         MoriWidgets: all
-        Mori: all
     run:
       config: Debug
       askForAppToLaunch: true
     profile:
       config: Release
-      executable: Mori
     analyze:
       config: Debug
     archive:

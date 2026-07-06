@@ -3,120 +3,234 @@ import FamilyControls
 
 struct ScreenTimeLimitControls: View {
     let contextTitle: String
+    let feature: MoriScreenTimeFeature
 
-    @StateObject private var shieldManager = FocusShieldManager.shared
-    @State private var isShowingPicker = false
-    @State private var selection = FamilyActivitySelection()
+    @Environment(\.moriOpenRoute) private var openRoute
+    @StateObject private var appLimitManager = AppLimitManager.shared
+    @State private var pickerTarget: AppLimitSelectionTarget?
+    @State private var pickerSelection = FamilyActivitySelection()
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            HStack(alignment: .top, spacing: 12) {
-                Image(systemName: shieldManager.isAuthorized ? "lock.shield" : "lock.shield.fill")
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundColor(MoriColors.forestMoss)
-                    .frame(width: 36, height: 36)
-                    .background(MoriColors.forestMoss.opacity(0.12))
-                    .clipShape(Circle())
+            header
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text("Blocked Apps")
-                        .font(.system(size: 15, weight: .semibold, design: .rounded))
-                        .foregroundColor(MoriColors.forestCanopy)
-
-                    Text(statusText)
-                        .font(.system(size: 12, weight: .regular))
-                        .foregroundColor(MoriColors.forestMuted)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                Spacer(minLength: 0)
-            }
-
-            if !shieldManager.isAuthorized {
+            if !presentation.isAuthorized {
                 Button {
-                    Task { await shieldManager.requestAuthorization() }
+                    requestScreenTimeAuthorization()
                 } label: {
-                    Label("Allow Screen Time", systemImage: "faceid")
-                        .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(MoriColors.forestCard)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 12)
-                        .background(MoriColors.forestCanopy)
-                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                }
-                .buttonStyle(.plain)
-            } else {
-                Button {
-                    selection = shieldManager.currentSelection()
-                    isShowingPicker = true
-                } label: {
-                    Label(
-                        shieldManager.hasSelection ? "Edit Blocked Apps" : "Choose Apps",
-                        systemImage: shieldManager.hasSelection ? "pencil.circle" : "plus.circle"
-                    )
+                    HStack(spacing: 8) {
+                        MoriBitmapIconImage(icon: .lockShield, size: 15, opacity: 0.94)
+                            .frame(width: 22, height: 22)
+                            .background(MoriColors.sanctuarySurface.opacity(0.86))
+                            .clipShape(Circle())
+
+                        Text(MoriL10n.display("Allow Screen Time"))
+                    }
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(MoriColors.forestCard)
+                    .foregroundColor(MoriColors.botanicalSurface)
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 12)
-                    .background(MoriColors.forestCanopy)
+                    .background(MoriColors.botanicalInk)
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 }
                 .buttonStyle(.plain)
-
-                Stepper(
-                    "Daily limit \(shieldManager.dailyThresholdMinutes)m",
-                    value: $shieldManager.dailyThresholdMinutes,
-                    in: 5...240,
-                    step: 5
-                )
-                .font(.system(size: 13, weight: .medium))
-                .foregroundColor(MoriColors.forestCanopy)
             }
 
-            if let message = shieldManager.lastErrorMessage {
-                Text(message)
+            if presentation.isAuthorized {
+                appLimitControls
+            }
+
+            Button(action: openAppLimits) {
+                HStack(spacing: 6) {
+                    MoriBitmapIconImage(icon: .settings, size: 15, opacity: 0.84)
+
+                    Text(MoriL10n.display("All App Limits"))
+                }
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(MoriColors.botanicalInk)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(MoriColors.botanicalInk.opacity(0.08))
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+            .buttonStyle(.plain)
+
+            if let message = presentation.lastErrorMessage {
+                Text(MoriL10n.display(message))
                     .font(.system(size: 12, weight: .regular))
-                    .foregroundColor(MoriColors.forestClay)
+                    .foregroundColor(MoriColors.botanicalClay)
             }
         }
         .padding(14)
-        .background(MoriColors.forestPaperDeep.opacity(0.52))
+        .background(MoriColors.botanicalPaperDeep.opacity(0.52))
         .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         .task {
-            shieldManager.restoreActiveShieldIfNeeded()
+            reconcileAppLimitState()
         }
-        .sheet(isPresented: $isShowingPicker) {
-            NavigationStack {
-                FamilyActivityPicker(selection: $selection)
-                    .navigationTitle("Blocked Apps")
-                    .navigationBarTitleDisplayMode(.inline)
-                    .toolbar {
-                        ToolbarItem(placement: .cancellationAction) {
-                            Button("Cancel") {
-                                isShowingPicker = false
-                            }
-                        }
+        .sheet(item: $pickerTarget) { target in
+            ScreenTimeSettingsPickerSheet(
+                title: target.inlineTitle,
+                selection: $pickerSelection,
+                onDone: { finishPicker(target) }
+            )
+        }
+    }
 
-                        ToolbarItem(placement: .confirmationAction) {
-                            Button("Done") {
-                                shieldManager.saveSelection(selection)
-                                isShowingPicker = false
-                            }
-                        }
+    private var header: some View {
+        HStack(alignment: .top, spacing: 12) {
+            MoriBitmapIconImage(icon: summary.isEnabled && summary.hasEffectiveSelection ? .leaf : .timer, size: 18, opacity: 0.86)
+                .frame(width: 36, height: 36)
+                .background(MoriColors.sanctuarySurface.opacity(0.74))
+                .clipShape(Circle())
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(MoriL10n.display("App Limit"))
+                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .foregroundColor(MoriColors.botanicalInk)
+
+                Text(MoriL10n.display(statusText))
+                    .font(.system(size: 12, weight: .regular))
+                    .foregroundColor(MoriColors.botanicalMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: 0)
+        }
+    }
+
+    private var appLimitControls: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Toggle(isOn: enabledBinding) {
+                Text(MoriL10n.string("screen_time.limit_context", defaultValue: "Limit %@", arguments: [contextTitle]))
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(MoriColors.botanicalInk)
+            }
+            .tint(MoriColors.botanicalInk)
+
+            if summary.isEnabled {
+                Picker(MoriL10n.display("App list"), selection: sourceBinding) {
+                    ForEach(MoriScreenTimeBlockListSource.allCases) { source in
+                        Text(source.title).tag(source)
                     }
+                }
+                .pickerStyle(.segmented)
+
+                HStack(alignment: .center, spacing: 10) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(MoriL10n.display(sourceTitle))
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundColor(MoriColors.botanicalInk)
+
+                        Text(MoriL10n.display(sourceStatusText))
+                            .font(.system(size: 12, weight: .regular))
+                            .foregroundColor(MoriColors.botanicalMuted)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    Spacer(minLength: 0)
+
+                    Button {
+                        showPicker(currentSource == .defaultList ? .defaultList : .feature(feature))
+                    } label: {
+                        HStack(spacing: 5) {
+                            MoriBitmapIconImage(icon: currentSource.icon, size: 13, opacity: 0.82)
+
+                            Text(MoriL10n.display(selectionButtonTitle))
+                        }
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(MoriColors.botanicalInk)
+                        .padding(.horizontal, 11)
+                        .padding(.vertical, 8)
+                        .background(MoriColors.botanicalInk.opacity(0.08))
+                        .clipShape(Capsule())
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(12)
+                .background(MoriColors.botanicalSurface.opacity(0.62))
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
         }
     }
 
+    private var presentation: ScreenTimeInlineLimitPresentation {
+        ScreenTimeInlineLimitPresentation(
+            appLimitManager: appLimitManager,
+            contextTitle: contextTitle,
+            feature: feature
+        )
+    }
+
+    private var summary: MoriScreenTimeProfileSummary {
+        presentation.summary
+    }
+
+    private var currentSource: MoriScreenTimeBlockListSource {
+        presentation.currentSource
+    }
+
+    private var enabledBinding: Binding<Bool> {
+        Binding(
+            get: { summary.isEnabled },
+            set: { isEnabled in
+                appLimitManager.perform(.setFeatureEnabled(isEnabled, feature))
+            }
+        )
+    }
+
+    private var sourceBinding: Binding<MoriScreenTimeBlockListSource> {
+        Binding(
+            get: { currentSource },
+            set: { source in
+                appLimitManager.perform(
+                    .setFeatureUsesDefaultSelection(source == .defaultList, feature)
+                )
+            }
+        )
+    }
+
     private var statusText: String {
-        guard shieldManager.isAuthorized else {
-            return "\(contextTitle) can limit selected apps after Screen Time permission is granted."
-        }
+        presentation.statusText
+    }
 
-        guard shieldManager.hasSelection else {
-            return "Choose apps or categories to protect this timer. Mori only sees private tokens and counts."
-        }
+    private var sourceTitle: String {
+        presentation.sourceTitle
+    }
 
-        return "\(shieldManager.selectedCount) selected. Names stay private; limits apply during protected focus."
+    private var sourceStatusText: String {
+        presentation.sourceStatusText
+    }
+
+    private var selectionButtonTitle: String {
+        presentation.selectionButtonTitle
+    }
+
+    private func requestScreenTimeAuthorization() {
+        appLimitManager.perform(.requestAuthorization)
+    }
+
+    private func reconcileAppLimitState() {
+        appLimitManager.perform(.reconcileAppLimitState)
+    }
+
+    private func showPicker(_ target: AppLimitSelectionTarget) {
+        let draft = appLimitManager.selectionDraft(for: target)
+        pickerSelection = draft.selection
+        pickerTarget = draft.target
+    }
+
+    private func openAppLimits() {
+        openRoute(.appLimits)
+    }
+
+    private func finishPicker(_ target: AppLimitSelectionTarget) {
+        appLimitManager.perform(
+            .commitSelectionDraft(
+                AppLimitSelectionDraft(
+                    target: target,
+                    selection: pickerSelection
+                )
+            )
+        )
     }
 }

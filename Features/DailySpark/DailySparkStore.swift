@@ -1,13 +1,10 @@
 import Foundation
 
-extension Notification.Name {
-    static let dailySparkDataDidChange = Notification.Name("dailySparkDataDidChange")
-}
-
 struct DailySparkEntry: Identifiable, Codable, Equatable {
     let id: UUID
     let dateKey: String
     var focus: String
+    var smallAction: String
     var desiredFeeling: String
     var thingToAvoid: String
     var ifThenPlan: String
@@ -18,6 +15,7 @@ struct DailySparkEntry: Identifiable, Codable, Equatable {
         id: UUID = UUID(),
         dateKey: String = DailySparkEntry.dateKey(for: Date()),
         focus: String,
+        smallAction: String,
         desiredFeeling: String,
         thingToAvoid: String,
         ifThenPlan: String,
@@ -27,11 +25,37 @@ struct DailySparkEntry: Identifiable, Codable, Equatable {
         self.id = id
         self.dateKey = dateKey
         self.focus = focus
+        self.smallAction = smallAction
         self.desiredFeeling = desiredFeeling
         self.thingToAvoid = thingToAvoid
         self.ifThenPlan = ifThenPlan
         self.createdAt = createdAt
         self.updatedAt = updatedAt
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case id
+        case dateKey
+        case focus
+        case smallAction
+        case desiredFeeling
+        case thingToAvoid
+        case ifThenPlan
+        case createdAt
+        case updatedAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(UUID.self, forKey: .id)
+        dateKey = try container.decode(String.self, forKey: .dateKey)
+        focus = try container.decode(String.self, forKey: .focus)
+        smallAction = try container.decodeIfPresent(String.self, forKey: .smallAction) ?? ""
+        desiredFeeling = try container.decode(String.self, forKey: .desiredFeeling)
+        thingToAvoid = try container.decode(String.self, forKey: .thingToAvoid)
+        ifThenPlan = try container.decode(String.self, forKey: .ifThenPlan)
+        createdAt = try container.decode(Date.self, forKey: .createdAt)
+        updatedAt = try container.decode(Date.self, forKey: .updatedAt)
     }
 
     static func dateKey(for date: Date) -> String {
@@ -49,12 +73,11 @@ final class DailySparkStore: ObservableObject {
 
     @Published private(set) var entries: [DailySparkEntry] = []
 
-    private let storageKey = "mori_daily_spark_entries"
-    private let decoder = JSONDecoder()
-    private let encoder = JSONEncoder()
+    private let entryStore: DailySparkEntryStore
 
-    private init() {
-        entries = Self.loadStoredEntries(storageKey: storageKey, decoder: decoder)
+    private init(entryStore: DailySparkEntryStore = DailySparkEntryStore()) {
+        self.entryStore = entryStore
+        entries = entryStore.loadEntries()
     }
 
     var todayEntry: DailySparkEntry? {
@@ -69,16 +92,18 @@ final class DailySparkStore: ObservableObject {
     @discardableResult
     func saveToday(
         focus: String,
+        smallAction: String,
         desiredFeeling: String,
         thingToAvoid: String,
         ifThenPlan: String
     ) -> DailySparkEntry? {
         let focus = focus.trimmedForDailySpark
+        let smallAction = smallAction.trimmedForDailySpark
         let desiredFeeling = desiredFeeling.trimmedForDailySpark
         let thingToAvoid = thingToAvoid.trimmedForDailySpark
         let ifThenPlan = ifThenPlan.trimmedForDailySpark
 
-        guard !focus.isEmpty, !desiredFeeling.isEmpty, !thingToAvoid.isEmpty else {
+        guard !focus.isEmpty, !smallAction.isEmpty, !desiredFeeling.isEmpty, !thingToAvoid.isEmpty else {
             return nil
         }
 
@@ -89,6 +114,7 @@ final class DailySparkStore: ObservableObject {
         if let index = entries.firstIndex(where: { $0.dateKey == key }) {
             var existing = entries[index]
             existing.focus = focus
+            existing.smallAction = smallAction
             existing.desiredFeeling = desiredFeeling
             existing.thingToAvoid = thingToAvoid
             existing.ifThenPlan = plan
@@ -99,6 +125,7 @@ final class DailySparkStore: ObservableObject {
             entry = DailySparkEntry(
                 dateKey: key,
                 focus: focus,
+                smallAction: smallAction,
                 desiredFeeling: desiredFeeling,
                 thingToAvoid: thingToAvoid,
                 ifThenPlan: plan
@@ -108,7 +135,7 @@ final class DailySparkStore: ObservableObject {
 
         entries.sort { $0.dateKey > $1.dateKey }
         persist()
-        GratitudeEntry.saveDailySpark(entry)
+        GratitudeEntryStore.live.saveDailySpark(entry)
         MoriClarityStore.shared.recordDailyOnce(
             kind: .dailySpark,
             title: "Daily Spark",
@@ -116,22 +143,12 @@ final class DailySparkStore: ObservableObject {
             minutes: 3,
             note: "Set the lens for today"
         )
-        NotificationCenter.default.post(name: .dailySparkDataDidChange, object: nil)
+        MoriDataChangeEvent.dailySpark.post()
         return entry
     }
 
     private func persist() {
-        guard let data = try? encoder.encode(entries) else { return }
-        UserDefaults.standard.set(data, forKey: storageKey)
-    }
-
-    private static func loadStoredEntries(storageKey: String, decoder: JSONDecoder) -> [DailySparkEntry] {
-        guard let data = UserDefaults.standard.data(forKey: storageKey),
-              let decoded = try? decoder.decode([DailySparkEntry].self, from: data) else {
-            return []
-        }
-
-        return decoded.sorted { $0.dateKey > $1.dateKey }
+        entryStore.saveEntries(entries)
     }
 
     private static func defaultIfThenPlan(for thingToAvoid: String) -> String {

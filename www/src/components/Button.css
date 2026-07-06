@@ -36,15 +36,16 @@
 
 /* Primary Variant */
 .mori-btn-primary {
-  background: linear-gradient(135deg, var(--mori-sand) 0%, var(--time-gold) 100%);
-  color: var(--deep-night);
+  background: var(--mori-canopy);
+  color: var(--mori-paper);
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(194, 178, 128, 0.3);
+  box-shadow: 0 12px 28px rgba(36, 56, 51, 0.12);
 }
 
 .mori-btn-primary:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(194, 178, 128, 0.4);
+  background: #314941;
+  box-shadow: 0 16px 34px rgba(36, 56, 51, 0.16);
 }
 
 .mori-btn-primary:active:not(:disabled) {
@@ -53,14 +54,14 @@
 
 /* Secondary Variant */
 .mori-btn-secondary {
-  background: transparent;
-  border: 1px solid var(--mori-sand);
-  color: var(--mori-sand);
+  background: rgba(255, 250, 240, 0.48);
+  border: 1px solid rgba(36, 56, 51, 0.24);
+  color: var(--mori-canopy);
 }
 
 .mori-btn-secondary:hover:not(:disabled) {
-  background: var(--mori-sand);
-  color: var(--deep-night);
+  background: rgba(36, 56, 51, 0.06);
+  border-color: rgba(36, 56, 51, 0.38);
 }
 
 /* Ghost Variant */
@@ -70,8 +71,8 @@
 }
 
 .mori-btn-ghost:hover:not(:disabled) {
-  background: rgba(194, 178, 128, 0.1);
-  color: var(--mori-sand);
+  background: rgba(126, 141, 114, 0.1);
+  color: var(--mori-leaf);
 }
 
 /* Reduced Motion */

@@ -33,12 +33,16 @@
 	<string>$(CURRENT_PROJECT_VERSION)</string>
 	<key>LSApplicationCategoryType</key>
 	<string>public.app-category.lifestyle</string>
+	<key>MORI_PULSE_PROXY_BASE_URL</key>
+	<string>$(MORI_PULSE_PROXY_BASE_URL)</string>
 	<key>NSHealthShareUsageDescription</key>
-	<string>Mori can use your birth date and biological sex from Apple Health to personalize your life timeline. You can enter them manually instead.</string>
-	<key>NSLocationWhenInUseUsageDescription</key>
-	<string>Mori uses your location during onboarding to estimate life expectancy for your country. Your precise location is not stored.</string>
+	<string>Mori can read Apple Health data you approve, including HRV, heart rate, resting heart rate, sleep, respiratory rate, temperature, workouts, active energy, and walking or running distance, to personalize recovery readiness and attention signals.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>Mori does not write data to Apple Health. Recovery features only read the Apple Health data you approve.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Mori lets you choose photos to attach to your private journal entries.</string>
+	<key>NSSupportsLiveActivities</key>
+	<true/>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

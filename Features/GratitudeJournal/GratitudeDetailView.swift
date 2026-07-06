@@ -17,24 +17,23 @@ struct GratitudeDetailView: View {
     
     var body: some View {
         NavigationStack {
-            MoriForestBackground {
+            MoriPaperBackground(variant: .journal) {
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 24) {
                     // Date & Time
                     VStack(alignment: .leading, spacing: 4) {
                         Text(formatFullDate(entry.date))
                             .font(.system(size: 22, weight: .semibold, design: .rounded))
-                            .foregroundColor(MoriColors.forestCanopy)
+                            .foregroundColor(MoriColors.botanicalInk)
                         
                         Text(formatTime(entry.createdAt))
                             .font(.system(size: 14, weight: .regular))
-                            .foregroundColor(MoriColors.forestMuted)
+                            .foregroundColor(MoriColors.botanicalMuted)
                     }
                     .padding(.top, 8)
                     
                     HStack(spacing: 8) {
-                        Image(systemName: entry.sourceSymbolName)
-                            .font(.system(size: 14, weight: .semibold))
+                        MoriBitmapIconImage(icon: entry.sourceIcon, size: 15, opacity: 0.84)
 
                         Text(sourceDisplayText)
                             .font(.system(size: 14, weight: .semibold))
@@ -47,7 +46,7 @@ struct GratitudeDetailView: View {
                     // Content
                     Text(entry.displayContent)
                         .font(.system(size: 15, weight: .regular))
-                        .foregroundColor(MoriColors.forestCanopy)
+                        .foregroundColor(MoriColors.botanicalInk)
                         .lineSpacing(1.6)
                         .multilineTextAlignment(.leading)
                         .frame(maxWidth: .infinity, alignment: .leading)
@@ -75,27 +74,27 @@ struct GratitudeDetailView: View {
                     // Metadata
                     VStack(alignment: .leading, spacing: 8) {
                         Divider()
-                            .background(MoriColors.forestLine.opacity(0.58))
+                            .background(MoriColors.botanicalLine.opacity(0.58))
                         
                         HStack {
                             Text("Created:")
                                 .font(.system(size: 12, weight: .regular))
-                                .foregroundColor(MoriColors.forestMuted)
+                                .foregroundColor(MoriColors.botanicalMuted)
                             
                             Text(formatDateTime(entry.createdAt))
                                 .font(.system(size: 12, weight: .regular))
-                                .foregroundColor(MoriColors.forestCanopy)
+                                .foregroundColor(MoriColors.botanicalInk)
                         }
                         
                         if entry.updatedAt != entry.createdAt {
                             HStack {
                                 Text("Updated:")
                                     .font(.system(size: 12, weight: .regular))
-                                    .foregroundColor(MoriColors.forestMuted)
+                                    .foregroundColor(MoriColors.botanicalMuted)
                                 
                                 Text(formatDateTime(entry.updatedAt))
                                     .font(.system(size: 12, weight: .regular))
-                                    .foregroundColor(MoriColors.forestCanopy)
+                                    .foregroundColor(MoriColors.botanicalInk)
                             }
                         }
                     }
@@ -107,23 +106,27 @@ struct GratitudeDetailView: View {
                 }
             }
             .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(MoriColors.forestPaper, for: .navigationBar)
+            .toolbarBackground(MoriColors.botanicalPaper, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
             .toolbarColorScheme(.light, for: .navigationBar)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
                     Button(action: { dismiss() }) {
-                        Image(systemName: "chevron.left")
-                            .foregroundColor(MoriColors.forestCanopy)
+                        MoriBitmapIconImage(icon: .chevron, size: 15, opacity: 0.88)
+                            .rotationEffect(.degrees(180))
                     }
+                    .accessibilityLabel("Back")
                 }
                 
                 ToolbarItem(placement: .navigationBarTrailing) {
                     HStack(spacing: 16) {
                         Button(action: { showDeleteConfirmation = true }) {
-                            Image(systemName: "trash")
-                                .foregroundColor(MoriColors.forestClay)
+                            MoriBitmapIconImage(icon: .minus, size: 17, opacity: 0.86)
+                                .frame(width: 34, height: 34)
+                                .background(MoriColors.botanicalClay.opacity(0.10))
+                                .clipShape(Circle())
                         }
+                        .accessibilityLabel("Delete entry")
                     }
                 }
             }
@@ -134,7 +137,7 @@ struct GratitudeDetailView: View {
                     dismiss()
                 }
             } message: {
-                Text("Are you sure you want to delete this gratitude entry? This action cannot be undone.")
+                Text("Are you sure you want to delete this log entry? This action cannot be undone.")
             }
         }
     }
@@ -168,10 +171,10 @@ struct GratitudeDetailView: View {
 
     private var sourceColor: Color {
         switch entry.sourceKind {
-        case .journal: return MoriColors.forestMuted
-        case .dayLog: return MoriColors.forestClay
-        case .dailySpark: return MoriColors.forestSeed
-        case .weeklyIntention: return MoriColors.forestMoss
+        case .journal: return MoriColors.botanicalMuted
+        case .dayLog: return MoriColors.botanicalClay
+        case .dailySpark: return MoriColors.botanicalSeed
+        case .weeklyIntention: return MoriColors.botanicalMoss
         }
     }
 }

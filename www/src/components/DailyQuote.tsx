@@ -6,16 +6,16 @@ interface Quote {
 }
 
 const QUOTES: Quote[] = [
-  { text: "Memento mori. Remember that you will die, so you may truly live.", author: "Marcus Aurelius" },
-  { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
-  { text: "We are what we repeatedly do. Excellence, then, is not an act, but a habit.", author: "Aristotle" },
-  { text: "In the middle of difficulty lies opportunity.", author: "Albert Einstein" },
-  { text: "The unexamined life is not worth living.", author: "Socrates" },
-  { text: "It is not death that a man should fear, but he should fear never beginning to live.", author: "Marcus Aurelius" },
-  { text: "Waste no more time arguing about what a good man should be. Be one.", author: "Marcus Aurelius" },
-  { text: "The obstacle is the way.", author: "Marcus Aurelius" },
-  { text: "Very little is needed to make a happy life; it is all within yourself.", author: "Marcus Aurelius" },
-  { text: "Begin at once to live, and count each separate day as a separate life.", author: "Seneca" },
+  { text: "Limit the next feed. Protect the next hour.", author: "Mori" },
+  { text: "One breath before one more tap.", author: "Mori" },
+  { text: "The smallest pause can change the next open.", author: "Mori" },
+  { text: "Let the screen lose its grip before the day gets loud.", author: "Mori" },
+  { text: "Choose one clear action, then leave the app.", author: "Mori" },
+  { text: "A reset is working when the phone feels less heavy.", author: "Mori" },
+  { text: "Keep the archive soft. Change the next minute.", author: "Mori" },
+  { text: "Friction beats willpower at the moment of opening.", author: "Mori" },
+  { text: "Enough signal. No more scroll.", author: "Mori" },
+  { text: "Start small enough that calm can actually happen.", author: "Mori" },
 ];
 
 interface DailyQuoteProps {

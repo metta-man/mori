@@ -1,0 +1,140 @@
+/* Mori Week Archive component */
+
+.week-archive-container {
+  margin: var(--space-lg) 0;
+  padding: var(--space-lg);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
+  background:
+    repeating-linear-gradient(0deg, rgba(36, 56, 51, 0.035) 0 1px, transparent 1px 8px),
+    rgba(255, 250, 240, 0.74);
+  box-shadow: var(--shadow-soft);
+}
+
+.week-archive-header {
+  margin-bottom: var(--space-lg);
+  text-align: center;
+}
+
+.week-archive-title {
+  margin: 0 0 var(--space-sm) 0;
+  color: var(--text-primary);
+  font-family: var(--font-display);
+  font-size: var(--text-h2);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.week-archive-subtitle {
+  margin: 0;
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: var(--text-body-sm);
+}
+
+.week-archive-wrapper {
+  overflow-x: auto;
+  padding: var(--space-sm) 0;
+  scrollbar-color: rgba(95, 116, 92, 0.46) rgba(255, 250, 240, 0.7);
+  scrollbar-width: thin;
+}
+
+.week-archive-grid {
+  display: grid;
+  min-width: calc(52 * (var(--cell-size-mobile) + var(--cell-gap)));
+  grid-template-columns: repeat(52, var(--cell-size-mobile));
+  grid-template-rows: repeat(80, var(--cell-size-mobile));
+  gap: var(--cell-gap);
+}
+
+@media (min-width: 768px) {
+  .week-archive-grid {
+    min-width: calc(52 * (var(--cell-size-desktop) + var(--cell-gap)));
+    grid-template-columns: repeat(52, var(--cell-size-desktop));
+    grid-template-rows: repeat(80, var(--cell-size-desktop));
+  }
+}
+
+.week-archive-cell {
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: transform var(--transition-normal), box-shadow var(--transition-normal), opacity var(--transition-normal);
+}
+
+.week-archive-cell.cell-past {
+  background: rgba(95, 116, 92, 0.78);
+}
+
+.week-archive-cell.cell-current {
+  background: var(--mori-root);
+  box-shadow: 0 0 0 5px rgba(159, 95, 69, 0.12);
+  animation: mori-pulse 2s ease-in-out infinite;
+}
+
+.week-archive-cell.cell-near {
+  background: rgba(168, 123, 49, 0.46);
+}
+
+.week-archive-cell:not(.cell-past):not(.cell-current):not(.cell-near) {
+  background: rgba(36, 56, 51, 0.12);
+}
+
+.week-archive-cell:hover {
+  z-index: 10;
+  transform: scale(1.2);
+  box-shadow: 0 6px 16px rgba(36, 56, 51, 0.14);
+}
+
+.week-archive-legend {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-lg);
+  margin-top: var(--space-lg);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  color: var(--text-secondary);
+  font-family: var(--font-ui);
+  font-size: var(--text-ui-sm);
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-sm);
+}
+
+.legend-dot.cell-past {
+  background: rgba(95, 116, 92, 0.78);
+}
+
+.legend-dot.cell-current {
+  background: var(--mori-root);
+  animation: mori-pulse 2s ease-in-out infinite;
+}
+
+.legend-dot.cell-future {
+  background: rgba(36, 56, 51, 0.12);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .week-archive-cell {
+    transition: none;
+  }
+
+  .week-archive-cell.cell-current,
+  .legend-dot.cell-current {
+    animation: none;
+  }
+
+  .week-archive-cell:hover {
+    transform: none;
+  }
+}

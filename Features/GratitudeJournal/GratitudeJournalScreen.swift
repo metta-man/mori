@@ -6,130 +6,106 @@
 //
 
 import SwiftUI
+import PhotosUI
 import UIKit
 import UniformTypeIdentifiers
 
+private enum GratitudeJournalSheet: Identifiable {
+    case randomMemory
+    case patternLog(HabitDayTone)
+    case logbook
+    case entry(GratitudeEntry)
+    case export(JournalExportPackage)
+
+    var id: String {
+        switch self {
+        case .randomMemory:
+            return "random-memory"
+        case .patternLog(let tone):
+            return "pattern-log-\(tone.id)"
+        case .logbook:
+            return "logbook"
+        case .entry(let entry):
+            return "entry-\(entry.id)"
+        case .export(let package):
+            return "export-\(package.id)"
+        }
+    }
+}
+
 // MARK: - Gratitude Journal Screen
 struct GratitudeJournalScreen: View {
+    var showsDismissButton = false
+    var appLimitFeature: MoriScreenTimeFeature = .journal
+
     @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = GratitudeJournalViewModel()
     @StateObject private var dailySparkStore = DailySparkStore.shared
-    
-    @State private var showRandomMemory = false
-    @State private var showHistory = false
-    @State private var selectedEntry: GratitudeEntry?
+    @StateObject private var appLimitManager = AppLimitManager.shared
+
+    @State private var navigationPath: [GratitudeJournalRoute] = []
     @State private var showToast = false
     @State private var toastMessage = ""
     @State private var toastType: ToastType = .success
-    @State private var exportPackage: JournalExportPackage?
     @State private var showImporter = false
-    
+    @State private var todayHabitEntry: HabitEntry?
+    @State private var selectedTone: HabitDayTone?
+    @State private var dailyEntryNote = ""
+    @State private var dailyEntryPhotos: [GratitudePhotoAttachment] = []
+    @State private var persistedDailyEntryPhotos: [GratitudePhotoAttachment] = []
+    @State private var selectedDailyPhotoItems: [PhotosPickerItem] = []
+    @State private var activeSheet: GratitudeJournalSheet?
+
     var body: some View {
-        NavigationStack {
-            MoriForestBackground {
-                ScrollView(showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 22) {
-                        MoriPageHeader(
-                            eyebrow: "Journal",
-                            title: "Journal",
-                            subtitle: "Capture one thing worth remembering from today."
-                        )
-
-                        DailySparkCard(store: dailySparkStore, onSaved: { _ in
-                            toastMessage = "Daily Spark saved to Journal"
-                            toastType = .success
-
-                            withAnimation {
-                                showToast = true
-                            }
-                        })
-
-                        PromptSelectionSection(selectedPrompt: $viewModel.selectedPrompt)
-
-                        GratitudeEditorView(
-                            content: $viewModel.content,
-                            selectedPrompt: viewModel.selectedPrompt,
-                            attachedPhotos: viewModel.attachedPhotos,
-                            onAddPhoto: { data in
-                                viewModel.addPhotoData(data)
-                            },
-                            onRemovePhoto: { attachment in
-                                viewModel.removePhoto(attachment)
-                            },
-                            onSave: saveEntry
-                        )
-
-                        RandomMemoryButton {
-                            showRandomMemory = true
-                        }
-                        .disabled(viewModel.recentEntries.isEmpty)
-                        .opacity(viewModel.recentEntries.isEmpty ? 0.5 : 1)
-
-                        RecentEntriesSection(
-                            entries: viewModel.recentEntries,
-                            onViewAll: { showHistory = true },
-                            onEntryTap: { entry in
-                                selectedEntry = entry
-                            }
-                        )
-                        .padding(.bottom, 40)
+        NavigationStack(path: $navigationPath) {
+            MoriRootScrollScreen(
+                title: "Log",
+                subtitle: "Record today's state, signal, and one thing worth keeping.",
+                backgroundVariant: .journal,
+                headerTrailing: {
+                    GratitudeJournalHeaderActions(
+                        onLogPreviousDay: openLogbook,
+                        onExport: exportJournal,
+                        onImport: openImporter,
+                        onRestore: restoreFromCloudKit
+                    )
+                }
+            ) {
+                GratitudeJournalHomeContent(
+                    dailySparkStore: dailySparkStore,
+                    selectedTone: selectedTone,
+                    todayHabitEntry: todayHabitEntry,
+                    dailyEntryNote: $dailyEntryNote,
+                    dailyEntryPhotos: $dailyEntryPhotos,
+                    selectedDailyPhotoItems: $selectedDailyPhotoItems,
+                    recentEntries: viewModel.recentEntries,
+                    onDailySparkSaved: handleDailySparkSaved,
+                    onSelectTone: selectToneFromJournal,
+                    onSaveDailyEntry: saveDailyEntryFromJournal,
+                    onOpenPatternLog: openPatternLog,
+                    onOpenWeekArchive: openWeekArchive,
+                    onRemoveDailyPhoto: removeDailyEntryPhoto,
+                    onRandomMemory: openRandomMemory,
+                    onViewHistory: openHistory,
+                    onEntryTap: selectEntry
+                )
+            }
+            .overlay(alignment: .topLeading) {
+                if showsDismissButton {
+                    GratitudeJournalDismissButton {
+                        dismiss()
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 18)
+                    .padding(.leading, 20)
+                    .padding(.top, 52)
                 }
             }
             .scrollDismissesKeyboard(.interactively)
-            .navigationBarTitleDisplayMode(.inline)
-            .navigationTitle("Mori")
-            .toolbarColorScheme(.light, for: .navigationBar)
-            .toolbarBackground(MoriColors.forestPaper, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    HStack(spacing: 16) {
-                        Menu {
-                            Button(action: exportJournal) {
-                                Label("Export Journal", systemImage: "square.and.arrow.up")
-                            }
-
-                            Button(action: { showImporter = true }) {
-                                Label("Import Backup", systemImage: "tray.and.arrow.down")
-                            }
-
-                            Button(action: restoreFromCloudKit) {
-                                Label("Restore iCloud Backup", systemImage: "icloud.and.arrow.down")
-                            }
-                        } label: {
-                            Image(systemName: "ellipsis.circle")
-                                .foregroundColor(MoriColors.forestCanopy.opacity(0.82))
-                        }
-                        .accessibility(label: Text("Journal backup options"))
-
-                        NavigationLink(destination: GratitudeHistoryView()) {
-                            Image(systemName: "book.fill")
-                                .foregroundColor(MoriColors.forestCanopy.opacity(0.82))
-                        }
-                    }
-                }
-
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-
-                    Button("Done") {
-                        dismissKeyboard()
-                    }
-                    .foregroundColor(MoriColors.forestCanopy)
-                }
-            }
-            .sheet(isPresented: $showRandomMemory) {
-                RandomMemoryModal(entry: viewModel.randomEntry)
-                    .presentationDetents([.medium, .large])
-            }
-            .sheet(item: $selectedEntry) { entry in
-                GratitudeDetailView(entry: entry)
-            }
-            .sheet(item: $exportPackage) { package in
-                ActivityView(activityItems: [package.url])
+            .navigationTitle("")
+            .toolbar(.hidden, for: .navigationBar)
+            .moriKeyboardDoneToolbar()
+            .sheet(item: $activeSheet) { sheet in
+                activeSheetContent(sheet)
             }
             .fileImporter(
                 isPresented: $showImporter,
@@ -138,110 +114,320 @@ struct GratitudeJournalScreen: View {
             ) { result in
                 importJournal(result)
             }
-            .navigationDestination(isPresented: $showHistory) {
-                GratitudeHistoryView()
-            }
-            .overlay(alignment: .bottom) {
-                if showToast {
-                    toastView
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
-                        .onAppear {
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
-                                withAnimation {
-                                    showToast = false
-                                }
-                            }
-                        }
+            .navigationDestination(for: GratitudeJournalRoute.self) { route in
+                switch route {
+                case .history:
+                    GratitudeHistoryView()
+                case .weekArchiveDetail:
+                    WeekArchiveDetailView()
                 }
             }
-            .onAppear {
-                viewModel.loadData()
-            }
-            .onChange(of: scenePhase) { newPhase in
-                if newPhase == .active {
-                    viewModel.loadData()
+            .gratitudeJournalToast(
+                isPresented: $showToast,
+                message: toastMessage,
+                type: toastType
+            )
+            .gratitudeJournalLifecycle(
+                scenePhase: scenePhase,
+                onPrepare: prepareJournal,
+                onCleanup: cleanupJournalSession,
+                onReloadJournal: viewModel.loadData,
+                onReloadHabitData: loadHabitData
+            )
+            .moriPhotoPickerImporter(
+                selectedItems: $selectedDailyPhotoItems,
+                onImport: attachDailyEntryPhoto
+            )
+        }
+        .environment(\.moriOpenGratitudeJournalRoute, GratitudeJournalRouteAction { route in
+            navigationPath.append(route)
+        })
+    }
+
+    @ViewBuilder
+    private func activeSheetContent(_ sheet: GratitudeJournalSheet) -> some View {
+        switch sheet {
+        case .randomMemory:
+            RandomMemoryModal(entry: viewModel.randomEntry)
+                .presentationDetents([.medium, .large])
+        case .patternLog(let tone):
+            PatternLogSheet(
+                existingEntry: todayHabitEntry,
+                initialTone: tone,
+                onSave: { tone, trigger, thought, feeling, responsePlan in
+                    saveToneFromJournal(
+                        tone,
+                        note: dailyEntryNote,
+                        trigger: trigger,
+                        thought: thought,
+                        feeling: feeling,
+                        responsePlan: responsePlan,
+                        photoAttachments: dailyEntryPhotos,
+                        promptForDifficultPattern: false
+                    )
                 }
+            )
+        case .logbook:
+            LogbookEntrySheet { date, tone, note, trigger, thought, feeling, responsePlan, journalText, photoAttachments in
+                saveBackdatedEntry(
+                    date: date,
+                    tone: tone,
+                    note: note,
+                    trigger: trigger,
+                    thought: thought,
+                    feeling: feeling,
+                    responsePlan: responsePlan,
+                    journalText: journalText,
+                    photoAttachments: photoAttachments
+                )
             }
-            .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in
-                viewModel.loadData()
-            }
-            .onReceive(NotificationCenter.default.publisher(for: .gratitudeDataDidChange)) { _ in
-                viewModel.loadData()
+        case .entry(let entry):
+            GratitudeDetailView(entry: entry)
+        case .export(let package):
+            ActivityView(activityItems: [package.url])
+        }
+    }
+
+    private func handleDailySparkSaved(_ entry: DailySparkEntry) {
+        showJournalToast(message: "Daily Spark saved to Log")
+    }
+
+    private func openRandomMemory() {
+        activeSheet = .randomMemory
+    }
+
+    private func openHistory() {
+        navigationPath.append(.history)
+    }
+
+    private func openWeekArchive() {
+        navigationPath.append(.weekArchiveDetail)
+    }
+
+    private func selectEntry(_ entry: GratitudeEntry) {
+        activeSheet = .entry(entry)
+    }
+
+    private func loadHabitData() {
+        todayHabitEntry = HabitDataManager.shared.getTodayEntry()
+        selectedTone = todayHabitEntry?.tone
+        dailyEntryNote = todayHabitEntry?.note ?? ""
+        loadDailyEntryPhotos()
+    }
+
+    private func prepareJournal() {
+        viewModel.loadData()
+        loadHabitData()
+        startJournalAppLimitIfPossible()
+    }
+
+    private func selectToneFromJournal(_ tone: HabitDayTone) {
+        let generator = UIImpactFeedbackGenerator(style: .light)
+        generator.impactOccurred()
+
+        selectedTone = tone
+    }
+
+    private func saveDailyEntryFromJournal() {
+        guard let tone = selectedTone ?? todayHabitEntry?.tone else { return }
+        saveToneFromJournal(
+            tone,
+            note: dailyEntryNote,
+            photoAttachments: dailyEntryPhotos,
+            promptForDifficultPattern: true
+        )
+    }
+
+    private func saveToneFromJournal(
+        _ tone: HabitDayTone,
+        note: String? = nil,
+        trigger: String? = nil,
+        thought: String? = nil,
+        feeling: String? = nil,
+        responsePlan: String? = nil,
+        photoAttachments: [GratitudePhotoAttachment]? = nil,
+        promptForDifficultPattern: Bool = false
+    ) {
+        let memoryNote = note ?? dailyEntryNote
+        let photosToSave = photoAttachments
+
+        let entry = HabitDataManager.shared.saveEntry(
+            tone: tone,
+            note: memoryNote,
+            trigger: trigger,
+            thought: thought,
+            feeling: feeling,
+            responsePlan: responsePlan
+        )
+
+        GratitudeEntryStore.live.saveDayLogEntry(
+            on: entry.date,
+            tone: tone,
+            note: memoryNote,
+            trigger: trigger,
+            thought: thought,
+            feeling: feeling,
+            responsePlan: responsePlan,
+            photoAttachments: photosToSave
+        )
+
+        todayHabitEntry = entry
+        selectedTone = tone
+        dailyEntryNote = entry.note ?? ""
+        if let photosToSave {
+            dailyEntryPhotos = photosToSave
+            persistedDailyEntryPhotos = photosToSave
+        } else {
+            loadDailyEntryPhotos(for: entry.date)
+        }
+        viewModel.loadData()
+
+        let action = MoriClarityStore.shared.recordDailyOnce(
+            kind: .dailyCheckIn,
+            title: MoriPractice.dailyCheckIn.title,
+            seeds: MoriPractice.dailyCheckIn.seeds,
+            minutes: MoriPractice.dailyCheckIn.minutes,
+            note: MoriPractice.dailyCheckIn.note
+        )
+
+        showJournalToast(message: action.map { "\(tone.toastMessage) · +\($0.seeds) Seeds" } ?? tone.toastMessage)
+
+        if appLimitFeature == .dailyCheckIn {
+            endActiveAppLimit()
+        }
+
+        if promptForDifficultPattern, tone == .negative, !entry.hasPatternLog {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
+                activeSheet = .patternLog(.negative)
             }
         }
     }
-    
-    // MARK: - Toast View
-    private var toastView: some View {
-        HStack {
-            Image(systemName: toastType == .success ? "checkmark.circle.fill" : "exclamationmark.triangle.fill")
-                .font(.system(size: 15, weight: .semibold))
-            
-            Text(toastMessage)
-                .font(.system(size: 14, weight: .medium))
+
+    private func saveBackdatedEntry(
+        date: Date,
+        tone: HabitDayTone,
+        note: String?,
+        trigger: String?,
+        thought: String?,
+        feeling: String?,
+        responsePlan: String?,
+        journalText: String?,
+        photoAttachments: [GratitudePhotoAttachment]
+    ) {
+        let memoryNote = journalText ?? note
+
+        _ = HabitDataManager.shared.saveEntry(
+            on: date,
+            tone: tone,
+            note: memoryNote,
+            trigger: trigger,
+            thought: thought,
+            feeling: feeling,
+            responsePlan: responsePlan
+        )
+
+        GratitudeEntryStore.live.saveDayLogEntry(
+            on: date,
+            tone: tone,
+            note: memoryNote,
+            trigger: trigger,
+            thought: thought,
+            feeling: feeling,
+            responsePlan: responsePlan,
+            photoAttachments: photoAttachments
+        )
+
+        if Calendar.current.isDateInToday(date) {
+            MoriClarityStore.shared.recordDailyOnce(
+                kind: .dailyCheckIn,
+                title: MoriPractice.dailyCheckIn.title,
+                seeds: MoriPractice.dailyCheckIn.seeds,
+                minutes: MoriPractice.dailyCheckIn.minutes,
+                note: MoriPractice.dailyCheckIn.note
+            )
         }
-        .foregroundColor(MoriColors.forestCard)
-        .padding(.horizontal, 24)
-        .padding(.vertical, 12)
-        .background(toastType == .success ? MoriColors.forestMoss : MoriColors.forestClay)
-        .cornerRadius(8)
-        .shadow(color: MoriColors.forestShadow.opacity(0.35), radius: 8, x: 0, y: 4)
-        .padding(.bottom, 32)
+
+        viewModel.loadData()
+        loadHabitData()
+        showJournalToast(message: "Previous day logged")
     }
-    
-    // MARK: - Save Entry
-    private func saveEntry() {
-        let result = viewModel.saveEntry()
-        
-        switch result {
-        case .success:
-            let action = MoriClarityStore.shared.recordPractice(MoriPractice.quietNote)
-            toastMessage = "Entry saved! · +\(action.seeds) Seeds"
-            toastType = .success
-        case .failure(let error):
-            toastMessage = error.localizedDescription
-            toastType = .error
+
+    private func loadDailyEntryPhotos(for date: Date = Date()) {
+        let photos = GratitudeEntryStore.live.dayLogEntry(on: date)?.photoAttachments ?? []
+        dailyEntryPhotos = photos
+        persistedDailyEntryPhotos = photos
+    }
+
+    private func attachDailyEntryPhoto(from data: Data) {
+        guard dailyEntryPhotos.count < 6 else { return }
+
+        if let attachment = try? GratitudePhotoStore.savePhotoData(data) {
+            dailyEntryPhotos.append(attachment)
         }
-        
-        withAnimation {
-            showToast = true
+    }
+
+    private func removeDailyEntryPhoto(_ attachment: GratitudePhotoAttachment) {
+        dailyEntryPhotos.removeAll { $0.id == attachment.id }
+
+        if !persistedDailyEntryPhotos.contains(attachment) {
+            GratitudePhotoStore.deletePhoto(attachment)
         }
+    }
+
+    private func cleanupUnsavedDailyEntryPhotos() {
+        let unsavedPhotos = dailyEntryPhotos.filter { !persistedDailyEntryPhotos.contains($0) }
+        unsavedPhotos.forEach(GratitudePhotoStore.deletePhoto)
+        dailyEntryPhotos = persistedDailyEntryPhotos
+        selectedDailyPhotoItems = []
+    }
+
+    private func openLogbook() {
+        activeSheet = .logbook
+    }
+
+    private func openImporter() {
+        showImporter = true
+    }
+
+    private func openPatternLog() {
+        activeSheet = .patternLog(selectedTone ?? todayHabitEntry?.tone ?? .neutral)
+    }
+
+    private func startJournalAppLimitIfPossible() {
+        guard appLimitFeature == .journal else { return }
+        appLimitManager.perform(.startTimedAppLimit(feature: .journal, duration: 60 * 60))
+    }
+
+    private func endActiveAppLimit() {
+        appLimitManager.perform(.endAppLimit(feature: appLimitFeature))
+    }
+
+    private func cleanupJournalSession() {
+        cleanupUnsavedDailyEntryPhotos()
+        endActiveAppLimit()
     }
 
     private func exportJournal() {
         guard let url = viewModel.exportJournal() else {
-            toastMessage = "Could not export journal."
-            toastType = .error
-            withAnimation {
-                showToast = true
-            }
+            showJournalToast(message: "Could not export log.", type: .error)
             return
         }
 
-        exportPackage = JournalExportPackage(url: url)
+        activeSheet = .export(JournalExportPackage(url: url))
     }
 
     private func importJournal(_ result: Result<[URL], Error>) {
         guard case .success(let urls) = result, let url = urls.first else {
-            toastMessage = "Could not open that backup."
-            toastType = .error
-            withAnimation {
-                showToast = true
-            }
+            showJournalToast(message: "Could not open that backup.", type: .error)
             return
         }
 
         switch viewModel.importJournal(from: url) {
         case .success(let count):
-            toastMessage = "Imported \(count) journal entries."
-            toastType = .success
+            loadHabitData()
+            showJournalToast(message: "Imported \(count) log entries.")
         case .failure(let error):
-            toastMessage = error.localizedDescription
-            toastType = .error
-        }
-
-        withAnimation {
-            showToast = true
+            showJournalToast(message: error.localizedDescription, type: .error)
         }
     }
 
@@ -251,48 +437,22 @@ struct GratitudeJournalScreen: View {
 
             switch result {
             case .success(let count):
-                toastMessage = "Restored \(count) iCloud entries."
-                toastType = .success
+                loadHabitData()
+                showJournalToast(message: "Restored \(count) iCloud entries.")
             case .failure(let error):
-                toastMessage = error.localizedDescription
-                toastType = .error
-            }
-
-            withAnimation {
-                showToast = true
+                showJournalToast(message: error.localizedDescription, type: .error)
             }
         }
     }
 
-    private func dismissKeyboard() {
-        UIApplication.shared.sendAction(
-            #selector(UIResponder.resignFirstResponder),
-            to: nil,
-            from: nil,
-            for: nil
-        )
+    private func showJournalToast(message: String, type: ToastType = .success) {
+        toastMessage = message
+        toastType = type
+
+        withAnimation {
+            showToast = true
+        }
     }
-}
-
-// MARK: - Toast Type
-enum ToastType {
-    case success
-    case error
-}
-
-struct JournalExportPackage: Identifiable {
-    let id = UUID()
-    let url: URL
-}
-
-struct ActivityView: UIViewControllerRepresentable {
-    let activityItems: [Any]
-
-    func makeUIViewController(context: Context) -> UIActivityViewController {
-        UIActivityViewController(activityItems: activityItems, applicationActivities: nil)
-    }
-
-    func updateUIViewController(_ uiViewController: UIActivityViewController, context: Context) {}
 }
 
 // MARK: - Preview

@@ -1,0 +1,5 @@
+"CFBundleDisplayName" = "Mori";
+"CFBundleName" = "Mori";
+"NSHealthShareUsageDescription" = "Mori 可以讀取你授權的 Apple 健康資料，包括 HRV、心率、靜息心率、睡眠、呼吸率、體溫、運動、活動能量和步行或跑步距離，用來個人化恢復狀態和注意力提示。";
+"NSHealthUpdateUsageDescription" = "Mori 不會把資料寫入 Apple 健康。恢復功能只會讀取你授權的 Apple 健康資料。";
+"NSPhotoLibraryUsageDescription" = "Mori 允許你選擇照片並附加到私人日記條目。";

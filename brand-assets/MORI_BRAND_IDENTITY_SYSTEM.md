@@ -1,94 +1,128 @@
-# 🎨 Mori Brand Identity System - Complete Implementation
+# Mori Brand Identity System
 
-**Version:** 1.0  
-**Date:** March 28, 2026  
-**Design Lead:** Flare (Design Agent)  
-**Status:** ✅ **Complete - Ready for Implementation**  
-**Handoff to:** Phoenix (Build Agent)  
-
----
-
-## 📋 Executive Summary
-
-The Mori Brand Identity System has been fully implemented according to the design brief specifications. This mindful life tracker app inspired by Memento Mori philosophy now has a complete brand identity system featuring warm minimalism, comprehensive design tokens, and all necessary UI components for development.
+**Version:** 2.0
+**Date:** June 24, 2026
+**Status:** Active product/design source of truth
+**Current build:** SwiftUI iOS app, watch app, widgets, Screen Time extensions, localized landing site, and Vercel pulse proxy
 
 ---
 
-## 🎯 Core Philosophy
+## Executive Summary
 
-**Memento Mori → Modern Mindfulness**  
-*"Contemplating mortality → Appreciating life → Living intentionally"*
+Mori is a calm attention operating system, not a generic habit tracker. The product promise is simple: help the user reclaim attention, record proof of a life actually lived, and return to the next small practice.
 
-**Visual Style:** **Warm Minimalism**  
+The current design direction is botanical watercolor on paper: warm washi surfaces, deep leaf ink, generated bitmap art, compact root navigation, and minimal ceremony. Keep the interface quiet, tactile, and fast. Remove anything that exists only because wellness apps usually have it.
+
+---
+
+## First-Principles Product Gate
+
+Every feature must pass one of these tests:
+
+1. **Return attention:** Does it reduce compulsive checking, feeds, or avoidable context switching?
+2. **Record proof:** Does it help the user capture a meaningful practice, reflection, or recovered minute?
+3. **Improve the next action:** Does it make the next practice clearer or easier?
+
+If a feature fails all three, delete it. If a screen needs explanation text to justify itself, simplify the screen before adding more copy. If a flow can be completed in one step, do not make it three.
+
+Use this order for future redesign work:
+
+1. Question the requirement.
+2. Delete the non-essential path.
+3. Simplify the remaining interaction.
+4. Speed up the loop.
+5. Automate only after the loop is proven.
+
+---
+
+## Core Philosophy
+
+**Attention → Presence**
+*"Notice the pull → add one real limit → return to the next lived minute"*
+
+**Visual Style:** **Botanical watercolor paper**
 ```
-Minimalism ≠ Cold
-Minimalism = Clarity with Warmth
+Minimalism is not emptiness.
+Minimalism is lower cognitive load.
 ```
+
+Mori should feel like opening a quiet paper field, not operating a dashboard.
 
 ---
 
-## 🎨 Color System ✅
+## Product Architecture
 
-### Primary Palette
+### App Shell
+
+- Root app entry: `App/MoriApp.swift`
+- Root navigation shell: `App/ContentView.swift`
+- Active tabs: Today, Reset, Log
+- Global sheets: Before Feed reset, Morning Gate reset, Recovery/Pulse
+- Cross-surface state: `UserSettings`, shared app group defaults, notification deep links, widget context publishing
+
+The root shell intentionally uses a custom bottom tab bar, not native `TabView`, so immersive practice flows can hide the root controls and keep bottom safe-area treatment consistent.
+
+### Service Layer
+
+- Screen Time protection: `AttentionShieldManager`, `BeforeFeedGate`, `MoriScreenTimeShared`
+- Recovery and pulse signals: `MoriRecoveryHealthService`, `MoriRecoveryStore`, `MoriClarityStore`, `MoriLLMService`
+- Watch/widget sync: `MoriWatchSettingsSync`, `MoriWidgetSnapshot`
+- Web pulse proxy: `www/server/pulse/*`
+
+New infrastructure should plug into these seams rather than creating parallel state channels.
+
+---
+
+## Color System
+
+### Active Sanctuary Palette
 ```swift
-// Core Neutrals
-MoriColors.creamWhite      #FFF8E7  // Main background
-MoriColors.softCream       #F5EFE0  // Card background  
-MoriColors.warmGray        #D4CFC4  // Borders/dividers
-MoriColors.softTaupe       #8B7355  // Secondary text
-MoriColors.warmCharcoal     #4A4A4A  // Primary text
-MoriColors.deepEspresso     #2B2520  // High contrast text
-
-// Accent Colors
-MoriColors.accentAmber      #D4A574  // Focus/active states
-MoriColors.softSage         #A8B5A0  // Growth/positive
-MoriColors.warmClay         #C4846C  // Missed/negative
-MoriColors.morningGold      #E8C78A  // Celebration
+MoriColors.sanctuaryPaper       #FBF7EF
+MoriColors.sanctuarySurface     #FFFDF8
+MoriColors.sanctuaryInk         #14392F
+MoriColors.sanctuaryInkSoft     #31584B
+MoriColors.sanctuaryMuted       #5F6D64
+MoriColors.sanctuarySage        #758C6B
+MoriColors.sanctuaryFern        #8FA883
+MoriColors.sanctuaryMist        #AFC9CB
+MoriColors.sanctuarySand        #D9C6A5
+MoriColors.sanctuaryRoot        #8A765F
+MoriColors.sanctuaryLine        #DDD6C8
 ```
 
-### Design Spec Compliance (v1.0)
-```css
---mori-gold: #D4AF37        /* Primary accent */
---zen-cream: #FDF5E6        /* Main background */
---charcoal: #333333        /* Primary text */
---sage-green: #788c5d      /* Success/growth */
---mist-blue: #6a9bcc       /* Calm */
---ember-orange: #FF6B35    /* Energy */
-```
-
----
-
-## 📐 Typography System ✅
+## Typography System
 
 ### Font Scale
 ```swift
-MoriTypography.display      // 48pt Light (big countdown numbers)
+MoriTypography.display      // 48pt Light (large hero numbers)
 MoriTypography.title1      // 28pt Semibold (screen titles)
 MoriTypography.title2      // 22pt Semibold (section headers)
 MoriTypography.body        // 17pt Regular (main content)
 MoriTypography.callout      // 16pt Regular (secondary info)
 MoriTypography.caption      // 14pt Regular (labels, hints)
 MoriTypography.micro        // 12pt Medium (timestamps)
-MoriTypography.largeNumber  // 64pt Rounded (days remaining)
+MoriTypography.largeMetric  // 64pt Rounded (archive/recovery metrics)
 ```
 
 ### Font Stack
 ```css
 --font-display: 'Cormorant Garamond', serif;      // Headlines
 --font-body: 'Crimson Pro', serif;                // Body text
---font-mono: 'DM Mono', monospace;                // Numbers/LifeGrid
+--font-mono: 'DM Mono', monospace;                // Numbers/Week Archive
 --font-handwritten: 'Caveat', cursive;           // Personal notes
 ```
 
 ---
 
-## 🎭 UI Components ✅
+## UI Components
 
-### Core Components Implemented
-- **MoriCard**: Base card component with warm cream styling
-- **MoriButton**: Primary action button with amber accent
-- **MoriTabView**: Custom tab bar navigation
-- **MoriViewModifiers**: Reusable view modifiers
+### Current Components
+- **MoriPaperBackground**: Root bitmap watercolor paper wrapper
+- **MoriRootHeader / MoriPageHeader**: Compact screen heading system
+- **MoriPracticeCard / BotanicalPanel / OrganicCard**: Sanctuary card surfaces
+- **MoriMetricTile / MoriCompactStatStrip**: Dense status components
+- **MoriBitmapIconImage / MoriBitmapIconBadge**: Generated botanical icon pipeline
+- **MoriViewModifiers**: App theme, forms, keyboard toolbar, root tab hiding
 
 ### Design System Features
 - **Spacing**: 4pt grid system (space1-space8)
@@ -97,55 +131,60 @@ MoriTypography.largeNumber  // 64pt Rounded (days remaining)
 - **Shadows**: Subtle depth for cards and buttons
 - **Hit Targets**: Accessibility-compliant (44pt minimum)
 
+Avoid nested cards. Avoid decorative surfaces that do not carry interaction or information. Use generated bitmap icons for primary surfaces; add a Mori bitmap asset when a matching icon does not exist.
+
 ---
 
 ## 📱 App Icon Design ✅
 
-### Current Implementation: Forest Rings Concept
-**Background:** #2D4739 (deep forest green)  
-**Rings:** #F5F0E1 (warm cream)  
-**Center glow:** #D4A574 (soft amber)
+### Current Implementation: Paper Linework App Icon
+**Source:** Generated raster PNG, not SVG
+**Background:** Warm paper `#F7F5F0` / `#FFF8EA`
+**Linework:** Deep forest ink `#173D32`
+**Canopy/landscape:** Moss and sage greens
+**Seed/light:** Soft gold `#D8B86F`
+
+The active app icon uses a soft circular paper-linework landscape. Layered moss forms suggest terrain, breath, and quiet growth without using literal trees or Japanese motifs. The mark was selected because it best matches the latest Mori UI references: warm paper, thin green linework, soft watercolor texture, and a premium calm/wellness tone. Do not place logo lockups, app-icon art, seedling badges, or circular brand emblems inside primary app screens unless an OS surface or external marketing surface requires branding.
 
 **Assets Generated:**
-- iOS: 1024x1024, 180x180, 120x120, 60x60, 29x29, 76x76
-- Android: 192x192, 144x144, 96x96, 72x72, 48x48
-- Variants: High contrast, Monochrome, Forest Rings
+- iOS: 1024x1024, 180x180, 167x167, 152x152, 120x120, 76x76, 60x60, 29x29
+- Android review exports: 192x192, 144x144, 96x96, 72x72, 48x48
+- External lockups: horizontal PNG logo, reverse PNG logo, exact `Mori` wordmark PNG, and reverse wordmark PNG
+- Review: Creative Production moodboard plus Canva board
 
-### Recommended Alternative: Golden Hourglass
-**Background:** Warm cream #FDF5E6 with radial gradient  
-**Hourglass:** Dark charcoal #333333  
-**Sand:** Golden gradient #D4AF37 → #B8860B  
-**Status:** Design complete, assets ready for generation if preferred
+### Brand Asset Rule
 
----
-
-## 📱 Screen Mockups ✅
-
-### Core Screens Implemented
-1. **LifeGrid** (80x52 week grid)
-2. **The Clock** (real-time countdown)
-3. **Habit Tracker** (+/- daily check-in)
-4. **Gratitude Journal** (3 daily entries)
-
-### Color Variations
-- **Warm Minimalist** (Recommended): Cream backgrounds, amber accents
-- **Dignified**: Dark backgrounds, blue accents  
-- **Natural**: Cream backgrounds, green accents
+The paper-linework family is the only active brand direction. Do not add alternate logo families to `brand-assets/` or active app catalogs. Historical explorations belong in research/archive material, not in the active brand source of truth.
 
 ---
 
-## 🔧 Technical Implementation ✅
+## Product Surfaces
+
+### Core App Screens
+1. **Today:** App Limits, reset suggestions, proof strip, and week archive preview
+2. **Reset:** settle timer, breathing library, Pomodoro, quiet mode, mindfulness bell
+3. **Log:** gratitude writing, daily spark, history, random memory
+4. **Week Archive:** week/month/archive views calibrated by archive start date and archive span
+5. **Pulse:** source-backed recovery and information diet cards
+
+### Web Surface
+- `www/src/App.tsx` is a localized brand/early-access site.
+- `www/server/pulse/*` is the live-source pulse proxy used by app-side recovery and topic cards.
+
+---
+
+## Technical Implementation
 
 ### Swift Design System
-- **MoriDesignTokens.swift**: Complete color, typography, spacing, animation system
-- **MoriComponents.swift**: Core UI components with interactions
-- **MoriTabView.swift**: Custom navigation
-- **MoriViewModifiers.swift**: Reusable modifiers
+- **DesignSystem/MoriDesignTokens.swift**: Color, typography, spacing, radius, animation tokens
+- **DesignSystem/MoriSanctuaryComponents.swift**: Active botanical paper component layer
+- **DesignSystem/MoriViewModifiers.swift**: Theme, form, keyboard, and root tab modifiers
+- **Shared/MoriGeneratedArt.swift**: Generated art and bitmap icon wrappers
 
-### HTML/CSS Mockups
-- Standalone HTML files for all screens
-- Responsive design principles
-- Browser-ready prototypes
+### Infrastructure
+- **project.yml** remains the XcodeGen source for targets and bundle settings.
+- The iOS app, Screen Time extensions, widgets, watch app, shared localization, and generated art must stay in one project graph.
+- The pulse proxy must validate request shape, prefer live sources when available, and fail closed when live search is required but source coverage is missing.
 
 ---
 
@@ -160,114 +199,98 @@ MoriTypography.largeNumber  // 64pt Rounded (days remaining)
 ### Design Validation
 - User interviews planned for primary persona
 - A/B testing of warm vs pure minimalism
-- Emotional response validation for LifeGrid concept
+- Emotional response validation for Week Archive concept
 
 ---
 
-## 🎯 Implementation Roadmap
+## Execution Roadmap
 
-### Phase 1: Core Features (Week 1-2)
-- [ ] LifeGrid visualization (80x52 grid)
-- [ ] The Clock countdown timer
-- [ ] Basic settings (birth date, life expectancy)
+### Now
+- [x] Root app shell builds with custom bottom navigation.
+- [x] Generated brand/icon assets are wired into SwiftUI and web.
+- [x] Web package builds with the localized brand site and pulse proxy sources.
 
-### Phase 2: Habits & Journal (Week 3-4)
-- [ ] Habit tracker (+/- daily check-in)
-- [ ] Gratitude journal (3 daily entries)
-- [ ] Weekly summary view
+### Next
+- [ ] Run simulator screenshots for Today, Reset, Log, Week Archive, and Pulse after each major UI pass.
+- [x] Remove v1 component APIs and card/input compatibility aliases from the active DesignSystem surface.
+- [ ] Add focused tests around pulse request validation and source coverage.
 
-### Phase 3: Polish (Week 5-6)
-- [ ] Micro-interactions and animations
-- [ ] Onboarding flow
-- [ ] Settings and customization
-- [ ] Widget support
-
----
-
-## 📁 Asset Inventory
-
-### Design Files (Ready)
-- **Design System**: 4 Swift files (11KB total)
-- **Mockups**: 12 HTML files (92KB total)
-- **Brand Guidelines**: This document
-- **Icons**: Complete app icon set
-
-### Source Files
-- **Design Brief**: `/design/MORI_DESIGN_BRIEF.md`
-- **User Personas**: `/design/MORI_USER_PERSONAS.md`
-- **Icon Concepts**: `/icon-concepts/MORI_ICON_CONCEPTS.md`
-- **Mockups**: `/mockups/` directory
+### Later
+- [ ] Review historical mockups for reference value; archive or delete anything non-authoritative.
+- [ ] Make pricing and App Store links real before public web launch.
+- [ ] Audit localization coverage before TestFlight.
 
 ---
 
-## ✅ Quality Assurance
+## Asset Inventory
 
-### Design Requirements Met
-- ✅ Warm minimalism aesthetic
-- ✅ Memento Mori philosophy reflected
-- ✅ Comprehensive color system
-- ✅ Complete typography scale
-- ✅ Accessible component system
-- ✅ Cross-platform icon assets
-- ✅ User research foundation
-
-### Technical Requirements Met
-- ✅ Swift/SwiftUI implementation ready
-- ✅ HTML/CSS prototypes functional
-- ✅ Responsive design principles
-- ✅ Animation system defined
-- ✅ Accessibility considerations
+### Active Source Files
+- **Brand source of truth**: `brand-assets/MORI_BRAND_IDENTITY_SYSTEM.md`
+- **Logo source of truth**: `brand-assets/MORI_PAPER_LINEWORK_LOGO.md`
+- **Design system source of truth**: `DesignSystem/MoriDesignSystemDocumentation.md`
+- **Swift design system**: `DesignSystem/MoriDesignTokens.swift`, `DesignSystem/MoriSanctuaryComponents.swift`, `DesignSystem/MoriActionComponents.swift`, `DesignSystem/MoriStateComponents.swift`
+- **Generated bitmap assets**: `Shared/MoriGeneratedArt.swift`, `Shared/MoriGeneratedArt.xcassets`
+- **App icon catalogs**: `AppIcon.appiconset`, `DesignSystem/MoriBackgrounds.xcassets/AppIcon.appiconset`
 
 ---
 
-## 🚀 Handoff Package
+## Quality Gates
 
-### For Phoenix (Build Agent)
-1. **Swift Design System Files**: Complete component library
-2. **HTML Mockups**: Interactive prototypes for all screens
-3. **Brand Guidelines**: This comprehensive document
-4. **Icon Assets**: iOS AppIcon.appiconset and Android variants
-5. **Design Documentation**: Brief, personas, research
+### Required Before Claiming Done
+- iOS simulator build succeeds for `Mori`.
+- Web build succeeds with `pnpm --dir www build`.
+- Main flows render without overlapping text on iPhone-size and iPad-size screens.
+- Root tabs use Mori-generated assets where available.
+- New source-backed pulse behavior either returns citations or explicitly degrades to local fallback copy.
 
-### Next Steps
-1. Review Swift design system implementation
-2. Build core screens using provided components
-3. Implement LifeGrid data visualization
-4. Add Clock countdown functionality
-5. Create habit tracking and journal features
-6. Implement micro-interactions and animations
+### Design Requirements
+- Botanical watercolor paper palette is dominant.
+- Buttons and controls have stable tap targets.
+- Cards are used for actual grouped content, not section decoration.
+- Screen copy is short enough to scan in one breath.
+- Any new feature names the user action it improves.
+
+---
+
+## Handoff Package
+
+### For Build Agents
+1. **Start here:** `brand-assets/MORI_BRAND_IDENTITY_SYSTEM.md`
+2. **Swift app shell:** `App/ContentView.swift`, `App/MoriApp.swift`
+3. **Design tokens/components:** `DesignSystem/MoriDesignTokens.swift`, `DesignSystem/MoriSanctuaryComponents.swift`
+4. **Generated assets:** `Shared/MoriGeneratedArt.swift`, `Shared/MoriGeneratedArt.xcassets`, `brand-assets/*`
+5. **Web/pulse:** `www/src/App.tsx`, `www/src/i18n.ts`, `www/server/pulse/*`
+
+### Task Card Template
+```markdown
+Goal:
+User action improved:
+Requirement owner:
+Delete-first check:
+Files likely touched:
+Acceptance:
+- iOS build:
+- Web build if touched:
+- Screenshot/simulator proof:
+```
 
 ---
 
 ## 📞 Support & Documentation
 
 ### Design Reference
-- **Design Brief**: Warm minimalism, mortality awareness
-- **Color Philosophy**: Cream backgrounds, warm accents, depth
-- **Typography**: Classic serif with modern touches
-- **Component Style**: Organic corners, subtle shadows
+- **Design Brief**: Botanical watercolor paper, App Limit-first attention recovery
+- **Color Philosophy**: Warm paper, deep green ink, restrained botanical accents
+- **Typography**: Serif display for reflective moments; system text for controls and dense utility
+- **Component Style**: Organic but controlled, never ornamental for its own sake
 
 ### Technical Support
 - **Design Tokens**: MoriDesignTokens.swift
-- **Components**: MoriComponents.swift
-- **Mockups**: Interactive HTML prototypes
-- **Icons**: Multiple size variants provided
+- **Components**: MoriSanctuaryComponents.swift and MoriComponents.swift
+- **Icons**: Generated app icons, lockups, and bitmap UI icons
 
 ---
 
-## ✅ Implementation Complete
+## Current Completion Claim
 
-**Status**: Brand identity system 100% complete  
-**Quality**: ⭐⭐⭐⭐⭐ Production-ready  
-**Documentation**: Comprehensive with clear handoff  
-**Dependencies**: None (standalone design system)  
-**Timeline**: Ready for immediate development start  
-
----
-
-**Created by:** Flare  
-**Date:** March 28, 2026  
-**Version:** 1.0  
-**Project:** Mori - Mindful Life Tracker  
-
-🎨 **Design Complete - Ready for Development!** ✨
+Do not call the full redesign complete until the simulator UI has been visually inspected across the main app surfaces and the active source, docs, and compiled artifact gates pass without exceptions.

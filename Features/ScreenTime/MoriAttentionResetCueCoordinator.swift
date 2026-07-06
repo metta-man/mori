@@ -1,0 +1,121 @@
+import UIKit
+
+final class MoriAttentionResetCueCoordinator {
+    private let breathingFeedback = MoriBreathingSessionFeedbackCoordinator()
+
+    deinit {
+        stopResetCues()
+    }
+
+    func playStartCues(soundEnabled: Bool, hapticsEnabled: Bool, hasBreathingTechnique: Bool) {
+        guard !hasBreathingTechnique else { return }
+
+        if soundEnabled {
+            SettleBellService.shared.playStartBell()
+        }
+        if hapticsEnabled {
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        }
+    }
+
+    func playCompletionCues(soundEnabled: Bool, hapticsEnabled: Bool) {
+        breathingFeedback.playCompletionFeedback(soundEnabled: soundEnabled, hapticsEnabled: hapticsEnabled)
+    }
+
+    func beginBreathingCueTiming(
+        segments: [MoriBreathingCycleSegment],
+        elapsedTime: TimeInterval,
+        phaseRemaining: TimeInterval,
+        hapticsEnabled: Bool,
+        canPlaySound: @escaping () -> Bool
+    ) -> Int {
+        guard !segments.isEmpty else { return 0 }
+
+        let phaseIndex = MoriBreathingCycle.phaseIndex(for: segments, elapsedTime: elapsedTime)
+        playCurrentBreathingSound(segments: segments, currentPhaseIndex: phaseIndex, canPlay: canPlaySound)
+        playCurrentBreathingHaptic(segments: segments, currentPhaseIndex: phaseIndex, hapticsEnabled: hapticsEnabled)
+        scheduleSoundForNextPhase(
+            segments: segments,
+            currentPhaseIndex: phaseIndex,
+            phaseRemaining: phaseRemaining,
+            canPlay: canPlaySound
+        )
+        return phaseIndex
+    }
+
+    func syncBreathingCueTiming(
+        segments: [MoriBreathingCycleSegment],
+        currentPhaseIndex: Int,
+        elapsedTime: TimeInterval,
+        phaseRemaining: TimeInterval,
+        hapticsEnabled: Bool,
+        canPlaySound: @escaping () -> Bool
+    ) -> Int {
+        guard !segments.isEmpty else { return currentPhaseIndex }
+
+        let nextPhaseIndex = MoriBreathingCycle.phaseIndex(for: segments, elapsedTime: elapsedTime)
+        guard nextPhaseIndex != currentPhaseIndex else { return currentPhaseIndex }
+
+        playCurrentBreathingHaptic(segments: segments, currentPhaseIndex: nextPhaseIndex, hapticsEnabled: hapticsEnabled)
+        scheduleSoundForNextPhase(
+            segments: segments,
+            currentPhaseIndex: nextPhaseIndex,
+            phaseRemaining: phaseRemaining,
+            canPlay: canPlaySound
+        )
+        return nextPhaseIndex
+    }
+
+    func playCurrentBreathingSound(
+        segments: [MoriBreathingCycleSegment],
+        currentPhaseIndex: Int,
+        canPlay: () -> Bool
+    ) {
+        breathingFeedback.playCurrentSoundCue(
+            segments: segments,
+            currentPhaseIndex: currentPhaseIndex,
+            canPlay: canPlay
+        )
+    }
+
+    func scheduleSoundForNextPhase(
+        segments: [MoriBreathingCycleSegment],
+        currentPhaseIndex: Int,
+        phaseRemaining: TimeInterval,
+        canPlay: @escaping () -> Bool
+    ) {
+        breathingFeedback.scheduleSoundForNextPhase(
+            segments: segments,
+            currentPhaseIndex: currentPhaseIndex,
+            phaseRemaining: phaseRemaining,
+            canPlay: canPlay
+        )
+    }
+
+    func stopResetCues() {
+        breathingFeedback.cancelSound()
+        breathingFeedback.stopBreathingCues()
+    }
+
+    private func playCurrentBreathingHaptic(
+        segments: [MoriBreathingCycleSegment],
+        currentPhaseIndex: Int,
+        hapticsEnabled: Bool
+    ) {
+        guard hapticsEnabled, segments.indices.contains(currentPhaseIndex) else { return }
+        playBreathingHaptic(for: segments[currentPhaseIndex].phase)
+    }
+
+    private func playBreathingHaptic(for phase: MoriBreathingCyclePhase) {
+        switch phase {
+        case .inhale:
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        case .holdAfterInhale, .holdAfterExhale:
+            UIImpactFeedbackGenerator(style: .rigid).impactOccurred()
+        case .exhale:
+            UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        case .idle:
+            break
+        }
+    }
+}

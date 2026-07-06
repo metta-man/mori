@@ -1,5 +1,4 @@
-/* 🌙 Week Progress Indicator Component */
-/* Mori Brand Identity */
+/* Mori Week Progress */
 
 .week-progress-container {
   margin: var(--space-md) 0;
@@ -17,27 +16,27 @@
   font-size: var(--text-ui-sm);
   color: var(--text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.05em;
+  letter-spacing: 0;
 }
 
 .week-progress-percent {
   font-family: var(--font-ui);
   font-size: var(--text-ui);
   font-weight: 500;
-  color: var(--mori-gold);
+  color: var(--mori-leaf);
 }
 
 .week-progress-track {
   position: relative;
   height: 8px;
-  background: var(--mori-gray-mid);
+  background: rgba(36, 56, 51, 0.12);
   border-radius: var(--radius-full);
   overflow: hidden;
 }
 
 .week-progress-fill {
   height: 100%;
-  background: var(--mori-gold-gradient);
+  background: linear-gradient(90deg, var(--mori-leaf), var(--mori-seed));
   border-radius: var(--radius-full);
   transition: width 0.5s var(--mori-ease);
 }
@@ -48,7 +47,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: var(--mori-gold);
+  background: var(--mori-leaf);
   border-radius: var(--radius-full);
   animation: mori-pulse 2s ease-in-out infinite;
 }
@@ -67,4 +66,14 @@
 
 .week-progress-container.complete .week-progress-fill {
   background: var(--mori-success);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .week-progress-fill {
+    transition: none;
+  }
+
+  .week-progress-glow {
+    animation: none;
+  }
 }

@@ -23,32 +23,31 @@ struct RandomMemoryButton: View {
             }
         }) {
             VStack(spacing: 8) {
-                Image(systemName: "dice.fill")
-                    .font(.system(size: 28))
+                MoriBitmapIconImage(icon: .refresh, size: 28, opacity: 0.88)
                     .rotationEffect(.degrees(isPressed ? 360 : 0))
                     .animation(.easeInOut(duration: 0.6), value: isPressed)
                 
                 Text("Random Memory")
                     .font(.system(size: 17, weight: .semibold, design: .rounded))
-                    .foregroundColor(MoriColors.forestCanopy)
+                    .foregroundColor(MoriColors.botanicalInk)
                 
                 Text("Rediscover a past moment")
                     .font(.system(size: 12, weight: .regular))
-                    .foregroundColor(MoriColors.forestMuted)
+                    .foregroundColor(MoriColors.botanicalMuted)
             }
             .frame(maxWidth: .infinity)
             .padding(24)
-            .background(MoriColors.forestCard.opacity(0.96))
+            .background(MoriColors.botanicalSurface.opacity(0.96))
             .cornerRadius(16)
             .overlay(
                 RoundedRectangle(cornerRadius: 16)
                     .stroke(style: StrokeStyle(lineWidth: 2, dash: [8]))
-                    .foregroundColor(MoriColors.forestMoss.opacity(0.45))
+                    .foregroundColor(MoriColors.botanicalMoss.opacity(0.45))
             )
-            .shadow(color: MoriColors.forestShadow.opacity(0.28), radius: 14, x: 0, y: 8)
+            .shadow(color: MoriColors.botanicalShadow.opacity(0.28), radius: 14, x: 0, y: 8)
         }
         .buttonStyle(PlainButtonStyle())
-        .accessibility(label: Text("Show a random past gratitude entry"))
+        .accessibility(label: Text("Show a random past log entry"))
     }
 }
 
@@ -61,7 +60,7 @@ struct RandomMemoryModal: View {
         VStack(spacing: 0) {
             // Handle
             RoundedRectangle(cornerRadius: 2.5)
-                .fill(MoriColors.forestMuted.opacity(0.34))
+                .fill(MoriColors.botanicalMuted.opacity(0.34))
                 .frame(width: 36, height: 5)
                 .padding(.top, 8)
             
@@ -69,19 +68,23 @@ struct RandomMemoryModal: View {
                 // Date
                 Text(formatDate(entry.date))
                     .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(MoriColors.forestMoss)
+                    .foregroundColor(MoriColors.botanicalMoss)
                     .padding(.top, 24)
                 
-                Label(entry.sourceLabel, systemImage: entry.sourceSymbolName)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(sourceColor(for: entry))
-                    .padding(.top, 4)
+                HStack(spacing: 6) {
+                    MoriBitmapIconImage(icon: entry.sourceIcon, size: 15, opacity: 0.82)
+
+                    Text(entry.sourceLabel)
+                }
+                .font(.system(size: 14, weight: .semibold))
+                .foregroundColor(sourceColor(for: entry))
+                .padding(.top, 4)
                 
                 // Content
                 ScrollView {
                     Text(entry.displayContent)
                         .font(.system(size: 15, weight: .regular))
-                        .foregroundColor(MoriColors.forestCanopy)
+                        .foregroundColor(MoriColors.botanicalInk)
                         .lineSpacing(1.6)
                         .multilineTextAlignment(.leading)
                         .padding(.horizontal, 24)
@@ -93,10 +96,10 @@ struct RandomMemoryModal: View {
                 Button(action: { dismiss() }) {
                     Text("Close")
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(MoriColors.forestCanopy)
+                        .foregroundColor(MoriColors.botanicalInk)
                         .padding(.vertical, 12)
                         .padding(.horizontal, 32)
-                        .background(MoriColors.forestCanopy.opacity(0.08))
+                        .background(MoriColors.botanicalInk.opacity(0.08))
                         .cornerRadius(8)
                 }
                 .padding(.top, 24)
@@ -104,33 +107,38 @@ struct RandomMemoryModal: View {
             } else {
                 // Empty state
                 VStack(spacing: 16) {
-                    Image(systemName: "photo.on.rectangle.angled")
-                        .font(.system(size: 48))
-                        .foregroundColor(MoriColors.forestMuted.opacity(0.62))
+                    MoriBitmapIconBadge(
+                        icon: .journal,
+                        size: 58,
+                        iconScale: 0.58,
+                        fill: MoriColors.sanctuarySurface.opacity(0.76),
+                        stroke: Color.white.opacity(0.88),
+                        shadow: MoriColors.sanctuaryShadow.opacity(0.16)
+                    )
                     
                     Text("No memories yet")
                         .font(.system(size: 17, weight: .semibold, design: .rounded))
-                        .foregroundColor(MoriColors.forestCanopy)
+                        .foregroundColor(MoriColors.botanicalInk)
                     
                     Text("Start writing to build your collection!")
                         .font(.system(size: 14, weight: .regular))
-                        .foregroundColor(MoriColors.forestMuted)
+                        .foregroundColor(MoriColors.botanicalMuted)
                 }
                 .frame(height: 300)
                 
                 Button(action: { dismiss() }) {
                     Text("Close")
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(MoriColors.forestCanopy)
+                        .foregroundColor(MoriColors.botanicalInk)
                         .padding(.vertical, 12)
                         .padding(.horizontal, 32)
-                        .background(MoriColors.forestCanopy.opacity(0.08))
+                        .background(MoriColors.botanicalInk.opacity(0.08))
                         .cornerRadius(8)
                 }
                 .padding(.bottom, 32)
             }
         }
-        .background(MoriColors.forestCard)
+        .background(MoriColors.botanicalSurface)
         .cornerRadius(20, corners: [.topLeft, .topRight])
     }
     
@@ -142,10 +150,10 @@ struct RandomMemoryModal: View {
 
     private func sourceColor(for entry: GratitudeEntry) -> Color {
         switch entry.sourceKind {
-        case .journal: return MoriColors.forestMuted
-        case .dayLog: return MoriColors.forestClay
-        case .dailySpark: return MoriColors.forestSeed
-        case .weeklyIntention: return MoriColors.forestMoss
+        case .journal: return MoriColors.botanicalMuted
+        case .dayLog: return MoriColors.botanicalClay
+        case .dailySpark: return MoriColors.botanicalSeed
+        case .weeklyIntention: return MoriColors.botanicalMoss
         }
     }
 }
@@ -177,5 +185,5 @@ struct RoundedCorner: Shape {
         RandomMemoryButton(onTap: {})
     }
     .padding()
-    .background(MoriColors.forestPaper)
+    .background(MoriColors.botanicalPaper)
 }

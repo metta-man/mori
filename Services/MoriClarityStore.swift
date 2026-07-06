@@ -8,38 +8,41 @@ final class MoriClarityStore: ObservableObject {
     @Published private(set) var selectedTopics: Set<PulseTopic> = PulseTopic.defaultSelected
     @Published private(set) var customTopics: [String] = []
     @Published private(set) var customTopicSymbols: [String: String] = [:]
+    @Published private(set) var topicOrder: [String] = []
     @Published private(set) var latestPulse: MoriDailyPulse?
 
-    private let actionsKey = "mori_clarity_actions"
-    private let topicsKey = "mori_pulse_selected_topics"
-    private let customTopicsKey = "mori_pulse_custom_topics"
-    private let customTopicSymbolsKey = "mori_pulse_custom_topic_symbols"
-    private let latestPulseKey = "mori_latest_pulse"
+    let maxActiveTopicCount = 5
     private let firstSeedBonus = 2
-    private let userDefaults = UserDefaults.standard
-    private let encoder = JSONEncoder()
-    private let decoder = JSONDecoder()
+    private let persistence = MoriClarityPersistence.standard
 
     private init() {
-        actions = load([MoriMindfulAction].self, forKey: actionsKey) ?? []
-        selectedTopics = sanitizedTopics(Set(load([PulseTopic].self, forKey: topicsKey) ?? Array(selectedTopics)))
-        customTopics = load([String].self, forKey: customTopicsKey) ?? []
-        customTopicSymbols = load([String: String].self, forKey: customTopicSymbolsKey) ?? [:]
+        actions = load([MoriMindfulAction].self, forKey: MoriClarityPersistence.Key.actions) ?? []
+        selectedTopics = MoriClarityTopicPlanner.sanitizedTopics(
+            Set(load([PulseTopic].self, forKey: MoriClarityPersistence.Key.selectedTopics) ?? Array(selectedTopics))
+        )
+        customTopics = load([String].self, forKey: MoriClarityPersistence.Key.customTopics) ?? []
+        customTopicSymbols = load([String: String].self, forKey: MoriClarityPersistence.Key.customTopicSymbols) ?? [:]
         if !customTopics.isEmpty {
             selectedTopics.insert(.custom)
         }
-        persist(Array(selectedTopics), forKey: topicsKey)
-        latestPulse = load(MoriDailyPulse.self, forKey: latestPulseKey)
+        topicOrder = normalizedTopicOrder(load([String].self, forKey: MoriClarityPersistence.Key.topicOrder) ?? [])
+        persist(Array(selectedTopics), forKey: MoriClarityPersistence.Key.selectedTopics)
+        persist(topicOrder, forKey: MoriClarityPersistence.Key.topicOrder)
+        latestPulse = load(MoriDailyPulse.self, forKey: MoriClarityPersistence.Key.latestPulse)
         pruneOldActions()
     }
 
     var selectedTopicLabels: [String] {
-        let defaults = PulseTopic.allCases
-            .filter { selectedTopics.contains($0) }
-            .filter { $0 != .custom && $0 != .crypto }
-            .map(\.title)
+        let selected = Set(selectedTopicLabelSet)
+        return topicOrder.filter { selected.contains($0) }
+    }
 
-        return defaults + customTopics
+    var activeTopicLabels: [String] {
+        Array(selectedTopicLabels.prefix(maxActiveTopicCount))
+    }
+
+    var queuedTopicLabels: [String] {
+        Array(selectedTopicLabels.dropFirst(maxActiveTopicCount))
     }
 
     func toggleTopic(_ topic: PulseTopic) {
@@ -48,7 +51,9 @@ final class MoriClarityStore: ObservableObject {
         } else {
             selectedTopics.insert(topic)
         }
-        persist(Array(selectedTopics), forKey: topicsKey)
+        topicOrder = normalizedTopicOrder(topicOrder)
+        persist(Array(selectedTopics), forKey: MoriClarityPersistence.Key.selectedTopics)
+        persist(topicOrder, forKey: MoriClarityPersistence.Key.topicOrder)
     }
 
     @discardableResult
@@ -98,9 +103,15 @@ final class MoriClarityStore: ObservableObject {
         customTopics.append(trimmed)
         customTopicSymbols[trimmed] = symbolName
         selectedTopics.insert(.custom)
-        persist(customTopics, forKey: customTopicsKey)
-        persist(customTopicSymbols, forKey: customTopicSymbolsKey)
-        persist(Array(selectedTopics), forKey: topicsKey)
+        topicOrder = normalizedTopicOrder(topicOrder + [trimmed])
+        persist(customTopics, forKey: MoriClarityPersistence.Key.customTopics)
+        persist(customTopicSymbols, forKey: MoriClarityPersistence.Key.customTopicSymbols)
+        persist(Array(selectedTopics), forKey: MoriClarityPersistence.Key.selectedTopics)
+        persist(topicOrder, forKey: MoriClarityPersistence.Key.topicOrder)
+    }
+
+    func addCustomTopic(_ topic: String, icon: MoriCustomPulseTopicIcon) {
+        addCustomTopic(topic, symbolName: icon.rawValue)
     }
 
     func removeCustomTopic(_ topic: String) {
@@ -109,18 +120,50 @@ final class MoriClarityStore: ObservableObject {
         if customTopics.isEmpty {
             selectedTopics.remove(.custom)
         }
-        persist(customTopics, forKey: customTopicsKey)
-        persist(customTopicSymbols, forKey: customTopicSymbolsKey)
-        persist(Array(selectedTopics), forKey: topicsKey)
+        topicOrder.removeAll { $0.caseInsensitiveCompare(topic) == .orderedSame }
+        topicOrder = normalizedTopicOrder(topicOrder)
+        persist(customTopics, forKey: MoriClarityPersistence.Key.customTopics)
+        persist(customTopicSymbols, forKey: MoriClarityPersistence.Key.customTopicSymbols)
+        persist(Array(selectedTopics), forKey: MoriClarityPersistence.Key.selectedTopics)
+        persist(topicOrder, forKey: MoriClarityPersistence.Key.topicOrder)
     }
 
     func symbolName(forCustomTopic topic: String) -> String {
         customTopicSymbols[topic] ?? MoriCustomPulseTopicIcon.leaf.rawValue
     }
 
+    func icon(forCustomTopic topic: String) -> MoriBitmapIcon {
+        MoriBitmapIcon.fromLegacySymbolName(symbolName(forCustomTopic: topic))
+    }
+
+    func symbolName(forTopicLabel topic: String) -> String {
+        if let defaultTopic = PulseTopic.allCases.first(where: { $0.title.caseInsensitiveCompare(topic) == .orderedSame }) {
+            return defaultTopic.symbolName
+        }
+
+        return symbolName(forCustomTopic: topic)
+    }
+
+    func icon(forTopicLabel topic: String) -> MoriBitmapIcon {
+        if let defaultTopic = PulseTopic.allCases.first(where: { $0.title.caseInsensitiveCompare(topic) == .orderedSame }) {
+            return defaultTopic.icon
+        }
+
+        return icon(forCustomTopic: topic)
+    }
+
+    func promoteTopic(_ topic: String) {
+        guard selectedTopicLabelSet.contains(where: { $0.caseInsensitiveCompare(topic) == .orderedSame }) else { return }
+        topicOrder.removeAll { $0.caseInsensitiveCompare(topic) == .orderedSame }
+        topicOrder.insert(topic, at: 0)
+        topicOrder = normalizedTopicOrder(topicOrder)
+        persist(topicOrder, forKey: MoriClarityPersistence.Key.topicOrder)
+    }
+
     func savePulse(_ pulse: MoriDailyPulse) {
         latestPulse = pulse
-        persist(pulse, forKey: latestPulseKey)
+        persist(pulse, forKey: MoriClarityPersistence.Key.latestPulse)
+        MoriWidgetContextPublisher.publish(clarityStore: self)
     }
 
     @discardableResult
@@ -144,7 +187,8 @@ final class MoriClarityStore: ObservableObject {
         )
         actions.insert(action, at: 0)
         pruneOldActions()
-        persist(actions, forKey: actionsKey)
+        persist(actions, forKey: MoriClarityPersistence.Key.actions)
+        MoriWidgetContextPublisher.publish(clarityStore: self)
         return action
     }
 
@@ -153,97 +197,11 @@ final class MoriClarityStore: ObservableObject {
         return actions.filter { $0.dateKey == key }
     }
 
-    func nourishedDomains(for date: Date = Date()) -> [LifeDomain: Int] {
-        var scores = Dictionary(uniqueKeysWithValues: LifeDomain.allCases.map { ($0, 0) })
-        let dateActions = actions(for: date)
-
-        for action in dateActions {
-            let weight = max(1, action.seeds)
-            for domain in MoriPractice.domains(for: action) {
-                scores[domain, default: 0] += weight
-            }
-        }
-
-        if Calendar.current.isDateInToday(date),
-           DailySparkStore.shared.todayEntry != nil,
-           !dateActions.contains(where: { $0.kind == .dailySpark }) {
-            scores[.mind, default: 0] += 1
-            scores[.craft, default: 0] += 1
-        }
-
-        if Calendar.current.isDateInToday(date),
-           HabitDataManager.shared.getTodayEntry() != nil,
-           !dateActions.contains(where: { $0.kind == .dailyFocus }) {
-            scores[.body, default: 0] += 1
-            scores[.rest, default: 0] += 1
-        }
-
-        return scores
-    }
-
-    func suggestedPracticeForToday() -> MoriPractice {
-        let scores = nourishedDomains()
-        let total = scores.values.reduce(0, +)
-        guard total > 0 else { return .quietPause }
-
-        let lowestDomain = LifeDomain.allCases.min { lhs, rhs in
-            scores[lhs, default: 0] < scores[rhs, default: 0]
-        } ?? .rest
-
-        return MoriPractice.suggested(for: lowestDomain)
-    }
-
     func metrics(settings: UserSettings) -> MoriClarityMetrics {
-        let todayActions = actions()
-        let actionSeeds = todayActions.reduce(0) { $0 + $1.seeds }
-        let quietMinutes = todayActions
-            .filter {
-                $0.kind == .quietTimer ||
-                    $0.kind == .replacementAction ||
-                    $0.kind == .urgeCheckIn ||
-                    $0.kind == .breathingSession ||
-                    $0.kind == .pomodoroSession
-            }
-            .reduce(0) { $0 + $1.minutes }
-        let settleActions = todayActions.filter {
-            $0.kind == .settleSession ||
-                $0.kind == .breathingSession ||
-                $0.kind == .pomodoroSession
-        }
-        let settleMinutes = settleActions.reduce(0) { $0 + $1.minutes }
-        let pulseMinutes = latestPulse?.dateKey == MoriDateKey.value() ? latestPulse?.reclaimedMinutes ?? 0 : 0
-        let reclaimedMinutes = todayActions
-            .filter { $0.kind == .pulseRead || $0.kind == .resetAction }
-            .reduce(pulseMinutes) { $0 + $1.minutes }
-        let protectedFocusMinutes = todayActions
-            .filter { $0.kind == .screenTimeLimitKept }
-            .reduce(0) { $0 + $1.minutes }
-        let screenTimeThresholdsReached = MoriScreenTimeSignalStore.signals().count +
-            todayActions.filter { $0.kind == .screenTimeThresholdReached }.count
-
-        let sparkBonus = DailySparkStore.shared.todayEntry == nil || todayActions.contains(where: { $0.kind == .dailySpark }) ? 0 : 2
-        let habitBonus = HabitDataManager.shared.getTodayEntry() == nil || todayActions.contains(where: { $0.kind == .dailyFocus }) ? 0 : habitScoreBonus()
-        let weeklyBonus = settings.hasCompletedWeeklyIntention && !todayActions.contains(where: { $0.kind == .lifeGridProof }) ? 4 : 0
-        let seeds = actionSeeds + sparkBonus + habitBonus + weeklyBonus
-        let screenTimeReward = min(10, protectedFocusMinutes / 5)
-        let screenTimePenalty = min(12, screenTimeThresholdsReached * 4)
-        let clarityScore = max(0, min(100, 46 + seeds * 4 + min(16, quietMinutes / 2) + min(12, reclaimedMinutes / 5) + min(10, settleMinutes / 3) + screenTimeReward - screenTimePenalty))
-        let bloom = min(1, Double(seeds) / 24.0 + (settings.hasCompletedWeeklyIntention ? 0.18 : 0))
-
-        return MoriClarityMetrics(
-            clarityScore: clarityScore,
-            seedsToday: seeds,
-            bloomProgress: bloom,
-            rootsStreak: rootsStreak(settings: settings),
-            quietMinutesToday: quietMinutes,
-            settleMinutesToday: settleMinutes,
-            settleSessionsToday: settleActions.count,
-            reclaimedMinutesToday: reclaimedMinutes,
-            screenTimeThresholdsReachedToday: screenTimeThresholdsReached,
-            protectedFocusMinutesToday: protectedFocusMinutes,
-            mindfulActionsToday: todayActions.count +
-                (DailySparkStore.shared.todayEntry == nil || todayActions.contains(where: { $0.kind == .dailySpark }) ? 0 : 1) +
-                (HabitDataManager.shared.getTodayEntry() == nil || todayActions.contains(where: { $0.kind == .dailyFocus }) ? 0 : 1)
+        MoriClarityStatsCalculator.metrics(
+            settings: settings,
+            actions: actions,
+            latestPulse: latestPulse
         )
     }
 
@@ -254,59 +212,35 @@ final class MoriClarityStore: ObservableObject {
             seedsToday: metrics.seedsToday,
             quietMinutesToday: metrics.quietMinutesToday,
             reclaimedMinutesToday: metrics.reclaimedMinutesToday,
-            weeklyProofCompleted: settings.hasCompletedWeeklyIntention
+            screenTimeAttemptsToday: metrics.screenTimeAttemptsToday,
+            screenTimeSavedMinutesToday: metrics.screenTimeSavedMinutesToday,
+            weeklyProofCompleted: false
         )
     }
 
     func weeklyStats(settings: UserSettings) -> MoriWeeklyStats {
-        let recent = actions.filter { action in
-            guard let cutoff = Calendar.current.date(byAdding: .day, value: -7, to: Date()) else { return true }
-            return action.createdAt >= cutoff
-        }
-        let metrics = metrics(settings: settings)
-        return MoriWeeklyStats(
-            seeds: recent.reduce(0) { $0 + $1.seeds },
-            quietMinutes: recent.reduce(0) { $0 + ($1.kind == .quietTimer ? $1.minutes : 0) },
-            reclaimedMinutes: recent.reduce(0) { $0 + ($1.kind == .pulseRead ? $1.minutes : 0) },
-            rootsStreak: metrics.rootsStreak,
-            clarityAverage: metrics.clarityScore
+        MoriClarityStatsCalculator.weeklyStats(
+            settings: settings,
+            actions: actions,
+            latestPulse: latestPulse
         )
     }
 
-    private func rootsStreak(settings: UserSettings) -> Int {
-        var streak = 0
-        var date = Date()
-
-        while hasPractice(on: date, settings: settings) {
-            streak += 1
-            guard let previous = Calendar.current.date(byAdding: .day, value: -1, to: date) else { break }
-            date = previous
-        }
-
-        return streak
+    func growthSummaries(settings: UserSettings) -> [MoriGrowthPeriodSummary] {
+        MoriClarityStatsCalculator.growthSummaries(
+            settings: settings,
+            actions: actions,
+            latestPulse: latestPulse
+        )
     }
 
-    private func hasPractice(on date: Date, settings: UserSettings) -> Bool {
-        if !actions(for: date).isEmpty {
-            return true
-        }
-
-        if Calendar.current.isDateInToday(date) {
-            return DailySparkStore.shared.todayEntry != nil ||
-                HabitDataManager.shared.getTodayEntry() != nil ||
-                settings.hasCompletedWeeklyIntention
-        }
-
-        return false
-    }
-
-    private func habitScoreBonus() -> Int {
-        guard let entry = HabitDataManager.shared.getTodayEntry() else { return 0 }
-        switch entry.tone {
-        case .positive: return 3
-        case .neutral: return 1
-        case .negative: return 1
-        }
+    func clarityTrend(days: Int = 7, settings: UserSettings) -> [MoriClarityTrendPoint] {
+        MoriClarityStatsCalculator.clarityTrend(
+            days: days,
+            settings: settings,
+            actions: actions,
+            latestPulse: latestPulse
+        )
     }
 
     private func pruneOldActions() {
@@ -323,18 +257,22 @@ final class MoriClarityStore: ObservableObject {
         return hasSeedToday ? 0 : firstSeedBonus
     }
 
-    private func sanitizedTopics(_ topics: Set<PulseTopic>) -> Set<PulseTopic> {
-        let sanitized = topics.subtracting([.crypto])
-        return sanitized.isEmpty ? PulseTopic.defaultSelected : sanitized
+    private var selectedTopicLabelSet: [String] {
+        MoriClarityTopicPlanner.selectedTopicLabelSet(
+            selectedTopics: selectedTopics,
+            customTopics: customTopics
+        )
+    }
+
+    private func normalizedTopicOrder(_ order: [String]) -> [String] {
+        MoriClarityTopicPlanner.normalizedTopicOrder(order, customTopics: customTopics)
     }
 
     private func persist<T: Encodable>(_ value: T, forKey key: String) {
-        guard let data = try? encoder.encode(value) else { return }
-        userDefaults.set(data, forKey: key)
+        persistence.save(value, forKey: key)
     }
 
     private func load<T: Decodable>(_ type: T.Type, forKey key: String) -> T? {
-        guard let data = userDefaults.data(forKey: key) else { return nil }
-        return try? decoder.decode(type, from: data)
+        persistence.load(type, forKey: key)
     }
 }

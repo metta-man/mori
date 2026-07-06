@@ -9,6 +9,16 @@ DerivedData/
 xcuserdata/
 *.moved-aside
 
+# Local secrets and deployment metadata
+.env
+.env.*
+!.env.example
+.vercel/
+www/.env
+www/.env.*
+!www/.env.example
+www/.vercel/
+
 # Swift Package Manager / Xcode generated package state
 .build/
 .swiftpm/
@@ -22,3 +32,10 @@ www/dist/
 *.log
 *.tmp
 *.swp
+
+# Local automation, archives, and generated review output
+.codex-build/
+.playwright-cli/
+artifacts/
+output/
+outputs/

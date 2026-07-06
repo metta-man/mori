@@ -38,7 +38,7 @@ struct GratitudeEditorView: View {
                 if content.isEmpty {
                     Text(placeholder)
                         .font(.system(size: 15, weight: .regular))
-                        .foregroundColor(MoriColors.forestMuted.opacity(0.72))
+                        .foregroundColor(MoriColors.botanicalMuted.opacity(0.72))
                         .italic()
                         .padding(.horizontal, 20)
                         .padding(.vertical, 20)
@@ -46,27 +46,24 @@ struct GratitudeEditorView: View {
                 
                 TextEditor(text: $content)
                     .font(.system(size: 15, weight: .regular))
-                    .foregroundColor(MoriColors.forestCanopy)
+                    .foregroundColor(MoriColors.botanicalInk)
                     .scrollContentBackground(.hidden)
                     .background(Color.clear)
                     .frame(minHeight: 80)
                     .padding(.horizontal, 16)
                     .padding(.vertical, 16)
                     .focused($isEditorFocused)
-                    .onChange(of: content) { newValue in
-                        charCountStatus = CharacterCountStatus.status(for: newValue.count)
-                    }
             }
             .frame(minHeight: 120)
             
             Divider()
-                .background(MoriColors.forestLine.opacity(0.58))
+                .background(MoriColors.botanicalLine.opacity(0.58))
 
             if !attachedPhotos.isEmpty {
                 photoStrip
 
                 Divider()
-                    .background(MoriColors.forestLine.opacity(0.58))
+                    .background(MoriColors.botanicalLine.opacity(0.58))
             }
             
             // Footer
@@ -81,11 +78,15 @@ struct GratitudeEditorView: View {
                     maxSelectionCount: 6,
                     matching: .images
                 ) {
-                    Label("Add photos", systemImage: "photo.on.rectangle.angled")
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(MoriColors.forestCanopy)
+                    HStack(spacing: 6) {
+                        MoriBitmapIconImage(icon: .journal, size: 14, opacity: 0.82)
+
+                        Text("Add photos")
+                    }
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(MoriColors.botanicalInk)
                 }
-                .accessibility(label: Text("Add photos to journal entry"))
+                .accessibility(label: Text("Add photos to log entry"))
                 
                 Spacer()
                 
@@ -93,27 +94,30 @@ struct GratitudeEditorView: View {
                 Button(action: save) {
                     Text("Save")
                         .font(.system(size: 14, weight: .semibold))
-                        .foregroundColor(isValid ? MoriColors.forestCard : MoriColors.forestMuted)
+                        .foregroundColor(isValid ? MoriColors.botanicalSurface : MoriColors.botanicalMuted)
                         .padding(.horizontal, 24)
                         .padding(.vertical, 8)
-                        .background(isValid ? MoriColors.forestCanopy : MoriColors.forestCanopy.opacity(0.08))
+                        .background(isValid ? MoriColors.botanicalInk : MoriColors.botanicalInk.opacity(0.08))
                         .cornerRadius(8)
                 }
                 .disabled(!isValid)
-                .accessibility(label: Text("Save gratitude entry"))
+                .accessibility(label: Text("Save log entry"))
             }
             .padding(20)
         }
-        .background(MoriColors.forestCard.opacity(0.96))
+        .background(MoriColors.botanicalSurface.opacity(0.96))
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .overlay(
             RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(MoriColors.forestHairline, lineWidth: 1)
+                .stroke(MoriColors.botanicalHairline, lineWidth: 1)
         )
-        .shadow(color: MoriColors.forestShadow.opacity(0.50), radius: 18, x: 0, y: 10)
-        .onChange(of: selectedPhotoItems) { newItems in
-            importPhotos(from: newItems)
-        }
+        .shadow(color: MoriColors.botanicalShadow.opacity(0.50), radius: 18, x: 0, y: 10)
+        .gratitudeEditorLifecycle(
+            entryContent: content,
+            characterCountStatus: $charCountStatus,
+            selectedPhotoItems: $selectedPhotoItems,
+            onAddPhoto: onAddPhoto
+        )
         .accessibilityElement(children: .combine)
     }
 
@@ -139,32 +143,14 @@ struct GratitudeEditorView: View {
         onSave()
     }
 
-    private func importPhotos(from items: [PhotosPickerItem]) {
-        guard !items.isEmpty else { return }
-
-        Task {
-            for item in items {
-                if let data = try? await item.loadTransferable(type: Data.self) {
-                    await MainActor.run {
-                        onAddPhoto(data)
-                    }
-                }
-            }
-
-            await MainActor.run {
-                selectedPhotoItems = []
-            }
-        }
-    }
-
     private var characterCountColor: Color {
         switch charCountStatus {
         case .normal:
-            return MoriColors.forestMuted
+            return MoriColors.botanicalMuted
         case .warning:
-            return MoriColors.forestSeed
+            return MoriColors.botanicalSeed
         case .error:
-            return MoriColors.forestClay
+            return MoriColors.botanicalClay
         }
     }
 }
@@ -181,21 +167,19 @@ private struct JournalPhotoThumbnail: View {
                         .resizable()
                         .scaledToFill()
                 } else {
-                    Image(systemName: "photo")
-                        .font(.system(size: 22))
-                        .foregroundColor(MoriColors.forestMuted)
+                    MoriBitmapIconImage(icon: .journal, size: 24, opacity: 0.62)
                         .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(MoriColors.forestPaperDeep.opacity(0.72))
+                        .background(MoriColors.botanicalPaperDeep.opacity(0.72))
                 }
             }
             .frame(width: 76, height: 76)
             .clipShape(RoundedRectangle(cornerRadius: 10))
 
             Button(action: onRemove) {
-                Image(systemName: "xmark.circle.fill")
-                    .font(.system(size: 18, weight: .semibold))
-                    .symbolRenderingMode(.palette)
-                    .foregroundStyle(MoriColors.forestCard, MoriColors.forestCanopy.opacity(0.72))
+                MoriBitmapIconImage(icon: .minus, size: 13, opacity: 0.92)
+                    .frame(width: 24, height: 24)
+                    .background(MoriColors.botanicalInk.opacity(0.74))
+                    .clipShape(Circle())
             }
             .offset(x: 6, y: -6)
             .accessibility(label: Text("Remove photo"))
@@ -226,5 +210,5 @@ private struct JournalPhotoThumbnail: View {
         )
     }
     .padding()
-    .background(MoriColors.forestPaper)
+    .background(MoriColors.botanicalPaper)
 }

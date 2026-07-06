@@ -1,386 +1,424 @@
 import SwiftUI
 
-struct ClarityPulseView: View {
-    var onOpenSettle: (() -> Void)? = nil
+private enum PulseSheet: Identifiable {
+    case card(UUID)
 
+    var id: String {
+        switch self {
+        case .card(let id):
+            return "card-\(id.uuidString)"
+        }
+    }
+}
+
+private enum PulseRoute: Hashable {
+    case recoverySignals
+}
+
+struct ClarityPulseView: View {
+    var showsDismissButton = false
+
+    @Environment(\.dismiss) private var dismiss
+    @Environment(\.moriOpenRoute) private var openRoute
     @EnvironmentObject var settings: UserSettings
     @StateObject private var clarityStore = MoriClarityStore.shared
+    @StateObject private var recoveryStore = MoriRecoveryStore.shared
     @State private var pulse: MoriDailyPulse = .mock()
     @State private var isLoading = false
     @State private var customTopic = ""
     @State private var selectedCustomTopicIcon: MoriCustomPulseTopicIcon = .leaf
-    @State private var activePracticeSheet: MoriPracticeSheet?
+    @State private var navigationPath: [PulseRoute] = []
+    @State private var activeSheet: PulseSheet?
+    @State private var answeringCardIDs: Set<UUID> = []
+    @State private var followUpErrors: [UUID: String] = [:]
+    @State private var pulseErrorMessage: String?
+    @State private var showsTopicControls = false
+    @AppStorage(MoriRecoveryStore.llmInsightOptInKey) private var recoveryInsightOptIn = false
 
     private var metrics: MoriClarityMetrics {
         clarityStore.metrics(settings: settings)
     }
 
+    private var shouldShowPulseContent: Bool {
+        !(pulse.isMock && pulseErrorMessage != nil)
+    }
+
+    private var shouldOpenRecoveryDetailsForUITest: Bool {
+        ProcessInfo.processInfo.arguments.contains("-MoriOpenRecoveryDetailsForUITest")
+    }
+
+    private var shouldUseMockPulseForUITest: Bool {
+        ProcessInfo.processInfo.arguments.contains("-MoriUseMockPulseForUITest")
+    }
+
+    private var activeTopicSet: Set<String> {
+        Set(clarityStore.activeTopicLabels.map { $0.lowercased() })
+    }
+
+    private var sharedPulseCards: [MoriPulseCard] {
+        pulse.displaySharedCards.filter { card in
+            card.kind == .resetAction || card.kind == .reclaimedTime
+        }
+    }
+
     var body: some View {
-        NavigationStack {
-            MoriForestBackground {
-                ScrollView(showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 22) {
-                        MoriPageHeader(
-                            eyebrow: "Pulse",
-                            title: "Clarity Pulse",
-                            subtitle: "Useful signal, noisy loops, attention traps, and one reset action."
-                        )
+        NavigationStack(path: $navigationPath) {
+            MoriRootScrollScreen(
+                title: MoriL10n.display("Pulse"),
+                subtitle: nil,
+                spacing: 18,
+                backgroundVariant: .today
+            ) {
+                ClarityPulseStatsHeader(
+                    generatedAt: pulse.generatedAt,
+                    metrics: metrics,
+                    isLoading: isLoading,
+                    onRefresh: refreshPulse
+                )
 
-                        topicPicker
+                MoriRecoveryPulseCard(
+                    snapshot: recoveryStore.snapshot,
+                    isLoading: recoveryStore.isLoading,
+                    errorMessage: recoveryStore.errorMessage,
+                    title: MoriL10n.display("Recovery Pulse"),
+                    subtitle: MoriL10n.display("HealthKit readiness signals before the attention scan."),
+                    onOpenDetails: openRecoveryDetails,
+                    onRefresh: refreshRecovery,
+                    onStartPractice: startPractice,
+                    onQuickComplete: completePractice
+                )
 
-                        pulseHeader
+                if recoveryStore.snapshot.status != .needsPermission {
+                    MoriRecoveryInsightOptInCard(isEnabled: $recoveryInsightOptIn)
+                }
 
-                        ForEach(MoriPulseCardKind.allCases) { kind in
-                            if let card = pulse.cards.first(where: { $0.kind == kind }) {
-                                PulseCardView(
-                                    card: card,
-                                    onAction: {
-                                        handle(card)
-                                    }
-                                )
-                            }
+                if let pulseErrorMessage {
+                    PulseErrorBanner(message: pulseErrorMessage)
+                }
+
+                PulseTopicControlsSummary(
+                    activeTopicLabels: clarityStore.activeTopicLabels,
+                    activeCount: clarityStore.activeTopicLabels.count,
+                    maxActiveCount: clarityStore.maxActiveTopicCount,
+                    selectedCount: clarityStore.selectedTopicLabels.count,
+                    queuedCount: clarityStore.queuedTopicLabels.count,
+                    isExpanded: showsTopicControls,
+                    onToggle: {
+                        withAnimation(.snappy(duration: 0.22)) {
+                            showsTopicControls.toggle()
                         }
-
-                        PulsePracticeCTA {
-                            activePracticeSheet = .selection
-                        }
-
-                        privacyNote
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 18)
-                    .padding(.bottom, 40)
+                )
+
+                if showsTopicControls {
+                    PulseTopicPickerCard(
+                        clarityStore: clarityStore,
+                        customTopic: $customTopic,
+                        selectedCustomTopicIcon: $selectedCustomTopicIcon
+                    )
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                }
+
+                if shouldShowPulseContent {
+                    ForEach(pulse.displayTopicPulses) { topicPulse in
+                        TopicPulseSection(
+                            topicPulse: topicPulse,
+                            topicIcon: clarityStore.icon(forTopicLabel: topicPulse.topic),
+                            onAction: handle,
+                            onOpenDetails: { card in
+                                presentCardDetail(card.id)
+                            }
+                        )
+                    }
+
+                    SharedPulseSection(
+                        cards: sharedPulseCards,
+                        onAction: handle,
+                        onOpenDetails: { card in
+                            presentCardDetail(card.id)
+                        }
+                    )
+                }
+
+                PulsePracticeCTA {
+                    presentPracticeSheet(.selection)
+                }
+
+                PulsePrivacyNote()
+            }
+            .overlay(alignment: .topLeading) {
+                if showsDismissButton {
+                    PulseDismissButton {
+                        dismiss()
+                    }
+                        .padding(.leading, 20)
+                        .padding(.top, 52)
                 }
             }
-            .navigationTitle("Pulse")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(MoriColors.forestPaper, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarColorScheme(.light, for: .navigationBar)
+            .navigationTitle("")
+            .toolbar(.hidden, for: .navigationBar)
+            .navigationDestination(for: PulseRoute.self) { route in
+                switch route {
+                case .recoverySignals:
+                    MoriRecoveryDetailView(
+                        snapshot: recoveryStore.snapshot,
+                        onStartPractice: startPractice,
+                        onQuickComplete: completePractice
+                    )
+                }
+            }
             .task {
+                await recoveryStore.refresh()
+                openRecoveryDetailsForUITestIfNeeded()
                 await loadPulse(force: false)
             }
-            .sheet(item: $activePracticeSheet) { sheet in
-                switch sheet {
-                case .selection:
-                    MoriPracticeSelectionSheet(
-                        title: "Reset with a Practice",
-                        subtitle: "Close the Pulse with one grounded action instead of another scan.",
-                        practices: MoriPractice.plantSeedChoices,
-                        onStartVerification: startManualVerification
-                    )
-                case .verification(let practice):
-                    MoriPracticeVerificationSheet(
-                        practice: practice,
-                        onComplete: completePractice
-                    )
-                case .completion(let practice, let seeds):
-                    MoriPracticeCompletionSheet(practice: practice, seeds: seeds)
-                }
+            .sheet(item: $activeSheet) { sheet in
+                activeSheetContent(sheet)
             }
+            .moriKeyboardDoneToolbar()
         }
     }
 
-    private var topicPicker: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            MoriSectionTitle(
-                title: "Topics",
-                subtitle: "Choose what Mori should gently watch for you. Custom topics stay as labels until a provider is configured."
-            )
-
-            FlowLayout(spacing: 8) {
-                ForEach(PulseTopic.allCases.filter { $0 != .custom }) { topic in
-                    Button {
-                        clarityStore.toggleTopic(topic)
-                    } label: {
-                        MoriPill(
-                            title: topic.title,
-                            symbolName: topic.symbolName,
-                            isSelected: clarityStore.selectedTopics.contains(topic),
-                            tint: MoriColors.forestMoss
-                        )
+    @ViewBuilder
+    private func activeSheetContent(_ sheet: PulseSheet) -> some View {
+        switch sheet {
+        case .card(let cardID):
+            if let cardBinding = bindingForCard(cardID) {
+                PulseCardDetailSheet(
+                    card: cardBinding,
+                    isAnswering: answeringCardIDs.contains(cardID),
+                    errorMessage: followUpErrors[cardID],
+                    onAsk: { question in
+                        await askFollowUp(cardID: cardID, question: question, appendUserMessage: true)
+                    },
+                    onRetry: {
+                        await retryFollowUp(cardID: cardID)
+                    },
+                    onOpenPractices: {
+                        presentPracticeSheet(.selection)
                     }
-                    .buttonStyle(.plain)
-                }
-            }
-
-            HStack(spacing: 10) {
-                Menu {
-                    ForEach(MoriCustomPulseTopicIcon.allCases) { icon in
-                        Button {
-                            selectedCustomTopicIcon = icon
-                        } label: {
-                            Label(icon.rawValue, systemImage: icon.rawValue)
-                        }
-                    }
-                } label: {
-                    Image(systemName: selectedCustomTopicIcon.rawValue)
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(MoriColors.forestCanopy)
-                        .frame(width: 40, height: 40)
-                        .background(MoriColors.forestCanopy.opacity(0.08))
-                        .clipShape(Circle())
-                }
-
-                TextField("Add custom topic", text: $customTopic)
-                    .font(.system(size: 14, weight: .regular))
-                    .foregroundColor(MoriColors.forestCanopy)
-                    .textInputAutocapitalization(.words)
-                    .padding(12)
-                    .background(MoriColors.forestPaperDeep.opacity(0.7))
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-
-                Button {
-                    clarityStore.addCustomTopic(customTopic, symbolName: selectedCustomTopicIcon.rawValue)
-                    customTopic = ""
-                } label: {
-                    Image(systemName: "plus")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(MoriColors.forestCard)
-                        .frame(width: 40, height: 40)
-                        .background(MoriColors.forestCanopy)
-                        .clipShape(Circle())
-                }
-                .buttonStyle(.plain)
-                .disabled(customTopic.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
-            }
-
-            if !clarityStore.customTopics.isEmpty {
-                FlowLayout(spacing: 8) {
-                    ForEach(clarityStore.customTopics, id: \.self) { topic in
-                        Menu {
-                            Button(role: .destructive) {
-                                clarityStore.removeCustomTopic(topic)
-                            } label: {
-                                Label("Remove topic", systemImage: "trash")
-                            }
-                        } label: {
-                            MoriPill(
-                                title: topic,
-                                symbolName: clarityStore.symbolName(forCustomTopic: topic),
-                                isSelected: true,
-                                tint: MoriColors.forestMoss
-                            )
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel("Remove \(topic)")
-                    }
-                }
+                )
             }
         }
-        .moriSanctuaryCard(cornerRadius: 22, padding: 18)
-    }
-
-    private var pulseHeader: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 5) {
-                    Text("Today's briefing")
-                        .font(.system(size: 22, weight: .semibold, design: .rounded))
-                        .foregroundColor(MoriColors.forestCanopy)
-
-                    Text(pulse.generatedAt.formatted(date: .abbreviated, time: .shortened))
-                        .font(.system(size: 13, weight: .regular))
-                        .foregroundColor(MoriColors.forestMuted)
-                }
-
-                Spacer()
-
-                Button {
-                    Task { await loadPulse(force: true) }
-                } label: {
-                    Label(isLoading ? "Updating" : "Refresh", systemImage: isLoading ? "hourglass" : "arrow.clockwise")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(MoriColors.forestCanopy)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 9)
-                        .background(MoriColors.forestCanopy.opacity(0.08))
-                        .clipShape(Capsule())
-                }
-                .buttonStyle(.plain)
-                .disabled(isLoading)
-            }
-
-            HStack(spacing: 10) {
-                MoriPill(title: "\(pulse.reclaimedMinutes) min saved", symbolName: "clock", tint: MoriColors.forestMist)
-                MoriPill(title: "\(metrics.clarityScore) clarity", symbolName: "leaf", tint: MoriColors.forestMoss)
-                if pulse.isMock {
-                    MoriPill(title: "mock fallback", symbolName: "wand.and.stars", tint: MoriColors.forestClay)
-                }
-            }
-        }
-        .moriSanctuaryCard(cornerRadius: 22, padding: 18)
-    }
-
-    private var privacyNote: some View {
-        HStack(alignment: .top, spacing: 10) {
-            Image(systemName: "lock.shield")
-                .foregroundColor(MoriColors.forestMoss)
-
-            Text("Mori sends only topic labels and aggregate clarity stats to configured providers. Raw journal, habit, and screen-time details stay local whenever possible.")
-                .font(.system(size: 12, weight: .regular))
-                .foregroundColor(MoriColors.forestMuted)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .padding(.horizontal, 4)
     }
 
     private func loadPulse(force: Bool) async {
+        if shouldUseMockPulseForUITest {
+            var mockPulse = MoriDailyPulse.mock(topics: clarityStore.activeTopicLabels)
+            mockPulse.screenTimeAttemptsAtGeneration = metrics.screenTimeAttemptsToday
+            mockPulse.screenTimeSavedMinutesAtGeneration = metrics.screenTimeSavedMinutesToday
+            pulse = mockPulse
+            pulseErrorMessage = nil
+            return
+        }
+
         if !force,
            let latest = clarityStore.latestPulse,
-           latest.dateKey == MoriDateKey.value() {
+           canUseCachedPulse(latest) {
             pulse = latest
+            pulseErrorMessage = nil
             return
         }
 
         isLoading = true
-        let generated = await MoriPulseService.shared.generateDailyPulse(
-            userContext: clarityStore.userContext(settings: settings),
-            topics: clarityStore.selectedTopicLabels,
-            recentInputs: recentInputs
-        )
-        clarityStore.savePulse(generated)
-        pulse = generated
-        isLoading = false
+        pulseErrorMessage = nil
+        defer { isLoading = false }
+
+        do {
+            var generated = try await MoriPulseService.shared.generateDailyPulse(
+                userContext: clarityStore.userContext(settings: settings),
+                topics: clarityStore.activeTopicLabels,
+                recentInputs: recentInputs
+            )
+            generated.screenTimeAttemptsAtGeneration = metrics.screenTimeAttemptsToday
+            generated.screenTimeSavedMinutesAtGeneration = metrics.screenTimeSavedMinutesToday
+            clarityStore.savePulse(generated)
+            pulse = generated
+        } catch {
+            pulseErrorMessage = error.localizedDescription
+        }
+    }
+
+    private func canUseCachedPulse(_ cachedPulse: MoriDailyPulse) -> Bool {
+        guard cachedPulse.dateKey == MoriDateKey.value(),
+              cachedPulse.isUsableForCurrentLocale,
+              !cachedPulse.topicPulses.isEmpty else {
+            return false
+        }
+
+        let cachedTopics = Set(cachedPulse.topicPulses.map { $0.topic.lowercased() })
+        return activeTopicSet.isSubset(of: cachedTopics)
     }
 
     private var recentInputs: [String] {
-        [
+        var inputs = [
             "Seeds today: \(metrics.seedsToday)",
             "Quiet minutes today: \(metrics.quietMinutesToday)",
-            "Reclaimed minutes today: \(metrics.reclaimedMinutesToday)"
+            "Reclaimed minutes today: \(metrics.reclaimedMinutesToday)",
+            "Screen Time attempts today: \(metrics.screenTimeAttemptsToday), estimated saved \(metrics.screenTimeSavedMinutesToday) minutes"
         ]
+
+        if recoveryInsightOptIn {
+            inputs.append("Recovery summary is user opt-in and contains coarse labels only.")
+            inputs.append(contentsOf: recoveryStore.snapshot.llmInsightLines.map { "Recovery: \($0)" })
+        }
+
+        return inputs
+    }
+
+    private func refreshRecovery() {
+        Task {
+            if recoveryStore.snapshot.status == .needsPermission {
+                await recoveryStore.requestAuthorizationAndRefresh()
+            } else {
+                await recoveryStore.refresh()
+            }
+        }
+    }
+
+    private func refreshPulse() {
+        Task { await loadPulse(force: true) }
+    }
+
+    private func startPractice(_ practice: MoriPractice) {
+        if practice.route == .journal {
+            openJournalPractice()
+        } else {
+            presentPracticeSheet(MoriPracticeSheet.destination(for: practice))
+        }
+    }
+
+    private func openJournalPractice() {
+        dismiss()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+            if !openRoute(.journalTab) {
+                presentPracticeSheet(.journal)
+            }
+        }
+    }
+
+    private func bindingForCard(_ id: UUID) -> Binding<MoriPulseCard>? {
+        guard let current = pulse.card(with: id) else { return nil }
+
+        return Binding(
+            get: {
+                pulse.card(with: id) ?? current
+            },
+            set: { updatedCard in
+                pulse.replaceCard(updatedCard)
+                clarityStore.savePulse(pulse)
+            }
+        )
+    }
+
+    @MainActor
+    private func askFollowUp(cardID: UUID, question: String, appendUserMessage: Bool) async {
+        let trimmed = question.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty,
+              var requestCard = pulse.card(with: cardID) else { return }
+
+        if appendUserMessage {
+            requestCard.followUpMessages.append(
+                MoriPulseFollowUpMessage(role: .user, content: trimmed)
+            )
+            pulse.replaceCard(requestCard)
+        }
+
+        followUpErrors[cardID] = nil
+        answeringCardIDs.insert(cardID)
+        defer { answeringCardIDs.remove(cardID) }
+        clarityStore.savePulse(pulse)
+
+        let requestTopics = pulse.topic(for: cardID).map { [$0] } ?? pulse.topics
+        do {
+            let result = try await MoriPulseService.shared.answerFollowUp(
+                card: requestCard,
+                question: trimmed,
+                topics: requestTopics,
+                userContext: clarityStore.userContext(settings: settings),
+                recentInputs: recentInputs
+            )
+            guard var answerCard = pulse.card(with: cardID) else { return }
+            answerCard.followUpMessages.append(result.message)
+            if !result.followUpPrompts.isEmpty {
+                answerCard.followUpPrompts = result.followUpPrompts
+            }
+            mergeSources(result.message.sources, into: &answerCard)
+            pulse.replaceCard(answerCard)
+            clarityStore.savePulse(pulse)
+        } catch {
+            followUpErrors[cardID] = MoriL10n.string(
+                "pulse.follow_up.error_saved",
+                defaultValue: "Live answer unavailable. Your question is saved."
+            )
+        }
+    }
+
+    @MainActor
+    private func retryFollowUp(cardID: UUID) async {
+        guard let card = pulse.card(with: cardID),
+              let lastQuestion = card.followUpMessages.last(where: { $0.role == .user })?.content else { return }
+
+        await askFollowUp(cardID: cardID, question: lastQuestion, appendUserMessage: false)
+    }
+
+    private func mergeSources(_ sources: [MoriPulseSource], into card: inout MoriPulseCard) {
+        guard !sources.isEmpty else { return }
+
+        var seen = Set(card.sources.map(\.id))
+        for source in sources where !seen.contains(source.id) {
+            card.sources.append(source)
+            seen.insert(source.id)
+        }
     }
 
     private func handle(_ card: MoriPulseCard) {
         switch card.kind {
         case .worthKnowing:
-            clarityStore.record(kind: .pulseRead, title: "Read useful signal", seeds: 1, minutes: pulse.reclaimedMinutes)
+            clarityStore.record(kind: .pulseRead, title: MoriL10n.string("pulse.record.read_useful_signal", defaultValue: "Read useful signal"), seeds: 1, minutes: pulse.reclaimedMinutes)
         case .worthIgnoring:
-            clarityStore.record(kind: .pulseRead, title: "Skipped noisy loop", seeds: 2, minutes: 5)
+            clarityStore.record(kind: .pulseRead, title: MoriL10n.string("pulse.record.skipped_noisy_loop", defaultValue: "Skipped noisy loop"), seeds: 2, minutes: 5)
         case .attentionTrap:
-            clarityStore.record(kind: .urgeCheckIn, title: "Named an attention trap", seeds: 2, minutes: 3)
+            clarityStore.record(kind: .urgeCheckIn, title: MoriL10n.string("pulse.record.named_attention_trap", defaultValue: "Named an attention trap"), seeds: 2, minutes: 3)
         case .resetAction:
-            activePracticeSheet = .selection
+            presentPracticeSheet(.selection)
         case .reclaimedTime:
-            clarityStore.record(kind: .pulseRead, title: "Accepted reclaimed time", seeds: 1, minutes: card.minutes ?? pulse.reclaimedMinutes)
+            clarityStore.record(kind: .pulseRead, title: MoriL10n.string("pulse.record.accepted_reclaimed_time", defaultValue: "Accepted reclaimed time"), seeds: 1, minutes: card.minutes ?? pulse.reclaimedMinutes)
         }
     }
 
     private func completePractice(_ practice: MoriPractice) {
         let action = clarityStore.recordPractice(practice)
-        activePracticeSheet = .completion(practice, action.seeds)
+        presentPracticeSheet(.completion(practice, action.seeds))
     }
 
-    private func startManualVerification(_ practice: MoriPractice) {
-        activePracticeSheet = .verification(practice)
-    }
-}
-
-private struct PulsePracticeCTA: View {
-    let onOpenPractices: () -> Void
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            MoriSectionTitle(
-                title: "Close the loop",
-                subtitle: "End with a practice so Pulse stays an attention filter, not a feed."
-            )
-
-            Button(action: onOpenPractices) {
-                HStack(spacing: 12) {
-                    Image(systemName: "leaf.arrow.circlepath")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(MoriColors.forestMoss)
-                        .frame(width: 38, height: 38)
-                        .background(MoriColors.forestMoss.opacity(0.12))
-                        .clipShape(Circle())
-
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text("Choose a reset practice")
-                            .font(.system(size: 16, weight: .semibold, design: .rounded))
-                            .foregroundColor(MoriColors.forestCanopy)
-
-                        Text("Breathe, Settle, Journal, Focus, Quiet Mode, or walk offline.")
-                            .font(.system(size: 13, weight: .regular))
-                            .foregroundColor(MoriColors.forestMuted)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-
-                    Spacer(minLength: 0)
-
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(MoriColors.forestMuted.opacity(0.7))
-                }
-                .padding(12)
-                .background(MoriColors.forestPaperDeep.opacity(0.55))
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+    private func presentPracticeSheet(_ sheet: MoriPracticeSheet) {
+        if activeSheet != nil {
+            activeSheet = nil
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.25) {
+                openRoute(.practiceSheet(sheet))
             }
-            .buttonStyle(.plain)
-        }
-        .moriSanctuaryCard(cornerRadius: 22, padding: 18)
-    }
-}
-
-private struct PulseCardView: View {
-    let card: MoriPulseCard
-    let onAction: () -> Void
-
-    private var tint: Color {
-        switch card.kind {
-        case .worthKnowing: return MoriColors.forestMoss
-        case .worthIgnoring: return MoriColors.forestMist
-        case .attentionTrap: return MoriColors.forestClay
-        case .resetAction: return MoriColors.forestFern
-        case .reclaimedTime: return MoriColors.forestSeed
+        } else {
+            openRoute(.practiceSheet(sheet))
         }
     }
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .top, spacing: 12) {
-                Image(systemName: card.kind.symbolName)
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundColor(tint)
-                    .frame(width: 38, height: 38)
-                    .background(tint.opacity(0.13))
-                    .clipShape(Circle())
+    private func presentCardDetail(_ id: UUID) {
+        activeSheet = .card(id)
+    }
 
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(card.kind.title)
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(tint)
+    private func openRecoveryDetails() {
+        navigationPath.append(.recoverySignals)
+    }
 
-                    Text(card.headline)
-                        .font(.system(size: 18, weight: .semibold, design: .rounded))
-                        .foregroundColor(MoriColors.forestCanopy)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-
-            Text(card.body)
-                .font(.system(size: 15, weight: .regular))
-                .foregroundColor(MoriColors.forestMuted)
-                .lineSpacing(2)
-                .fixedSize(horizontal: false, vertical: true)
-
-            if let minutes = card.minutes {
-                MoriForestProgressBar(value: Double(min(minutes, 45)) / 45.0, tint: tint)
-            }
-
-            Button(action: onAction) {
-                Label(card.actionLabel ?? "Mark useful", systemImage: "checkmark.circle")
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(MoriColors.forestCanopy)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(tint.opacity(0.12))
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-            }
-            .buttonStyle(.plain)
+    private func openRecoveryDetailsForUITestIfNeeded() {
+        guard shouldOpenRecoveryDetailsForUITest,
+              recoveryStore.snapshot.status == .ready,
+              !navigationPath.contains(.recoverySignals) else {
+            return
         }
-        .moriSanctuaryCard(cornerRadius: 22, padding: 18)
+
+        navigationPath.append(.recoverySignals)
     }
 }
 

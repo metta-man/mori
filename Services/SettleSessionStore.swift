@@ -7,13 +7,16 @@ final class SettleSessionStore: ObservableObject {
 
     @Published private(set) var sessions: [SettleSession] = []
 
-    private let sessionsKey = "mori_settle_sessions"
-    private let userDefaults = UserDefaults.standard
-    private let encoder = JSONEncoder()
-    private let decoder = JSONDecoder()
+    private let persistence: SettleSessionPersistence
+    private let statsCalculator: SettleSessionStatsCalculator
 
-    private init() {
-        sessions = loadSessions()
+    private init(
+        persistence: SettleSessionPersistence = SettleSessionPersistence(),
+        statsCalculator: SettleSessionStatsCalculator = SettleSessionStatsCalculator()
+    ) {
+        self.persistence = persistence
+        self.statsCalculator = statsCalculator
+        sessions = persistence.loadSessions()
         pruneOldSessions()
     }
 
@@ -33,7 +36,7 @@ final class SettleSessionStore: ObservableObject {
             actualSeconds: actualSeconds,
             outcome: completed ? .completed : .endedEarly,
             intervalBellMinutes: intervalBellMinutes,
-            seedsEarned: completed ? seeds(for: plannedMinutes) : 0
+            seedsEarned: completed ? statsCalculator.seeds(for: plannedMinutes) : 0
         )
 
         sessions.insert(session, at: 0)
@@ -56,60 +59,15 @@ final class SettleSessionStore: ObservableObject {
     }
 
     func weeklySummary(for date: Date = Date()) -> SettleWeeklySummary {
-        let weekly = sessionsInWeek(containing: date).filter(\.completed)
-        let totalMinutes = weekly.reduce(0) { $0 + $1.actualMinutes }
-        let days = Set(weekly.map { Calendar.current.startOfDay(for: $0.startedAt) }).count
-        let sessionProgress = min(1.0, Double(weekly.count) / 5.0)
-        let minuteProgress = min(1.0, Double(totalMinutes) / 90.0)
-        let consistencyProgress = min(1.0, Double(days) / 5.0)
-        let bloom = min(1.0, sessionProgress * 0.35 + minuteProgress * 0.40 + consistencyProgress * 0.25)
-
-        return SettleWeeklySummary(
-            completedSessions: weekly.count,
-            totalMinutes: totalMinutes,
-            consistencyDays: days,
-            bloomProgress: bloom
-        )
+        statsCalculator.weeklySummary(for: sessions, containing: date)
     }
 
     func recommendedDurationMinutes(for date: Date = Date()) -> Int {
-        let summary = weeklySummary(for: date)
-
-        if summary.completedSessions == 0 {
-            return 10
-        }
-
-        if summary.consistencyDays >= 4 {
-            return 15
-        }
-
-        if summary.totalMinutes < 20 {
-            return 8
-        }
-
-        return 12
+        statsCalculator.recommendedDurationMinutes(for: sessions, containing: date)
     }
 
     func seeds(for plannedMinutes: Int) -> Int {
-        max(2, min(12, plannedMinutes / 5 + 1))
-    }
-
-    private func sessionsInWeek(containing date: Date) -> [SettleSession] {
-        let calendar = moriWeekCalendar
-        guard
-            let startOfWeek = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: date)),
-            let endOfWeek = calendar.date(byAdding: .day, value: 7, to: startOfWeek)
-        else {
-            return []
-        }
-
-        return sessions.filter { $0.startedAt >= startOfWeek && $0.startedAt < endOfWeek }
-    }
-
-    private var moriWeekCalendar: Calendar {
-        var calendar = Calendar.current
-        calendar.firstWeekday = 2
-        return calendar
+        statsCalculator.seeds(for: plannedMinutes)
     }
 
     private func pruneOldSessions() {
@@ -118,16 +76,6 @@ final class SettleSessionStore: ObservableObject {
     }
 
     private func persist() {
-        guard let data = try? encoder.encode(sessions) else { return }
-        userDefaults.set(data, forKey: sessionsKey)
-    }
-
-    private func loadSessions() -> [SettleSession] {
-        guard let data = userDefaults.data(forKey: sessionsKey),
-              let decoded = try? decoder.decode([SettleSession].self, from: data)
-        else {
-            return []
-        }
-        return decoded.sorted { $0.startedAt > $1.startedAt }
+        persistence.saveSessions(sessions)
     }
 }

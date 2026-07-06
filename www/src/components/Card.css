@@ -1,42 +1,49 @@
 /* Mori Card Styles */
 
 .mori-card {
-  background: var(--bg-card);
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(180deg, rgba(255, 250, 240, 0.82), rgba(255, 250, 240, 0.68)),
+    url('../assets/botanical/card-paper.png') center / cover no-repeat,
+    var(--bg-card);
+  background-blend-mode: normal, multiply, normal;
   border-radius: var(--radius-lg);
   padding: var(--space-lg);
   transition: all var(--transition-normal);
+  border: 1px solid var(--border-subtle);
+  box-shadow: var(--shadow-soft);
 }
 
 /* Default Variant */
 .mori-card-default {
-  border: 1px solid rgba(194, 178, 128, 0.1);
-  box-shadow: var(--shadow-soft);
+  border-color: var(--border-subtle);
 }
 
 .mori-card-default:hover {
-  border-color: rgba(194, 178, 128, 0.3);
+  border-color: rgba(36, 56, 51, 0.24);
 }
 
 /* Elevated Variant */
 .mori-card-elevated {
-  border: 1px solid rgba(194, 178, 128, 0.1);
+  border-color: rgba(36, 56, 51, 0.14);
   box-shadow: var(--shadow-medium);
 }
 
 .mori-card-elevated:hover {
-  border-color: var(--mori-sand);
+  border-color: rgba(36, 56, 51, 0.28);
   box-shadow: var(--shadow-strong);
   transform: translateY(-4px);
 }
 
 /* Outlined Variant */
 .mori-card-outlined {
-  border: 1px solid var(--ash-gray);
+  border: 1px solid var(--border-subtle);
   box-shadow: none;
 }
 
 .mori-card-outlined:hover {
-  border-color: var(--mori-sand);
+  border-color: rgba(36, 56, 51, 0.28);
 }
 
 /* Clickable Card */
@@ -49,7 +56,7 @@
 }
 
 .mori-card[role="button"]:focus {
-  outline: 2px solid var(--mori-sand);
+  outline: 2px solid rgba(95, 116, 92, 0.48);
   outline-offset: 2px;
 }
 

@@ -1,293 +1,246 @@
-import { motion } from 'framer-motion'
-import { useState, useEffect } from 'react'
+import { motion, useReducedMotion } from 'framer-motion'
+import { useEffect, useState } from 'react'
+import appLimitPaper from './assets/botanical/app-limit-paper.png'
+import onboardingPaper from './assets/botanical/onboarding-paper.png'
+import practicePaper from './assets/botanical/practice-paper.png'
+import todayPaper from './assets/botanical/today-paper.png'
+import { MoriIcon } from './components/Icon'
+import {
+  dictionaries,
+  initialLocale,
+  localeOptions,
+  type MoriCopy,
+  type MoriWebLocale,
+} from './i18n'
 
-// Hero Section with Life Grid
-function Hero() {
-  const [filledCells, setFilledCells] = useState(0)
-  const totalCells = 80 // 8x10 grid for demo
-  
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setFilledCells(prev => {
-        if (prev >= totalCells) {
-          clearInterval(interval)
-          return prev
-        }
-        return prev + 1
-      })
-    }, 30)
-    return () => clearInterval(interval)
-  }, [])
+type CopyProps = {
+  copy: MoriCopy
+}
 
+type FlowStepIndex = 0 | 1 | 2
+
+const previewImages = [appLimitPaper, todayPaper, practicePaper] as const
+
+function LanguageSelector({
+  locale,
+  setLocale,
+  copy,
+}: CopyProps & {
+  locale: MoriWebLocale
+  setLocale: (locale: MoriWebLocale) => void
+}) {
   return (
-    <section className="min-h-screen flex flex-col items-center justify-center relative overflow-hidden px-4 py-20">
-      <div className="absolute inset-0 bg-gradient-to-b from-[#faf8f5] to-[#f0ebe3]" />
-      <div className="absolute inset-0 opacity-5" style={{
-        backgroundImage: `radial-gradient(circle at 1px 1px, #1a3c34 1px, transparent 0)`,
-        backgroundSize: '40px 40px'
-      }} />
-      
-      <motion.div 
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.8 }}
-        className="relative z-10 text-center max-w-4xl mx-auto"
+    <label className="fixed right-4 top-4 z-50 flex items-center gap-2 rounded-[8px] border border-[#243833]/20 bg-[#fffaf0]/80 px-3 py-2 text-sm font-ui text-[#243833] shadow-[0_12px_30px_rgba(36,56,51,0.08)] backdrop-blur">
+      <span className="sr-only">{copy.languageLabel}</span>
+      <select
+        value={locale}
+        onChange={(event) => setLocale(event.target.value as MoriWebLocale)}
+        className="bg-transparent text-sm font-medium outline-none"
+        aria-label={copy.languageLabel}
       >
-        <span className="inline-block px-4 py-2 bg-[#1a3c34]/10 text-[#1a3c34] rounded-full text-sm font-ui mb-6">
-          Now in Early Access
-        </span>
-        <h1 className="text-5xl md:text-7xl font-heading text-[#1a3c34] mb-6 leading-tight">
-          Nurture Good Habits,<br/>
-          <span className="italic text-[#c47d5e]">One Day at a Time</span>
-        </h1>
-        <p className="text-xl md:text-2xl text-[#2c2c2c]/70 mb-10 max-w-2xl mx-auto font-body">
-          Track habits, build gratitude, and grow mindfully. 
-          Simple tools for a more intentional life.
-        </p>
-        <div className="flex flex-col sm:flex-row gap-4 justify-center">
-          <button className="px-8 py-4 bg-[#1a3c34] text-white rounded-full font-ui font-medium text-lg hover:bg-[#2a5c4e] transition-all hover:scale-105">
-            Download for iOS
-          </button>
-          <button className="px-8 py-4 border-2 border-[#1a3c34] text-[#1a3c34] rounded-full font-ui font-medium text-lg hover:bg-[#1a3c34]/5 transition-all">
-            Watch Demo
-          </button>
-        </div>
-      </motion.div>
+        {localeOptions.map((option) => (
+          <option key={option.locale} value={option.locale}>
+            {option.label}
+          </option>
+        ))}
+      </select>
+    </label>
+  )
+}
 
-      {/* Life Grid Preview */}
-      <motion.div 
-        initial={{ opacity: 0, scale: 0.9 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ delay: 0.4, duration: 0.8 }}
-        className="mt-16 relative z-10"
-      >
-        <div className="glass-card p-6">
-          <div className="grid grid-cols-10 gap-1 w-64 h-80 mx-auto">
-            {Array.from({ length: totalCells }).map((_, i) => (
-              <motion.div
-                key={i}
-                initial={{ backgroundColor: '#e5e5e5' }}
-                animate={{ 
-                  backgroundColor: i < filledCells ? '#8fae8b' : '#e5e5e5'
-                }}
-                transition={{ duration: 0.3 }}
-                className="rounded-sm"
-              />
-            ))}
+function AppLimitPreview({ copy }: CopyProps) {
+  const [activeStep, setActiveStep] = useState<FlowStepIndex>(0)
+  const step = copy.steps[activeStep]
+
+  function advanceStep() {
+    setActiveStep(((activeStep + 1) % 3) as FlowStepIndex)
+  }
+
+  return (
+    <div className="mori-experience-grid">
+      <div className="mori-app-preview" aria-label={copy.previewLabel}>
+        <img
+          src={previewImages[activeStep]}
+          alt=""
+          aria-hidden="true"
+          className="mori-preview-paper"
+        />
+        <div className="mori-app-chrome">
+          <div className="mori-preview-status">
+            <span>{copy.heroPanelTitle}</span>
+            <strong>{copy.heroPanelSubtitle}</strong>
           </div>
-          <p className="text-center mt-4 text-sm text-[#2c2c2c]/60 font-ui">
-            Your journey, visualized
-          </p>
-        </div>
-      </motion.div>
-    </section>
-  )
-}
 
-// Features Section
-function Features() {
-  const features = [
-    { icon: '🎯', title: 'Habit Tracking', desc: 'Simple daily check-ins for habits that matter' },
-    { icon: '🙏', title: 'Gratitude Journal', desc: 'Capture moments of thankfulness each day' },
-    { icon: '📊', title: 'Progress Insights', desc: 'Visualize your growth over weeks and months' },
-    { icon: '🌱', title: 'Gentle Reminders', desc: 'Kind nudges to keep you on track' }
-  ]
+          <div className="mori-preview-list" aria-live="polite">
+            {copy.steps.map((item, index) => {
+              const isActive = index === activeStep
+              const isComplete = index < activeStep
 
-  return (
-    <section className="py-24 px-4 bg-white">
-      <div className="max-w-6xl mx-auto">
-        <motion.h2 
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          className="text-4xl md:text-5xl font-heading text-center text-[#1a3c34] mb-16"
-        >
-          Everything You Need to <span className="italic text-[#c47d5e]">Grow</span>
-        </motion.h2>
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {features.map((f, i) => (
-            <motion.div
-              key={i}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ delay: i * 0.1 }}
-              className="glass-card p-6 text-center hover:shadow-lg transition-shadow"
-            >
-              <div className="text-4xl mb-4">{f.icon}</div>
-              <h3 className="text-xl font-heading text-[#1a3c34] mb-2">{f.title}</h3>
-              <p className="text-[#2c2c2c]/70 font-body">{f.desc}</p>
-            </motion.div>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// How It Works
-function HowItWorks() {
-  const steps = [
-    { num: '01', title: 'Choose Your Habits', desc: 'Start with suggestions or create your own' },
-    { num: '02', title: 'Check In Daily', desc: 'A simple moment to reflect and record' },
-    { num: '03', title: 'Watch Yourself Grow', desc: 'See your progress in beautiful visualizations' }
-  ]
-
-  return (
-    <section className="py-24 px-4 bg-[#faf8f5]">
-      <div className="max-w-6xl mx-auto">
-        <h2 className="text-4xl md:text-5xl font-heading text-center text-[#1a3c34] mb-16">
-          How It <span className="italic text-[#c47d5e]">Works</span>
-        </h2>
-        <div className="grid md:grid-cols-3 gap-8">
-          {steps.map((s, i) => (
-            <div key={i} className="text-center">
-              <div className="text-6xl font-heading text-[#d4a853]/30 mb-4">{s.num}</div>
-              <h3 className="text-2xl font-heading text-[#1a3c34] mb-2">{s.title}</h3>
-              <p className="text-[#2c2c2c]/70 font-body">{s.desc}</p>
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// Pricing
-function Pricing() {
-  return (
-    <section className="py-24 px-4 bg-white">
-      <div className="max-w-4xl mx-auto text-center">
-        <h2 className="text-4xl md:text-5xl font-heading text-[#1a3c34] mb-6">
-          Simple, <span className="italic text-[#c47d5e]">Free</span> Pricing
-        </h2>
-        <p className="text-xl text-[#2c2c2c]/70 mb-12 font-body">
-          Mori is free to download and use. Premium features coming soon.
-        </p>
-        
-        <div className="grid md:grid-cols-2 gap-8 max-w-3xl mx-auto">
-          <div className="glass-card p-8">
-            <h3 className="text-2xl font-heading text-[#1a3c34] mb-2">Free</h3>
-            <div className="text-4xl font-heading text-[#1a3c34] mb-4">$0</div>
-            <ul className="text-left space-y-3 text-[#2c2c2c]/70 font-body">
-              <li>✓ Unlimited habit tracking</li>
-              <li>✓ Gratitude journal</li>
-              <li>✓ Progress visualizations</li>
-              <li>✓ iCloud sync</li>
-            </ul>
-            <button className="mt-6 w-full py-3 bg-[#1a3c34] text-white rounded-full font-ui font-medium hover:bg-[#2a5c4e] transition-all">
-              Download Free
-            </button>
+              return (
+                <button
+                  key={item.num}
+                  type="button"
+                  className="mori-preview-row"
+                  data-active={isActive}
+                  onClick={() => setActiveStep(index as FlowStepIndex)}
+                  aria-pressed={isActive}
+                >
+                  <MoriIcon
+                    name={isComplete ? 'leaf' : isActive ? 'focus' : 'timer'}
+                    size={22}
+                  />
+                  <span>
+                    <strong>{item.title}</strong>
+                    <small>{item.desc}</small>
+                  </span>
+                </button>
+              )
+            })}
           </div>
-          
-          <div className="glass-card p-8 border-2 border-[#d4a853]">
-            <div className="inline-block px-3 py-1 bg-[#d4a853]/20 text-[#d4a853] rounded-full text-sm font-ui mb-4">
-              COMING SOON
-            </div>
-            <h3 className="text-2xl font-heading text-[#1a3c34] mb-2">Premium</h3>
-            <div className="text-4xl font-heading text-[#1a3c34] mb-4">$4.99<span className="text-lg">/mo</span></div>
-            <ul className="text-left space-y-3 text-[#2c2c2c]/70 font-body">
-              <li>✓ Everything in Free</li>
-              <li>✓ Advanced analytics</li>
-              <li>✓ Custom themes</li>
-              <li>✓ Priority support</li>
-            </ul>
-            <button className="mt-6 w-full py-3 border-2 border-[#1a3c34] text-[#1a3c34] rounded-full font-ui font-medium hover:bg-[#1a3c34]/5 transition-all" disabled>
-              Coming Soon
-            </button>
+
+          <div className="mori-preview-tabbar" aria-hidden="true">
+            <span data-active="true">
+              <MoriIcon name="home" size={17} />
+              {copy.surfaceToday}
+            </span>
+            <span>
+              <MoriIcon name="breathe" size={17} />
+              {copy.surfaceReset}
+            </span>
+            <span>
+              <MoriIcon name="journal" size={17} />
+              {copy.surfaceLog}
+            </span>
           </div>
         </div>
       </div>
-    </section>
-  )
-}
 
-// FAQ
-function FAQ() {
-  const [openIndex, setOpenIndex] = useState<number | null>(null)
-  const faqs = [
-    { q: 'Is Mori free to use?', a: 'Yes! The core features of Mori are completely free. We believe everyone should have access to tools that help them grow.' },
-    { q: 'Is my data private?', a: 'Absolutely. Your data is stored locally on your device and synced via iCloud. We never sell your personal information.' },
-    { q: 'Can I use Mori on Android?', a: 'Mori is currently available on iOS. Android support is planned for the future.' },
-    { q: 'How do I get started?', a: 'Simply download Mori from the App Store, create an account, and start adding habits you want to build. The app will guide you through the process.' },
-    { q: 'What makes Mori different?', a: 'Mori focuses on gentle, sustainable habit building. Unlike gamified apps that use streaks and pressure, Mori emphasizes reflection and growth.' }
-  ]
-
-  return (
-    <section className="py-24 px-4 bg-[#faf8f5]">
-      <div className="max-w-3xl mx-auto">
-        <h2 className="text-4xl md:text-5xl font-heading text-center text-[#1a3c34] mb-12">
-          Frequently Asked <span className="italic text-[#c47d5e]">Questions</span>
-        </h2>
-        <div className="space-y-4">
-          {faqs.map((faq, i) => (
-            <div key={i} className="glass-card overflow-hidden">
-              <button
-                onClick={() => setOpenIndex(openIndex === i ? null : i)}
-                className="w-full p-6 text-left flex justify-between items-center"
-              >
-                <span className="font-heading text-lg text-[#1a3c34]">{faq.q}</span>
-                <span className="text-[#c47d5e] text-2xl">{openIndex === i ? '−' : '+'}</span>
-              </button>
-              {openIndex === i && (
-                <div className="px-6 pb-6 text-[#2c2c2c]/70 font-body">
-                  {faq.a}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      </div>
-    </section>
-  )
-}
-
-// CTA
-function CTA() {
-  return (
-    <section className="py-24 px-4 bg-[#1a3c34] text-white text-center">
-      <div className="max-w-3xl mx-auto">
-        <h2 className="text-4xl md:text-5xl font-heading mb-6">
-          Start Your Journey Today
-        </h2>
-        <p className="text-xl text-white/70 mb-10 font-body">
-          Join thousands who are building better habits, one day at a time.
-        </p>
-        <button className="px-10 py-5 bg-[#c47d5e] text-white rounded-full font-ui font-medium text-lg hover:bg-[#d48d6e] transition-all hover:scale-105">
-          Download for iOS — It's Free
+      <div className="mori-flow-copy">
+        <span className="mori-kicker">{copy.earlyAccess}</span>
+        <h2>{step.title}</h2>
+        <p>{step.desc}</p>
+        <button type="button" className="mori-flow-button" onClick={advanceStep}>
+          <MoriIcon name="play" size={18} />
+          {activeStep === 2 ? copy.ctaBody : copy.watchDemo}
         </button>
       </div>
+    </div>
+  )
+}
+
+function ProductPromise({ copy }: CopyProps) {
+  const featureImages = [appLimitPaper, practicePaper, todayPaper, onboardingPaper]
+
+  return (
+    <section className="mori-proof-band" aria-labelledby="mori-proof-title">
+      <div className="mori-proof-inner">
+        <div>
+          <span className="mori-kicker">{copy.weeksHeldSoftly}</span>
+          <h2 id="mori-proof-title">
+            {copy.featuresTitle} <em>{copy.featuresAccent}</em>
+          </h2>
+        </div>
+
+        <div className="mori-proof-grid">
+          {copy.features.map((feature, index) => (
+            <article key={feature.title} className="mori-proof-item">
+              <img
+                src={featureImages[index % featureImages.length]}
+                alt=""
+                aria-hidden="true"
+              />
+              <span>{feature.mark}</span>
+              <h3>{feature.title}</h3>
+              <p>{feature.desc}</p>
+            </article>
+          ))}
+        </div>
+      </div>
     </section>
   )
 }
 
-// Footer
-function Footer() {
+function Hero({ copy }: CopyProps) {
+  const shouldReduceMotion = useReducedMotion()
+  const copyInitial = shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 24 }
+  const previewInitial = shouldReduceMotion ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }
+  const copyTransition = shouldReduceMotion ? { duration: 0 } : { duration: 0.65 }
+  const previewTransition = shouldReduceMotion ? { duration: 0 } : { delay: 0.12, duration: 0.65 }
+
   return (
-    <footer className="py-12 px-4 bg-[#faf8f5] border-t border-[#1a3c34]/10">
-      <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-        <div className="text-2xl font-heading text-[#1a3c34]">Mori</div>
-        <div className="flex gap-8 font-ui text-sm text-[#2c2c2c]/60">
-          <a href="#" className="hover:text-[#1a3c34]">Privacy</a>
-          <a href="#" className="hover:text-[#1a3c34]">Terms</a>
-          <a href="#" className="hover:text-[#1a3c34]">Contact</a>
-        </div>
-        <div className="text-sm text-[#2c2c2c]/40 font-body">
-          © 2026 Metta Labs. All rights reserved.
-        </div>
+    <section className="mori-web-hero">
+      <img src={onboardingPaper} alt="" aria-hidden="true" className="mori-hero-paper" />
+      <div className="mori-paper-grain" />
+      <div className="mori-hero-content">
+        <motion.div
+          initial={copyInitial}
+          animate={{ opacity: 1, y: 0 }}
+          transition={copyTransition}
+          className="mori-hero-copy"
+        >
+          <span className="mori-kicker">{copy.footerBrandLine}</span>
+          <h1>
+            {copy.heroTitleLine}
+            <em>{copy.heroTitleAccent}</em>
+          </h1>
+          <p>{copy.heroBody}</p>
+          <div className="mori-hero-actions">
+            <button type="button">
+              <MoriIcon name="leaf" size={18} />
+              {copy.downloadIos}
+            </button>
+            <a href="#first-limit">
+              <MoriIcon name="play" size={18} />
+              {copy.watchDemo}
+            </a>
+          </div>
+        </motion.div>
+
+        <motion.div
+          id="first-limit"
+          initial={previewInitial}
+          animate={{ opacity: 1, y: 0 }}
+          transition={previewTransition}
+        >
+          <AppLimitPreview copy={copy} />
+        </motion.div>
       </div>
+    </section>
+  )
+}
+
+function Footer({ copy }: CopyProps) {
+  return (
+    <footer className="mori-footer">
+      <div>
+        <strong>Mori</strong>
+        <span>{copy.footerBrandLine}</span>
+      </div>
+      <nav aria-label="Footer">
+        <a href="#">{copy.privacy}</a>
+        <a href="#">{copy.terms}</a>
+        <a href="#">{copy.contact}</a>
+      </nav>
+      <small>{copy.copyright}</small>
     </footer>
   )
 }
 
 export default function App() {
+  const [locale, setLocale] = useState<MoriWebLocale>(() => initialLocale())
+  const copy = dictionaries[locale]
+
+  useEffect(() => {
+    window.localStorage.setItem('mori.locale', locale)
+    document.documentElement.lang = locale
+  }, [locale])
+
   return (
     <div className="min-h-screen">
-      <Hero />
-      <Features />
-      <HowItWorks />
-      <Pricing />
-      <FAQ />
-      <CTA />
-      <Footer />
+      <LanguageSelector locale={locale} setLocale={setLocale} copy={copy} />
+      <Hero copy={copy} />
+      <ProductPromise copy={copy} />
+      <Footer copy={copy} />
     </div>
   )
 }

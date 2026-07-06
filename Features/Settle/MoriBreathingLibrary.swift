@@ -1,6 +1,7 @@
 import SwiftUI
 
 enum MoriBreathingTechniqueID: String, CaseIterable, Identifiable, Codable {
+    case longExhale = "Long Exhale (4-6)"
     case nadiShodhana = "Nadi Shodhana (4s in - 6s out)"
     case coherent5 = "Coherent (1min 5x)"
     case coherent55 = "Coherent (5.5s in - 5.5s out)"
@@ -26,8 +27,8 @@ enum MoriBreathingDifficulty: String, Codable, CaseIterable, Identifiable {
 
     var tint: Color {
         switch self {
-        case .beginner: return MoriColors.forestMoss
-        case .intermediate: return MoriColors.forestClay
+        case .beginner: return MoriColors.botanicalMoss
+        case .intermediate: return MoriColors.botanicalClay
         case .advanced: return Color(hex: "#B85C54")
         }
     }
@@ -37,6 +38,17 @@ enum MoriBreathingDifficulty: String, Codable, CaseIterable, Identifiable {
         case .beginner: return 1
         case .intermediate: return 2
         case .advanced: return 3
+        }
+    }
+
+    var icon: MoriBitmapIcon {
+        switch self {
+        case .beginner:
+            return .leaf
+        case .intermediate:
+            return .focus
+        case .advanced:
+            return .roots
         }
     }
 }
@@ -81,20 +93,24 @@ struct MoriBreathingTechnique: Identifiable, Codable, Equatable {
     let iconName: String
     let gradientColors: [String]
 
+    var icon: MoriBitmapIcon {
+        .fromLegacySymbolName(iconName)
+    }
+
     var techniqueID: MoriBreathingTechniqueID? {
         MoriBreathingTechniqueID(rawValue: id)
     }
 
     var durationDisplay: String {
         if id == MoriBreathingTechniqueID.custom.rawValue {
-            return "Varies by settings"
+            return MoriL10n.display("Varies by settings")
         }
-        return String(format: "%.1f breaths/min", breathPattern.breathsPerMinute)
+        return MoriL10n.string("breath.frequency.value", defaultValue: "%.1f breaths/min", arguments: [breathPattern.breathsPerMinute])
     }
 
     var patternDisplay: String {
         if id == MoriBreathingTechniqueID.custom.rawValue {
-            return "Set in settings"
+            return MoriL10n.display("Set in settings")
         }
 
         return Self.patternDisplay(for: breathPattern)
@@ -102,13 +118,13 @@ struct MoriBreathingTechnique: Identifiable, Codable, Equatable {
 
     static func patternDisplay(for pattern: MoriBreathPattern) -> String {
         var parts: [String] = []
-        parts.append("\(formatSeconds(pattern.inhale)) in")
+        parts.append(MoriL10n.string("breath.pattern.in", defaultValue: "%@ in", arguments: [formatSeconds(pattern.inhale)]))
         if let hold = pattern.inhaleHold, hold > 0 {
-            parts.append("\(formatSeconds(hold)) hold")
+            parts.append(MoriL10n.string("breath.pattern.hold", defaultValue: "%@ hold", arguments: [formatSeconds(hold)]))
         }
-        parts.append("\(formatSeconds(pattern.exhale)) out")
+        parts.append(MoriL10n.string("breath.pattern.out", defaultValue: "%@ out", arguments: [formatSeconds(pattern.exhale)]))
         if let hold = pattern.exhaleHold, hold > 0 {
-            parts.append("\(formatSeconds(hold)) hold")
+            parts.append(MoriL10n.string("breath.pattern.hold", defaultValue: "%@ hold", arguments: [formatSeconds(hold)]))
         }
         return parts.joined(separator: ", ")
     }
@@ -124,15 +140,30 @@ struct MoriBreathingTechnique: Identifiable, Codable, Equatable {
 enum MoriBreathingTechniqueRepository {
     static let techniques: [MoriBreathingTechnique] = [
         MoriBreathingTechnique(
+            id: MoriBreathingTechniqueID.longExhale.rawValue,
+            name: "Long Exhale (4-6)",
+            shortDescription: "A simple longer-exhale reset before opening a feed",
+            longDescription: "Long Exhale is a plain, accessible rhythm for quick state shifts: breathe in for 4 seconds, then breathe out for 6 seconds. It keeps the reset lightweight while gently biasing attention toward the exhale.",
+            difficulty: .beginner,
+            benefits: ["Creates a quick pause", "Supports calmer transitions", "Keeps the rhythm easy to follow", "Avoids breath holds", "Fits short resets"],
+            scienceExplanation: "Longer exhales can make slow breathing feel more settling without adding breath retention. The 10-second cycle stays simple enough for short interruption moments.",
+            howToSteps: ["Sit or stand comfortably", "Inhale gently through your nose for 4 seconds", "Exhale slowly for 6 seconds", "Keep the breath quiet and unforced", "Continue until the reset timer completes"],
+            bestFor: ["Before-feed resets", "Short urges", "Beginner breathing", "Gentle calming", "Fast transitions"],
+            breathPattern: MoriBreathPattern(inhale: 4, inhaleHold: nil, exhale: 6, exhaleHold: nil),
+            category: "Reset",
+            iconName: "leaf.arrow.circlepath",
+            gradientColors: ["#687E5E", "#8FA77A", "#D8C690"]
+        ),
+        MoriBreathingTechnique(
             id: MoriBreathingTechniqueID.nadiShodhana.rawValue,
             name: "Nadi Shodhana (4-6)",
             shortDescription: "Alternate nostril breathing for balance",
-            longDescription: "Nadi Shodhana, often called alternate nostril breathing, is a yogic pranayama practice where you breathe through one nostril at a time. This gentle 4-second inhale and 6-second exhale version supports calm focus without breath retention.",
+            longDescription: "Nadi Shodhana, often called alternate nostril breathing, is a yogic pranayama reset where you breathe through one nostril at a time. This gentle 4-second inhale and 6-second exhale version supports calm focus without breath retention.",
             difficulty: .beginner,
             benefits: ["Helps relieve stress", "Supports calm concentration", "Encourages slower nasal breathing", "May support healthy blood pressure", "Builds steady breath awareness"],
-            scienceExplanation: "Alternate nostril breathing has been studied as a way to influence autonomic regulation. The longer 6-second exhale gently biases the rhythm toward relaxation while keeping the practice approachable.",
+            scienceExplanation: "Alternate nostril breathing has been studied as a way to influence autonomic regulation. The longer 6-second exhale gently biases the rhythm toward relaxation while keeping the reset approachable.",
             howToSteps: ["Sit upright and relax your shoulders", "Use your right thumb to close your right nostril", "Inhale through your left nostril for 4 seconds", "Close your left nostril and exhale through your right nostril for 6 seconds", "Inhale through your right nostril for 4 seconds, then exhale through your left for 6 seconds", "Continue alternating sides, keeping the breath smooth and quiet"],
-            bestFor: ["Pre-meditation settling", "Stress resets", "Focused breathing practice", "Balancing energy", "Gentle daytime calm"],
+            bestFor: ["Pre-meditation settling", "Stress resets", "Focused breathing reset", "Balancing energy", "Gentle daytime calm"],
             breathPattern: MoriBreathPattern(inhale: 4, inhaleHold: nil, exhale: 6, exhaleHold: nil),
             category: "Balance",
             iconName: "arrow.left.arrow.right",
@@ -146,8 +177,8 @@ enum MoriBreathingTechniqueRepository {
             difficulty: .beginner,
             benefits: ["Maximizes heart rate variability", "Deeply calming effect", "Improves emotional regulation", "Reduces blood pressure", "Enhances mental clarity"],
             scienceExplanation: "Five breaths per minute is close to the resonant frequency for many adults, creating larger oscillations in heart rate variability and supporting autonomic balance.",
-            howToSteps: ["Sit comfortably with a straight spine", "Inhale gently for 5 seconds", "Exhale smoothly for 5 seconds", "Maintain a relaxed, natural rhythm", "Practice for 10-20 minutes daily"],
-            bestFor: ["Stress management", "Anxiety reduction", "Improving HRV", "Daily meditation practice", "Emotional balance"],
+            howToSteps: ["Sit comfortably with a straight spine", "Inhale gently for 5 seconds", "Exhale smoothly for 5 seconds", "Maintain a relaxed, natural rhythm", "Reset for 10-20 minutes daily"],
+            bestFor: ["Stress management", "Anxiety reduction", "Improving HRV", "Daily meditation reset", "Emotional balance"],
             breathPattern: MoriBreathPattern(inhale: 5, inhaleHold: nil, exhale: 5, exhaleHold: nil),
             category: "Coherent",
             iconName: "wind",
@@ -162,7 +193,7 @@ enum MoriBreathingTechniqueRepository {
             benefits: ["Supports steady relaxation", "Encourages smooth, even breathing", "Helps settle stress responses", "Promotes heart-breath synchronization", "Good for daily nervous system reset"],
             scienceExplanation: "Coherent breathing near 5 to 6 breaths per minute is often used to support heart rate variability and autonomic balance. The 11-second cycle gives roughly 5.5 breaths per minute.",
             howToSteps: ["Sit comfortably and soften your shoulders", "Inhale gently for 5.5 seconds", "Exhale smoothly for 5.5 seconds", "Keep the breath quiet and continuous", "Return to natural breathing if strain appears"],
-            bestFor: ["Daily regulation", "Midday reset", "Anxiety support", "Resonance breathing practice", "Gentle focus"],
+            bestFor: ["Daily regulation", "Midday reset", "Anxiety support", "Resonance breathing reset", "Gentle focus"],
             breathPattern: MoriBreathPattern(inhale: 5.5, inhaleHold: nil, exhale: 5.5, exhaleHold: nil),
             category: "Coherent",
             iconName: "wind",
@@ -171,13 +202,13 @@ enum MoriBreathingTechniqueRepository {
         MoriBreathingTechnique(
             id: MoriBreathingTechniqueID.coherent6.rawValue,
             name: "Coherent Breathing (6-6)",
-            shortDescription: "Balanced calm for daily practice",
+            shortDescription: "Balanced calm for daily reset",
             longDescription: "Coherent breathing is a balanced breathing technique that helps synchronize heart rate and breath. It acts like a reset button for the nervous system.",
             difficulty: .beginner,
             benefits: ["Reduces stress and anxiety", "Improves heart rate variability", "Promotes emotional balance", "Enhances focus and clarity", "Lowers blood pressure"],
             scienceExplanation: "Research around slow breathing suggests 5-6 breaths per minute can optimize heart rate variability and support parasympathetic activation.",
             howToSteps: ["Find a comfortable seated position", "Breathe in slowly through your nose for 6 seconds", "Breathe out slowly through your nose for 6 seconds", "Continue for 5-10 minutes", "Focus on smooth, effortless breathing"],
-            bestFor: ["Daily mindfulness practice", "Managing anxiety", "General wellness", "First-time practitioners", "Improving sleep quality"],
+            bestFor: ["Daily mindfulness reset", "Managing anxiety", "General wellness", "First-time users", "Improving sleep quality"],
             breathPattern: MoriBreathPattern(inhale: 6, inhaleHold: nil, exhale: 6, exhaleHold: nil),
             category: "Coherent",
             iconName: "wind",
@@ -190,8 +221,8 @@ enum MoriBreathingTechniqueRepository {
             longDescription: "A slower variation of coherent breathing at 4 breaths per minute. This deeper pattern is suited to a more meditative, calming experience.",
             difficulty: .intermediate,
             benefits: ["Very deep relaxation", "Enhanced meditation depth", "Improved lung capacity", "Profound stress relief", "Better sleep preparation"],
-            scienceExplanation: "Slower breathing rates increase tidal volume and can deepen parasympathetic activation. This pattern is especially useful for evening practice.",
-            howToSteps: ["Find a quiet, comfortable space", "Inhale deeply for 7.5 seconds", "Exhale fully for 7.5 seconds", "Allow breathing to be effortless", "Practice for 10-15 minutes"],
+            scienceExplanation: "Slower breathing rates increase tidal volume and can deepen parasympathetic activation. This pattern is especially useful for an evening reset.",
+            howToSteps: ["Find a quiet, comfortable space", "Inhale deeply for 7.5 seconds", "Exhale fully for 7.5 seconds", "Allow breathing to be effortless", "Reset for 10-15 minutes"],
             bestFor: ["Evening relaxation", "Sleep preparation", "Deep meditation", "Stress recovery", "Experienced practitioners"],
             breathPattern: MoriBreathPattern(inhale: 7.5, inhaleHold: nil, exhale: 7.5, exhaleHold: nil),
             category: "Coherent",
@@ -202,12 +233,12 @@ enum MoriBreathingTechniqueRepository {
             id: MoriBreathingTechniqueID.coherent3.rawValue,
             name: "Coherent Breathing (10-10)",
             shortDescription: "Very slow, meditative breathing",
-            longDescription: "The slowest coherent breathing pattern at 3 breaths per minute. This advanced technique takes practice and can create a very deep meditative state.",
+            longDescription: "The slowest coherent breathing pattern at 3 breaths per minute. This advanced technique takes time and can create a very deep meditative state.",
             difficulty: .advanced,
             benefits: ["Deepest relaxation state", "Enhanced meditative awareness", "Maximum lung expansion", "Profound nervous system reset", "Improved respiratory efficiency"],
             scienceExplanation: "Very slow breathing can strongly emphasize respiratory sinus arrhythmia and parasympathetic dominance, but it should remain comfortable and unforced.",
             howToSteps: ["Sit in a comfortable meditation posture", "Inhale very slowly for 10 seconds", "Exhale completely for 10 seconds", "Maintain smooth, continuous breath", "Begin with 5-10 minutes"],
-            bestFor: ["Advanced meditation", "Deep relaxation", "Experienced practitioners", "Breath awareness training", "Spiritual practice"],
+            bestFor: ["Advanced meditation", "Deep relaxation", "Experienced users", "Breath awareness training", "Spiritual reset"],
             breathPattern: MoriBreathPattern(inhale: 10, inhaleHold: nil, exhale: 10, exhaleHold: nil),
             category: "Coherent",
             iconName: "wind",
@@ -235,7 +266,7 @@ enum MoriBreathingTechniqueRepository {
             longDescription: "A longer variation of box breathing that keeps the balanced square pattern while offering deeper relaxation for people comfortable with breath retention.",
             difficulty: .intermediate,
             benefits: ["Deeper relaxation than 4-4-4-4", "Enhanced CO2 tolerance", "Improved breath control", "Greater mental stillness", "Stronger parasympathetic activation"],
-            scienceExplanation: "Longer breath holds increase CO2 levels and train respiratory control. This can feel deeply settling when practiced without strain.",
+            scienceExplanation: "Longer breath holds increase CO2 levels and train respiratory control. This can feel deeply settling when done without strain.",
             howToSteps: ["Establish a comfortable seated position", "Inhale smoothly for 6 seconds", "Hold comfortably for 6 seconds", "Exhale steadily for 6 seconds", "Hold empty for 6 seconds, then continue"],
             bestFor: ["Intermediate practitioners", "Deeper meditation", "Breath control training", "Stress resilience", "Performance enhancement"],
             breathPattern: MoriBreathPattern(inhale: 6, inhaleHold: 6, exhale: 6, exhaleHold: 6),
@@ -297,7 +328,7 @@ enum MoriBreathingTechniqueRepository {
             benefits: ["Personalizes the breathing rhythm", "Supports gradual breath training", "Allows longer calming exhales", "Can include or skip breath holds", "Adapts to different energy levels"],
             scienceExplanation: "Breathing rate, inhale-to-exhale ratio, and breath holds all change how demanding or calming a pattern feels. Keep every setting comfortable and reduce any duration that feels strained.",
             howToSteps: ["Open Breathing Settings", "Choose Custom Breathing", "Set your breathe-in duration", "Turn on Hold if you want a pause after the inhale", "Set your breathe-out duration", "Watch the pattern and frequency update", "Start gently and reduce any strained setting"],
-            bestFor: ["Personal practice", "Gentle experimentation", "Long-exhale calming rhythms", "Breath awareness training", "Adapting practice day by day"],
+            bestFor: ["Personal reset", "Gentle experimentation", "Long-exhale calming rhythms", "Breath awareness training", "Adapting day by day"],
             breathPattern: MoriBreathPattern(inhale: 4, inhaleHold: nil, exhale: 6, exhaleHold: nil),
             category: "Custom",
             iconName: "slider.horizontal.3",
@@ -349,6 +380,23 @@ enum MoriBreathMood: String, CaseIterable, Identifiable {
         }
     }
 
+    var icon: MoriBitmapIcon {
+        switch self {
+        case .all:
+            return .pulse
+        case .calm:
+            return .leaf
+        case .sleep:
+            return .quiet
+        case .focus:
+            return .focus
+        case .anxiety:
+            return .heart
+        case .beginner:
+            return .breathe
+        }
+    }
+
     func matches(_ technique: MoriBreathingTechnique) -> Bool {
         switch self {
         case .all:
@@ -372,198 +420,4 @@ enum MoriBreathMood: String, CaseIterable, Identifiable {
             .lowercased()
         return terms.contains { searchable.contains($0) }
     }
-}
-
-enum MoriBreathingSessionDurationOptions {
-    static let pickerOptions = [1, 3, 5, 10, 15, 20, 30, 45, 60, 90, 120, 180]
-    static let presets = [5, 10, 20, 45, 60, 90, 120, 180]
-}
-
-enum MoriBreathingCyclePhase: Equatable {
-    case idle
-    case inhale
-    case holdAfterInhale
-    case exhale
-    case holdAfterExhale
-
-    var cue: SettleBreathingCue? {
-        switch self {
-        case .inhale: return .inhale
-        case .holdAfterInhale, .holdAfterExhale: return .hold
-        case .exhale: return .exhale
-        case .idle: return nil
-        }
-    }
-}
-
-struct MoriBreathingCycleSegment: Equatable {
-    let phase: MoriBreathingCyclePhase
-    let label: String
-    let duration: TimeInterval
-
-    init(phase: MoriBreathingCyclePhase, label: String, duration: TimeInterval) {
-        self.phase = phase
-        self.label = label
-        self.duration = max(0, duration)
-    }
-}
-
-struct MoriBreathingCycleVisualState: Equatable {
-    let label: String
-    let phase: MoriBreathingCyclePhase
-    let progress: Double
-    let scale: CGFloat
-    let opacity: Double
-    let blur: CGFloat
-
-    static let idle = MoriBreathingCycleVisualState(
-        label: "Settle",
-        phase: .idle,
-        progress: 0,
-        scale: 1,
-        opacity: 1,
-        blur: 0
-    )
-}
-
-enum MoriBreathingCycle {
-    static func visualState(
-        for segments: [MoriBreathingCycleSegment],
-        elapsedTime: TimeInterval,
-        minimumScale: CGFloat = 0.88,
-        maximumScale: CGFloat = 1.16,
-        minimumOpacity: Double = 0.78,
-        maximumOpacity: Double = 1.0,
-        maximumBlur: CGFloat = 2.8
-    ) -> MoriBreathingCycleVisualState {
-        let activeSegments = segments.filter { $0.duration > 0 }
-        guard !activeSegments.isEmpty else { return .idle }
-
-        let cycleDuration = activeSegments.reduce(0) { $0 + $1.duration }
-        guard cycleDuration > 0 else { return .idle }
-
-        let elapsedInCycle = positiveRemainder(elapsedTime, cycleDuration)
-        var cursor: TimeInterval = 0
-
-        for (index, segment) in activeSegments.enumerated() {
-            let start = cursor
-            cursor += segment.duration
-            if elapsedInCycle < cursor || index == activeSegments.count - 1 {
-                let rawProgress = (elapsedInCycle - start) / max(segment.duration, 0.001)
-                let progress = min(1, max(0, rawProgress))
-                let eased = cosineEaseInOut(progress)
-                let scale = scaleForPhase(segment.phase, easedProgress: eased, minimumScale: minimumScale, maximumScale: maximumScale)
-
-                return MoriBreathingCycleVisualState(
-                    label: segment.label,
-                    phase: segment.phase,
-                    progress: progress,
-                    scale: scale,
-                    opacity: opacityForScale(scale, minimumScale: minimumScale, maximumScale: maximumScale, minimumOpacity: minimumOpacity, maximumOpacity: maximumOpacity),
-                    blur: blurForPhase(segment.phase, easedProgress: eased, maximumBlur: maximumBlur)
-                )
-            }
-        }
-
-        return .idle
-    }
-
-    static func phaseIndex(for segments: [MoriBreathingCycleSegment], elapsedTime: TimeInterval) -> Int {
-        let activeSegments = segments.filter { $0.duration > 0 }
-        let cycleDuration = activeSegments.reduce(0) { $0 + $1.duration }
-        guard cycleDuration > 0 else { return 0 }
-        let elapsedInCycle = positiveRemainder(elapsedTime, cycleDuration)
-        var cursor: TimeInterval = 0
-
-        for (index, segment) in activeSegments.enumerated() {
-            cursor += segment.duration
-            if elapsedInCycle < cursor || index == activeSegments.count - 1 {
-                return index
-            }
-        }
-
-        return 0
-    }
-
-    static func phaseRemaining(for segments: [MoriBreathingCycleSegment], elapsedTime: TimeInterval) -> TimeInterval {
-        let activeSegments = segments.filter { $0.duration > 0 }
-        let cycleDuration = activeSegments.reduce(0) { $0 + $1.duration }
-        guard cycleDuration > 0 else { return 0 }
-        let elapsedInCycle = positiveRemainder(elapsedTime, cycleDuration)
-        var cursor: TimeInterval = 0
-
-        for (index, segment) in activeSegments.enumerated() {
-            cursor += segment.duration
-            if elapsedInCycle < cursor || index == activeSegments.count - 1 {
-                return max(0, cursor - elapsedInCycle)
-            }
-        }
-
-        return 0
-    }
-
-    static func segments(inhale: TimeInterval, inhaleHold: TimeInterval? = nil, exhale: TimeInterval, exhaleHold: TimeInterval? = nil) -> [MoriBreathingCycleSegment] {
-        var segments = [
-            MoriBreathingCycleSegment(phase: .inhale, label: "Inhale", duration: inhale)
-        ]
-
-        if let inhaleHold, inhaleHold > 0 {
-            segments.append(MoriBreathingCycleSegment(phase: .holdAfterInhale, label: "Hold", duration: inhaleHold))
-        }
-
-        segments.append(MoriBreathingCycleSegment(phase: .exhale, label: "Exhale", duration: exhale))
-
-        if let exhaleHold, exhaleHold > 0 {
-            segments.append(MoriBreathingCycleSegment(phase: .holdAfterExhale, label: "Hold", duration: exhaleHold))
-        }
-
-        return segments
-    }
-
-    private static func positiveRemainder(_ value: TimeInterval, _ divisor: TimeInterval) -> TimeInterval {
-        let remainder = value.truncatingRemainder(dividingBy: divisor)
-        return remainder >= 0 ? remainder : remainder + divisor
-    }
-
-    private static func cosineEaseInOut(_ progress: Double) -> Double {
-        0.5 - 0.5 * cos(.pi * progress)
-    }
-
-    private static func scaleForPhase(_ phase: MoriBreathingCyclePhase, easedProgress: Double, minimumScale: CGFloat, maximumScale: CGFloat) -> CGFloat {
-        let range = maximumScale - minimumScale
-        switch phase {
-        case .inhale:
-            return minimumScale + range * CGFloat(easedProgress)
-        case .holdAfterInhale:
-            return maximumScale
-        case .exhale:
-            return maximumScale - range * CGFloat(easedProgress)
-        case .holdAfterExhale, .idle:
-            return minimumScale
-        }
-    }
-
-    private static func opacityForScale(_ scale: CGFloat, minimumScale: CGFloat, maximumScale: CGFloat, minimumOpacity: Double, maximumOpacity: Double) -> Double {
-        guard maximumScale > minimumScale else { return maximumOpacity }
-        let normalized = Double((scale - minimumScale) / (maximumScale - minimumScale))
-        return minimumOpacity + (maximumOpacity - minimumOpacity) * min(1, max(0, normalized))
-    }
-
-    private static func blurForPhase(_ phase: MoriBreathingCyclePhase, easedProgress: Double, maximumBlur: CGFloat) -> CGFloat {
-        switch phase {
-        case .exhale:
-            return maximumBlur * CGFloat(easedProgress)
-        case .holdAfterExhale:
-            return maximumBlur
-        default:
-            return 0
-        }
-    }
-}
-
-enum MoriBreathingHapticStyle: String, CaseIterable, Identifiable {
-    case symmetry = "Symmetry"
-    case minimalist = "Minimalist"
-
-    var id: String { rawValue }
 }

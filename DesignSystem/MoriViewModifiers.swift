@@ -1,45 +1,50 @@
 import SwiftUI
+import UIKit
 
-// MARK: - Mori Card Style
-struct MoriCardStyle: ViewModifier {
-    func body(content: Content) -> some View {
-        content
-            .background(MoriColors.cardBackground)
-            .cornerRadius(MoriCornerRadius.card)
-            .shadow(color: Color.black.opacity(MoriShadow.cardOpacity), radius: MoriShadow.cardRadius, x: 0, y: MoriShadow.cardY)
+struct MoriMainTabBarHiddenPreferenceKey: PreferenceKey {
+    static let defaultValue = false
+
+    static func reduce(value: inout Bool, nextValue: () -> Bool) {
+        value = value || nextValue()
     }
 }
 
-extension View {
-    func moriCard() -> some View {
-        modifier(MoriCardStyle())
+enum MoriMainTabBarMetrics {
+    static let barHeight: CGFloat = 58
+    static let reservedBottomInset: CGFloat = 70
+    static let overlayHeight: CGFloat = reservedBottomInset
+    static let scrollBottomInset: CGFloat = reservedBottomInset + 8
+}
+
+enum MoriRootScreenMetrics {
+    static let minimumTopInset: CGFloat = 112
+    static let safeAreaBreathingRoom: CGFloat = 24
+    static let visibleScrollTopOffset: CGFloat = 18
+    static let headerContentGap: CGFloat = 18
+
+    static func topInset(for safeAreaTop: CGFloat) -> CGFloat {
+        max(minimumTopInset, safeAreaTop + safeAreaBreathingRoom)
     }
 }
 
-// MARK: - Mori Button Style
-struct MoriButtonStyle: ButtonStyle {
-    var isPrimary: Bool = true
-    
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(MoriTypography.body)
-            .foregroundColor(isPrimary ? .white : MoriColors.warmCharcoal)
-            .padding(.vertical, MoriSpacing.buttonVertical)
-            .padding(.horizontal, MoriSpacing.buttonHorizontal)
-            .background(isPrimary ? MoriColors.accentAmber : Color.clear)
-            .cornerRadius(MoriCornerRadius.button)
-            .scaleEffect(configuration.isPressed ? MoriAnimation.buttonTapScale : 1.0)
-            .animation(MoriAnimation.standard, value: configuration.isPressed)
+struct MoriKeyboardDismissAction {
+    static let system = MoriKeyboardDismissAction {
+        UIApplication.shared.sendAction(
+            #selector(UIResponder.resignFirstResponder),
+            to: nil,
+            from: nil,
+            for: nil
+        )
     }
-}
 
-extension ButtonStyle where Self == MoriButtonStyle {
-    static var mori: MoriButtonStyle {
-        MoriButtonStyle()
+    private let handler: () -> Void
+
+    init(_ handler: @escaping () -> Void) {
+        self.handler = handler
     }
-    
-    static func mori(isPrimary: Bool) -> MoriButtonStyle {
-        MoriButtonStyle(isPrimary: isPrimary)
+
+    func callAsFunction() {
+        handler()
     }
 }
 
@@ -47,17 +52,17 @@ extension ButtonStyle where Self == MoriButtonStyle {
 extension View {
     func moriTitle() -> some View {
         self.font(MoriTypography.title1)
-            .foregroundColor(MoriColors.warmCharcoal)
+            .foregroundColor(MoriColors.botanicalInk)
     }
     
     func moriBody() -> some View {
         self.font(MoriTypography.body)
-            .foregroundColor(MoriColors.warmCharcoal)
+            .foregroundColor(MoriColors.botanicalInk)
     }
     
     func moriCaption() -> some View {
         self.font(MoriTypography.caption)
-            .foregroundColor(MoriColors.softTaupe)
+            .foregroundColor(MoriColors.botanicalMuted)
     }
 }
 
@@ -78,43 +83,77 @@ extension View {
 }
 
 struct MoriTapAnimationModifier: ViewModifier {
-    @State private var isPressed = false
-    
     func body(content: Content) -> some View {
         content
-            .scaleEffect(isPressed ? MoriAnimation.buttonTapScale : 1.0)
-            .animation(MoriAnimation.fast, value: isPressed)
-            .simultaneousGesture(
-                DragGesture(minimumDistance: 0)
-                    .onChanged { _ in
-                        withAnimation(MoriAnimation.fast) {
-                            isPressed = true
-                        }
-                    }
-                    .onEnded { _ in
-                        withAnimation(MoriAnimation.fast) {
-                            isPressed = false
-                        }
-                    }
-            )
     }
 }
 
 // MARK: - Mori Color Modifiers
 extension View {
+    /// Apply Mori's primary light sanctuary theme across the app.
+    func moriAppTheme() -> some View {
+        self
+            .tint(MoriColors.botanicalInk)
+            .preferredColorScheme(.light)
+    }
+
+    /// Add a consistent keyboard accessory so text input can always be dismissed.
+    func moriKeyboardDoneToolbar(doneTitle: String = "Done") -> some View {
+        self.toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+
+                Button {
+                    MoriKeyboardDismissAction.system()
+                } label: {
+                    HStack(spacing: 5) {
+                        MoriBitmapIconImage(icon: .chevron, size: 13, opacity: 0.78)
+                            .rotationEffect(.degrees(90))
+
+                        Text(MoriL10n.display(doneTitle))
+                    }
+                }
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundColor(MoriColors.botanicalInk)
+                .accessibilityLabel("Dismiss keyboard")
+            }
+        }
+    }
+
+    /// Hide the root app tab bar for immersive pushed practice flows.
+    func moriHidesMainTabBar() -> some View {
+        self
+            .toolbar(.hidden, for: .tabBar)
+            .preference(key: MoriMainTabBarHiddenPreferenceKey.self, value: true)
+    }
+
+    /// Keep SwiftUI forms aligned with Mori's light paper UI, independent of the device appearance.
+    func moriSettingsForm() -> some View {
+        self
+            .scrollContentBackground(.hidden)
+            .background {
+                MoriPaperBackground(variant: .settings) {
+                    Color.clear
+                }
+            }
+            .tint(MoriColors.botanicalInk)
+            .listRowSeparatorTint(MoriColors.botanicalLine.opacity(0.7))
+            .environment(\.colorScheme, .light)
+    }
+
     /// Apply primary text color
     func moriTextPrimary() -> some View {
-        self.foregroundColor(MoriColors.warmCharcoal)
+        self.foregroundColor(MoriColors.botanicalInk)
     }
     
     /// Apply secondary text color
     func moriTextSecondary() -> some View {
-        self.foregroundColor(MoriColors.softTaupe)
+        self.foregroundColor(MoriColors.botanicalMuted)
     }
     
     /// Apply accent text color
     func moriTextAccent() -> some View {
-        self.foregroundColor(MoriColors.accentAmber)
+        self.foregroundColor(MoriColors.botanicalMoss)
     }
 }
 
@@ -150,6 +189,28 @@ extension View {
             self.animation(animation, value: value)
         }
     }
+
+    /// Apply an animation that reacts to the current SwiftUI Reduce Motion environment.
+    func moriReduceMotionAnimation<V: Equatable>(_ animation: Animation?, value: V) -> some View {
+        modifier(MoriReduceMotionAnimationModifier(animation: animation, value: value))
+    }
+}
+
+private struct MoriReduceMotionAnimationModifier<Value: Equatable>: ViewModifier {
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    let animation: Animation?
+    let value: Value
+
+    func body(content: Content) -> some View {
+        content.animation(reduceMotion ? nil : animation, value: value)
+    }
+}
+
+extension EnvironmentValues {
+    var moriAllowsMotion: Bool {
+        !accessibilityReduceMotion
+    }
 }
 
 // MARK: - Preview
@@ -166,15 +227,12 @@ struct MoriViewModifiers_Previews: PreviewProvider {
             Text("Caption text")
                 .moriCaption()
             
-            Button("Primary Button") {}
-                .buttonStyle(.mori)
-            
-            Button("Secondary Button") {}
-                .buttonStyle(.mori(isPrimary: false))
-            
+            MoriButton(title: "Primary Button") {}
+
+            MoriSecondaryButton(title: "Secondary Button") {}
+
             Text("Card Content")
-                .moriCard()
-                .moriCardPadding()
+                .moriSanctuaryCard()
         }
         .padding()
     }

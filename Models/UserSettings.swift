@@ -3,58 +3,6 @@ import Foundation
 import WidgetKit
 #endif
 
-enum UserGender: String, CaseIterable, Identifiable {
-    case female
-    case male
-    case unspecified
-
-    var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .female: return "Female"
-        case .male: return "Male"
-        case .unspecified: return "Prefer not to say"
-        }
-    }
-}
-
-enum ClockTimeUnit: String, CaseIterable, Identifiable {
-    case days
-    case weeks
-    case months
-    case years
-
-    var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .days: return "Days"
-        case .weeks: return "Weeks"
-        case .months: return "Months"
-        case .years: return "Years"
-        }
-    }
-
-    var singularLabel: String {
-        switch self {
-        case .days: return "day"
-        case .weeks: return "week"
-        case .months: return "month"
-        case .years: return "year"
-        }
-    }
-
-    var pluralLabel: String {
-        switch self {
-        case .days: return "days"
-        case .weeks: return "weeks"
-        case .months: return "months"
-        case .years: return "years"
-        }
-    }
-}
-
 enum LifeDomain: String, CaseIterable, Identifiable, Codable {
     case body
     case mind
@@ -69,14 +17,14 @@ enum LifeDomain: String, CaseIterable, Identifiable, Codable {
 
     var title: String {
         switch self {
-        case .body: return "Body"
-        case .mind: return "Mind"
-        case .love: return "Love"
-        case .craft: return "Craft"
-        case .courage: return "Courage"
-        case .service: return "Service"
-        case .wonder: return "Wonder"
-        case .rest: return "Rest"
+        case .body: return MoriL10n.string("domain.body", defaultValue: "Body")
+        case .mind: return MoriL10n.string("domain.mind", defaultValue: "Mind")
+        case .love: return MoriL10n.string("domain.love", defaultValue: "Love")
+        case .craft: return MoriL10n.string("domain.craft", defaultValue: "Craft")
+        case .courage: return MoriL10n.string("domain.courage", defaultValue: "Courage")
+        case .service: return MoriL10n.string("domain.service", defaultValue: "Service")
+        case .wonder: return MoriL10n.string("domain.wonder", defaultValue: "Wonder")
+        case .rest: return MoriL10n.string("domain.rest", defaultValue: "Rest")
         }
     }
 
@@ -96,21 +44,53 @@ enum LifeDomain: String, CaseIterable, Identifiable, Codable {
     var suggestedActions: [String] {
         switch self {
         case .body:
-            return ["Take a 10 minute walk", "Stretch before bed", "Drink water before coffee"]
+            return [
+                MoriL10n.string("domain.body.action.walk", defaultValue: "Take a 10 minute walk"),
+                MoriL10n.string("domain.body.action.stretch", defaultValue: "Stretch before bed"),
+                MoriL10n.string("domain.body.action.water", defaultValue: "Drink water before coffee")
+            ]
         case .mind:
-            return ["Read 5 pages", "Write 3 honest lines", "Sit quietly for 2 minutes"]
+            return [
+                MoriL10n.string("domain.mind.action.read", defaultValue: "Read 5 pages"),
+                MoriL10n.string("domain.mind.action.write", defaultValue: "Write 3 honest lines"),
+                MoriL10n.string("domain.mind.action.sit", defaultValue: "Sit quietly for 2 minutes")
+            ]
         case .love:
-            return ["Send one warm message", "Ask someone how they really are", "Make time for dinner together"]
+            return [
+                MoriL10n.string("domain.love.action.message", defaultValue: "Send one warm message"),
+                MoriL10n.string("domain.love.action.ask", defaultValue: "Ask someone how they really are"),
+                MoriL10n.string("domain.love.action.dinner", defaultValue: "Make time for dinner together")
+            ]
         case .craft:
-            return ["Do the hard 10 minutes", "Ship one small piece", "Practice before checking feeds"]
+            return [
+                MoriL10n.string("domain.craft.action.hard_10", defaultValue: "Do the hard 10 minutes"),
+                MoriL10n.string("domain.craft.action.ship", defaultValue: "Ship one small piece"),
+                MoriL10n.string("domain.craft.action.practice", defaultValue: "Practice before checking feeds")
+            ]
         case .courage:
-            return ["Have the postponed conversation", "Ask for what you need", "Start before you feel ready"]
+            return [
+                MoriL10n.string("domain.courage.action.conversation", defaultValue: "Have the postponed conversation"),
+                MoriL10n.string("domain.courage.action.ask", defaultValue: "Ask for what you need"),
+                MoriL10n.string("domain.courage.action.start", defaultValue: "Start before you feel ready")
+            ]
         case .service:
-            return ["Help without announcing it", "Check on someone", "Leave the room easier"]
+            return [
+                MoriL10n.string("domain.service.action.help", defaultValue: "Help without announcing it"),
+                MoriL10n.string("domain.service.action.check", defaultValue: "Check on someone"),
+                MoriL10n.string("domain.service.action.room", defaultValue: "Leave the room easier")
+            ]
         case .wonder:
-            return ["Notice one beautiful thing", "Go outside without headphones", "Take one photo for memory"]
+            return [
+                MoriL10n.string("domain.wonder.action.notice", defaultValue: "Notice one beautiful thing"),
+                MoriL10n.string("domain.wonder.action.outside", defaultValue: "Go outside without headphones"),
+                MoriL10n.string("domain.wonder.action.photo", defaultValue: "Take one photo for memory")
+            ]
         case .rest:
-            return ["Put the phone down early", "Make the evening quieter", "Protect 30 minutes of sleep"]
+            return [
+                MoriL10n.string("domain.rest.action.phone", defaultValue: "Put the phone down early"),
+                MoriL10n.string("domain.rest.action.evening", defaultValue: "Make the evening quieter"),
+                MoriL10n.string("domain.rest.action.sleep", defaultValue: "Protect 30 minutes of sleep")
+            ]
         }
     }
 }
@@ -165,49 +145,33 @@ struct WeeklyIntention: Codable, Equatable, Identifiable {
 }
 
 class UserSettings: ObservableObject {
-    @Published var birthDate: Date {
+    private let store: UserSettingsStore
+
+    @Published var archiveStartDate: Date {
         didSet {
-            UserDefaults.standard.set(birthDate, forKey: "birthDate")
+            store.saveArchiveStartDate(archiveStartDate)
             syncWidgetDefaults()
-            AnalyticsManager.shared.trackBirthDateSet(date: birthDate)
-        }
-    }
-    
-    @Published var lifeExpectancy: Int {
-        didSet {
-            UserDefaults.standard.set(lifeExpectancy, forKey: "lifeExpectancy")
-            syncWidgetDefaults()
+            AnalyticsManager.shared.trackArchiveStartDateSet(date: archiveStartDate)
         }
     }
 
-    @Published var gender: UserGender {
+    @Published var archiveSpanYears: Int {
         didSet {
-            UserDefaults.standard.set(gender.rawValue, forKey: "gender")
-        }
-    }
-
-    @Published var locationCountryCode: String {
-        didSet {
-            UserDefaults.standard.set(locationCountryCode, forKey: "locationCountryCode")
-        }
-    }
-
-    @Published var locationCountryName: String {
-        didSet {
-            UserDefaults.standard.set(locationCountryName, forKey: "locationCountryName")
-        }
-    }
-
-    @Published var clockTimeUnit: ClockTimeUnit {
-        didSet {
-            UserDefaults.standard.set(clockTimeUnit.rawValue, forKey: "clockTimeUnit")
+            store.saveArchiveSpanYears(archiveSpanYears)
             syncWidgetDefaults()
         }
     }
-    
+
+    @Published var localePreference: MoriLocalePreference {
+        didSet {
+            store.saveLocalePreference(localePreference)
+            syncWidgetDefaults()
+        }
+    }
+
     @Published var hasCompletedOnboarding: Bool {
         didSet {
-            UserDefaults.standard.set(hasCompletedOnboarding, forKey: "hasCompletedOnboarding")
+            store.saveHasCompletedOnboarding(hasCompletedOnboarding)
         }
     }
 
@@ -216,37 +180,28 @@ class UserSettings: ObservableObject {
             persistWeeklyIntentions()
         }
     }
-    
-    var age: Int {
+
+    var archiveYearIndex: Int {
         let calendar = Calendar.current
-        let components = calendar.dateComponents([.year], from: birthDate, to: Date())
+        let components = calendar.dateComponents([.year], from: archiveStartDate, to: Date())
         return components.year ?? 0
     }
-    
+
     var totalWeeks: Int {
-        lifeExpectancy * 52
+        archiveSpanYears * 52
     }
-    
-    var weeksLived: Int {
+
+    var archiveWeeksElapsed: Int {
         let calendar = Calendar.current
         let now = Date()
-        let currentAgeStart = calendar.date(byAdding: .year, value: age, to: birthDate) ?? birthDate
-        let daysIntoCurrentAge = calendar.dateComponents([.day], from: currentAgeStart, to: now).day ?? 0
-        let weeksIntoCurrentAge = max(0, min(51, daysIntoCurrentAge / 7))
-        return min(age * 52 + weeksIntoCurrentAge, totalWeeks)
+        let currentArchiveYearStart = calendar.date(byAdding: .year, value: archiveYearIndex, to: archiveStartDate) ?? archiveStartDate
+        let daysIntoCurrentArchiveYear = calendar.dateComponents([.day], from: currentArchiveYearStart, to: now).day ?? 0
+        let weeksIntoCurrentArchiveYear = max(0, min(51, daysIntoCurrentArchiveYear / 7))
+        return min(archiveYearIndex * 52 + weeksIntoCurrentArchiveYear, totalWeeks)
     }
-    
-    var weeksRemaining: Int {
-        max(totalWeeks - weeksLived, 0)
-    }
-    
-    var percentageLived: Double {
-        guard totalWeeks > 0 else { return 0 }
-        return Double(weeksLived) / Double(totalWeeks)
-    }
-    
+
     var currentWeekIndex: Int {
-        min(weeksLived, max(totalWeeks - 1, 0))
+        min(archiveWeeksElapsed, max(totalWeeks - 1, 0))
     }
 
     var currentWeekKey: String {
@@ -280,32 +235,15 @@ class UserSettings: ObservableObject {
     var hasCompletedWeeklyIntention: Bool {
         activeWeeklyIntentions.contains { $0.isCompleted }
     }
-    
-    init() {
-        let savedDate = UserDefaults.standard.object(forKey: "birthDate") as? Date
-        self.birthDate = savedDate ?? Calendar.current.date(byAdding: .year, value: -30, to: Date())!
-        
-        let savedLifeExpectancy = UserDefaults.standard.integer(forKey: "lifeExpectancy")
-        self.lifeExpectancy = savedLifeExpectancy > 0 ? savedLifeExpectancy : 80
 
-        let savedGender = UserDefaults.standard.string(forKey: "gender")
-            .flatMap(UserGender.init(rawValue:))
-        self.gender = savedGender ?? .unspecified
-
-        let defaultCountryCode = Locale.current.region?.identifier ?? "US"
-        let savedCountryCode = UserDefaults.standard.string(forKey: "locationCountryCode")
-        let initialCountryCode = savedCountryCode ?? defaultCountryCode
-        self.locationCountryCode = initialCountryCode
-
-        let savedCountryName = UserDefaults.standard.string(forKey: "locationCountryName")
-        self.locationCountryName = savedCountryName ?? LifeExpectancyService.countryName(for: initialCountryCode)
-
-        let savedClockTimeUnit = UserDefaults.standard.string(forKey: "clockTimeUnit")
-            .flatMap(ClockTimeUnit.init(rawValue:))
-        self.clockTimeUnit = savedClockTimeUnit ?? .days
-        
-        self.hasCompletedOnboarding = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
-        self.weeklyIntentions = Self.loadWeeklyIntentions()
+    init(store: UserSettingsStore = UserSettingsStore()) {
+        self.store = store
+        let snapshot = store.load()
+        self.archiveStartDate = snapshot.archiveStartDate
+        self.archiveSpanYears = snapshot.archiveSpanYears
+        self.localePreference = snapshot.localePreference
+        self.hasCompletedOnboarding = snapshot.hasCompletedOnboarding
+        self.weeklyIntentions = snapshot.weeklyIntentions
 
         syncWidgetDefaults()
     }
@@ -328,7 +266,7 @@ class UserSettings: ObservableObject {
             completedAt: nil
         )
         weeklyIntentions.append(intention)
-        GratitudeEntry.saveWeeklyIntention(intention)
+        GratitudeEntryStore.live.saveWeeklyIntention(intention)
     }
 
     func completeWeeklyIntention() {
@@ -342,7 +280,7 @@ class UserSettings: ObservableObject {
         intention.isCompleted = true
         intention.completedAt = Date()
         weeklyIntentions[index] = intention
-        GratitudeEntry.saveWeeklyIntentionCompletion(intention)
+        GratitudeEntryStore.live.saveWeeklyIntentionCompletion(intention)
     }
 
     func reopenWeeklyIntention() {
@@ -360,14 +298,17 @@ class UserSettings: ObservableObject {
 
     private func syncWidgetDefaults() {
         let defaults = MoriSharedDefaults.shared
-        defaults.set(birthDate, forKey: "birthDate")
-        defaults.set(lifeExpectancy, forKey: "lifeExpectancy")
-        defaults.set(clockTimeUnit.rawValue, forKey: "clockTimeUnit")
+        defaults.set(archiveStartDate, forKey: "archiveStartDate")
+        defaults.set(archiveSpanYears, forKey: "archiveSpanYears")
+        defaults.set(localePreference.rawValue, forKey: MoriLocalePreference.defaultsKey)
         MoriWatchSettingsSync.shared.send(
-            birthDate: birthDate,
-            lifeExpectancy: lifeExpectancy,
-            timeUnit: clockTimeUnit.rawValue
+            archiveStartDate: archiveStartDate,
+            archiveSpanYears: archiveSpanYears,
+            localePreference: localePreference.rawValue
         )
+        Task { @MainActor in
+            MoriWidgetContextPublisher.publish(settings: self, reloadTimelines: false)
+        }
 
         #if canImport(WidgetKit)
         WidgetCenter.shared.reloadAllTimelines()
@@ -375,25 +316,10 @@ class UserSettings: ObservableObject {
     }
 
     private func persistWeeklyIntentions() {
-        if let data = try? JSONEncoder().encode(weeklyIntentions) {
-            UserDefaults.standard.set(data, forKey: "weeklyIntentions")
-        } else {
-            UserDefaults.standard.removeObject(forKey: "weeklyIntentions")
+        store.saveWeeklyIntentions(weeklyIntentions)
+        Task { @MainActor in
+            MoriWidgetContextPublisher.publish(settings: self)
         }
-    }
-
-    private static func loadWeeklyIntentions() -> [WeeklyIntention] {
-        if let data = UserDefaults.standard.data(forKey: "weeklyIntentions"),
-           let decoded = try? JSONDecoder().decode([WeeklyIntention].self, from: data) {
-            return decoded
-        }
-
-        guard let data = UserDefaults.standard.data(forKey: "weeklyIntention"),
-              let legacy = try? JSONDecoder().decode(WeeklyIntention.self, from: data) else {
-            return []
-        }
-
-        return [legacy]
     }
 
     private static func weekKey(for date: Date) -> String {

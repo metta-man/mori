@@ -10,7 +10,7 @@
 .mori-counter {
   font-family: var(--font-accent);
   font-weight: 700;
-  color: var(--time-gold);
+  color: var(--mori-canopy);
   line-height: 1;
 }
 
@@ -28,7 +28,7 @@
 
 .mori-counter-xl {
   font-size: 128px;
-  text-shadow: 0 2px 30px rgba(212, 175, 55, 0.4);
+  text-shadow: 0 12px 38px rgba(36, 56, 51, 0.1);
 }
 
 .mori-counter-label {
@@ -36,7 +36,7 @@
   font-size: 14px;
   color: var(--text-secondary);
   text-transform: uppercase;
-  letter-spacing: 0.1em;
+  letter-spacing: 0;
   margin-top: var(--space-sm);
 }
 

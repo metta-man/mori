@@ -42,8 +42,6 @@ struct PersistenceController {
         let user = UserEntity(context: viewContext)
         user.id = UUID()
         user.name = "Demo User"
-        user.birthDate = Calendar.current.date(byAdding: .year, value: -25, to: Date())
-        user.lifeExpectancy = 80
         user.createdAt = Date()
         user.updatedAt = Date()
         

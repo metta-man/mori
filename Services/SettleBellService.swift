@@ -2,45 +2,6 @@ import AudioToolbox
 import AVFoundation
 import Foundation
 
-enum SettleBellTone: String, CaseIterable, Identifiable {
-    case singingBowlA = "Singing Bowl A.wav"
-    case defaultChime = "Default.mp3"
-
-    var id: String { rawValue }
-
-    var title: String {
-        switch self {
-        case .singingBowlA: return "Singing Bowl"
-        case .defaultChime: return "Soft Chime"
-        }
-    }
-
-    var fileName: String {
-        rawValue
-    }
-}
-
-enum SettleBreathingCue {
-    case inhale
-    case exhale
-    case hold
-
-    var fileName: String {
-        switch self {
-        case .inhale: return "Singing Bowl E_2.wav"
-        case .exhale: return "Singing Bowl A.wav"
-        case .hold: return "Mokugyo.wav"
-        }
-    }
-
-    var volume: Float {
-        switch self {
-        case .inhale, .exhale: return 0.6
-        case .hold: return 0.7
-        }
-    }
-}
-
 final class SettleBellService {
     static let shared = SettleBellService()
 
@@ -50,62 +11,85 @@ final class SettleBellService {
     private var holdAudioPlayer: AVAudioPlayer?
     private var inhaleFadeTimer: Timer?
     private var exhaleFadeTimer: Timer?
+    private let audioSessionQueue = DispatchQueue(label: "com.mori.settleBell.audioSession", qos: .userInitiated)
+    private let playbackGenerationLock = NSLock()
+    private var audioSessionConfigured = false
+    private var playbackGeneration = 0
 
     private init() {}
 
     func playStartBell(_ tone: SettleBellTone = .singingBowlA) {
-        play(tone)
+        performOnMain { [weak self] in
+            self?.play(tone)
+        }
     }
 
     func playIntervalBell(_ tone: SettleBellTone = .defaultChime) {
-        play(tone, volume: 0.72)
+        performOnMain { [weak self] in
+            self?.play(tone, volume: 0.72)
+        }
     }
 
     func playEndingBell(_ tone: SettleBellTone = .singingBowlA) {
-        play(tone)
+        performOnMain { [weak self] in
+            self?.play(tone)
+        }
     }
 
     func playBreathingCue(_ cue: SettleBreathingCue) {
-        configureAudioSession()
+        performOnMain { [weak self] in
+            self?.playBreathingCueOnMain(cue)
+        }
+    }
 
-        switch cue {
-        case .inhale:
-            fadeOutExhaleSound()
-            holdAudioPlayer?.stop()
-            inhaleAudioPlayer = makeCuePlayer(fileName: cue.fileName, volume: cue.volume)
-            inhaleAudioPlayer?.play()
-        case .exhale:
-            fadeOutInhaleSound()
-            holdAudioPlayer?.stop()
-            exhaleAudioPlayer = makeCuePlayer(fileName: cue.fileName, volume: cue.volume)
-            exhaleAudioPlayer?.play()
-        case .hold:
-            fadeOutInhaleSound()
-            fadeOutExhaleSound()
-            holdAudioPlayer = makeCuePlayer(fileName: cue.fileName, volume: cue.volume)
-            holdAudioPlayer?.play()
+    private func playBreathingCueOnMain(_ cue: SettleBreathingCue) {
+        let requestID = nextPlaybackGeneration()
+
+        prepareForBreathingCue(cue)
+        preparePlayer(fileName: cue.fileName, volume: cue.volume) { [weak self] player in
+            guard let self, self.playbackGenerationIsCurrent(requestID) else { return }
+            guard let player else {
+                self.playFallbackSound()
+                return
+            }
+            self.playPreparedBreathingCue(cue, player: player, generation: requestID)
         }
     }
 
     func fadeOutBreathingCue(_ cue: SettleBreathingCue) {
-        switch cue {
-        case .inhale:
-            fadeOutInhaleSound()
-        case .exhale:
-            fadeOutExhaleSound()
-        case .hold:
-            holdAudioPlayer?.stop()
-            holdAudioPlayer = nil
+        performOnMain { [weak self] in
+            switch cue {
+            case .inhale:
+                self?.fadeOutInhaleSound()
+            case .exhale:
+                self?.fadeOutExhaleSound()
+            case .hold:
+                self?.holdAudioPlayer?.stop()
+                self?.holdAudioPlayer = nil
+            }
         }
     }
 
     func stop() {
-        audioPlayer?.stop()
-        audioPlayer = nil
-        stopBreathingCues()
+        performOnMain { [weak self] in
+            self?.cancelPendingPlayback()
+            self?.audioPlayer?.stop()
+            self?.audioPlayer = nil
+            self?.stopBreathingCuesOnMain(cancelPendingPlayback: false)
+        }
     }
 
     func stopBreathingCues() {
+        performOnMain { [weak self] in
+            self?.stopBreathingCuesOnMain()
+        }
+    }
+
+    private func stopBreathingCuesOnMain(cancelPendingPlayback shouldCancelPendingPlayback: Bool = true) {
+        if shouldCancelPendingPlayback {
+            cancelPendingPlayback()
+        }
+
         inhaleFadeTimer?.invalidate()
         exhaleFadeTimer?.invalidate()
         inhaleFadeTimer = nil
@@ -119,37 +103,81 @@ final class SettleBellService {
     }
 
     private func play(_ tone: SettleBellTone, volume: Float = 1.0) {
-        configureAudioSession()
+        let requestID = nextPlaybackGeneration()
 
-        guard let url = findAudioFile(named: tone.fileName) ?? findAudioFile(named: SettleBellTone.defaultChime.fileName) else {
-            AudioServicesPlaySystemSound(1013)
-            return
-        }
-
-        do {
-            audioPlayer = try AVAudioPlayer(contentsOf: url)
-            audioPlayer?.volume = volume
-            audioPlayer?.prepareToPlay()
-            audioPlayer?.play()
-        } catch {
-            AudioServicesPlaySystemSound(1013)
+        preparePlayer(
+            fileName: tone.fileName,
+            fallbackFileName: SettleBellTone.defaultChime.fileName,
+            volume: volume
+        ) { [weak self] player in
+            guard let self, self.playbackGenerationIsCurrent(requestID) else { return }
+            guard let player else {
+                self.playFallbackSound()
+                return
+            }
+            self.audioPlayer = player
+            self.playPreparedPlayer(player, generation: requestID)
         }
     }
 
-    private func makeCuePlayer(fileName: String, volume: Float) -> AVAudioPlayer? {
-        guard let url = findAudioFile(named: fileName) else {
-            AudioServicesPlaySystemSound(1013)
-            return nil
+    private func prepareForBreathingCue(_ cue: SettleBreathingCue) {
+        switch cue {
+        case .inhale:
+            fadeOutExhaleSound()
+            holdAudioPlayer?.stop()
+        case .exhale:
+            fadeOutInhaleSound()
+            holdAudioPlayer?.stop()
+        case .hold:
+            fadeOutInhaleSound()
+            fadeOutExhaleSound()
         }
+    }
 
-        do {
-            let player = try AVAudioPlayer(contentsOf: url)
-            player.volume = volume
-            player.prepareToPlay()
-            return player
-        } catch {
-            AudioServicesPlaySystemSound(1013)
-            return nil
+    private func playPreparedBreathingCue(_ cue: SettleBreathingCue, player: AVAudioPlayer, generation: Int) {
+        switch cue {
+        case .inhale:
+            inhaleAudioPlayer = player
+        case .exhale:
+            exhaleAudioPlayer = player
+        case .hold:
+            holdAudioPlayer = player
+        }
+        playPreparedPlayer(player, generation: generation)
+    }
+
+    private func preparePlayer(
+        fileName: String,
+        fallbackFileName: String? = nil,
+        volume: Float,
+        completion: @escaping (AVAudioPlayer?) -> Void
+    ) {
+        audioSessionQueue.async { [weak self] in
+            guard let self else { return }
+
+            self.configureAudioSessionOnQueue()
+
+            guard let url = self.findAudioFile(named: fileName)
+                ?? fallbackFileName.flatMap({ self.findAudioFile(named: $0) })
+            else {
+                DispatchQueue.main.async {
+                    completion(nil)
+                }
+                return
+            }
+
+            do {
+                let player = try AVAudioPlayer(contentsOf: url)
+                player.volume = volume
+                player.prepareToPlay()
+                DispatchQueue.main.async {
+                    completion(player)
+                }
+            } catch {
+                DispatchQueue.main.async {
+                    completion(nil)
+                }
+            }
         }
     }
 
@@ -185,7 +213,7 @@ final class SettleBellService {
             return
         }
 
-        let fadeDuration: TimeInterval = 1.5
+        let fadeDuration = SettleBreathingCue.fadeDuration
         let steps = 30
         let stepDuration = fadeDuration / Double(steps)
         let startVolume = player.volume
@@ -206,15 +234,57 @@ final class SettleBellService {
         RunLoop.current.add(timer, forMode: .common)
     }
 
-    private func configureAudioSession() {
+    private func performOnMain(_ action: @escaping () -> Void) {
+        if Thread.isMainThread {
+            action()
+        } else {
+            DispatchQueue.main.async(execute: action)
+        }
+    }
+
+    private func nextPlaybackGeneration() -> Int {
+        playbackGenerationLock.lock()
+        defer { playbackGenerationLock.unlock() }
+        playbackGeneration += 1
+        return playbackGeneration
+    }
+
+    private func cancelPendingPlayback() {
+        playbackGenerationLock.lock()
+        defer { playbackGenerationLock.unlock() }
+        playbackGeneration += 1
+    }
+
+    private func playbackGenerationIsCurrent(_ generation: Int) -> Bool {
+        playbackGenerationLock.lock()
+        defer { playbackGenerationLock.unlock() }
+        return playbackGeneration == generation
+    }
+
+    private func playPreparedPlayer(_ player: AVAudioPlayer, generation: Int) {
+        audioSessionQueue.async { [weak self, weak player] in
+            guard let self, let player, self.playbackGenerationIsCurrent(generation) else { return }
+            player.play()
+        }
+    }
+
+    private func configureAudioSessionOnQueue() {
         do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .default, options: [.mixWithOthers])
-            try AVAudioSession.sharedInstance().setActive(true)
+            let session = AVAudioSession.sharedInstance()
+            if !audioSessionConfigured {
+                try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+                audioSessionConfigured = true
+            }
+            try session.setActive(true)
         } catch {
             #if DEBUG
             print("[SettleBellService] Audio session failed: \(error.localizedDescription)")
             #endif
         }
+    }
+
+    private func playFallbackSound() {
+        AudioServicesPlaySystemSound(1013)
     }
 
     private func findAudioFile(named name: String) -> URL? {

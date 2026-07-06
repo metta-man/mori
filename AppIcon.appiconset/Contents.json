@@ -1,91 +1,145 @@
 {
   "images" : [
     {
-      "filename" : "icon_1024_forest_rings.png",
+      "filename" : "icon_1024_paper_linework.png",
       "idiom" : "universal",
       "platform" : "ios",
       "size" : "1024x1024"
     },
     {
-      "filename" : "icon_180_forest_rings.png",
+      "filename" : "icon_40_paper_linework.png",
       "idiom" : "iphone",
-      "scale" : "3x",
-      "size" : "60x60"
+      "scale" : "2x",
+      "size" : "20x20"
     },
     {
-      "filename" : "icon_120.png",
+      "filename" : "icon_60_paper_linework.png",
+      "idiom" : "iphone",
+      "scale" : "3x",
+      "size" : "20x20"
+    },
+    {
+      "filename" : "icon_58_paper_linework.png",
+      "idiom" : "iphone",
+      "scale" : "2x",
+      "size" : "29x29"
+    },
+    {
+      "filename" : "icon_87_paper_linework.png",
+      "idiom" : "iphone",
+      "scale" : "3x",
+      "size" : "29x29"
+    },
+    {
+      "filename" : "icon_80_paper_linework.png",
+      "idiom" : "iphone",
+      "scale" : "2x",
+      "size" : "40x40"
+    },
+    {
+      "filename" : "icon_120_paper_linework.png",
+      "idiom" : "iphone",
+      "scale" : "3x",
+      "size" : "40x40"
+    },
+    {
+      "filename" : "icon_120_paper_linework.png",
       "idiom" : "iphone",
       "scale" : "2x",
       "size" : "60x60"
     },
     {
-      "filename" : "icon_60.png",
+      "filename" : "icon_180_paper_linework.png",
       "idiom" : "iphone",
+      "scale" : "3x",
+      "size" : "60x60"
+    },
+    {
+      "filename" : "icon_20_paper_linework.png",
+      "idiom" : "ipad",
       "scale" : "1x",
-      "size" : "60x60"
+      "size" : "20x20"
     },
     {
-      "filename" : "icon_180_forest_rings.png",
-      "idiom" : "iphone",
-      "scale" : "3x",
-      "size" : "58x58"
-    },
-    {
-      "filename" : "icon_120.png",
-      "idiom" : "iphone",
+      "filename" : "icon_40_paper_linework.png",
+      "idiom" : "ipad",
       "scale" : "2x",
-      "size" : "58x58"
+      "size" : "20x20"
     },
     {
-      "filename" : "icon_29.png",
-      "idiom" : "iphone",
+      "filename" : "icon_29_paper_linework.png",
+      "idiom" : "ipad",
       "scale" : "1x",
       "size" : "29x29"
     },
     {
-      "filename" : "icon_76.png",
+      "filename" : "icon_58_paper_linework.png",
+      "idiom" : "ipad",
+      "scale" : "2x",
+      "size" : "29x29"
+    },
+    {
+      "filename" : "icon_40_paper_linework.png",
+      "idiom" : "ipad",
+      "scale" : "1x",
+      "size" : "40x40"
+    },
+    {
+      "filename" : "icon_80_paper_linework.png",
+      "idiom" : "ipad",
+      "scale" : "2x",
+      "size" : "40x40"
+    },
+    {
+      "filename" : "icon_76_paper_linework.png",
       "idiom" : "ipad",
       "scale" : "1x",
       "size" : "76x76"
     },
     {
-      "filename" : "icon_76.png",
+      "filename" : "icon_152_paper_linework.png",
       "idiom" : "ipad",
       "scale" : "2x",
       "size" : "76x76"
     },
     {
-      "filename" : "icon_1024_forest_rings.png",
+      "filename" : "icon_167_paper_linework.png",
+      "idiom" : "ipad",
+      "scale" : "2x",
+      "size" : "83.5x83.5"
+    },
+    {
+      "filename" : "icon_1024_paper_linework.png",
       "idiom" : "ios-marketing",
       "platform" : "ios",
       "size" : "1024x1024"
     },
     {
-      "filename" : "android_icon_192.png",
+      "filename" : "android_icon_192_paper_linework.png",
       "idiom" : "universal",
       "platform" : "android",
       "size" : "192x192"
     },
     {
-      "filename" : "android_icon_144.png",
+      "filename" : "android_icon_144_paper_linework.png",
       "idiom" : "universal",
       "platform" : "android",
       "size" : "144x144"
     },
     {
-      "filename" : "android_icon_96.png",
+      "filename" : "android_icon_96_paper_linework.png",
       "idiom" : "universal",
       "platform" : "android",
       "size" : "96x96"
     },
     {
-      "filename" : "android_icon_72.png",
+      "filename" : "android_icon_72_paper_linework.png",
       "idiom" : "universal",
       "platform" : "android",
       "size" : "72x72"
     },
     {
-      "filename" : "android_icon_48.png",
+      "filename" : "android_icon_48_paper_linework.png",
       "idiom" : "universal",
       "platform" : "android",
       "size" : "48x48"

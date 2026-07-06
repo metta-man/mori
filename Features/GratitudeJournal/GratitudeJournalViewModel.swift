@@ -25,12 +25,19 @@ class GratitudeJournalViewModel: ObservableObject {
     // MARK: - Private Properties
     private var autoSaveTimer: Timer?
     private var entries: [GratitudeEntry] = []
-    
-    // MARK: - UserDefaults Keys
-    private let draftKey = "mori_gratitude_draft"
+    private let entryStore: GratitudeEntryStore
+    private let draftStore: GratitudeDraftStore
+    private let transferStore: GratitudeJournalTransferStore
     
     // MARK: - Initialization
-    init() {
+    init(
+        entryStore: GratitudeEntryStore = .live,
+        draftStore: GratitudeDraftStore = GratitudeDraftStore(),
+        transferStore: GratitudeJournalTransferStore = GratitudeJournalTransferStore()
+    ) {
+        self.entryStore = entryStore
+        self.draftStore = draftStore
+        self.transferStore = transferStore
         setupAutoSave()
     }
     
@@ -46,8 +53,7 @@ class GratitudeJournalViewModel: ObservableObject {
     }
     
     private func loadEntries() {
-        // Load from UserDefaults (in production, this would be CoreData/CloudKit)
-        entries = GratitudeEntry.loadAllStored()
+        entries = entryStore.loadEntries()
         recentEntries = Array(entries.prefix(10))
     }
     
@@ -71,16 +77,9 @@ class GratitudeJournalViewModel: ObservableObject {
     }
     
     private func loadDraft() {
-        // Load draft if no entry today
         guard !hasExistingEntryToday else { return }
-        
-        if let data = UserDefaults.standard.data(forKey: draftKey),
-           let draft = try? JSONDecoder().decode(GratitudeDraft.self, from: data) {
-            guard Calendar.current.isDate(draft.entryDate, inSameDayAs: Date()) else {
-                clearDraft()
-                return
-            }
 
+        if let draft = draftStore.loadForToday() {
             content = draft.content
             selectedPrompt = draft.promptType
             attachedPhotos = draft.photoAttachments
@@ -111,10 +110,8 @@ class GratitudeJournalViewModel: ObservableObject {
             entryDate: Date(),
             lastSaved: Date()
         )
-        
-        if let data = try? JSONEncoder().encode(draft) {
-            UserDefaults.standard.set(data, forKey: draftKey)
-        }
+
+        draftStore.save(draft)
     }
 
     // MARK: - Photos
@@ -136,7 +133,7 @@ class GratitudeJournalViewModel: ObservableObject {
     
     // MARK: - Save Entry
     func saveEntry() -> Result<GratitudeEntry, GratitudeError> {
-        let result = GratitudeEntry.saveJournalEntry(
+        let result = entryStore.saveJournalEntry(
             on: Date(),
             content: content,
             promptType: selectedPrompt,
@@ -145,7 +142,7 @@ class GratitudeJournalViewModel: ObservableObject {
 
         switch result {
         case .success(let entry):
-            entries = GratitudeEntry.loadAllStored()
+            entries = entryStore.loadEntries()
             todayEntry = entry
             hasExistingEntryToday = true
             clearDraft()
@@ -187,11 +184,11 @@ class GratitudeJournalViewModel: ObservableObject {
     
     // MARK: - Private Helpers
     private func saveEntries() {
-        GratitudeEntry.persist(entries)
+        entryStore.saveEntries(entries)
     }
     
     private func clearDraft() {
-        UserDefaults.standard.removeObject(forKey: draftKey)
+        draftStore.clear()
     }
     
     // MARK: - Get All Entries (for history)
@@ -222,35 +219,13 @@ class GratitudeJournalViewModel: ObservableObject {
 
     // MARK: - Export
     func exportJournal() -> URL? {
-        let backup = GratitudeJournalBackup(entries: getAllEntries())
-        guard let data = try? GratitudeCloudBackup.encode(backup) else { return nil }
-
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        let filename = "Mori-Journal-\(formatter.string(from: Date())).json"
-        let url = FileManager.default.temporaryDirectory.appendingPathComponent(filename)
-
-        do {
-            try data.write(to: url, options: [.atomic])
-            return url
-        } catch {
-            return nil
-        }
+        try? transferStore.export(entries: getAllEntries())
     }
 
     // MARK: - Import
     func importJournal(from url: URL) -> Result<Int, GratitudeError> {
-        let hasAccess = url.startAccessingSecurityScopedResource()
-        defer {
-            if hasAccess {
-                url.stopAccessingSecurityScopedResource()
-            }
-        }
-
         do {
-            let data = try Data(contentsOf: url)
-            let backup = try GratitudeCloudBackup.decode(data)
-            let importedEntries = try backup.entries.map { try $0.gratitudeEntry() }
+            let importedEntries = try transferStore.importEntries(from: url)
             let importedCount = mergeImportedEntries(importedEntries)
             return .success(importedCount)
         } catch {
@@ -260,7 +235,7 @@ class GratitudeJournalViewModel: ObservableObject {
 
     func restoreFromCloudKit() async -> Result<Int, GratitudeError> {
         do {
-            let importedEntries = try await GratitudeCloudBackup.shared.restore()
+            let importedEntries = try await entryStore.restoreFromCloudBackup()
             let importedCount = mergeImportedEntries(importedEntries)
             return .success(importedCount)
         } catch {
@@ -286,9 +261,9 @@ enum GratitudeError: LocalizedError {
         case .loadFailed:
             return "Failed to load entries."
         case .importFailed:
-            return "Could not import this journal backup."
+            return MoriL10n.display("Could not import this log backup.")
         case .iCloudRestoreFailed:
-            return "Could not restore your iCloud journal backup."
+            return MoriL10n.display("Could not restore your iCloud log backup.")
         }
     }
 }

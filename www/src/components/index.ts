@@ -1,14 +1,14 @@
-// 🌙 Mori Components - Brand Identity System
+// Mori Components - UI System
 // Export all Mori components
 
-export { LifeGrid } from './LifeGrid';
+export { WeekArchive } from './WeekArchive';
 export { HabitCheckIn } from './HabitCheckIn';
 export { GratitudeInput } from './GratitudeInput';
 export { DailyQuote } from './DailyQuote';
 export { WeekProgress } from './WeekProgress';
 
 // Re-export with defaults
-export { default as LifeGridDefault } from './LifeGrid';
+export { default as WeekArchiveDefault } from './WeekArchive';
 export { default as HabitCheckInDefault } from './HabitCheckIn';
 export { default as GratitudeInputDefault } from './GratitudeInput';
 export { default as DailyQuoteDefault } from './DailyQuote';

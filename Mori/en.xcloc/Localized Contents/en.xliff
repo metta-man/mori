@@ -10,11 +10,6 @@
         <target>%@</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
-      <trans-unit id="%@ days" xml:space="preserve">
-        <source>%@ days</source>
-        <target>%@ days</target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
       <trans-unit id="%@ years" xml:space="preserve">
         <source>%@ years</source>
         <target>%@ years</target>
@@ -65,16 +60,6 @@
         <target>Longest Streak</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
-      <trans-unit id="Memento mori — remember that you will die. But instead of fear, let it inspire you to live fully." xml:space="preserve">
-        <source>Memento mori — remember that you will die. But instead of fear, let it inspire you to live fully.</source>
-        <target>Memento mori — remember that you will die. But instead of fear, let it inspire you to live fully.</target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
-      <trans-unit id="Mori reminds us that time is precious. Use this grid to visualize your life and make each week count." xml:space="preserve">
-        <source>Mori reminds us that time is precious. Use this grid to visualize your life and make each week count.</source>
-        <target>Mori reminds us that time is precious. Use this grid to visualize your life and make each week count.</target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
       <trans-unit id="No memory logged" xml:space="preserve">
         <source>No memory logged</source>
         <target>No memory logged</target>
@@ -90,11 +75,6 @@
         <target>Statistics</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
-      <trans-unit id="This helps us calculate your life remaining" xml:space="preserve">
-        <source>This helps us calculate your life remaining</source>
-        <target>This helps us calculate your life remaining</target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
       <trans-unit id="This is just an estimate — update it anytime" xml:space="preserve">
         <source>This is just an estimate — update it anytime</source>
         <target>This is just an estimate — update it anytime</target>
@@ -103,36 +83,6 @@
       <trans-unit id="Trend" xml:space="preserve">
         <source>Trend</source>
         <target>Trend</target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
-      <trans-unit id="Week %@, Age %@" xml:space="preserve">
-        <source>Week %1$@, Age %2$@</source>
-        <target>Week %1$@, Age %2$@</target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
-      <trans-unit id="Welcome to Mori" xml:space="preserve">
-        <source>Welcome to Mori</source>
-        <target>Welcome to Mori</target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
-      <trans-unit id="When were you born?" xml:space="preserve">
-        <source>When were you born?</source>
-        <target>When were you born?</target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
-      <trans-unit id="You have approximately %@ weeks remaining" xml:space="preserve">
-        <source>You have approximately %@ weeks remaining</source>
-        <target>You have approximately %@ weeks remaining</target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
-      <trans-unit id="Your Life" xml:space="preserve">
-        <source>Your Life</source>
-        <target>Your Life</target>
-        <note>No comment provided by engineer.</note>
-      </trans-unit>
-      <trans-unit id="days" xml:space="preserve">
-        <source>days</source>
-        <target>days</target>
         <note>No comment provided by engineer.</note>
       </trans-unit>
       <trans-unit id="網絡有點不穩定" xml:space="preserve">

@@ -1,58 +1,124 @@
 import React from 'react';
+import bellIcon from '../assets/icons/mori-icon-bell.png';
+import breatheIcon from '../assets/icons/mori-icon-breathe.png';
+import chevronIcon from '../assets/icons/mori-icon-chevron.png';
+import focusIcon from '../assets/icons/mori-icon-focus.png';
+import hapticsIcon from '../assets/icons/mori-icon-haptics.png';
+import heartIcon from '../assets/icons/mori-icon-heart.png';
+import homeIcon from '../assets/icons/mori-icon-home.png';
+import journalIcon from '../assets/icons/mori-icon-journal.png';
+import leafIcon from '../assets/icons/mori-icon-leaf.png';
+import lockShieldIcon from '../assets/icons/mori-icon-lock-shield.png';
+import minusIcon from '../assets/icons/mori-icon-minus.png';
+import pauseIcon from '../assets/icons/mori-icon-pause.png';
+import playIcon from '../assets/icons/mori-icon-play.png';
+import plusIcon from '../assets/icons/mori-icon-plus.png';
+import pulseIcon from '../assets/icons/mori-icon-pulse.png';
+import quietIcon from '../assets/icons/mori-icon-quiet.png';
+import refreshIcon from '../assets/icons/mori-icon-refresh.png';
+import rootsIcon from '../assets/icons/mori-icon-roots.png';
+import settingsIcon from '../assets/icons/mori-icon-settings.png';
+import soundIcon from '../assets/icons/mori-icon-sound.png';
+import stopIcon from '../assets/icons/mori-icon-stop.png';
+import timerIcon from '../assets/icons/mori-icon-timer.png';
 
-export type MoriIconName = 
-  | 'hourglass' 
-  | 'rose' 
-  | 'chart' 
-  | 'sunset' 
-  | 'target' 
-  | 'star' 
-  | 'book' 
+export type MoriIconName =
+  | 'home'
+  | 'breathe'
+  | 'focus'
+  | 'bell'
+  | 'roots'
+  | 'pulse'
+  | 'journal'
+  | 'quiet'
+  | 'settings'
+  | 'chevron'
+  | 'plus'
+  | 'minus'
+  | 'play'
+  | 'pause'
+  | 'stop'
+  | 'refresh'
+  | 'sound'
+  | 'haptics'
   | 'leaf'
-  | 'sun'
-  | 'moon'
-  | 'clock'
+  | 'lockShield'
+  | 'timer'
   | 'heart';
 
 export interface MoriIconProps {
   name: MoriIconName;
   size?: number;
   className?: string;
+  decorative?: boolean;
 }
 
-const iconPaths: Record<MoriIconName, string> = {
-  hourglass: 'M12 2v4m0 12v4M4 8h16M4 16h16m-8-4l-4-4m4 4l4-4m-4 12l-4 4m4-4l4 4',
-  rose: 'M12 21c-4-4-8-7-8-12a8 8 0 1116 0c0 5-4 8-8 12z',
-  chart: 'M3 3v18h18M7 16l4-4 4 4 5-6',
-  sunset: 'M17 18a5 5 0 000-10H5m12 5a5 5 0 01-5 5H5m12-8l-4-4m0 0L9 7m4 4l-4 4',
-  target: 'M12 2a10 10 0 100 20 10 10 0 000-20zm0 5v5l3 3',
-  star: 'M12 2l3 7h7l-5.5 4.5 2 7.5-6.5-4.5-6.5 4.5 2-7.5L2 9h7l3-7z',
-  book: 'M4 19.5A2.5 2.5 0 016.5 17H20M4 4.5v15A2.5 2.5 0 016.5 17H20V2H6.5A2.5 2.5 0 004 4.5z',
-  leaf: 'M11 20A7 7 0 0113.56 6.44l-2.12-6.36a1 1 0 00-1.74 0L7 12.86 3 21h14l-4-8.56z',
-  sun: 'M12 1v2m0 18v2M4.22 4.22l1.42 1.42m12.72 12.72l1.42 1.42M1 12h2m18 0h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42',
-  moon: 'M21 12.79A9 9 0 1111.21 3 7 7 0 0021 12.79z',
-  clock: 'M12 6v6l4 2m4-2a8 8 0 11-16 0 8 8 0 0116 0z',
-  heart: 'M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z'
+const iconAssets: Record<MoriIconName, string> = {
+  home: homeIcon,
+  breathe: breatheIcon,
+  focus: focusIcon,
+  bell: bellIcon,
+  roots: rootsIcon,
+  pulse: pulseIcon,
+  journal: journalIcon,
+  quiet: quietIcon,
+  settings: settingsIcon,
+  chevron: chevronIcon,
+  plus: plusIcon,
+  minus: minusIcon,
+  play: playIcon,
+  pause: pauseIcon,
+  stop: stopIcon,
+  refresh: refreshIcon,
+  sound: soundIcon,
+  haptics: hapticsIcon,
+  leaf: leafIcon,
+  lockShield: lockShieldIcon,
+  timer: timerIcon,
+  heart: heartIcon,
+};
+
+const iconLabels: Record<MoriIconName, string> = {
+  home: 'Home',
+  breathe: 'Breathe',
+  focus: 'Focus',
+  bell: 'Bell',
+  roots: 'Roots',
+  pulse: 'Pulse',
+  journal: 'Journal',
+  quiet: 'Quiet',
+  settings: 'Settings',
+  chevron: 'Chevron',
+  plus: 'Plus',
+  minus: 'Minus',
+  play: 'Play',
+  pause: 'Pause',
+  stop: 'Stop',
+  refresh: 'Refresh',
+  sound: 'Sound',
+  haptics: 'Haptics',
+  leaf: 'Leaf',
+  lockShield: 'Lock Shield',
+  timer: 'Timer',
+  heart: 'Heart',
 };
 
 export const MoriIcon: React.FC<MoriIconProps> = ({
   name,
   size = 24,
-  className = ''
+  className = '',
+  decorative = true,
 }) => {
   return (
-    <svg
+    <img
+      src={iconAssets[name]}
       width={size}
       height={size}
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="1.5"
-      strokeLinecap="round"
-      strokeLinejoin="round"
+      alt={decorative ? '' : iconLabels[name]}
+      aria-hidden={decorative ? 'true' : undefined}
       className={`mori-icon mori-icon-${name} ${className}`}
-    >
-      <path d={iconPaths[name]} />
-    </svg>
+      decoding="async"
+      loading="lazy"
+    />
   );
 };

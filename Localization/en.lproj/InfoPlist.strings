@@ -1,0 +1,5 @@
+"CFBundleDisplayName" = "Mori";
+"CFBundleName" = "Mori";
+"NSHealthShareUsageDescription" = "Mori can read Apple Health data you approve, including HRV, heart rate, resting heart rate, sleep, respiratory rate, temperature, workouts, active energy, and walking or running distance, to personalize recovery readiness and attention signals.";
+"NSHealthUpdateUsageDescription" = "Mori does not write data to Apple Health. Recovery features only read the Apple Health data you approve.";
+"NSPhotoLibraryUsageDescription" = "Mori lets you choose photos to attach to your private journal entries.";

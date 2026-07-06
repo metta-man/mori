@@ -1,62 +1,36 @@
 #!/bin/bash
-# Colors from Flare's spec
-BG="#2D4739"
-RING="#F5F0E1"
-GLOW="#D4A574"
+set -euo pipefail
 
-# Create base 1024x1024 icon
-convert -size 1024x1024 xc:"$BG" \
-    -gravity center \
-    -fill "$RING" -draw "circle 512,512 512,400" \
-    -fill "$BG"   -draw "circle 512,512 512,440" \
-    -fill "$RING" -draw "circle 512,512 512,360" \
-    -fill "$BG"   -draw "circle 512,512 512,400" \
-    -fill "$RING" -draw "circle 512,512 512,320" \
-    -fill "$BG"   -draw "circle 512,512 512,360" \
-    -fill "$GLOW" -draw "circle 512,512 512,480" \
-    -fill "$RING" -draw "circle 512,512 512,280" \
-    -fill "$BG"   -draw "circle 512,512 512,320" \
-    -blur 0x20 icon_1024.png
+# Regenerate the active botanical app-icon family. Keep the app icon aligned with
+# the paper-and-watercolor direction used throughout the app.
 
-# Generate iOS sizes
-for size in 180 120 60 29; do
-    convert icon_1024.png -resize ${size}x${size} icon_${size}.png
-done
+if ! command -v convert >/dev/null 2>&1; then
+    echo "ImageMagick 'convert' is required." >&2
+    exit 1
+fi
 
-# Generate Android sizes
-for size in 192 144 96 72 48; do
-    convert icon_1024.png -resize ${size}x${size} android_icon_${size}.png
-done
+PAPER_MASTER="icon_1024_paper_linework.png"
+IOS_SIZES=(20 29 40 58 60 76 80 87 120 152 167 180)
+ANDROID_SIZES=(48 72 96 144 192)
 
-# High contrast variant (darker background, brighter rings)
-convert -size 1024x1024 xc:"#1a2e24" \
-    -gravity center \
-    -fill "#ffffff" -draw "circle 512,512 512,400" \
-    -fill "#1a2e24" -draw "circle 512,512 512,440" \
-    -fill "#ffffff" -draw "circle 512,512 512,360" \
-    -fill "#1a2e24" -draw "circle 512,512 512,400" \
-    -fill "#ffffff" -draw "circle 512,512 512,320" \
-    -fill "#1a2e24" -draw "circle 512,512 512,360" \
-    -fill "#ffcc88" -draw "circle 512,512 512,480" \
-    -fill "#ffffff" -draw "circle 512,512 512,280" \
-    -fill "#1a2e24" -draw "circle 512,512 512,320" \
-    icon_1024_high_contrast.png
-convert icon_1024_high_contrast.png -resize 180x180 icon_180_high_contrast.png
+generate_family() {
+    local master="$1"
+    local suffix="$2"
 
-# Monochrome variant (black and white)
-convert -size 1024x1024 xc:"#000000" \
-    -gravity center \
-    -fill "#ffffff" -draw "circle 512,512 512,400" \
-    -fill "#000000" -draw "circle 512,512 512,440" \
-    -fill "#ffffff" -draw "circle 512,512 512,360" \
-    -fill "#000000" -draw "circle 512,512 512,400" \
-    -fill "#ffffff" -draw "circle 512,512 512,320" \
-    -fill "#000000" -draw "circle 512,512 512,360" \
-    -fill "#888888" -draw "circle 512,512 512,480" \
-    -fill "#ffffff" -draw "circle 512,512 512,280" \
-    -fill "#000000" -draw "circle 512,512 512,320" \
-    icon_1024_mono.png
-convert icon_1024_mono.png -resize 180x180 icon_180_mono.png
+    if [[ ! -f "$master" ]]; then
+        echo "Missing master icon: $master" >&2
+        exit 1
+    fi
 
-echo "Icons generated successfully"
-ls -la
+    for size in "${IOS_SIZES[@]}"; do
+        convert "$master" -resize "${size}x${size}" "icon_${size}_${suffix}.png"
+    done
+
+    for size in "${ANDROID_SIZES[@]}"; do
+        convert "$master" -resize "${size}x${size}" "android_icon_${size}_${suffix}.png"
+    done
+}
+
+generate_family "$PAPER_MASTER" "paper_linework"
+
+echo "Botanical app icons regenerated."

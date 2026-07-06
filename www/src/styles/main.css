@@ -1,4 +1,4 @@
-/* Mori Brand System - Main Styles */
+/* Mori UI System - Main Styles */
 @import './variables.css';
 
 /* Base Styles */
@@ -21,7 +21,7 @@ body {
   font-size: 48px;
   font-weight: 300;
   line-height: 1.2;
-  letter-spacing: -0.02em;
+  letter-spacing: 0;
 }
 
 .mori-h2 {
@@ -49,5 +49,5 @@ body {
   font-family: var(--font-ui);
   font-size: 14px;
   font-weight: 500;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
 }

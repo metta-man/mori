@@ -1,249 +1,215 @@
 import SwiftUI
 
-struct MoriForestBackground<Content: View>: View {
-    private let content: Content
-
-    init(@ViewBuilder content: () -> Content) {
-        self.content = content()
-    }
+struct MoriPracticeCard: View {
+    let practice: MoriPractice
+    var eyebrow: String?
+    var reason: String?
+    var showsChevron = true
 
     var body: some View {
-        ZStack {
-            MoriColors.forestPaper
-                .ignoresSafeArea()
+        HStack(alignment: .top, spacing: 12) {
+            MoriBitmapIconBadge(
+                icon: practice.icon,
+                size: 42,
+                fill: MoriColors.sanctuarySurface.opacity(0.72),
+                stroke: Color.white.opacity(0.9)
+            )
 
-            MoriHillShape()
-                .fill(MoriColors.forestSage.opacity(0.18))
-                .frame(height: 220)
-                .frame(maxHeight: .infinity, alignment: .bottom)
-                .ignoresSafeArea()
+            VStack(alignment: .leading, spacing: 8) {
+                if let eyebrow {
+                    Text(MoriL10n.display(eyebrow))
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(MoriColors.sanctuarySage)
+                }
 
-            MoriRootPattern()
-                .stroke(MoriColors.forestRoot.opacity(0.08), lineWidth: 1)
-                .ignoresSafeArea()
+                HStack(alignment: .firstTextBaseline, spacing: 8) {
+                    Text(MoriL10n.display(practice.title))
+                        .font(.system(size: 18, weight: .regular, design: .serif))
+                        .foregroundColor(MoriColors.sanctuaryInk)
 
-            MoriSeedScatter()
-                .fill(MoriColors.forestMoss.opacity(0.10))
-                .ignoresSafeArea()
+                    Text(MoriL10n.display(practice.durationText))
+                        .font(.system(size: 11, weight: .semibold))
+                        .foregroundColor(MoriColors.sanctuaryMuted)
+                        .padding(.horizontal, 7)
+                        .padding(.vertical, 4)
+                        .background(MoriColors.sanctuaryInk.opacity(0.07))
+                        .clipShape(Capsule())
+                }
 
-            content
+                Text(MoriL10n.display(reason ?? practice.description))
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundColor(MoriColors.sanctuaryMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                MoriPracticeInlineSummary(practice: practice)
+            }
+
+            Spacer(minLength: 0)
+
+            if showsChevron {
+                MoriBitmapIconImage(icon: .chevron, size: 15, opacity: 0.58)
+                    .padding(.top, 12)
+            }
         }
+        .moriSanctuaryBox(cornerRadius: 16, padding: 12, tone: .paper, castsShadow: false)
     }
 }
 
-struct MoriPageHeader: View {
-    let eyebrow: String
+struct MoriPracticeInlineSummary: View {
+    let practice: MoriPractice
+
+    var body: some View {
+        Text(summaryText)
+            .font(.system(size: 12, weight: .semibold))
+            .foregroundColor(MoriColors.botanicalMuted)
+            .lineLimit(1)
+            .minimumScaleFactor(0.78)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(MoriColors.botanicalInk.opacity(0.055))
+            .clipShape(Capsule())
+            .accessibilityLabel(accessibilityText)
+    }
+
+    private var summaryText: String {
+        "\(practice.seedText) / \(practice.domainText)"
+    }
+
+    private var accessibilityText: String {
+        MoriL10n.string(
+            "practice.inline_summary.accessibility",
+            defaultValue: "%@. %@.",
+            arguments: [practice.seedText, practice.domainText]
+        )
+    }
+}
+
+struct MoriFeatureBox: View {
     let title: String
     let subtitle: String
+    let icon: MoriBitmapIcon
+    var detail: String?
+    var tone: MoriSanctuaryBoxTone = .paper
+    var iconSize: CGFloat = 58
+    var minHeight: CGFloat = 132
+    var showsChevron = true
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            Text(eyebrow.uppercased())
-                .font(.system(size: 11, weight: .semibold, design: .rounded))
-                .tracking(1.4)
-                .foregroundColor(MoriColors.forestMoss)
+        ZStack(alignment: .bottomTrailing) {
+            HStack(alignment: .top, spacing: isCompact ? 10 : 14) {
+                iconBadge
+                    .padding(.top, 1)
 
-            Text(title)
-                .font(.system(size: 34, weight: .semibold, design: .rounded))
-                .foregroundColor(MoriColors.forestCanopy)
-                .fixedSize(horizontal: false, vertical: true)
+                VStack(alignment: .leading, spacing: isCompact ? 5 : 7) {
+                    HStack(alignment: .firstTextBaseline, spacing: 8) {
+                        Text(MoriL10n.display(title))
+                            .font(.system(size: isCompact ? 17 : 22, weight: .regular, design: .serif))
+                            .foregroundColor(MoriColors.sanctuaryInk)
+                            .lineLimit(isCompact ? 1 : 2)
+                            .minimumScaleFactor(isCompact ? 0.72 : 0.82)
+                            .layoutPriority(2)
 
-            Text(subtitle)
-                .font(.system(size: 15, weight: .regular))
-                .foregroundColor(MoriColors.forestMuted)
-                .lineSpacing(2)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
+                        if let detail {
+                            Text(MoriL10n.display(detail))
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundColor(tone.accent)
+                                .padding(.horizontal, 8)
+                                .padding(.vertical, 4)
+                                .background(tone.accent.opacity(0.11))
+                                .clipShape(Capsule())
+                        }
+                    }
 
-struct MoriSectionTitle: View {
-    let title: String
-    var subtitle: String?
+                    Text(MoriL10n.display(subtitle))
+                        .font(.system(size: isCompact ? 11 : 15, weight: .regular))
+                        .foregroundColor(MoriColors.sanctuaryMuted)
+                        .lineLimit(isCompact ? 3 : nil)
+                        .minimumScaleFactor(isCompact ? 0.78 : 0.88)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .padding(.trailing, showsChevron ? (isCompact ? 22 : 16) : 0)
 
-    var body: some View {
-        VStack(alignment: .leading, spacing: 5) {
-            Text(title)
-                .font(.system(size: 20, weight: .semibold, design: .rounded))
-                .foregroundColor(MoriColors.forestCanopy)
-
-            if let subtitle {
-                Text(subtitle)
-                    .font(.system(size: 13, weight: .regular))
-                    .foregroundColor(MoriColors.forestMuted)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
-struct MoriMetricTile: View {
-    let title: String
-    let value: String
-    let detail: String
-    var symbolName: String = "leaf.fill"
-    var tint: Color = MoriColors.forestMoss
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Image(systemName: symbolName)
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundColor(tint)
-                .frame(width: 34, height: 34)
-                .background(tint.opacity(0.12))
-                .clipShape(Circle())
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(value)
-                    .font(.system(size: 24, weight: .semibold, design: .rounded))
-                    .foregroundColor(MoriColors.forestCanopy)
-                    .minimumScaleFactor(0.75)
-
-                Text(title)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(MoriColors.forestMuted)
-
-                Text(detail)
-                    .font(.system(size: 11, weight: .regular))
-                    .foregroundColor(MoriColors.forestMuted.opacity(0.82))
-                    .lineLimit(2)
-            }
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .moriSanctuaryCard(cornerRadius: 18, padding: 15)
-    }
-}
-
-struct MoriPill: View {
-    let title: String
-    var symbolName: String?
-    var isSelected: Bool = false
-    var tint: Color = MoriColors.forestMoss
-
-    var body: some View {
-        HStack(spacing: 6) {
-            if let symbolName {
-                Image(systemName: symbolName)
-                    .font(.system(size: 12, weight: .semibold))
+                Spacer(minLength: 0)
             }
 
-            Text(title)
-                .font(.system(size: 13, weight: .semibold))
-                .lineLimit(1)
+            if showsChevron {
+                MoriBitmapIconImage(icon: .chevron, size: 16, opacity: 0.68)
+                    .frame(width: 26, height: 26)
+                    .background(MoriColors.sanctuarySurface.opacity(0.52))
+                    .clipShape(Circle())
+                    .padding(.bottom, 2)
+            }
         }
-        .foregroundColor(isSelected ? MoriColors.forestCard : tint)
-        .padding(.horizontal, 12)
-        .padding(.vertical, 8)
-        .background(isSelected ? tint : tint.opacity(0.10))
-        .clipShape(Capsule())
-        .overlay(
-            Capsule()
-                .stroke(tint.opacity(isSelected ? 0 : 0.16), lineWidth: 1)
+        .frame(maxWidth: .infinity, minHeight: minHeight, alignment: .topLeading)
+        .moriSanctuaryBox(
+            cornerRadius: 22,
+            padding: isCompact ? 10 : 14,
+            tone: tone,
+            castsShadow: !isCompact
         )
+        .contentShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .accessibilityElement(children: .combine)
     }
-}
 
-struct MoriForestProgressBar: View {
-    let value: Double
-    var tint: Color = MoriColors.forestMoss
-
-    var body: some View {
-        GeometryReader { proxy in
-            let clamped = max(0, min(1, value))
-            ZStack(alignment: .leading) {
-                Capsule()
-                    .fill(MoriColors.forestLine.opacity(0.55))
-
-                Capsule()
-                    .fill(tint)
-                    .frame(width: max(8, proxy.size.width * clamped))
-            }
-        }
-        .frame(height: 9)
+    private var isCompact: Bool {
+        iconSize <= 52
     }
-}
 
-extension View {
-    func moriSanctuaryCard(cornerRadius: CGFloat = 20, padding: CGFloat = 18) -> some View {
-        modifier(MoriSanctuaryCardModifier(cornerRadius: cornerRadius, padding: padding))
-    }
-}
-
-private struct MoriSanctuaryCardModifier: ViewModifier {
-    let cornerRadius: CGFloat
-    let padding: CGFloat
-
-    func body(content: Content) -> some View {
-        content
-            .padding(padding)
-            .background(MoriColors.forestCard.opacity(0.96))
-            .clipShape(RoundedRectangle(cornerRadius: cornerRadius, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
-                    .stroke(MoriColors.forestHairline, lineWidth: 1)
-            )
-            .shadow(color: MoriColors.forestShadow.opacity(0.50), radius: 18, x: 0, y: 10)
-    }
-}
-
-private struct MoriHillShape: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        path.move(to: CGPoint(x: rect.minX, y: rect.maxY))
-        path.addLine(to: CGPoint(x: rect.minX, y: rect.midY + 42))
-        path.addCurve(
-            to: CGPoint(x: rect.maxX, y: rect.midY + 16),
-            control1: CGPoint(x: rect.width * 0.26, y: rect.midY - 22),
-            control2: CGPoint(x: rect.width * 0.62, y: rect.midY + 90)
+    @ViewBuilder
+    private var iconBadge: some View {
+        MoriBitmapIconBadge(
+            icon: icon,
+            size: iconSize,
+            iconScale: isCompact ? 0.50 : 0.54,
+            fill: tone.iconFill,
+            stroke: Color.white.opacity(0.88),
+            shadow: MoriColors.sanctuaryShadow.opacity(0.34)
         )
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
-        path.closeSubpath()
-        return path
+        .accessibilityHidden(true)
     }
 }
 
-private struct MoriRootPattern: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        let startY = rect.maxY - 170
-
-        for index in 0..<5 {
-            let x = rect.minX + CGFloat(index) * rect.width / 4
-            path.move(to: CGPoint(x: x, y: startY + CGFloat(index % 2) * 22))
-            path.addCurve(
-                to: CGPoint(x: x + rect.width * 0.22, y: rect.maxY + 20),
-                control1: CGPoint(x: x + 28, y: startY + 38),
-                control2: CGPoint(x: x - 18, y: rect.maxY - 70)
-            )
+extension LifeDomain {
+    var moriTint: Color {
+        switch self {
+        case .body:
+            return MoriColors.botanicalFern
+        case .mind:
+            return MoriColors.botanicalMist
+        case .love:
+            return MoriColors.botanicalClay
+        case .craft:
+            return MoriColors.botanicalSeed
+        case .courage:
+            return MoriColors.botanicalRoot
+        case .service:
+            return MoriColors.botanicalSage
+        case .wonder:
+            return MoriColors.botanicalSeed
+        case .rest:
+            return MoriColors.botanicalMuted
         }
-
-        return path
     }
-}
 
-private struct MoriSeedScatter: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        let seeds: [(CGFloat, CGFloat, CGFloat)] = [
-            (0.12, 0.18, 7),
-            (0.72, 0.14, 5),
-            (0.88, 0.34, 8),
-            (0.18, 0.72, 6),
-            (0.61, 0.82, 7)
-        ]
-
-        for seed in seeds {
-            let seedRect = CGRect(
-                x: rect.width * seed.0,
-                y: rect.height * seed.1,
-                width: seed.2,
-                height: seed.2 * 1.6
-            )
-            path.addEllipse(in: seedRect)
+    var moriIcon: MoriBitmapIcon {
+        switch self {
+        case .body:
+            return .focus
+        case .mind:
+            return .pulse
+        case .love:
+            return .heart
+        case .craft:
+            return .journal
+        case .courage:
+            return .leaf
+        case .service:
+            return .breathe
+        case .wonder:
+            return .pulse
+        case .rest:
+            return .quiet
         }
-
-        return path
     }
 }

@@ -17,27 +17,27 @@ struct PromptChipView: View {
         Button(action: { onTap?() }) {
             Text(prompt.shortName)
                 .font(.system(size: 13, weight: .medium))
-                .foregroundColor(isSelected ? MoriColors.forestCard : MoriColors.forestCanopy)
+                .foregroundColor(isSelected ? MoriColors.botanicalSurface : MoriColors.botanicalInk)
                 .padding(.horizontal, 16)
                 .padding(.vertical, 8)
                 .background(
                     isSelected 
-                        ? MoriColors.forestCanopy
-                        : MoriColors.forestCanopy.opacity(0.08)
+                        ? MoriColors.botanicalInk
+                        : MoriColors.botanicalInk.opacity(0.08)
                 )
                 .overlay(
                     RoundedRectangle(cornerRadius: 20)
                         .stroke(
                             isSelected 
-                                ? MoriColors.forestCanopy
-                                : MoriColors.forestLine.opacity(0.48),
+                                ? MoriColors.botanicalInk
+                                : MoriColors.botanicalLine.opacity(0.48),
                             lineWidth: 1
                         )
                 )
                 .cornerRadius(20)
         }
         .buttonStyle(PlainButtonStyle())
-        .accessibility(label: Text("Prompt: \(prompt.displayText)"))
+        .accessibility(label: Text(MoriL10n.string("journal.prompt.accessibility", defaultValue: "Prompt: %@", arguments: [prompt.displayText])))
     }
 }
 
@@ -49,13 +49,11 @@ struct PromptSelectionSection: View {
         VStack(alignment: .leading, spacing: 12) {
             // Header
             HStack {
-                Image(systemName: "sparkle")
-                    .font(.system(size: 16, weight: .medium))
-                    .foregroundColor(MoriColors.forestMoss)
+                MoriBitmapIconImage(icon: .leaf, size: 17, opacity: 0.82)
                 
                 Text("Choose a prompt")
                     .font(.system(size: 17, weight: .semibold, design: .rounded))
-                    .foregroundColor(MoriColors.forestCanopy)
+                    .foregroundColor(MoriColors.botanicalInk)
             }
             
             // Chips
@@ -141,5 +139,5 @@ struct FlowLayout: Layout {
         }
     }
     .padding()
-    .background(MoriColors.forestPaper)
+    .background(MoriColors.botanicalPaper)
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import leafIcon from '../assets/icons/mori-icon-leaf.png';
 import './HabitCheckIn.css';
 
 interface Habit {
@@ -54,9 +55,7 @@ export function HabitCheckIn({ habits: initialHabits, onToggle }: HabitCheckInPr
             <span className="habit-name">{habit.name}</span>
             <div className={`habit-toggle ${habits[habit.id] ? 'complete' : ''}`}>
               {habits[habit.id] && (
-                <svg className="checkmark" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3">
-                  <polyline points="20 6 9 17 4 12" />
-                </svg>
+                <img className="habit-toggle-art" src={leafIcon} alt="" aria-hidden="true" decoding="async" />
               )}
             </div>
           </div>

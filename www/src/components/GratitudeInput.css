@@ -1,17 +1,18 @@
-/* 🌙 Gratitude Input Component */
-/* Mori Brand Identity */
+/* Mori Gratitude Input */
 
 .gratitude-container {
   background: var(--bg-secondary);
-  border-radius: var(--radius-2xl);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-lg);
   padding: var(--space-lg);
   margin: var(--space-lg) 0;
   transition: all var(--transition-normal);
+  box-shadow: var(--shadow-soft);
 }
 
 .gratitude-container.submitted {
-  border: 1px solid var(--mori-gold);
-  box-shadow: var(--shadow-gold);
+  border-color: rgba(126, 141, 114, 0.42);
+  box-shadow: var(--shadow-seed);
 }
 
 .gratitude-header {
@@ -31,7 +32,7 @@
   font-size: var(--text-h3);
   color: var(--text-primary);
   margin: 0;
-  letter-spacing: 0.02em;
+  letter-spacing: 0;
 }
 
 .gratitude-prompt {
@@ -42,16 +43,16 @@
 }
 
 .gratitude-input-wrapper {
-  background: var(--bg-primary);
-  border: 1px solid var(--mori-gray-mid);
+  background: rgba(255, 250, 240, 0.68);
+  border: 1px solid var(--border-subtle);
   border-radius: var(--radius-lg);
   padding: var(--space-md);
   transition: all var(--transition-normal);
 }
 
 .gratitude-input-wrapper.focused {
-  border-color: var(--mori-gold);
-  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.1);
+  border-color: rgba(95, 116, 92, 0.42);
+  box-shadow: 0 0 0 3px rgba(95, 116, 92, 0.1);
 }
 
 .gratitude-textarea {
@@ -94,16 +95,16 @@
   font-size: var(--text-ui-sm);
   font-weight: 500;
   padding: var(--space-sm) var(--space-lg);
-  background: var(--mori-gold);
-  color: var(--mori-dark);
+  background: var(--mori-canopy);
+  color: var(--mori-paper);
   border: none;
-  border-radius: var(--radius-full);
+  border-radius: var(--radius-lg);
   cursor: pointer;
   transition: all var(--transition-normal);
 }
 
 .gratitude-submit:hover:not(:disabled) {
-  box-shadow: var(--shadow-gold);
+  box-shadow: var(--shadow-seed);
   transform: translateY(-1px);
 }
 
@@ -119,11 +120,11 @@
   gap: var(--space-sm);
   margin-top: var(--space-md);
   padding: var(--space-md);
-  background: rgba(212, 175, 55, 0.1);
+  background: rgba(126, 141, 114, 0.12);
   border-radius: var(--radius-lg);
   font-family: var(--font-ui);
   font-size: var(--text-ui-sm);
-  color: var(--mori-gold);
+  color: var(--mori-leaf);
   animation: mori-fade-up 0.5s ease;
 }
 
@@ -139,5 +140,21 @@
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gratitude-container,
+  .gratitude-input-wrapper,
+  .gratitude-submit {
+    transition: none;
+  }
+
+  .gratitude-submit:hover:not(:disabled) {
+    transform: none;
+  }
+
+  .gratitude-success {
+    animation: none;
   }
 }

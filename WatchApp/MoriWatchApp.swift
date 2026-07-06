@@ -2,44 +2,33 @@ import SwiftUI
 
 @main
 struct MoriWatchApp: App {
+    @Environment(\.scenePhase) private var scenePhase
+    @StateObject private var notificationCenter = MoriWatchNotificationCenter.shared
+    @AppStorage(MoriLocalePreference.defaultsKey, store: MoriSharedDefaults.shared) private var localePreferenceRaw = MoriLocalePreference.system.rawValue
+
     init() {
         MoriWatchSettingsReceiver.shared.activate()
+        MoriWatchNotificationCenter.shared.configure()
     }
 
     var body: some Scene {
         WindowGroup {
-            MoriWatchSummaryView(snapshot: MoriWidgetSnapshot())
+            MoriWatchResetHub(notificationCenter: notificationCenter)
+                .environment(\.locale, localePreference.locale)
+                .id(localePreference.rawValue)
                 .onOpenURL { _ in
                     MoriWatchSettingsReceiver.shared.activate()
                 }
+                .onChange(of: scenePhase) { _, phase in
+                    if phase == .active {
+                        MoriWatchSettingsReceiver.shared.activate()
+                        MoriWatchBellScheduler.shared.refreshIfNeeded()
+                    }
+                }
         }
     }
-}
 
-private struct MoriWatchSummaryView: View {
-    let snapshot: MoriWidgetSnapshot
-
-    var body: some View {
-        VStack(spacing: 8) {
-            Gauge(value: snapshot.progress) {
-                Image(systemName: "hourglass")
-            } currentValueLabel: {
-                Text("\(Int(snapshot.progress * 100))%")
-            }
-            .gaugeStyle(.accessoryCircularCapacity)
-            .tint(.yellow)
-
-            Text("\(snapshot.primaryCountdownValue.formatted())")
-                .font(.system(.title2, design: .monospaced).weight(.light))
-                .lineLimit(1)
-                .minimumScaleFactor(0.6)
-
-            Text(snapshot.primaryCountdownLabel)
-                .font(.caption)
-                .foregroundStyle(.secondary)
-        }
-        .containerBackground(.black, for: .navigation)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(snapshot.primaryCountdownValue) \(snapshot.primaryCountdownLabel) left")
+    private var localePreference: MoriLocalePreference {
+        MoriLocalePreference(rawValue: localePreferenceRaw) ?? .system
     }
 }

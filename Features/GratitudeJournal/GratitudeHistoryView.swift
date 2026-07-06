@@ -13,7 +13,7 @@ struct GratitudeHistoryView: View {
     @State private var selectedEntry: GratitudeEntry?
     
     var body: some View {
-        MoriForestBackground {
+        MoriPaperBackground(variant: .journal) {
             ScrollView(showsIndicators: false) {
                 LazyVStack(spacing: 18) {
                     if viewModel.getAllEntries().isEmpty {
@@ -27,33 +27,36 @@ struct GratitudeHistoryView: View {
                 .padding(20)
             }
         }
-        .navigationTitle("Journal History")
+        .navigationTitle("Log History")
         .navigationBarTitleDisplayMode(.large)
-        .toolbarBackground(MoriColors.forestPaper, for: .navigationBar)
+        .toolbarBackground(MoriColors.botanicalPaper, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbarColorScheme(.light, for: .navigationBar)
         .sheet(item: $selectedEntry) { entry in
             GratitudeDetailView(entry: entry)
         }
-        .onAppear {
-            viewModel.loadData()
-        }
+        .gratitudeHistoryLifecycle(onReload: viewModel.loadData)
     }
     
     // MARK: - Empty State
     private var emptyState: some View {
         VStack(spacing: 16) {
-            Image(systemName: "book.closed")
-                .font(.system(size: 64))
-                .foregroundColor(MoriColors.forestMuted.opacity(0.62))
+            MoriBitmapIconBadge(
+                icon: .journal,
+                size: 64,
+                iconScale: 0.58,
+                fill: MoriColors.sanctuarySurface.opacity(0.76),
+                stroke: Color.white.opacity(0.88),
+                shadow: MoriColors.sanctuaryShadow.opacity(0.16)
+            )
             
             Text("No entries yet")
                 .font(.system(size: 20, weight: .semibold, design: .rounded))
-                .foregroundColor(MoriColors.forestCanopy)
+                .foregroundColor(MoriColors.botanicalInk)
             
-            Text("Start your gratitude journey today.\nEvery small note makes a difference.")
+            Text("Start with one daily log.\nOne small note is enough.")
                 .font(.system(size: 14, weight: .regular))
-                .foregroundColor(MoriColors.forestMuted)
+                .foregroundColor(MoriColors.botanicalMuted)
                 .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
@@ -66,7 +69,7 @@ struct GratitudeHistoryView: View {
             // Month Header
             Text(month)
                 .font(.system(size: 17, weight: .semibold, design: .rounded))
-                .foregroundColor(MoriColors.forestCanopy)
+                .foregroundColor(MoriColors.botanicalInk)
             
             // Entries for this month
             VStack(spacing: 0) {
@@ -75,7 +78,7 @@ struct GratitudeHistoryView: View {
                     
                     if entry.id != groupedEntries[month]?.last?.id {
                         Divider()
-                            .background(MoriColors.forestLine.opacity(0.58))
+                            .background(MoriColors.botanicalLine.opacity(0.58))
                     }
                 }
             }
@@ -91,42 +94,48 @@ struct GratitudeHistoryView: View {
                 VStack(alignment: .center, spacing: 2) {
                     Text(dayOfMonth(entry.date))
                         .font(.system(size: 20, weight: .semibold, design: .rounded))
-                        .foregroundColor(MoriColors.forestMoss)
+                        .foregroundColor(MoriColors.botanicalMoss)
                     
                     Text(shortMonth(entry.date))
                         .font(.system(size: 12, weight: .medium))
-                        .foregroundColor(MoriColors.forestMuted)
+                        .foregroundColor(MoriColors.botanicalMuted)
                 }
                 .frame(width: 44)
                 
                 // Content
                 VStack(alignment: .leading, spacing: 4) {
-                    Label(entry.sourceLabel, systemImage: entry.sourceSymbolName)
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundColor(sourceColor(for: entry))
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 2)
-                        .background(sourceColor(for: entry).opacity(0.10))
-                        .cornerRadius(4)
+                    HStack(spacing: 5) {
+                        MoriBitmapIconImage(icon: entry.sourceIcon, size: 12, opacity: 0.78)
+
+                        Text(entry.sourceLabel)
+                    }
+                    .font(.system(size: 11, weight: .semibold))
+                    .foregroundColor(sourceColor(for: entry))
+                    .padding(.horizontal, 8)
+                    .padding(.vertical, 2)
+                    .background(sourceColor(for: entry).opacity(0.10))
+                    .cornerRadius(4)
 
                     if !entry.photoAttachments.isEmpty {
-                        Label("\(entry.photoAttachments.count)", systemImage: "photo")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundColor(MoriColors.forestMuted)
+                        HStack(spacing: 4) {
+                            MoriBitmapIconImage(icon: .journal, size: 11, opacity: 0.62)
+
+                            Text("\(entry.photoAttachments.count)")
+                        }
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(MoriColors.botanicalMuted)
                     }
                     
                     Text(entry.displayContent)
                         .font(.system(size: 14, weight: .regular))
-                        .foregroundColor(MoriColors.forestCanopy)
+                        .foregroundColor(MoriColors.botanicalInk)
                         .lineLimit(2)
                         .multilineTextAlignment(.leading)
                 }
                 
                 Spacer()
                 
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14))
-                    .foregroundColor(MoriColors.forestMuted.opacity(0.58))
+                MoriBitmapIconImage(icon: .chevron, size: 13, opacity: 0.58)
             }
             .padding(16)
         }
@@ -159,10 +168,10 @@ struct GratitudeHistoryView: View {
 
     private func sourceColor(for entry: GratitudeEntry) -> Color {
         switch entry.sourceKind {
-        case .journal: return MoriColors.forestMuted
-        case .dayLog: return MoriColors.forestClay
-        case .dailySpark: return MoriColors.forestSeed
-        case .weeklyIntention: return MoriColors.forestMoss
+        case .journal: return MoriColors.botanicalMuted
+        case .dayLog: return MoriColors.botanicalClay
+        case .dailySpark: return MoriColors.botanicalSeed
+        case .weeklyIntention: return MoriColors.botanicalMoss
         }
     }
 }

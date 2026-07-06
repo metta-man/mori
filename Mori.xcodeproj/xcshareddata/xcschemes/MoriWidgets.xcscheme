@@ -1,25 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Scheme
-   LastUpgradeVersion = "2650"
+   LastUpgradeVersion = "2700"
+   wasCreatedForAppExtension = "YES"
    version = "2.0">
    <BuildAction
       parallelizeBuildables = "YES"
       buildImplicitDependencies = "YES">
       <BuildActionEntries>
-         <BuildActionEntry
-            buildForTesting = "YES"
-            buildForRunning = "YES"
-            buildForProfiling = "YES"
-            buildForArchiving = "YES"
-            buildForAnalyzing = "YES">
-            <BuildableReference
-               BuildableIdentifier = "primary"
-               BlueprintIdentifier = "555F06634E0DCC958AE3C40D"
-               BuildableName = "Mori.app"
-               BlueprintName = "Mori"
-               ReferencedContainer = "container:Mori.xcodeproj">
-            </BuildableReference>
-         </BuildActionEntry>
          <BuildActionEntry
             buildForTesting = "YES"
             buildForRunning = "YES"
@@ -44,9 +31,9 @@
       <MacroExpansion>
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "555F06634E0DCC958AE3C40D"
-            BuildableName = "Mori.app"
-            BlueprintName = "Mori"
+            BlueprintIdentifier = "E3B598FD83F77B5AD3708644"
+            BuildableName = "MoriWidgets.appex"
+            BlueprintName = "MoriWidgets"
             ReferencedContainer = "container:Mori.xcodeproj">
          </BuildableReference>
       </MacroExpansion>
@@ -55,8 +42,8 @@
    </TestAction>
    <LaunchAction
       buildConfiguration = "Debug"
-      selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
-      selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
+      selectedDebuggerIdentifier = ""
+      selectedLauncherIdentifier = "Xcode.IDEFoundation.Launcher.PosixSpawn"
       launchStyle = "0"
       askForAppToLaunch = "Yes"
       useCustomWorkingDirectory = "NO"
@@ -69,9 +56,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "555F06634E0DCC958AE3C40D"
-            BuildableName = "Mori.app"
-            BlueprintName = "Mori"
+            BlueprintIdentifier = "E3B598FD83F77B5AD3708644"
+            BuildableName = "MoriWidgets.appex"
+            BlueprintName = "MoriWidgets"
             ReferencedContainer = "container:Mori.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
@@ -86,9 +73,9 @@
          runnableDebuggingMode = "0">
          <BuildableReference
             BuildableIdentifier = "primary"
-            BlueprintIdentifier = "555F06634E0DCC958AE3C40D"
-            BuildableName = "Mori.app"
-            BlueprintName = "Mori"
+            BlueprintIdentifier = "E3B598FD83F77B5AD3708644"
+            BuildableName = "MoriWidgets.appex"
+            BlueprintName = "MoriWidgets"
             ReferencedContainer = "container:Mori.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
