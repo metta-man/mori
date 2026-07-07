@@ -596,6 +596,7 @@ private enum MoriBeforeFeedWindowLiveActivityController {
                 content: content,
                 pushType: nil
             )
+            scheduleEndExpiredActivity(at: endsAt)
         }
     }
 
@@ -607,22 +608,53 @@ private enum MoriBeforeFeedWindowLiveActivityController {
     }
 
     @available(iOS 16.2, *)
+    private static func scheduleEndExpiredActivity(at endsAt: Date) {
+        Task {
+            let delay = max(0, endsAt.timeIntervalSince(Date()))
+            if delay > 0 {
+                try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+            }
+            await endExpired(now: Date(), dismissalPolicy: .immediate)
+        }
+    }
+
+    @available(iOS 16.2, *)
+    private static func endExpired(
+        now: Date,
+        dismissalPolicy: ActivityUIDismissalPolicy
+    ) async {
+        for activity in Activity<MoriBeforeFeedWindowAttributes>.activities {
+            guard activity.content.state.endsAt <= now else { continue }
+            await end(activity, now: now, dismissalPolicy: dismissalPolicy)
+        }
+    }
+
+    @available(iOS 16.2, *)
     private static func endExisting(dismissalPolicy: ActivityUIDismissalPolicy) async {
         let now = Date()
         for activity in Activity<MoriBeforeFeedWindowAttributes>.activities {
-            let previousState = activity.content.state
-            let state = MoriBeforeFeedWindowAttributes.ContentState(
-                startedAt: previousState.startedAt,
-                endsAt: min(previousState.endsAt, now),
-                durationSeconds: previousState.durationSeconds
-            )
-            let content = ActivityContent(
-                state: state,
-                staleDate: now,
-                relevanceScore: 0
-            )
-            await activity.end(content, dismissalPolicy: dismissalPolicy)
+            await end(activity, now: now, dismissalPolicy: dismissalPolicy)
         }
+    }
+
+    @available(iOS 16.2, *)
+    private static func end(
+        _ activity: Activity<MoriBeforeFeedWindowAttributes>,
+        now: Date,
+        dismissalPolicy: ActivityUIDismissalPolicy
+    ) async {
+        let previousState = activity.content.state
+        let state = MoriBeforeFeedWindowAttributes.ContentState(
+            startedAt: previousState.startedAt,
+            endsAt: min(previousState.endsAt, now),
+            durationSeconds: previousState.durationSeconds
+        )
+        let content = ActivityContent(
+            state: state,
+            staleDate: now,
+            relevanceScore: 0
+        )
+        await activity.end(content, dismissalPolicy: dismissalPolicy)
     }
 }
 #else

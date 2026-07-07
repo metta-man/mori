@@ -196,7 +196,7 @@ struct MoriBeforeFeedWindowLiveActivityWidget: Widget {
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     MoriBeforeFeedLiveActivityCountdown(
-                        endsAt: context.state.endsAt,
+                        state: context.state,
                         alignment: .trailing,
                         titleFont: .system(size: 18, weight: .semibold, design: .rounded),
                         labelFont: .caption2
@@ -210,7 +210,7 @@ struct MoriBeforeFeedWindowLiveActivityWidget: Widget {
                     .font(.caption.weight(.bold))
                     .foregroundStyle(MoriWidgetColors.leafAccent)
             } compactTrailing: {
-                Text(context.state.endsAt, style: .timer)
+                MoriBeforeFeedLiveActivityTimerText(state: context.state)
                     .font(.caption2.monospacedDigit())
                     .foregroundStyle(MoriWidgetColors.paper)
                     .minimumScaleFactor(0.7)
@@ -256,7 +256,7 @@ private struct MoriBeforeFeedWindowLiveActivityView: View {
             Spacer(minLength: 8)
 
             MoriBeforeFeedLiveActivityCountdown(
-                endsAt: context.state.endsAt,
+                state: context.state,
                 alignment: .trailing,
                 titleFont: .system(size: 22, weight: .semibold, design: .rounded),
                 labelFont: .caption2
@@ -282,14 +282,14 @@ private struct MoriBeforeFeedLiveActivityStatus: View {
 
 @available(iOS 16.1, *)
 private struct MoriBeforeFeedLiveActivityCountdown: View {
-    let endsAt: Date
+    let state: MoriBeforeFeedWindowAttributes.ContentState
     let alignment: HorizontalAlignment
     let titleFont: Font
     let labelFont: Font
 
     var body: some View {
         VStack(alignment: alignment, spacing: 2) {
-            Text(endsAt, style: .timer)
+            MoriBeforeFeedLiveActivityTimerText(state: state)
                 .font(titleFont.monospacedDigit())
                 .foregroundStyle(MoriWidgetColors.ink)
                 .lineLimit(1)
@@ -300,6 +300,20 @@ private struct MoriBeforeFeedLiveActivityCountdown: View {
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel("Open window time remaining")
+    }
+}
+
+@available(iOS 16.1, *)
+private struct MoriBeforeFeedLiveActivityTimerText: View {
+    let state: MoriBeforeFeedWindowAttributes.ContentState
+
+    var body: some View {
+        Text(
+            timerInterval: state.timerInterval,
+            pauseTime: state.endsAt,
+            countsDown: true,
+            showsHours: state.durationSeconds >= 60 * 60
+        )
     }
 }
 

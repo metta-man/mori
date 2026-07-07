@@ -28,6 +28,10 @@ struct MoriBeforeFeedWindowAttributes: ActivityAttributes {
             max(0, Int(ceil(endsAt.timeIntervalSince(now))))
         }
 
+        var timerInterval: ClosedRange<Date> {
+            startedAt...max(startedAt, endsAt)
+        }
+
         func progress(now: Date = Date()) -> Double {
             guard durationSeconds > 0 else { return 1 }
             let elapsed = now.timeIntervalSince(startedAt)
