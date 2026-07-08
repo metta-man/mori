@@ -672,6 +672,8 @@
 "Starts at your chosen time each day. Completing Morning Reset opens selected apps for that morning window." = "每天在你選擇的時間開始。完成晨間重設後，所選 App 會在晨間視窗內開啟。";
 "Tap a bell to breathe" = "輕點鈴聲開始呼吸";
 "The Screen Time gate opens selected feed apps after the reset. A Shortcut automation can open Mori, but iOS does not tell Mori which app triggered it, so you may need to switch back manually." = "螢幕時間門檻會在重設後開啟所選資訊流 App。捷徑自動化可以打開 Mori，但 iOS 不會告訴 Mori 是哪個 App 觸發的，所以你可能需要手動切回去。";
+"Use Mori's Start Before Feed Reset action. Do not use Shortcuts' plain Open App action, because that would open Mori even while your feed window is still active." = "使用 Mori 的「開始資訊流前重置」動作。不要用捷徑的普通「打開 App」動作，否則資訊流開放視窗仍然有效時都會打開 Mori。";
+"Do not use Open URL with mori://; iOS may block that launch from personal automations." = "不要用 mori:// 的「打開 URL」；iOS 可能會阻止個人自動化用這種方式啟動。";
 "Screen Time prepared this reset from the blocked feed app." = "Screen Time 已從被封鎖的資訊流 App 準備好這次重置。";
 "Shortcut opened Mori; iOS will not return to the feed automatically." = "捷徑已打開 Mori；iOS 不會自動返回資訊流。";
 "Selected feed apps stay limited until this completes." = "已選資訊流 App 會保持受限，直到完成這次重置。";
@@ -1560,6 +1562,10 @@
 "Topic labels, aggregate clarity stats, selected Pulse cards, and your follow-up questions are sent to the configured proxy. Recovery labels are included only when you opt in. Raw HealthKit, log, habit, and screen-time details stay local whenever possible." = "主題標籤、匯總清明統計、所選 Pulse 卡片和你的追問會傳送到已配置的代理。只有你選擇開啟時，才會包含恢復標籤。原始 HealthKit、記錄、習慣和螢幕時間詳情會盡可能保留在本地。";
 "Updating Pulse" = "正在更新 Pulse";
 "Refresh Pulse" = "重新整理 Pulse";
+"Finish the core loop first" = "先完成核心流程";
+"Pulse unlocks after one App Limit is ready, so insight stays a filter instead of another feed." = "完成一個 App Limit 後才解鎖 Pulse，讓洞察保持為過濾器，而不是另一條資訊流。";
+"Set first App Limit" = "設定第一個 App Limit";
+"Do one reset instead" = "改為完成一次重置";
 "Mark useful" = "標記有用";
 "Let it pass" = "讓它經過";
 "Name the trap" = "說出陷阱";
@@ -1575,6 +1581,14 @@
 "Classic" = "經典";
 "Breath" = "呼吸";
 "Break Breath" = "休息呼吸";
+"Limit one app. Do one reset. Leave." = "限制一個 App。完成一次重置。然後離開。";
+"Adjust only when needed" = "只在需要時調整";
+"Keep the main loop simple: limit, reset, leave." = "保持主流程簡單：限制、重置、離開。";
+"Choose or adjust the app Mori slows down." = "選擇或調整 Mori 會放慢的 App。";
+"today.morning_reset.subtitle" = "%@ 晨間視窗，用於第一次解鎖。";
+"Create one pause before the next selected feed opens." = "在下次打開已選資訊流前，建立一個停頓。";
+"Open only if you still mean to." = "只有仍然確定要打開時才繼續。";
+"Start Before Feed Reset" = "開始資訊流前重置";
 "watch.home.breathe" = "呼吸";
 "watch.home.settle" = "停一停";
 "watch.home.focus" = "專注";
@@ -1583,10 +1597,6 @@
 "watch.home.settle.subtitle" = "3 分鐘停頓";
 "watch.home.focus.subtitle" = "25 分鐘專注";
 "watch.home.bell_short" = "鈴聲";
-"watch.life.title" = "生命剩餘週數";
-"watch.life.weeks_left" = "剩餘 %@ 週";
-"watch.life.days_left" = "約 %@ 日";
-"watch.life.current_week" = "第 %@ 週";
 "watch.bell.active_start" = "開始 %@";
 "watch.bell.active_end" = "結束 %@";
 "watch.bell.message.mindfulness.title" = "正念鈴聲";

@@ -200,6 +200,159 @@ private struct BeforeFeedReadinessRow: View {
     }
 }
 
+struct ScreenTimeMonitorHealthSection: View {
+    let events: [MoriScreenTimeMonitorHealthEvent]
+    let onRefresh: () -> Void
+
+    var body: some View {
+        Section {
+            HStack {
+                screenTimeLabel("Monitor health", icon: .lockShield)
+
+                Spacer()
+
+                Button(MoriL10n.display("Refresh"), action: onRefresh)
+                    .font(.footnote.weight(.semibold))
+            }
+
+            if let latestEvent = events.first {
+                MonitorHealthLatestRow(event: latestEvent)
+            } else {
+                Text(MoriL10n.display("No Screen Time monitor events recorded yet. Complete a Before Feed reset, wait for the open window to end, then refresh."))
+                    .font(.footnote)
+                    .foregroundColor(MoriColors.botanicalMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            ForEach(events.prefix(6)) { event in
+                MonitorHealthEventRow(event: event)
+            }
+        } header: {
+            Text(MoriL10n.display("Screen Time Monitor"))
+        } footer: {
+            Text(MoriL10n.display("Use this to confirm whether iOS fired Mori's DeviceActivity monitor and whether the Before Feed shield was applied after the open window."))
+        }
+    }
+}
+
+private struct MonitorHealthLatestRow: View {
+    let event: MoriScreenTimeMonitorHealthEvent
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            MoriBitmapIconImage(icon: icon, size: 16, opacity: 0.9)
+                .frame(width: 26, height: 26)
+                .background(color.opacity(0.12))
+                .clipShape(Circle())
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(MoriL10n.display(event.kind.title))
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(MoriColors.botanicalInk)
+
+                Text(MoriL10n.display("Latest event") + " · " + Self.timeFormatter.string(from: event.recordedAt))
+                    .font(.caption)
+                    .foregroundColor(MoriColors.botanicalMuted)
+            }
+        }
+    }
+
+    private var icon: MoriBitmapIcon {
+        switch event.kind {
+        case .shieldApplied, .beforeFeedGraceIntervalStarted, .beforeFeedGraceExpired:
+            return .leaf
+        case .beforeFeedGraceScheduleFailed:
+            return .lockShield
+        default:
+            return .timer
+        }
+    }
+
+    private var color: Color {
+        switch event.kind {
+        case .beforeFeedGraceScheduleFailed:
+            return .red
+        case .shieldApplied, .beforeFeedGraceIntervalStarted, .beforeFeedGraceExpired:
+            return MoriColors.botanicalMoss
+        default:
+            return MoriColors.botanicalInk
+        }
+    }
+
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .none
+        formatter.timeStyle = .medium
+        return formatter
+    }()
+}
+
+private struct MonitorHealthEventRow: View {
+    let event: MoriScreenTimeMonitorHealthEvent
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            HStack {
+                Text(MoriL10n.display(event.kind.title))
+                    .font(.system(size: 13, weight: .semibold))
+                    .foregroundColor(MoriColors.botanicalInk)
+
+                Spacer()
+
+                Text(Self.timeFormatter.string(from: event.recordedAt))
+                    .font(.caption2.monospacedDigit())
+                    .foregroundColor(MoriColors.botanicalMuted)
+            }
+
+            Text(detailText)
+                .font(.caption)
+                .foregroundColor(MoriColors.botanicalMuted)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(.vertical, 2)
+    }
+
+    private var detailText: String {
+        let details = detailItems
+        return details.isEmpty ? MoriL10n.display("No detail") : details.joined(separator: " · ")
+    }
+
+    private var detailItems: [String] {
+        var items: [String] = []
+
+        if let action = event.action {
+            items.append(action)
+        }
+        if let feature = event.featureRawValue {
+            items.append("feature \(feature)")
+        }
+        if let tokenCount = event.totalTokenCount {
+            items.append("\(tokenCount) tokens")
+        }
+        if let inGraceWindow = event.beforeFeedInGraceWindow {
+            items.append(inGraceWindow ? "open window active" : "open window closed")
+        }
+        if let hasSelection = event.beforeFeedHasSelection {
+            items.append(hasSelection ? "feed apps selected" : "no feed app selection")
+        }
+        if let graceUntil = event.graceUntil {
+            items.append("until \(Self.timeFormatter.string(from: graceUntil))")
+        }
+        if let message = event.message {
+            items.append(message)
+        }
+
+        return items
+    }
+
+    private static let timeFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .none
+        formatter.timeStyle = .medium
+        return formatter
+    }()
+}
+
 struct MorningGateSettingsSection: View {
     @Binding var isEnabled: Bool
     @Binding var startDate: Date

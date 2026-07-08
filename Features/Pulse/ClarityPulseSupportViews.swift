@@ -76,6 +76,73 @@ struct ClarityPulseStatsHeader: View {
     }
 }
 
+struct PulseCoreLoopGateCard: View {
+    let onOpenAppLimitSetup: () -> Void
+    let onStartReset: () -> Void
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(alignment: .top, spacing: 12) {
+                MoriBitmapIconBadge(
+                    icon: .lockShield,
+                    size: 46,
+                    iconScale: 0.58,
+                    fill: MoriColors.sanctuarySurface.opacity(0.74),
+                    stroke: Color.white.opacity(0.88),
+                    shadow: MoriColors.sanctuaryShadow.opacity(0.18)
+                )
+
+                VStack(alignment: .leading, spacing: 6) {
+                    Text(MoriL10n.display("Finish the core loop first"))
+                        .font(MoriTypography.sanctuarySection)
+                        .foregroundColor(MoriColors.sanctuaryInk)
+
+                    Text(MoriL10n.display("Pulse unlocks after one App Limit is ready, so insight stays a filter instead of another feed."))
+                        .font(.system(size: 14, weight: .regular))
+                        .foregroundColor(MoriColors.botanicalMuted)
+                        .lineSpacing(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+
+            VStack(spacing: 10) {
+                Button(action: onOpenAppLimitSetup) {
+                    HStack(spacing: 8) {
+                        MoriBitmapIconImage(icon: .lockShield, size: 17, opacity: 0.94)
+                        Text(MoriL10n.display("Set first App Limit"))
+                            .font(.system(size: 15, weight: .semibold))
+                        Spacer(minLength: 0)
+                        MoriBitmapIconImage(icon: .chevron, size: 13, opacity: 0.64)
+                    }
+                    .foregroundColor(MoriColors.botanicalSurface)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 13)
+                    .background(MoriColors.botanicalInk)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                }
+                .buttonStyle(.plain)
+
+                Button(action: onStartReset) {
+                    HStack(spacing: 8) {
+                        MoriBitmapIconImage(icon: .timer, size: 16, opacity: 0.88)
+                        Text(MoriL10n.display("Do one reset instead"))
+                            .font(.system(size: 14, weight: .semibold))
+                        Spacer(minLength: 0)
+                    }
+                    .foregroundColor(MoriColors.botanicalInk)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 12)
+                    .background(MoriColors.botanicalInk.opacity(0.08))
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .moriSanctuaryCard(cornerRadius: 22, padding: 16)
+        .accessibilityElement(children: .contain)
+    }
+}
+
 private struct PulseHeaderStatItem: View {
     let title: String
     let value: String

@@ -78,6 +78,12 @@ struct MoriWatchBellSettingsView: View {
                     .clipShape(Circle())
 
                 VStack(alignment: .leading, spacing: 2) {
+                    Text(MoriL10n.display("Tap a bell to breathe"))
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(MoriWatchPalette.muted)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.62)
+
                     Text(MoriL10n.string("watch.bell.title", defaultValue: "Mindfulness bell"))
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(MoriWatchPalette.ink)

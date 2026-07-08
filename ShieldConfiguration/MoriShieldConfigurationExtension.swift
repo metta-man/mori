@@ -73,7 +73,7 @@ private struct MoriShieldCopy {
     let secondaryButtonTitle: String?
 
     static let beforeFeed = MoriShieldCopy(
-        iconAssetName: "moriIconPause",
+        iconAssetName: "moriIconLeaf",
         title: "Reset before the feed",
         subtitle: "Prepare reset, then open Mori. This app will close and Mori will be ready when you arrive.",
         primaryButtonTitle: "Prepare reset",

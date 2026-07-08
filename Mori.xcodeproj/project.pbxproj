@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -20,8 +20,8 @@
 		08A445A6FF273FECA607E5A2 /* MoriLLMProviders.swift in Sources */ = {isa = PBXBuildFile; fileRef = B442430C6042F6E1012A47B6 /* MoriLLMProviders.swift */; };
 		09373174022FE7D995DC6145 /* MoriRecoveryPreferencesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5C67CDF6F27A81D612E98F1 /* MoriRecoveryPreferencesStore.swift */; };
 		09FAA8B86A4730AB8B7920AA /* Singing Bowl A.wav in Resources */ = {isa = PBXBuildFile; fileRef = CB794F0FE48862A503A7A370 /* Singing Bowl A.wav */; };
-		0B6B54E42D834F0AA9F74E31 /* MoriWatchAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 0B6B54E52D834F0AA9F74E31 /* MoriWatchAssets.xcassets */; };
 		0A428FFC8DFF9F6AA4236EB3 /* MoriWidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09CE9366BEF6089FBC6E4DFB /* MoriWidgetSnapshot.swift */; };
+		0A689AE69C244EEFB2DCA659 /* BotanicalBackdropJournal.png in Resources */ = {isa = PBXBuildFile; fileRef = 97351BA1BFB7520F21A8A0E9 /* BotanicalBackdropJournal.png */; };
 		0ABC0CAC5A32F85F21CC3F89 /* MoriAppLifecycle.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0540AAA21E570FBE909950AB /* MoriAppLifecycle.swift */; };
 		0B72F0E38ACC0D7686266705 /* SettleView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D2A6D75C6480C9A2E549D643 /* SettleView.swift */; };
 		0D01D847AF057D15ECD5214F /* MoriRecoveryHistory.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4CB764566AF64CBA2A6FCEC6 /* MoriRecoveryHistory.swift */; };
@@ -206,6 +206,7 @@
 		8236E16766493A07FF6013CF /* SettingsReminderViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = F1ABC060CBDD0BB3657AB062 /* SettingsReminderViews.swift */; };
 		824378F5B0A8E1B1A5CF9EF0 /* MoriClarityProgressModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1481D4A97BE45AF3C7A7631A /* MoriClarityProgressModels.swift */; };
 		82484F9E8ECCBC8898D1B304 /* MoriBreathingSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 593DC159334A4C2C1CFB1F0B /* MoriBreathingSessionView.swift */; };
+		8330A7BF02B8269CA231868E /* BotanicalBackdropPractice.png in Resources */ = {isa = PBXBuildFile; fileRef = 1AB4A4CB0AA30B254EA5748F /* BotanicalBackdropPractice.png */; };
 		8361740D371C115A63901A53 /* MoriScreenTimeStores.swift in Sources */ = {isa = PBXBuildFile; fileRef = A93377C0D556E5B4AADB8674 /* MoriScreenTimeStores.swift */; };
 		838F9B18877DD47876F4567F /* ScreenTimeSettingsLockManagementViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85238364440D3F1AA5A1B155 /* ScreenTimeSettingsLockManagementViews.swift */; };
 		8487D917A64A3B1A9D480D7C /* ScreenTimeSelectionPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = F77726D3F81C83B47DFDAE79 /* ScreenTimeSelectionPersistence.swift */; };
@@ -220,6 +221,7 @@
 		87804C798B0B69E2636E5E28 /* PersistenceController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2D03791AE11DCBD24B35A851 /* PersistenceController.swift */; };
 		87EC4A899E520D20D3DD1D3D /* MoriScreenTimeStores.swift in Sources */ = {isa = PBXBuildFile; fileRef = A93377C0D556E5B4AADB8674 /* MoriScreenTimeStores.swift */; };
 		89796B9E9201AD228BC273A3 /* MoriWatchSettingsReceiver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F001E7427FBD7B261E1A767 /* MoriWatchSettingsReceiver.swift */; };
+		8A3A7C3E126A1EF688421C01 /* MoriWatchAssets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D906F8572C29104A07270C77 /* MoriWatchAssets.xcassets */; };
 		8D64BFB5C110C5D11A6315FF /* MoriClaritySeedInsights.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9384937E2F25F89759B1A3A8 /* MoriClaritySeedInsights.swift */; };
 		8E03CD76F017689B63E2C340 /* MoriRecoveryDetailViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5FD4347BF7CBC86E01749815 /* MoriRecoveryDetailViews.swift */; };
 		8E550FF2A5B7ADB3BB1AFE87 /* WeekArchiveDetailComponents.swift in Sources */ = {isa = PBXBuildFile; fileRef = 96167EAE7D6317593E922DF6 /* WeekArchiveDetailComponents.swift */; };
@@ -250,6 +252,7 @@
 		A323FDB28781C9F8A843AF4E /* SettleBellAudioModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = E5F7D209149EDCFB2B3B3A5F /* SettleBellAudioModels.swift */; };
 		A5FB8DA0D95D7322BA92E500 /* ScreenTimeSelectionStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B84B60403050DBD08D10DFDF /* ScreenTimeSelectionStore.swift */; };
 		A6B0562012F50CEB8715C6C7 /* MoriRecoveryPatternViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 212D36FF9C8C94177CFDEB3A /* MoriRecoveryPatternViews.swift */; };
+		A96C441885267A98B3DC227B /* BotanicalBackdropSettings.png in Resources */ = {isa = PBXBuildFile; fileRef = 25B891923A5996CB7E462C04 /* BotanicalBackdropSettings.png */; };
 		AB550E7204F4A0FEB88649BB /* MoriAttentionResetSupportViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = AFFEDD6446F59625E423E0C1 /* MoriAttentionResetSupportViews.swift */; };
 		ACBB36C3D524F9CA6EDEB75A /* ScreenTimeSettingsGateRefreshModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7A043944C1FDB27ED41B5412 /* ScreenTimeSettingsGateRefreshModifier.swift */; };
 		ACCFB473900166EDD746E4FD /* MoriScreenTimeStores.swift in Sources */ = {isa = PBXBuildFile; fileRef = A93377C0D556E5B4AADB8674 /* MoriScreenTimeStores.swift */; };
@@ -264,6 +267,8 @@
 		B3347B03C7644F555BF1B6ED /* PomodoroPracticeDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9753875DDA5DBF8AC90038EA /* PomodoroPracticeDetailView.swift */; };
 		B37C4FDC32E0649D5846E757 /* ScreenTimeSettingsSupportViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCFEA862A7CE9A2639A59504 /* ScreenTimeSettingsSupportViews.swift */; };
 		B383F5D4E98AD84BBE0884B7 /* AttentionShieldApplier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8098DCA589708C4BF22C36B2 /* AttentionShieldApplier.swift */; };
+		B4E552AE5CFB2F653E447BF6 /* BotanicalBackdropAppLimit.png in Resources */ = {isa = PBXBuildFile; fileRef = 43404D69262834C813316A25 /* BotanicalBackdropAppLimit.png */; };
+		B55AF8CFC992DB933197FE66 /* BotanicalBackdropToday.png in Resources */ = {isa = PBXBuildFile; fileRef = 4665ECB352C6CD0603D58FA7 /* BotanicalBackdropToday.png */; };
 		B5BD7889A29D86CBDB0DD32B /* SettleTimerCompletionCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = E71184F7A59585A44DD0BF71 /* SettleTimerCompletionCoordinator.swift */; };
 		B5E9BE16B79E853F9D788F01 /* MoriClarityStatsCalculator.swift in Sources */ = {isa = PBXBuildFile; fileRef = F00041F4DAFC374CD3416143 /* MoriClarityStatsCalculator.swift */; };
 		B601BFB769CA4D10C483259D /* MoriClarityModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = EE30AF395F755DDD32BD63C7 /* MoriClarityModels.swift */; };
@@ -458,7 +463,6 @@
 		0DBADF42B57F8638B96363C3 /* SettleTimerSupportViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettleTimerSupportViews.swift; sourceTree = "<group>"; };
 		0EE9DCCE7C8EC9534CC350BA /* GratitudePhotoStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GratitudePhotoStore.swift; sourceTree = "<group>"; };
 		0F069A80C8C9464D517D0214 /* SettleTimerLifecycleModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettleTimerLifecycleModifier.swift; sourceTree = "<group>"; };
-		0B6B54E52D834F0AA9F74E31 /* MoriWatchAssets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = MoriWatchAssets.xcassets; sourceTree = "<group>"; };
 		0F38D6AEC00418D46C8AAE0C /* MoriWatchSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriWatchSupport.swift; sourceTree = "<group>"; };
 		10A97F908067E2B6CAD27AAE /* Mori.xcdatamodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcdatamodel; path = Mori.xcdatamodel; sourceTree = "<group>"; };
 		11C584EACE357103B8C1B6CE /* PomodoroPracticeModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PomodoroPracticeModels.swift; sourceTree = "<group>"; };
@@ -470,13 +474,14 @@
 		18D75EAC6E3AD403504A630E /* MoriSanctuaryComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriSanctuaryComponents.swift; sourceTree = "<group>"; };
 		19218F6CE0FF42EA4090C2F4 /* QuietModeSupportViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuietModeSupportViews.swift; sourceTree = "<group>"; };
 		1994966EBB19629655BC65FB /* AttentionShieldActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttentionShieldActions.swift; sourceTree = "<group>"; };
-		1994BC59159554AB67F72B49 /* MoriWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MoriWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		1994BC59159554AB67F72B49 /* MoriWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = MoriWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		1AA0D6B1025DD7BA89C262A4 /* MoriRecoveryScoring.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriRecoveryScoring.swift; sourceTree = "<group>"; };
+		1AB4A4CB0AA30B254EA5748F /* BotanicalBackdropPractice.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = BotanicalBackdropPractice.png; sourceTree = "<group>"; };
 		1BC4D4477EE9608AC58F1361 /* MoriShieldAction.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MoriShieldAction.entitlements; sourceTree = "<group>"; };
 		1CC669F01DF2CE8A73E0E696 /* MoriDataChangeEvents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriDataChangeEvents.swift; sourceTree = "<group>"; };
 		1D6B14AC7F95813A1BED8BEF /* GratitudeEntryPersistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GratitudeEntryPersistence.swift; sourceTree = "<group>"; };
 		1DDC3D74E0EFE05292BB83BE /* HabitTrackerStatsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitTrackerStatsViews.swift; sourceTree = "<group>"; };
-		1E40B99B9FE529A4A5FEB4A1 /* MoriScreenTimeMonitor.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MoriScreenTimeMonitor.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		1E40B99B9FE529A4A5FEB4A1 /* MoriScreenTimeMonitor.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = MoriScreenTimeMonitor.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		1E64ABA7A4B09164729B2BB1 /* MoriBreathingSessionClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriBreathingSessionClock.swift; sourceTree = "<group>"; };
 		2012303D3AAE3563D23C9374 /* MoriWatch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MoriWatch.entitlements; sourceTree = "<group>"; };
 		20CD693350CE36E2897A78F9 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -487,6 +492,7 @@
 		233739D43AB78CB9D73BD40F /* MoriOnboardingSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriOnboardingSupport.swift; sourceTree = "<group>"; };
 		24C6B0621278D3160925294C /* MoriRecoveryPulseCard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriRecoveryPulseCard.swift; sourceTree = "<group>"; };
 		24FB204AE3E93DD1C8964516 /* GratitudeEditorView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GratitudeEditorView.swift; sourceTree = "<group>"; };
+		25B891923A5996CB7E462C04 /* BotanicalBackdropSettings.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = BotanicalBackdropSettings.png; sourceTree = "<group>"; };
 		268AD1EB426CF61A69F6B334 /* MoriShieldConfiguration.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MoriShieldConfiguration.entitlements; sourceTree = "<group>"; };
 		278B7944D0F86FFB2A963B62 /* SettlePracticeShared.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettlePracticeShared.swift; sourceTree = "<group>"; };
 		2811EABE0F3DDFEE4AFAA2B7 /* AnalyticsDefinitions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AnalyticsDefinitions.swift; sourceTree = "<group>"; };
@@ -522,12 +528,14 @@
 		40A2437C084B27B2348F3E0E /* zh-Hans */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hans"; path = "zh-Hans.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
 		40C64C380F159368CB68C59B /* WeekArchiveWeekGrid.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekArchiveWeekGrid.swift; sourceTree = "<group>"; };
 		43316A5ED6B4B11A75DC64A8 /* MoriPracticeSheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriPracticeSheets.swift; sourceTree = "<group>"; };
+		43404D69262834C813316A25 /* BotanicalBackdropAppLimit.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = BotanicalBackdropAppLimit.png; sourceTree = "<group>"; };
 		4463CC71660ED1F3F2428D1B /* MoriPracticeCompletionSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriPracticeCompletionSheet.swift; sourceTree = "<group>"; };
 		454602A3ED0325C4C03F1AFE /* SettleSessionPersistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettleSessionPersistence.swift; sourceTree = "<group>"; };
 		45C3E80ABFD7F3EBC6880BCD /* MoriThemeTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriThemeTokens.swift; sourceTree = "<group>"; };
+		4665ECB352C6CD0603D58FA7 /* BotanicalBackdropToday.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = BotanicalBackdropToday.png; sourceTree = "<group>"; };
 		47AA7E5DE8FCE8D2CE6F996B /* MoriRecoveryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriRecoveryStore.swift; sourceTree = "<group>"; };
-		47DBA365758F5110E47D5F68 /* MoriShieldAction.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MoriShieldAction.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		47E42F334997A580CEAA9B3B /* MoriShieldConfiguration.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MoriShieldConfiguration.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		47DBA365758F5110E47D5F68 /* MoriShieldAction.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = MoriShieldAction.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		47E42F334997A580CEAA9B3B /* MoriShieldConfiguration.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = MoriShieldConfiguration.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		4802AA3982177F501E0BBF44 /* MoriWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MoriWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		49A6E072726B7943AC7E3085 /* GratitudeJournalLifecycleModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GratitudeJournalLifecycleModifier.swift; sourceTree = "<group>"; };
 		4A83CD28941A834C31E5E0BD /* MoriRecoveryViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriRecoveryViews.swift; sourceTree = "<group>"; };
@@ -549,7 +557,7 @@
 		617E6E8EA9E42CDEC2F60332 /* PomodoroPracticeSurfaces.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PomodoroPracticeSurfaces.swift; sourceTree = "<group>"; };
 		621655AAEDCD6569091620C4 /* LockedScreenTimeSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockedScreenTimeSettingsView.swift; sourceTree = "<group>"; };
 		627F42D21BCA57F17DE7EE24 /* ScreenTimeSettingsPickerSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenTimeSettingsPickerSupport.swift; sourceTree = "<group>"; };
-		62F9120F39BD4552A01D2CFB /* Mori.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Mori.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		62F9120F39BD4552A01D2CFB /* Mori.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Mori.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		637B113D92C69867FF51C003 /* MoriWatchBellNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriWatchBellNotifications.swift; sourceTree = "<group>"; };
 		63CEFA377BC9A2EA02F80C40 /* MoriRecoveryInsights.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriRecoveryInsights.swift; sourceTree = "<group>"; };
 		69AF7028F30930032BC63BD5 /* MoriDailyPulseMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriDailyPulseMock.swift; sourceTree = "<group>"; };
@@ -597,6 +605,7 @@
 		93D019B13C864180BAC6957D /* PomodoroSettingsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PomodoroSettingsViews.swift; sourceTree = "<group>"; };
 		94395CA6BF42C772409267B0 /* DailySparkEntryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DailySparkEntryStore.swift; sourceTree = "<group>"; };
 		96167EAE7D6317593E922DF6 /* WeekArchiveDetailComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekArchiveDetailComponents.swift; sourceTree = "<group>"; };
+		97351BA1BFB7520F21A8A0E9 /* BotanicalBackdropJournal.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = BotanicalBackdropJournal.png; sourceTree = "<group>"; };
 		9753875DDA5DBF8AC90038EA /* PomodoroPracticeDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PomodoroPracticeDetailView.swift; sourceTree = "<group>"; };
 		97B8DB83550CDAC5B4E07104 /* TodayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TodayView.swift; sourceTree = "<group>"; };
 		9811FAC893F0B70395FD6790 /* MoriWidgets.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MoriWidgets.entitlements; sourceTree = "<group>"; };
@@ -673,6 +682,7 @@
 		D8693AD7388C640682B53918 /* AttentionShieldSelectionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttentionShieldSelectionCoordinator.swift; sourceTree = "<group>"; };
 		D8D6381D0463E45FDB5E3D9A /* ScreenTimeSettingsLockModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenTimeSettingsLockModifiers.swift; sourceTree = "<group>"; };
 		D8E1A8F6A78AB29CBD27A884 /* MoriLLMService.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriLLMService.swift; sourceTree = "<group>"; };
+		D906F8572C29104A07270C77 /* MoriWatchAssets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = MoriWatchAssets.xcassets; sourceTree = "<group>"; };
 		DAC06DDC88C168F043B9BCA0 /* MoriShieldConfigurationExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriShieldConfigurationExtension.swift; sourceTree = "<group>"; };
 		DBA73AE55D61BAEB0B864E23 /* GratitudeJournalScreenSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GratitudeJournalScreenSupport.swift; sourceTree = "<group>"; };
 		DC740AF6DB9617FFA82A9594 /* SettleSupportViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettleSupportViews.swift; sourceTree = "<group>"; };
@@ -814,6 +824,18 @@
 			path = ScreenTime;
 			sourceTree = "<group>";
 		};
+		14BF9B717DB8AEC6DD9051EC /* BotanicalWatercolorMasters */ = {
+			isa = PBXGroup;
+			children = (
+				43404D69262834C813316A25 /* BotanicalBackdropAppLimit.png */,
+				97351BA1BFB7520F21A8A0E9 /* BotanicalBackdropJournal.png */,
+				1AB4A4CB0AA30B254EA5748F /* BotanicalBackdropPractice.png */,
+				25B891923A5996CB7E462C04 /* BotanicalBackdropSettings.png */,
+				4665ECB352C6CD0603D58FA7 /* BotanicalBackdropToday.png */,
+			);
+			path = BotanicalWatercolorMasters;
+			sourceTree = "<group>";
+		};
 		1AE9B937903D229CA937747C /* Localization */ = {
 			isa = PBXGroup;
 			children = (
@@ -873,6 +895,7 @@
 				6E36D15394059AF344266FA3 /* MoriStateComponents.swift */,
 				45C3E80ABFD7F3EBC6880BCD /* MoriThemeTokens.swift */,
 				099B70CB170D0B13085FEA01 /* MoriViewModifiers.swift */,
+				14BF9B717DB8AEC6DD9051EC /* BotanicalWatercolorMasters */,
 			);
 			path = DesignSystem;
 			sourceTree = "<group>";
@@ -1027,9 +1050,9 @@
 			isa = PBXGroup;
 			children = (
 				34334BB88C596EE5622171B1 /* Info.plist */,
-				0B6B54E52D834F0AA9F74E31 /* MoriWatchAssets.xcassets */,
 				2012303D3AAE3563D23C9374 /* MoriWatch.entitlements */,
 				B60CA46B944982651BC758FA /* MoriWatchApp.swift */,
+				D906F8572C29104A07270C77 /* MoriWatchAssets.xcassets */,
 				637B113D92C69867FF51C003 /* MoriWatchBellNotifications.swift */,
 				D83E9C58A18B9842070B3E7A /* MoriWatchBellSettingsView.swift */,
 				AD3D8858781879A59F859F7C /* MoriWatchPracticeViews.swift */,
@@ -1424,27 +1447,34 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 2700;
+				LastUpgradeCheck = 1500;
 				TargetAttributes = {
 					181908B7C8755205766B6827 = {
+						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 					555F06634E0DCC958AE3C40D = {
+						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 					922E64334CDA1FE7165A6441 = {
+						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 					CE7E965D4878DFED073F6A9C = {
+						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 					D42BE5FD4DEE0BCB60B6746E = {
+						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 					E3B598FD83F77B5AD3708644 = {
+						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 					ECAD2BE1F1651AE015B21EB5 = {
+						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -1464,6 +1494,7 @@
 			packageReferences = (
 				4A4EBF23529CF385C7BB5077 /* XCRemoteSwiftPackageReference "posthog-ios" */,
 			);
+			preferredProjectObjectVersion = 77;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -1526,7 +1557,7 @@
 				6AD5C626F200EAA43F08EFC9 /* InfoPlist.strings in Resources */,
 				60D7731F68F816D164F10158 /* Localizable.strings in Resources */,
 				F6981DAF86203D8A43A218CA /* MoriGeneratedArt.xcassets in Resources */,
-				0B6B54E42D834F0AA9F74E31 /* MoriWatchAssets.xcassets in Resources */,
+				8A3A7C3E126A1EF688421C01 /* MoriWatchAssets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1534,6 +1565,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B4E552AE5CFB2F653E447BF6 /* BotanicalBackdropAppLimit.png in Resources */,
+				0A689AE69C244EEFB2DCA659 /* BotanicalBackdropJournal.png in Resources */,
+				8330A7BF02B8269CA231868E /* BotanicalBackdropPractice.png in Resources */,
+				A96C441885267A98B3DC227B /* BotanicalBackdropSettings.png in Resources */,
+				B55AF8CFC992DB933197FE66 /* BotanicalBackdropToday.png in Resources */,
 				3DE1A6B3ACC82D1B5A002D72 /* Default.mp3 in Resources */,
 				AEEA313B3788D0E5D94259DB /* InfoPlist.strings in Resources */,
 				25D96C1516254179598F1601 /* Localizable.strings in Resources */,
@@ -1974,7 +2010,6 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ShieldAction/MoriShieldAction.entitlements;
 				INFOPLIST_FILE = ShieldAction/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -1992,7 +2027,6 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Widgets/MoriWidgets.entitlements;
 				INFOPLIST_FILE = Widgets/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2013,7 +2047,6 @@
 				CODE_SIGN_ENTITLEMENTS = WatchApp/MoriWatch.entitlements;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = WatchApp/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mettalabs.mori.watch;
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
@@ -2026,7 +2059,6 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ShieldConfiguration/MoriShieldConfiguration.entitlements;
 				INFOPLIST_FILE = ShieldConfiguration/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2054,7 +2086,6 @@
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Mori can read Apple Health data you approve, including HRV, heart rate, resting heart rate, sleep, respiratory rate, temperature, workouts, active energy, and walking or running distance, to personalize recovery readiness and attention signals.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Mori does not write data to Apple Health. Recovery features only read the Apple Health data you approve.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Mori lets you choose photos to attach to your private journal entries.";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2071,7 +2102,6 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Widgets/MoriWidgets.entitlements;
 				INFOPLIST_FILE = Widgets/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2089,7 +2119,6 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ScreenTimeMonitor/MoriScreenTimeMonitor.entitlements;
 				INFOPLIST_FILE = ScreenTimeMonitor/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2110,7 +2139,6 @@
 				CODE_SIGN_ENTITLEMENTS = WatchApp/MoriWatch.entitlements;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = WatchApp/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mettalabs.mori.watch;
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
@@ -2123,7 +2151,6 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ScreenTimeMonitor/MoriScreenTimeMonitor.entitlements;
 				INFOPLIST_FILE = ScreenTimeMonitor/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2141,7 +2168,6 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ShieldAction/MoriShieldAction.entitlements;
 				INFOPLIST_FILE = ShieldAction/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2161,7 +2187,6 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = "";
 				CODE_SIGN_ENTITLEMENTS = WatchWidgets/MoriWatchWidgets.entitlements;
 				INFOPLIST_FILE = WatchWidgets/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2189,7 +2214,6 @@
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Mori can read Apple Health data you approve, including HRV, heart rate, resting heart rate, sleep, respiratory rate, temperature, workouts, active energy, and walking or running distance, to personalize recovery readiness and attention signals.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Mori does not write data to Apple Health. Recovery features only read the Apple Health data you approve.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Mori lets you choose photos to attach to your private journal entries.";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2205,7 +2229,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -2238,12 +2261,10 @@
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 2;
-				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
-				DEVELOPMENT_TEAM = VU5N8NSBSN;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -2262,7 +2283,6 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.9;
@@ -2275,7 +2295,6 @@
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ShieldConfiguration/MoriShieldConfiguration.entitlements;
 				INFOPLIST_FILE = ShieldConfiguration/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2295,7 +2314,6 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = "";
 				CODE_SIGN_ENTITLEMENTS = WatchWidgets/MoriWatchWidgets.entitlements;
 				INFOPLIST_FILE = WatchWidgets/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2312,7 +2330,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -2345,12 +2362,10 @@
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 2;
-				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
-				DEVELOPMENT_TEAM = VU5N8NSBSN;
+				DEVELOPMENT_TEAM = "";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -2376,7 +2391,6 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.9;

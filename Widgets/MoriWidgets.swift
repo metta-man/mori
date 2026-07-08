@@ -206,9 +206,7 @@ struct MoriBeforeFeedWindowLiveActivityWidget: Widget {
                     MoriBeforeFeedLiveActivityProgress(state: context.state)
                 }
             } compactLeading: {
-                Image(systemName: "pause.fill")
-                    .font(.caption.weight(.bold))
-                    .foregroundStyle(MoriWidgetColors.leafAccent)
+                MoriBitmapIconImage(icon: .pause, size: 14, opacity: 0.94)
             } compactTrailing: {
                 MoriBeforeFeedLiveActivityTimerText(state: context.state)
                     .font(.caption2.monospacedDigit())
@@ -216,9 +214,7 @@ struct MoriBeforeFeedWindowLiveActivityWidget: Widget {
                     .minimumScaleFactor(0.7)
                     .frame(maxWidth: 42)
             } minimal: {
-                Image(systemName: "pause.fill")
-                    .font(.caption2.weight(.bold))
-                    .foregroundStyle(MoriWidgetColors.leafAccent)
+                MoriBitmapIconImage(icon: .pause, size: 12, opacity: 0.94)
             }
             .widgetURL(URL(string: "mori://before-feed?source=live-activity"))
             .keylineTint(MoriWidgetColors.leafAccent)
@@ -235,9 +231,7 @@ private struct MoriBeforeFeedWindowLiveActivityView: View {
             ZStack {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .fill(MoriWidgetColors.surfaceRaised)
-                Image(systemName: "pause.fill")
-                    .font(.title3.weight(.bold))
-                    .foregroundStyle(MoriWidgetColors.leafAccent)
+                MoriBitmapIconImage(icon: .pause, size: 24, opacity: 0.94)
             }
             .frame(width: 46, height: 46)
 
@@ -271,8 +265,7 @@ private struct MoriBeforeFeedWindowLiveActivityView: View {
 private struct MoriBeforeFeedLiveActivityStatus: View {
     var body: some View {
         HStack(spacing: 6) {
-            Image(systemName: "pause.fill")
-                .font(.caption.weight(.bold))
+            MoriBitmapIconImage(icon: .pause, size: 13, opacity: 0.94)
             Text("Open window")
                 .font(.caption.weight(.semibold))
         }
@@ -310,7 +303,6 @@ private struct MoriBeforeFeedLiveActivityTimerText: View {
     var body: some View {
         Text(
             timerInterval: state.timerInterval,
-            pauseTime: state.endsAt,
             countsDown: true,
             showsHours: state.durationSeconds >= 60 * 60
         )
@@ -322,7 +314,11 @@ private struct MoriBeforeFeedLiveActivityProgress: View {
     let state: MoriBeforeFeedWindowAttributes.ContentState
 
     var body: some View {
-        ProgressView(value: state.progress())
+        ProgressView(timerInterval: state.timerInterval, countsDown: false) {
+            EmptyView()
+        } currentValueLabel: {
+            EmptyView()
+        }
             .progressViewStyle(.linear)
             .tint(MoriWidgetColors.leafAccent)
             .background(MoriWidgetColors.ink.opacity(0.12))

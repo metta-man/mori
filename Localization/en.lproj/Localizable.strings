@@ -672,6 +672,8 @@
 "Starts at your chosen time each day. Completing Morning Reset opens selected apps for that morning window." = "Starts at your chosen time each day. Completing Morning Reset opens selected apps for that morning window.";
 "Tap a bell to breathe" = "Tap a bell to breathe";
 "The Screen Time gate opens selected feed apps after the reset. A Shortcut automation can open Mori, but iOS does not tell Mori which app triggered it, so you may need to switch back manually." = "The Screen Time gate opens selected feed apps after the reset. A Shortcut automation can open Mori, but iOS does not tell Mori which app triggered it, so you may need to switch back manually.";
+"Use Mori's Start Before Feed Reset action. Do not use Shortcuts' plain Open App action, because that would open Mori even while your feed window is still active." = "Use Mori's Start Before Feed Reset action. Do not use Shortcuts' plain Open App action, because that would open Mori even while your feed window is still active.";
+"Do not use Open URL with mori://; iOS may block that launch from personal automations." = "Do not use Open URL with mori://; iOS may block that launch from personal automations.";
 "Screen Time prepared this reset from the blocked feed app." = "Screen Time prepared this reset from the blocked feed app.";
 "Shortcut opened Mori; iOS will not return to the feed automatically." = "Shortcut opened Mori; iOS will not return to the feed automatically.";
 "Selected feed apps stay limited until this completes." = "Selected feed apps stay limited until this completes.";
@@ -1560,6 +1562,10 @@
 "Topic labels, aggregate clarity stats, selected Pulse cards, and your follow-up questions are sent to the configured proxy. Recovery labels are included only when you opt in. Raw HealthKit, log, habit, and screen-time details stay local whenever possible." = "Topic labels, aggregate clarity stats, selected Pulse cards, and your follow-up questions are sent to the configured proxy. Recovery labels are included only when you opt in. Raw HealthKit, log, habit, and screen-time details stay local whenever possible.";
 "Updating Pulse" = "Updating Pulse";
 "Refresh Pulse" = "Refresh Pulse";
+"Finish the core loop first" = "Finish the core loop first";
+"Pulse unlocks after one App Limit is ready, so insight stays a filter instead of another feed." = "Pulse unlocks after one App Limit is ready, so insight stays a filter instead of another feed.";
+"Set first App Limit" = "Set first App Limit";
+"Do one reset instead" = "Do one reset instead";
 "Mark useful" = "Mark useful";
 "Let it pass" = "Let it pass";
 "Name the trap" = "Name trap";
@@ -1575,6 +1581,14 @@
 "Classic" = "Classic";
 "Breath" = "Breath";
 "Break Breath" = "Break Breath";
+"Limit one app. Do one reset. Leave." = "Limit one app. Do one reset. Leave.";
+"Adjust only when needed" = "Adjust only when needed";
+"Keep the main loop simple: limit, reset, leave." = "Keep the main loop simple: limit, reset, leave.";
+"Choose or adjust the app Mori slows down." = "Choose or adjust the app Mori slows down.";
+"today.morning_reset.subtitle" = "%@ morning window for the first unlock.";
+"Create one pause before the next selected feed opens." = "Create one pause before the next selected feed opens.";
+"Open only if you still mean to." = "Open only if you still mean to.";
+"Start Before Feed Reset" = "Start Before Feed Reset";
 "watch.home.breathe" = "Breathe";
 "watch.home.settle" = "Settle";
 "watch.home.focus" = "Focus";
@@ -1583,10 +1597,6 @@
 "watch.home.settle.subtitle" = "3 minute pause";
 "watch.home.focus.subtitle" = "25 minute focus";
 "watch.home.bell_short" = "Bell";
-"watch.life.title" = "Life weeks left";
-"watch.life.weeks_left" = "%@ weeks";
-"watch.life.days_left" = "%@ days";
-"watch.life.current_week" = "Week %@";
 "watch.bell.active_start" = "Start %@";
 "watch.bell.active_end" = "End %@";
 "watch.bell.message.mindfulness.title" = "Mindfulness Bell";

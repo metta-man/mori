@@ -37,10 +37,18 @@ struct AttentionShieldPassiveGateApplier {
     func apply(features: [MoriScreenTimeFeature]) {
         let selection = selectionStore.mergedEffectiveSelection(for: features)
         let currentFeature = AttentionShieldPassiveGatePolicy.currentFeature(for: features)
+        let beforeFeedSelection = features.contains(.beforeFeed)
+            ? selectionStore.effectiveSelection(for: .beforeFeed)
+            : nil
         shieldApplier.apply(
             selection: selection,
             currentFeature: currentFeature,
-            displayNames: displayNames(currentFeature)
+            displayNames: displayNames(currentFeature),
+            beforeFeedHasSelection: features.contains(.beforeFeed)
+                ? selectionStore.hasEffectiveSelection(for: .beforeFeed)
+                : nil,
+            beforeFeedApplicationTokenCount: beforeFeedSelection?.applicationTokens.count,
+            beforeFeedWebDomainTokenCount: beforeFeedSelection?.webDomainTokens.count
         )
     }
 }
@@ -94,7 +102,13 @@ struct AttentionShieldPassiveGatePolicy {
     }
 
     static func currentFeature(for features: [MoriScreenTimeFeature]) -> MoriScreenTimeFeature {
-        features.contains(.morningGate) ? .morningGate : (features.first ?? .manualPractice)
+        if features.contains(.beforeFeed) {
+            return .beforeFeed
+        }
+        if features.contains(.morningGate) {
+            return .morningGate
+        }
+        return features.first ?? .manualPractice
     }
 
     private func action(for features: [MoriScreenTimeFeature]) -> AttentionShieldPassiveGateAction {

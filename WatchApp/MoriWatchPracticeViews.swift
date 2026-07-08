@@ -44,7 +44,7 @@ struct MoriWatchResetHub: View {
 
     private var homeContent: some View {
         VStack(alignment: .leading, spacing: 8) {
-            lifeRemainingHero
+            archiveHero
             practiceLaunchGrid
             compactContextStrip
         }
@@ -52,12 +52,12 @@ struct MoriWatchResetHub: View {
         .padding(.vertical, 6)
     }
 
-    private var lifeRemainingHero: some View {
+    private var archiveHero: some View {
         VStack(alignment: .leading, spacing: 7) {
             HStack(alignment: .center, spacing: 6) {
                 MoriBitmapIconImage(icon: .roots, size: 15, opacity: 0.82)
 
-                Text(MoriL10n.string("watch.life.title", defaultValue: "Life weeks left"))
+                Text(MoriL10n.string("watch.archive.current_week", defaultValue: "archive week"))
                     .font(.system(size: 11, weight: .semibold, design: .rounded))
                     .foregroundStyle(MoriWatchPalette.muted)
                     .lineLimit(1)
@@ -73,11 +73,7 @@ struct MoriWatchResetHub: View {
                     .monospacedDigit()
             }
 
-            Text(MoriL10n.string(
-                "watch.life.weeks_left",
-                defaultValue: "%@ weeks",
-                arguments: [lifeWeeksLeft.formatted()]
-            ))
+            Text(snapshot.archiveWeekNumber.formatted())
                 .font(.system(size: 25, weight: .semibold, design: .rounded))
                 .foregroundStyle(MoriWatchPalette.ink)
                 .lineLimit(1)
@@ -85,22 +81,13 @@ struct MoriWatchResetHub: View {
                 .monospacedDigit()
 
             HStack(alignment: .firstTextBaseline, spacing: 5) {
-                Text(MoriL10n.string(
-                    "watch.life.days_left",
-                    defaultValue: "%@ days",
-                    arguments: [lifeDaysLeft.formatted()]
-                ))
+                Text(MoriL10n.string("archive", defaultValue: "archive"))
                     .font(.system(size: 11, weight: .medium))
                     .foregroundStyle(MoriWatchPalette.muted)
                     .lineLimit(1)
                     .minimumScaleFactor(0.58)
-                    .monospacedDigit()
 
-                Text(MoriL10n.string(
-                    "watch.life.current_week",
-                    defaultValue: "Week %@",
-                    arguments: [snapshot.archiveWeekNumber.formatted()]
-                ))
+                Text(MoriL10n.string("watch.archive.current_week", defaultValue: "archive week"))
                     .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(MoriWatchPalette.muted.opacity(0.84))
                     .lineLimit(1)
@@ -115,21 +102,11 @@ struct MoriWatchResetHub: View {
         .padding(10)
         .moriWatchCard(cornerRadius: 14)
         .accessibilityElement(children: .combine)
-    }
-
-    private var lifeWeeksLeft: Int {
-        max(snapshot.totalWeeks - snapshot.archiveWeeksElapsed, 0)
-    }
-
-    private var lifeDaysLeft: Int {
-        let calendar = Calendar.current
-        let endDate = calendar.date(
-            byAdding: .year,
-            value: snapshot.archiveSpanYears,
-            to: snapshot.archiveStartDate
-        ) ?? snapshot.now
-        let remainingDays = calendar.dateComponents([.day], from: snapshot.now, to: endDate).day ?? 0
-        return max(remainingDays, 0)
+        .accessibilityLabel(MoriL10n.string(
+            "watch.archive.accessibility",
+            defaultValue: "Archive week %d. %@",
+            arguments: [snapshot.archiveWeekNumber, snapshot.archiveProgressPercentText]
+        ))
     }
 
     private var practiceLaunchGrid: some View {
@@ -161,7 +138,7 @@ struct MoriWatchResetHub: View {
         HStack(spacing: 6) {
             if context.hasRecoverySnapshot {
                 MoriWatchStatusChip(
-                    icon: .heart,
+                    icon: context.displayRecoveryPracticeIcon,
                     title: MoriL10n.string("recovery.widget.score", defaultValue: "Recovery %@", arguments: [context.recoveryScoreText]),
                     value: context.displayRecoveryState
                 )
@@ -611,7 +588,7 @@ private struct MoriWatchTimerView: View {
                     increment: { pomodoroCycles = min(4, pomodoroCycles + 1) }
                 )
 
-                setupSectionTitle("Break breath")
+                setupSectionTitle("Break Breath")
 
                 LazyVGrid(columns: compactOptionColumns, spacing: 6) {
                     ForEach(quickBreakBreathPresets) { preset in

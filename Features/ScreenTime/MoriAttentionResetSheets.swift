@@ -416,18 +416,18 @@ private struct MoriAttentionResetSheetHeader: View {
             HStack {
                 Spacer()
 
-                Button(action: onDone) {
-                    Text(MoriL10n.display("Done"))
-                        .font(.system(size: 21, weight: .regular))
-                        .foregroundColor(MoriColors.botanicalInk)
-                        .padding(.horizontal, 21)
-                        .frame(height: 52)
-                        .background(MoriColors.botanicalPaper.opacity(0.92))
-                        .clipShape(Capsule())
-                        .overlay {
-                            Capsule()
-                                .stroke(MoriColors.botanicalLine.opacity(0.58), lineWidth: 0.8)
-                        }
+                Button(MoriL10n.display("Done")) {
+                    onDone()
+                }
+                .font(.system(size: 21, weight: .regular))
+                .foregroundColor(MoriColors.botanicalInk)
+                .padding(.horizontal, 21)
+                .frame(height: 52)
+                .background(MoriColors.botanicalPaper.opacity(0.92))
+                .clipShape(Capsule())
+                .overlay {
+                    Capsule()
+                        .stroke(MoriColors.botanicalLine.opacity(0.58), lineWidth: 0.8)
                 }
                 .buttonStyle(.plain)
             }

@@ -77,6 +77,26 @@ require_file() {
   fi
 }
 
+normalize_generated_project_for_diff() {
+  local project_path="$1"
+  local watch_scheme="$project_path/xcshareddata/xcschemes/MoriWatch.xcscheme"
+
+  if [ -f "$watch_scheme" ]; then
+    ruby - "$watch_scheme" <<'RUBY'
+path = ARGV.fetch(0)
+body = File.read(path)
+body.gsub!(/^\s+version = "1\.[0-9]+">\n/, "   version = \"normalized\">\n")
+body.gsub!(/^\s+runPostActionsOnFailure = "NO"\n/, "")
+body.gsub!(/^\s+onlyGenerateCoverageForSpecifiedTargets = "NO"\n/, "")
+body.gsub!(/\n(\s+buildImplicitDependencies = "YES")\n\s+runPostActionsOnFailure = "NO"/, "\n\\1")
+body.gsub!(/\n(\s+shouldUseLaunchSchemeArgsEnv = "YES")\n\s+onlyGenerateCoverageForSpecifiedTargets = "NO"/, "\n\\1")
+body.gsub!(/^\s+BlueprintName = "MoriWatch"\n/, "")
+body.gsub!(/^\s+<CommandLineArguments>\n\s+<\/CommandLineArguments>\n/, "")
+File.write(path, body)
+RUBY
+  fi
+}
+
 derived_data_path="${MORI_DERIVED_DATA_PATH:-.codex-build/DerivedData}"
 sim_destination="${MORI_SIM_DESTINATION:-generic/platform=iOS Simulator}"
 app_bundle="$derived_data_path/Build/Products/Debug-iphonesimulator/Mori.app"
@@ -110,11 +130,18 @@ if [ "$skip_project_generate" -eq 0 ]; then
   require_command rsync
   require_command diff
 
-  temp_dir="$(mktemp -d "${TMPDIR:-/tmp}/mori-xcodegen-before.XXXXXX")"
+  temp_dir="$(mktemp -d "${TMPDIR:-/tmp}/mori-xcodegen-before-after.XXXXXX")"
   trap 'rm -rf "$temp_dir"' EXIT
-  rsync -a Mori.xcodeproj/ "$temp_dir/Mori.xcodeproj/"
+  mkdir -p "$temp_dir/before" "$temp_dir/after"
+  rsync -a Mori.xcodeproj/ "$temp_dir/before/Mori.xcodeproj/"
   xcodegen generate
-  diff -qr "$temp_dir/Mori.xcodeproj" Mori.xcodeproj
+  rsync -a Mori.xcodeproj/ "$temp_dir/after/Mori.xcodeproj/"
+  normalize_generated_project_for_diff "$temp_dir/before/Mori.xcodeproj"
+  normalize_generated_project_for_diff "$temp_dir/after/Mori.xcodeproj"
+  diff -qr \
+    -x xcuserdata \
+    -x configuration \
+    "$temp_dir/before/Mori.xcodeproj" "$temp_dir/after/Mori.xcodeproj"
 else
   log_step "Skip generated Xcode project idempotence"
 fi
@@ -128,7 +155,8 @@ bash scripts/check_design_direction.sh
 if [ "$skip_web_build" -eq 0 ]; then
   log_step "Build web UI package"
   require_command pnpm
-  pnpm --dir www build
+  # Keep pnpm from rewriting the tracked hoisted node_modules snapshot.
+  pnpm --dir www --config.node-linker=hoisted build
 else
   log_step "Skip web build"
 fi

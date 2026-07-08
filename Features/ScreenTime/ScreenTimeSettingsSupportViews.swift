@@ -140,6 +140,11 @@ struct MoriBeforeFeedShortcutGuideSheet: View {
                                 .font(.footnote)
                                 .foregroundColor(MoriColors.botanicalMuted)
                                 .fixedSize(horizontal: false, vertical: true)
+
+                            Text(MoriL10n.display("Do not use Open URL with mori://; iOS may block that launch from personal automations."))
+                                .font(.footnote)
+                                .foregroundColor(MoriColors.botanicalMuted)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
                         .padding(14)
                         .background(MoriColors.botanicalPaperDeep.opacity(0.58))

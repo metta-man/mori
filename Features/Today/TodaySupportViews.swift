@@ -306,42 +306,36 @@ struct TodayPrimaryResetCard: View {
 }
 
 struct TodayQuickActionsCard: View {
-    let beforeFeedDurationText: String
     let morningDurationText: String
-    let onOpenBeforeFeed: () -> Void
     let onOpenMorningReset: () -> Void
     let onOpenAppLimits: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             MoriSectionTitle(
-                title: "Open",
-                subtitle: "The main actions stay one tap from Today."
+                title: "Adjust only when needed",
+                subtitle: "Keep the main loop simple: limit, reset, leave."
             )
 
             VStack(spacing: 10) {
-                TodayQuickActionRow(
-                    title: "Before Feed Reset",
-                    subtitle: "Start the \(beforeFeedDurationText) reset now.",
-                    icon: .timer,
-                    productSymbol: .beforeFeedReset,
-                    action: onOpenBeforeFeed
-                )
-
-                TodayQuickActionRow(
-                    title: "Morning Reset",
-                    subtitle: "Default-on \(morningDurationText) morning window.",
-                    icon: .leaf,
-                    productSymbol: .morningReset,
-                    action: onOpenMorningReset
-                )
-
                 TodayQuickActionRow(
                     title: "App Limit Setup",
                     subtitle: "Choose or adjust the app Mori slows down.",
                     icon: .lockShield,
                     productSymbol: .appLimit,
                     action: onOpenAppLimits
+                )
+
+                TodayQuickActionRow(
+                    title: "Morning Reset",
+                    subtitle: MoriL10n.string(
+                        "today.morning_reset.subtitle",
+                        defaultValue: "%@ morning window for the first unlock.",
+                        arguments: [morningDurationText]
+                    ),
+                    icon: .leaf,
+                    productSymbol: .morningReset,
+                    action: onOpenMorningReset
                 )
             }
         }

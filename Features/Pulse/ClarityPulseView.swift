@@ -23,6 +23,7 @@ struct ClarityPulseView: View {
     @EnvironmentObject var settings: UserSettings
     @StateObject private var clarityStore = MoriClarityStore.shared
     @StateObject private var recoveryStore = MoriRecoveryStore.shared
+    @StateObject private var appLimitManager = AppLimitManager.shared
     @State private var pulse: MoriDailyPulse = .mock()
     @State private var isLoading = false
     @State private var customTopic = ""
@@ -41,6 +42,10 @@ struct ClarityPulseView: View {
 
     private var shouldShowPulseContent: Bool {
         !(pulse.isMock && pulseErrorMessage != nil)
+    }
+
+    private var isCoreLoopReady: Bool {
+        appLimitManager.settingsSnapshot.isAppLimitReady(for: .beforeFeed)
     }
 
     private var shouldOpenRecoveryDetailsForUITest: Bool {
@@ -69,61 +74,71 @@ struct ClarityPulseView: View {
                 spacing: 18,
                 backgroundVariant: .today
             ) {
-                ClarityPulseStatsHeader(
-                    generatedAt: pulse.generatedAt,
-                    metrics: metrics,
-                    isLoading: isLoading,
-                    onRefresh: refreshPulse
-                )
-
-                MoriRecoveryPulseCard(
-                    snapshot: recoveryStore.snapshot,
-                    isLoading: recoveryStore.isLoading,
-                    errorMessage: recoveryStore.errorMessage,
-                    title: MoriL10n.display("Recovery Pulse"),
-                    subtitle: MoriL10n.display("HealthKit readiness signals before the attention scan."),
-                    onOpenDetails: openRecoveryDetails,
-                    onRefresh: refreshRecovery,
-                    onStartPractice: startPractice,
-                    onQuickComplete: completePractice
-                )
-
-                if recoveryStore.snapshot.status != .needsPermission {
-                    MoriRecoveryInsightOptInCard(isEnabled: $recoveryInsightOptIn)
-                }
-
-                if let pulseErrorMessage {
-                    PulseErrorBanner(message: pulseErrorMessage)
-                }
-
-                PulseTopicControlsSummary(
-                    activeTopicLabels: clarityStore.activeTopicLabels,
-                    activeCount: clarityStore.activeTopicLabels.count,
-                    maxActiveCount: clarityStore.maxActiveTopicCount,
-                    selectedCount: clarityStore.selectedTopicLabels.count,
-                    queuedCount: clarityStore.queuedTopicLabels.count,
-                    isExpanded: showsTopicControls,
-                    onToggle: {
-                        withAnimation(.snappy(duration: 0.22)) {
-                            showsTopicControls.toggle()
-                        }
-                    }
-                )
-
-                if showsTopicControls {
-                    PulseTopicPickerCard(
-                        clarityStore: clarityStore,
-                        customTopic: $customTopic,
-                        selectedCustomTopicIcon: $selectedCustomTopicIcon
+                if isCoreLoopReady {
+                    ClarityPulseStatsHeader(
+                        generatedAt: pulse.generatedAt,
+                        metrics: metrics,
+                        isLoading: isLoading,
+                        onRefresh: refreshPulse
                     )
-                    .transition(.opacity.combined(with: .move(edge: .top)))
-                }
 
-                if shouldShowPulseContent {
-                    ForEach(pulse.displayTopicPulses) { topicPulse in
-                        TopicPulseSection(
-                            topicPulse: topicPulse,
-                            topicIcon: clarityStore.icon(forTopicLabel: topicPulse.topic),
+                    MoriRecoveryPulseCard(
+                        snapshot: recoveryStore.snapshot,
+                        isLoading: recoveryStore.isLoading,
+                        errorMessage: recoveryStore.errorMessage,
+                        title: MoriL10n.display("Recovery Pulse"),
+                        subtitle: MoriL10n.display("HealthKit readiness signals before the attention scan."),
+                        onOpenDetails: openRecoveryDetails,
+                        onRefresh: refreshRecovery,
+                        onStartPractice: startPractice,
+                        onQuickComplete: completePractice
+                    )
+
+                    if recoveryStore.snapshot.status != .needsPermission {
+                        MoriRecoveryInsightOptInCard(isEnabled: $recoveryInsightOptIn)
+                    }
+
+                    if let pulseErrorMessage {
+                        PulseErrorBanner(message: pulseErrorMessage)
+                    }
+
+                    PulseTopicControlsSummary(
+                        activeTopicLabels: clarityStore.activeTopicLabels,
+                        activeCount: clarityStore.activeTopicLabels.count,
+                        maxActiveCount: clarityStore.maxActiveTopicCount,
+                        selectedCount: clarityStore.selectedTopicLabels.count,
+                        queuedCount: clarityStore.queuedTopicLabels.count,
+                        isExpanded: showsTopicControls,
+                        onToggle: {
+                            withAnimation(.snappy(duration: 0.22)) {
+                                showsTopicControls.toggle()
+                            }
+                        }
+                    )
+
+                    if showsTopicControls {
+                        PulseTopicPickerCard(
+                            clarityStore: clarityStore,
+                            customTopic: $customTopic,
+                            selectedCustomTopicIcon: $selectedCustomTopicIcon
+                        )
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
+
+                    if shouldShowPulseContent {
+                        ForEach(pulse.displayTopicPulses) { topicPulse in
+                            TopicPulseSection(
+                                topicPulse: topicPulse,
+                                topicIcon: clarityStore.icon(forTopicLabel: topicPulse.topic),
+                                onAction: handle,
+                                onOpenDetails: { card in
+                                    presentCardDetail(card.id)
+                                }
+                            )
+                        }
+
+                        SharedPulseSection(
+                            cards: sharedPulseCards,
                             onAction: handle,
                             onOpenDetails: { card in
                                 presentCardDetail(card.id)
@@ -131,20 +146,17 @@ struct ClarityPulseView: View {
                         )
                     }
 
-                    SharedPulseSection(
-                        cards: sharedPulseCards,
-                        onAction: handle,
-                        onOpenDetails: { card in
-                            presentCardDetail(card.id)
-                        }
+                    PulsePracticeCTA {
+                        presentPracticeSheet(.selection)
+                    }
+
+                    PulsePrivacyNote()
+                } else {
+                    PulseCoreLoopGateCard(
+                        onOpenAppLimitSetup: openAppLimitSetup,
+                        onStartReset: openBeforeFeedReset
                     )
                 }
-
-                PulsePracticeCTA {
-                    presentPracticeSheet(.selection)
-                }
-
-                PulsePrivacyNote()
             }
             .overlay(alignment: .topLeading) {
                 if showsDismissButton {
@@ -167,7 +179,8 @@ struct ClarityPulseView: View {
                     )
                 }
             }
-            .task {
+            .task(id: isCoreLoopReady) {
+                guard isCoreLoopReady else { return }
                 await recoveryStore.refresh()
                 openRecoveryDetailsForUITestIfNeeded()
                 await loadPulse(force: false)
@@ -278,6 +291,14 @@ struct ClarityPulseView: View {
 
     private func refreshPulse() {
         Task { await loadPulse(force: true) }
+    }
+
+    private func openAppLimitSetup() {
+        openRoute(.appLimitSetup)
+    }
+
+    private func openBeforeFeedReset() {
+        openRoute(.beforeFeedReset)
     }
 
     private func startPractice(_ practice: MoriPractice) {

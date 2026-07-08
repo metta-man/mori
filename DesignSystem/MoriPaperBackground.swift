@@ -86,26 +86,24 @@ private struct MoriWatercolorPaperBackground: View {
 
     private func edgeWashes(size: CGSize) -> some View {
         ZStack {
-            RadialGradient(
+            LinearGradient(
                 colors: [
                     MoriColors.sanctuaryPaperWarm.opacity(0.34),
                     MoriColors.sanctuaryPaper.opacity(0.12),
                     .clear
                 ],
-                center: .topLeading,
-                startRadius: 0,
-                endRadius: max(size.width, size.height) * 0.58
+                startPoint: .topLeading,
+                endPoint: .center
             )
 
-            RadialGradient(
+            LinearGradient(
                 colors: [
                     MoriColors.sanctuarySand.opacity(0.20),
                     MoriColors.sanctuaryPaperWarm.opacity(0.12),
                     .clear
                 ],
-                center: .bottomTrailing,
-                startRadius: 0,
-                endRadius: max(size.width, size.height) * 0.56
+                startPoint: .bottomTrailing,
+                endPoint: .center
             )
 
             LinearGradient(

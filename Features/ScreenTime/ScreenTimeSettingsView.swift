@@ -62,6 +62,7 @@ struct ScreenTimeSettingsView: View {
     ) private var morningGateBreathingTechniqueID: String = MoriScreenTimeShared.defaultMorningGateBreathingTechniqueID
     @State private var pickerSelection = FamilyActivitySelection()
     @State private var activeSheet: ScreenTimeSettingsSheet?
+    @State private var monitorHealthEvents = MoriScreenTimeMonitorHealthStore.recentEvents()
 
     var body: some View {
         let presentation = ScreenTimeSettingsPresentation(
@@ -115,6 +116,10 @@ struct ScreenTimeSettingsView: View {
                 onEditFeedApps: showBeforeFeedPicker,
                 onShowShortcutGuide: showShortcutGuide
             )
+            ScreenTimeMonitorHealthSection(
+                events: monitorHealthEvents,
+                onRefresh: refreshMonitorHealth
+            )
         }
         .moriSettingsForm()
         .navigationTitle(MoriL10n.display("App Limits"))
@@ -122,7 +127,10 @@ struct ScreenTimeSettingsView: View {
         .toolbarBackground(MoriColors.botanicalPaper, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbarColorScheme(.light, for: .navigationBar)
-        .onAppear(perform: normalizeGateSettings)
+        .onAppear {
+            normalizeGateSettings()
+            refreshMonitorHealth()
+        }
         .screenTimeGateRefreshes(
             beforeFeedNativeGateEnabled: beforeFeedNativeGateEnabled,
             beforeFeedGraceWindowSeconds: beforeFeedGraceWindowSeconds,
@@ -242,6 +250,10 @@ struct ScreenTimeSettingsView: View {
         morningGateStartHour = MorningGate.startHour
         morningGateStartMinute = MorningGate.startMinute
         morningGateDurationSeconds = MorningGate.durationSeconds
+    }
+
+    private func refreshMonitorHealth() {
+        monitorHealthEvents = MoriScreenTimeMonitorHealthStore.recentEvents()
     }
 
     private func updateFeatureEnabled(_ isEnabled: Bool, for feature: MoriScreenTimeFeature) {

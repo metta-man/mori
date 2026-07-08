@@ -30,6 +30,10 @@ final class MoriScreenTimeMonitorExtension: DeviceActivityMonitor {
 
         switch activity {
         case .moriBeforeFeedGrace:
+            recordBeforeFeedMonitorEvent(
+                kind: .beforeFeedGraceIntervalStarted,
+                action: "intervalDidStart"
+            )
             refreshAfterBeforeFeedGraceExpired()
         case .moriMorningGate:
             applyPassiveGateShieldIfNeeded()
@@ -45,6 +49,10 @@ final class MoriScreenTimeMonitorExtension: DeviceActivityMonitor {
         case .moriActiveSession:
             refreshAfterActiveSessionEnded()
         case .moriBeforeFeedGrace:
+            recordBeforeFeedMonitorEvent(
+                kind: .beforeFeedGraceIntervalEnded,
+                action: "intervalDidEnd"
+            )
             refreshAfterBeforeFeedGraceExpired()
         case .moriMorningGate:
             refreshAfterMorningGateEnded()
@@ -61,7 +69,32 @@ final class MoriScreenTimeMonitorExtension: DeviceActivityMonitor {
 
     private func refreshAfterBeforeFeedGraceExpired() {
         beforeFeedGateStore.clearGraceUntil()
+        recordBeforeFeedMonitorEvent(
+            kind: .beforeFeedGraceExpired,
+            action: "clearGraceAndApplyPassiveGate"
+        )
         applyPassiveGateShieldIfNeeded()
+    }
+
+    private func recordBeforeFeedMonitorEvent(
+        kind: MoriScreenTimeMonitorHealthEventKind,
+        action: String
+    ) {
+        let selection = selectionStore.effectiveSelection(for: .beforeFeed)
+        MoriScreenTimeMonitorHealthStore.record(
+            MoriScreenTimeMonitorHealthEvent(
+                kind: kind,
+                activityName: "mori.before-feed.grace",
+                featureRawValue: MoriScreenTimeFeature.beforeFeed.rawValue,
+                action: action,
+                beforeFeedNativeGateEnabled: beforeFeedGateStore.nativeGateEnabled(),
+                beforeFeedInGraceWindow: beforeFeedGateStore.isInGraceWindow(),
+                beforeFeedHasSelection: selectionStore.hasEffectiveSelection(for: .beforeFeed),
+                applicationTokenCount: selection.applicationTokens.count,
+                webDomainTokenCount: selection.webDomainTokens.count,
+                displayNameCount: selectionStore.summary(for: .beforeFeed).displayNames.count
+            )
+        )
     }
 
     private func refreshAfterMorningGateEnded() {

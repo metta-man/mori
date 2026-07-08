@@ -68,18 +68,53 @@ struct AttentionShieldMonitoringCoordinator {
         graceUntil: Date?
     ) -> AttentionShieldMonitoringOutcome {
         guard isAuthorized else {
+            MoriScreenTimeMonitorHealthStore.record(
+                MoriScreenTimeMonitorHealthEvent(
+                    kind: .beforeFeedGraceScheduleSkipped,
+                    activityName: "mori.before-feed.grace",
+                    action: "skip",
+                    message: "Screen Time authorization is not available.",
+                    graceUntil: graceUntil
+                )
+            )
             activityScheduler.stopBeforeFeedGrace()
             return .noChange
         }
         guard let graceUntil else {
+            MoriScreenTimeMonitorHealthStore.record(
+                MoriScreenTimeMonitorHealthEvent(
+                    kind: .beforeFeedGraceScheduleSkipped,
+                    activityName: "mori.before-feed.grace",
+                    action: "skip",
+                    message: "No active Before Feed open window.",
+                    graceUntil: nil
+                )
+            )
             activityScheduler.stopBeforeFeedGrace()
             return .noChange
         }
 
         do {
             try activityScheduler.scheduleBeforeFeedGrace(graceUntil: graceUntil)
+            MoriScreenTimeMonitorHealthStore.record(
+                MoriScreenTimeMonitorHealthEvent(
+                    kind: .beforeFeedGraceScheduled,
+                    activityName: "mori.before-feed.grace",
+                    action: "schedule",
+                    graceUntil: graceUntil
+                )
+            )
             return .scheduled
         } catch {
+            MoriScreenTimeMonitorHealthStore.record(
+                MoriScreenTimeMonitorHealthEvent(
+                    kind: .beforeFeedGraceScheduleFailed,
+                    activityName: "mori.before-feed.grace",
+                    action: "fail",
+                    message: error.localizedDescription,
+                    graceUntil: graceUntil
+                )
+            )
             return .failed("Could not schedule Before Feed gate.")
         }
     }

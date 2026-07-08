@@ -16,6 +16,121 @@ enum MoriPendingResetLaunchSource: String {
     case shortcut = "shortcut"
 }
 
+enum MoriScreenTimeMonitorHealthEventKind: String, Codable, CaseIterable {
+    case beforeFeedGraceScheduled
+    case beforeFeedGraceScheduleSkipped
+    case beforeFeedGraceScheduleFailed
+    case beforeFeedGraceIntervalStarted
+    case beforeFeedGraceIntervalEnded
+    case beforeFeedGraceExpired
+    case shieldApplied
+    case shieldCleared
+
+    var title: String {
+        switch self {
+        case .beforeFeedGraceScheduled:
+            return "Grace monitor scheduled"
+        case .beforeFeedGraceScheduleSkipped:
+            return "Grace monitor skipped"
+        case .beforeFeedGraceScheduleFailed:
+            return "Grace monitor failed"
+        case .beforeFeedGraceIntervalStarted:
+            return "Grace monitor fired"
+        case .beforeFeedGraceIntervalEnded:
+            return "Grace monitor ended"
+        case .beforeFeedGraceExpired:
+            return "Grace expired"
+        case .shieldApplied:
+            return "Shield applied"
+        case .shieldCleared:
+            return "Shield cleared"
+        }
+    }
+}
+
+struct MoriScreenTimeMonitorHealthEvent: Identifiable, Codable, Equatable {
+    var id: UUID
+    var kind: MoriScreenTimeMonitorHealthEventKind
+    var recordedAt: Date
+    var activityName: String?
+    var featureRawValue: String?
+    var action: String?
+    var message: String?
+    var graceUntil: Date?
+    var beforeFeedNativeGateEnabled: Bool?
+    var beforeFeedInGraceWindow: Bool?
+    var beforeFeedHasSelection: Bool?
+    var applicationTokenCount: Int?
+    var webDomainTokenCount: Int?
+    var displayNameCount: Int?
+
+    init(
+        id: UUID = UUID(),
+        kind: MoriScreenTimeMonitorHealthEventKind,
+        recordedAt: Date = Date(),
+        activityName: String? = nil,
+        featureRawValue: String? = nil,
+        action: String? = nil,
+        message: String? = nil,
+        graceUntil: Date? = nil,
+        beforeFeedNativeGateEnabled: Bool? = nil,
+        beforeFeedInGraceWindow: Bool? = nil,
+        beforeFeedHasSelection: Bool? = nil,
+        applicationTokenCount: Int? = nil,
+        webDomainTokenCount: Int? = nil,
+        displayNameCount: Int? = nil
+    ) {
+        self.id = id
+        self.kind = kind
+        self.recordedAt = recordedAt
+        self.activityName = activityName
+        self.featureRawValue = featureRawValue
+        self.action = action
+        self.message = message
+        self.graceUntil = graceUntil
+        self.beforeFeedNativeGateEnabled = beforeFeedNativeGateEnabled
+        self.beforeFeedInGraceWindow = beforeFeedInGraceWindow
+        self.beforeFeedHasSelection = beforeFeedHasSelection
+        self.applicationTokenCount = applicationTokenCount
+        self.webDomainTokenCount = webDomainTokenCount
+        self.displayNameCount = displayNameCount
+    }
+
+    var totalTokenCount: Int? {
+        guard applicationTokenCount != nil || webDomainTokenCount != nil else { return nil }
+        return (applicationTokenCount ?? 0) + (webDomainTokenCount ?? 0)
+    }
+}
+
+enum MoriScreenTimeMonitorHealthStore {
+    private static let maxEvents = 20
+    private static let encoder = JSONEncoder()
+    private static let decoder = JSONDecoder()
+
+    static func record(_ event: MoriScreenTimeMonitorHealthEvent) {
+        var events = recentEvents()
+        events.insert(event, at: 0)
+        if events.count > maxEvents {
+            events.removeLast(events.count - maxEvents)
+        }
+        guard let data = try? encoder.encode(events) else { return }
+        MoriAppGroup.defaults.set(data, forKey: MoriScreenTimeShared.monitorHealthEventsKey)
+    }
+
+    static func recentEvents() -> [MoriScreenTimeMonitorHealthEvent] {
+        guard let data = MoriAppGroup.defaults.data(forKey: MoriScreenTimeShared.monitorHealthEventsKey),
+              let events = try? decoder.decode([MoriScreenTimeMonitorHealthEvent].self, from: data)
+        else {
+            return []
+        }
+        return events
+    }
+
+    static func clear() {
+        MoriAppGroup.defaults.removeObject(forKey: MoriScreenTimeShared.monitorHealthEventsKey)
+    }
+}
+
 #if canImport(ActivityKit) && os(iOS)
 @available(iOS 16.1, *)
 struct MoriBeforeFeedWindowAttributes: ActivityAttributes {
@@ -51,6 +166,7 @@ enum MoriScreenTimeShared {
     static let featureProfilesKey = "mori_screen_time_feature_profiles"
     static let featureMigrationKey = "mori_screen_time_feature_profiles_migrated_v1"
     static let signalsKey = "mori_screen_time_signals"
+    static let monitorHealthEventsKey = "mori_screen_time_monitor_health_events"
     static let attemptsKey = "mori_screen_time_attempts"
     static let activeSessionKey = "mori_screen_time_active_session"
     static let dailyThresholdMinutesKey = "mori_screen_time_daily_threshold_minutes"

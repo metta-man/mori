@@ -22,6 +22,7 @@ struct TodayView: View {
         MoriScreenTimeShared.beforeFeedBreathingTechniqueIDKey,
         store: MoriAppGroup.defaults
     ) private var beforeFeedBreathingTechniqueID: String = MoriScreenTimeShared.defaultBeforeFeedBreathingTechniqueID
+    @State private var todayFocus = TodayFocusDraftStore.live.load(for: Date())
     @State private var navigationPath: [TodayNavigationRoute] = []
     @State private var handledLaunchRequestID: UUID?
 
@@ -44,7 +45,7 @@ struct TodayView: View {
         NavigationStack(path: $navigationPath) {
             MoriRootScrollScreen(
                 title: "Today",
-                subtitle: "Limit one app. Reclaim this hour.",
+                subtitle: "Limit one app. Do one reset. Leave.",
                 spacing: 14,
                 backgroundVariant: .today
             ) {
@@ -62,10 +63,15 @@ struct TodayView: View {
                     onOpenAppLimits: openAppLimits
                 )
 
+                TodayPrimaryResetCard(
+                    durationText: BeforeFeedGate.formattedDuration(beforeFeedDurationSeconds),
+                    onStartReset: openBeforeFeedReset
+                )
+
+                TodayFocusCard(focus: $todayFocus)
+
                 TodayQuickActionsCard(
-                    beforeFeedDurationText: BeforeFeedGate.formattedDuration(beforeFeedDurationSeconds),
                     morningDurationText: MorningGate.formattedDuration(morningGateDurationSeconds),
-                    onOpenBeforeFeed: openBeforeFeedReset,
                     onOpenMorningReset: openMorningReset,
                     onOpenAppLimits: openAppLimits
                 )
@@ -84,8 +90,12 @@ struct TodayView: View {
             navigationPath.append(route)
         })
         .onAppear {
+            todayFocus = TodayFocusDraftStore.live.load(for: Date())
             AnalyticsManager.shared.trackTodayViewed()
             handleLaunchRequestIfNeeded()
+        }
+        .onChange(of: todayFocus) { newValue in
+            TodayFocusDraftStore.live.save(newValue, for: Date())
         }
         .onChange(of: launchRequest?.id) { _ in
             handleLaunchRequestIfNeeded()
