@@ -9,6 +9,63 @@ import SwiftUI
 import PhotosUI
 import UIKit
 
+struct JournalLifeGridSnapshot: Equatable {
+    let summary: String
+    let days: [MoriLifeGridPreviewDay]
+
+    static func current(
+        now: Date = Date(),
+        calendar: Calendar = .current,
+        dataManager: HabitDataManager = .shared,
+        dailySparks: [DailySparkEntry] = [],
+        journalEntries: [GratitudeEntry] = [],
+        actions: [MoriMindfulAction] = [],
+        sessions: [SettleSession] = []
+    ) -> JournalLifeGridSnapshot {
+        let today = calendar.startOfDay(for: now)
+        let monthInterval = calendar.dateInterval(of: .month, for: today)
+        let monthStart = monthInterval?.start ?? today
+        let monthEnd = calendar.date(byAdding: .day, value: -1, to: monthInterval?.end ?? today) ?? today
+        let recentStart = calendar.date(byAdding: .day, value: -29, to: today) ?? today
+        let habitEntries = dataManager.getEntries(from: min(monthStart, recentStart), to: today)
+        let recordedDays = Set(
+            dailySparks.compactMap { WeekArchiveData.date(fromDateKey: $0.dateKey) } +
+                journalEntries.map(\.date) +
+                actions.map(\.createdAt) +
+                sessions.map(\.startedAt) +
+                habitEntries.map(\.date)
+        ).map { calendar.startOfDay(for: $0) }
+        let recordedDaySet = Set(recordedDays)
+        let rememberedDays = recordedDaySet.filter {
+            $0 >= monthStart && $0 <= min(today, monthEnd)
+        }.count
+
+        let monthFormatter = DateFormatter()
+        monthFormatter.locale = MoriLocalePreference.load().locale
+        monthFormatter.setLocalizedDateFormatFromTemplate("LLLL")
+        let monthName = monthFormatter.string(from: today)
+        let rememberedLabel = MoriL10n.display(
+            rememberedDays == 1 ? "day remembered" : "days remembered"
+        )
+
+        let previewDays = (0..<30).map { offset in
+            let date = calendar.date(byAdding: .day, value: offset, to: recentStart) ?? recentStart
+            let entry = habitEntries.first { calendar.isDate($0.date, inSameDayAs: date) }
+
+            return MoriLifeGridPreviewDay(
+                id: offset,
+                tone: entry?.tone.moriMoodTone,
+                isRemembered: recordedDaySet.contains(calendar.startOfDay(for: date))
+            )
+        }
+
+        return JournalLifeGridSnapshot(
+            summary: "\(monthName) · \(rememberedDays) \(rememberedLabel)",
+            days: previewDays
+        )
+    }
+}
+
 enum GratitudeJournalRoute: Hashable {
     case history
     case weekArchiveDetail
@@ -74,18 +131,19 @@ struct GratitudeJournalHeaderActions: View {
                     menuActionLabel(title: "Restore iCloud Backup", icon: .refresh)
                 }
             } label: {
-                floatingHeaderIcon(.journal)
+                floatingHeaderSymbol("calendar")
             }
             .buttonStyle(.plain)
             .foregroundColor(MoriColors.sanctuaryInk)
             .accessibility(label: Text(MoriL10n.display("Log actions")))
 
             Button(action: openSettings) {
-                floatingHeaderIcon(.settings)
+                floatingHeaderSymbol("gearshape")
             }
             .buttonStyle(.plain)
             .accessibilityLabel(MoriL10n.display("Settings"))
         }
+        .padding(.trailing, 8)
     }
 
     private func openHistory() {
@@ -96,8 +154,11 @@ struct GratitudeJournalHeaderActions: View {
         openRoute(.settings)
     }
 
-    private func floatingHeaderIcon(_ icon: MoriBitmapIcon) -> some View {
-        MoriBitmapIconImage(icon: icon, size: 21, opacity: 0.92)
+    private func floatingHeaderSymbol(_ name: String) -> some View {
+        Image(systemName: name)
+            .font(.system(size: 18, weight: .regular))
+            .foregroundColor(MoriColors.sanctuaryInk)
+            .opacity(0.84)
             .frame(width: 44, height: 44)
             .background(MoriColors.sanctuarySurface.opacity(0.82))
             .clipShape(Circle())
@@ -154,6 +215,7 @@ struct GratitudeJournalHomeContent: View {
     @Binding var dailyEntryPhotos: [GratitudePhotoAttachment]
     @Binding var selectedDailyPhotoItems: [PhotosPickerItem]
     let recentEntries: [GratitudeEntry]
+    let lifeGridSnapshot: JournalLifeGridSnapshot
     let onDailySparkSaved: (DailySparkEntry) -> Void
     let onSelectTone: (HabitDayTone) -> Void
     let onSaveDailyEntry: () -> Void
@@ -165,7 +227,7 @@ struct GratitudeJournalHomeContent: View {
     let onEntryTap: (GratitudeEntry) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
+        VStack(alignment: .leading, spacing: 21) {
             JournalTodayPanel(
                 selectedTone: selectedTone ?? todayHabitEntry?.tone,
                 note: $dailyEntryNote,
@@ -176,10 +238,11 @@ struct GratitudeJournalHomeContent: View {
                 onRemovePhoto: onRemoveDailyPhoto
             )
 
-            JournalMoreSection(
+            JournalLifeGridSection(
                 dailySparkStore: dailySparkStore,
                 selectedTone: selectedTone ?? todayHabitEntry?.tone,
                 recentEntries: recentEntries,
+                lifeGridSnapshot: lifeGridSnapshot,
                 onDailySparkSaved: onDailySparkSaved,
                 onOpenPatternLog: onOpenPatternLog,
                 onOpenWeekArchive: onOpenWeekArchive,
@@ -211,12 +274,30 @@ struct JournalTodayPanel: View {
     private var photoCountText: String {
         switch attachedPhotos.count {
         case 0:
-            return MoriL10n.display("Optional")
+            return MoriL10n.display("(optional)")
         case 1:
-            return MoriL10n.display("1 photo attached")
+            return MoriL10n.display("(1 photo attached)")
         default:
-            return MoriL10n.display("\(attachedPhotos.count) photos attached")
+            return MoriL10n.display("(\(attachedPhotos.count) photos attached)")
         }
+    }
+
+    private var toneSelection: Binding<HabitDayTone?> {
+        Binding(
+            get: { selectedTone },
+            set: { tone in
+                guard let tone else { return }
+                onSelect(tone)
+            }
+        )
+    }
+
+    private var moodOptions: [MoriMoodOption<HabitDayTone>] {
+        [
+            MoriMoodOption(id: .positive, title: "Good", tone: .good),
+            MoriMoodOption(id: .neutral, title: "Neutral", tone: .neutral),
+            MoriMoodOption(id: .negative, title: "Difficult", tone: .difficult)
+        ]
     }
 
     var body: some View {
@@ -231,34 +312,14 @@ struct JournalTodayPanel: View {
                     .foregroundColor(MoriColors.botanicalMuted)
             }
 
-            HStack(spacing: 10) {
-                JournalToneButton(
-                    tone: .positive,
-                    icon: .plus,
-                    label: "Good",
-                    isSelected: selectedTone == .positive,
-                    action: { onSelect(.positive) }
-                )
+            MoriMoodSelector(
+                options: moodOptions,
+                selection: toneSelection,
+                optionSpacing: 12,
+                optionMinimumHeight: 97
+            )
 
-                JournalToneButton(
-                    tone: .neutral,
-                    icon: .leaf,
-                    productSymbol: .neutralDay,
-                    label: "Neutral",
-                    isSelected: selectedTone == .neutral,
-                    action: { onSelect(.neutral) }
-                )
-
-                JournalToneButton(
-                    tone: .negative,
-                    icon: .minus,
-                    label: "Difficult",
-                    isSelected: selectedTone == .negative,
-                    action: { onSelect(.negative) }
-                )
-            }
-
-            VStack(alignment: .leading, spacing: 8) {
+            VStack(alignment: .leading, spacing: 11) {
                 Text(MoriL10n.display("One sentence"))
                     .font(MoriTypography.callout.weight(.semibold))
                     .foregroundColor(MoriColors.botanicalInk)
@@ -289,6 +350,7 @@ struct JournalTodayPanel: View {
                         .stroke(MoriColors.botanicalLine.opacity(0.55), lineWidth: 1)
                 )
             }
+            .padding(.top, 5)
 
             PhotosPicker(
                 selection: $selectedPhotoItems,
@@ -296,27 +358,35 @@ struct JournalTodayPanel: View {
                 matching: .images
             ) {
                 HStack(spacing: 10) {
-                    MoriBitmapIconImage(icon: .journal, size: 16, opacity: canAddPhotos ? 0.88 : 0.38)
-                        .frame(width: 34, height: 34)
-                        .background(MoriColors.botanicalInk.opacity(0.08))
-                        .clipShape(Circle())
+                    Image(systemName: "photo")
+                        .font(.system(size: 16, weight: .light))
+                        .foregroundColor(
+                            canAddPhotos
+                                ? MoriColors.botanicalMuted
+                                : MoriColors.botanicalMuted.opacity(0.42)
+                        )
+                        .frame(width: 22, height: 22)
 
-                    VStack(alignment: .leading, spacing: 2) {
+                    HStack(alignment: .firstTextBaseline, spacing: 4) {
                         Text(MoriL10n.display(canAddPhotos ? "Add a photo" : "Photo limit reached"))
                             .font(MoriTypography.callout.weight(.semibold))
                             .foregroundColor(canAddPhotos ? MoriColors.botanicalInk : MoriColors.botanicalMuted)
 
                         Text(photoCountText)
-                            .font(MoriTypography.caption.weight(.medium))
+                            .font(MoriTypography.caption)
                             .foregroundColor(MoriColors.botanicalMuted)
                     }
 
                     Spacer(minLength: 0)
 
-                    MoriBitmapIconImage(icon: .plus, size: 14, opacity: canAddPhotos ? 0.74 : 0.32)
+                    Image(systemName: "plus")
+                        .font(.system(size: 15, weight: .regular))
+                        .foregroundColor(
+                            MoriColors.botanicalMuted.opacity(canAddPhotos ? 0.52 : 0.28)
+                        )
                 }
                 .padding(.horizontal, 12)
-                .frame(minHeight: 52)
+                .frame(minHeight: 50)
                 .background(MoriColors.botanicalPaperDeep.opacity(0.44))
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .overlay(
@@ -327,6 +397,7 @@ struct JournalTodayPanel: View {
             .buttonStyle(.plain)
             .disabled(!canAddPhotos)
             .accessibilityLabel(MoriL10n.display("Add photos to daily log"))
+            .padding(.top, 4)
 
             if !attachedPhotos.isEmpty {
                 DailyLogPhotoStrip(
@@ -336,26 +407,46 @@ struct JournalTodayPanel: View {
             }
 
             Button(action: onSave) {
-                Text(MoriL10n.display("Done"))
+                Text(MoriL10n.display("Save entry"))
                     .font(MoriTypography.callout.weight(.semibold))
                     .foregroundColor(canSave ? MoriColors.botanicalSurface : MoriColors.botanicalMuted)
                     .frame(maxWidth: .infinity)
                     .frame(minHeight: 50)
-                    .background(canSave ? MoriColors.botanicalInk : MoriColors.botanicalInk.opacity(0.08))
+                    .background(
+                        canSave
+                            ? MoriColors.botanicalInk
+                            : MoriTheme.Colors.sage.opacity(0.18)
+                    )
                     .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
             .buttonStyle(.plain)
             .disabled(!canSave)
             .accessibilityLabel(MoriL10n.display("Save today's log"))
+            .padding(.top, 5)
         }
-        .moriSanctuaryCard(cornerRadius: 22, padding: 18)
+        .padding(.horizontal, 19)
+        .padding(.top, 16)
+        .padding(.bottom, 24)
+        .background(
+            MoriSanctuaryBoxBackground(
+                cornerRadius: 20,
+                tone: .paper
+            )
+        )
+        .shadow(
+            color: MoriColors.sanctuaryShadow.opacity(0.24),
+            radius: 10,
+            x: 0,
+            y: 5
+        )
     }
 }
 
-private struct JournalMoreSection: View {
+private struct JournalLifeGridSection: View {
     @ObservedObject var dailySparkStore: DailySparkStore
     let selectedTone: HabitDayTone?
     let recentEntries: [GratitudeEntry]
+    let lifeGridSnapshot: JournalLifeGridSnapshot
     let onDailySparkSaved: (DailySparkEntry) -> Void
     let onOpenPatternLog: () -> Void
     let onOpenWeekArchive: () -> Void
@@ -363,79 +454,51 @@ private struct JournalMoreSection: View {
     let onViewHistory: () -> Void
     let onEntryTap: (GratitudeEntry) -> Void
 
-    @State private var isExpanded = false
-
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            Button {
-                isExpanded.toggle()
-            } label: {
-                HStack(spacing: 12) {
-                    MoriBitmapIconBadge(
-                        icon: .journal,
-                        size: 36,
-                        iconScale: 0.58,
-                        fill: MoriColors.sanctuarySurface.opacity(0.78),
-                        stroke: Color.white.opacity(0.88),
-                        shadow: MoriColors.sanctuaryShadow.opacity(0.14)
-                    )
+            MoriLifeGridPreview(
+                summary: lifeGridSnapshot.summary,
+                days: lifeGridSnapshot.days,
+                columnCount: 10,
+                columnSpacing: 19,
+                rowSpacing: 10,
+                cardPadding: 20,
+                cornerRadius: 20,
+                shadow: nil,
+                contentSpacing: 22,
+                contentOffsetY: -3,
+                action: onOpenWeekArchive
+            )
 
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(MoriL10n.display("More from your Log"))
-                            .font(MoriTypography.callout.weight(.semibold))
-                            .foregroundColor(MoriColors.botanicalInk)
+            VStack(alignment: .leading, spacing: 16) {
+                DailySparkCard(store: dailySparkStore, onSaved: onDailySparkSaved)
 
-                        Text(MoriL10n.display("Daily Spark, archive, and past entries."))
-                            .font(MoriTypography.caption)
-                            .foregroundColor(MoriColors.botanicalMuted)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-
-                    Spacer(minLength: 8)
-
-                    MoriBitmapIconImage(icon: .chevron, size: 13, opacity: 0.58)
-                        .rotationEffect(.degrees(isExpanded ? 90 : 0))
-                        .frame(width: 44, height: 44)
-                }
-                .padding(.leading, 14)
-                .padding(.trailing, 8)
-                .padding(.vertical, 6)
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .background(MoriColors.sanctuarySurface.opacity(0.72))
-                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 18, style: .continuous)
-                        .stroke(MoriColors.botanicalLine.opacity(0.54), lineWidth: 1)
+                JournalLogUtilitiesCard(
+                    selectedTone: selectedTone,
+                    onOpenPatternLog: onOpenPatternLog,
+                    onOpenWeekArchive: onOpenWeekArchive,
+                    onRandomMemory: onRandomMemory,
+                    onViewHistory: onViewHistory
                 )
-                .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+
+                RecentEntriesSection(
+                    entries: recentEntries,
+                    onViewAll: nil,
+                    onEntryTap: onEntryTap
+                )
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel(MoriL10n.display("More from your Log"))
-            .accessibilityValue(MoriL10n.display(isExpanded ? "Expanded" : "Collapsed"))
-            .accessibilityHint(MoriL10n.display(isExpanded ? "Hides secondary Log tools" : "Shows secondary Log tools"))
-
-            if isExpanded {
-                VStack(alignment: .leading, spacing: 16) {
-                    DailySparkCard(store: dailySparkStore, onSaved: onDailySparkSaved)
-
-                    JournalLogUtilitiesCard(
-                        selectedTone: selectedTone,
-                        onOpenPatternLog: onOpenPatternLog,
-                        onOpenWeekArchive: onOpenWeekArchive,
-                        onRandomMemory: onRandomMemory,
-                        onViewHistory: onViewHistory
-                    )
-
-                    RecentEntriesSection(
-                        entries: recentEntries,
-                        onViewAll: nil,
-                        onEntryTap: onEntryTap
-                    )
-                }
-                .transition(.opacity)
-            }
+            .padding(.top, MoriMainTabBarMetrics.reservedBottomInset)
         }
-        .moriReduceMotionAnimation(MoriAnimation.standard, value: isExpanded)
+    }
+}
+
+private extension HabitDayTone {
+    var moriMoodTone: MoriMoodTone {
+        switch self {
+        case .positive: return .good
+        case .neutral: return .neutral
+        case .negative: return .difficult
+        }
     }
 }
 

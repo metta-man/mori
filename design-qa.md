@@ -1,3 +1,73 @@
+# Mori Log reference rebuild — Design QA (2026-07-21)
+
+## Comparison target
+
+- Approved visual source: `DesignReferences/mori-approved-reference.jpeg`, Log panel at the upper left.
+- Written source of truth: `DesignReferences/MORI_DESIGN_SPEC.md`.
+- Normalized 430 × 932 reference: `artifacts/mori-log-redesign-20260721/reference-log-normalized-430x932.png`.
+- Final runtime capture from the final compiled source: `artifacts/mori-log-redesign-20260721/final-1290x2796.png` and `final-430x932.png`.
+- Required same-canvas comparison: `artifacts/mori-log-redesign-20260721/comparison-final.png`.
+- Focused comparisons: `comparison-header-final.png`, `comparison-form-final.png`, and `comparison-preview-dock-final.png`.
+- Baseline and refinement evidence: `runtime-baseline-1290x2796.png`, `baseline-430x932.png`, `comparison-pass1.png` through `comparison-pass4.png`, and the corresponding pass captures.
+- Accessibility evidence: `accessibility-extra-large-1290x2796.png`, `accessibility-extra-large-grid-1290x2796.png`, and `accessibility-extra-large-scrolled-1290x2796.png`.
+
+## Viewport and state
+
+- Native SwiftUI on the iPhone 15 Pro Max Mori QA simulator, iOS 26.5, 430 × 932 pt / 1290 × 2796 px, light appearance, Dynamic Type `large`.
+- The production Log root was opened through `mori://log?source=deep_link` after launching with the existing UI-test onboarding bypass. The visible screen, actions, stores, navigation stack, and floating dock are production components rather than a static mock.
+- The simulator has no saved mood or Log entry for today, but it does contain one real non-mood activity record. No state is fabricated: Save starts disabled and the preview truthfully reads `July · 1 day remembered` with one quiet sage cell.
+- Final accessibility geometry at standard type: header Log x20/y66; Log actions and Settings each 44 × 44 pt at x306/y68 and x358/y68; mood choices each 109.3 × 97 pt; photo target 353 × 51 pt; Save 352 × 50 pt; visible Life Grid card x20/y665 at 390 × 177 pt; floating tab targets each 126 × 58 pt.
+
+## Findings and complete visible-difference list
+
+No actionable P0, P1, or P2 visual difference remains. The following visible differences are intentional or truthful P3 source/runtime variations:
+
+- The concept illustrates `Good` selected, `July · 11 days remembered`, and a mixture of colored mood cells. The simulator has no current mood selection and one real non-mood activity day, so all three mood cards start unselected and the grid truthfully shows `July · 1 day remembered` with one pale-sage recorded cell.
+- The concept uses a legacy edge-attached three-tab treatment. Production retains the separately approved premium floating 74 pt material dock with 18 pt gutters, 16 pt bottom reveal, and the canonical `Today`, `Focus`, and `Log` destinations.
+- Native SF calendar, gear, photo, plus, tab, and status glyph strokes differ subtly from the photographed concept's painted or older-platform marks. Their size, alignment, hierarchy, and 44 pt targets match.
+- The production mood faces use Mori's reusable native mood component. Their mouth/eye strokes are slightly cleaner than the hand-painted concept while the green/ochre/terracotta tone mapping and selected-state behavior match.
+- Real watercolor paper and card textures have naturally different wet-edge contours and a slightly more opaque raised-paper surface. The warm paper, pale sage field, restrained border/shadow, and continuous top-safe-area wash match the approved composition.
+
+No other obvious visible mismatch remains in the full or focused side-by-side comparisons.
+
+## Required fidelity surfaces
+
+- Top chrome: passed. The journal watercolor continues behind the native status bar; the default navigation bar, background, divider, and toolbar chrome remain hidden.
+- Header: passed. The custom editorial serif Log title, support line, generous top breathing room, and two quiet circular actions match the approved coordinates and hierarchy.
+- Entry card: passed. The panel spans x19–411 and y163–644 with a 20 pt radius, warm paper, subtle line and soft shadow. Mood heading/support copy, three 97 pt choices, sentence field, single-line optional-photo row, and 50 pt Save action align to the reference.
+- Life Grid: passed. The former `More from your Log` disclosure is absent. A production-backed Life Grid card occupies x20/y665 at approximately 390 × 177 pt, uses a 10 × 3 rolling-day grid, a localized month summary, real mood tones, separately represented non-mood recorded days, and opens the existing Week Archive.
+- Typography, copy, and color: passed. The visible root copy matches the approved reference; serif/sans hierarchy, forest ink, sage, ochre, terracotta, muted secondary text, and warm raised paper use the existing Mori system.
+- Asset quality: passed. The screen uses the real journal botanical backdrop and card-paper wash with platform iconography; no placeholder image, emoji, handcrafted SVG, ASCII mark, or code-drawn watercolor substitute was added.
+- Dock clearance: passed. The first viewport ends cleanly at the Life Grid and detached dock. Preserved secondary Log tools begin below the reserved dock clearance and remain scroll-reachable.
+
+## Visible mismatch and automatic-refinement history
+
+1. Baseline — the title was too small and high; the main panel was roughly 60 pt too short; mood controls were generic `+ / ○ / −` glyphs; the photo action wrapped into two lines; the primary action said `Done`; and the forbidden `More from your Log` row appeared instead of a Life Grid.
+2. Pass 1 — introduced the editorial header, Mori face mood controls, exact single-line photo copy, `Save entry`, and a truthful 10 × 3 Life Grid. Remaining differences: the form was about 15 pt short, the preview sat about 22 pt high, its paper texture bled outside the corner mask, and secondary tools showed behind the dock.
+3. Pass 2 — corrected note/photo/Save geometry and the main-card-to-preview rhythm. Remaining differences: the Life Grid card background still overflowed its intended bounds and lower content could enter the first viewport.
+4. Pass 3 — clipped the preview texture, refined the disabled sage fill, and moved secondary content below the dock reserve. Remaining differences: the main card ended about 7 pt early and a small Daily Spark edge remained visible near the dock.
+5. Pass 4 — matched the 644 pt panel bottom, 21 pt Life Grid gap, preview content offset, and 842 pt preview bottom; restored uninterrupted journal watercolor; added navigation-specific dock hiding for Week Archive; rebuilt, relaunched, and regenerated full and focused comparisons.
+6. Final data-semantics refinement — independent review found that mood-only data could undercount remembered days. The preview now deduplicates Daily Spark, journal, mindful-action, settle-session, and habit dates; distinguishes a remembered non-mood day from a neutral mood; refreshes after Daily Spark and lifecycle reloads; and localizes the remembered-day label. The current-source build and comparisons were regenerated. No obvious actionable visual difference remains.
+
+## Behavior, accessibility, scope, and verification
+
+- Selecting `Good` on the running app changed the real form state and enabled `Save today's log`; Save starts disabled when neither mood nor note is present. No test entry was persisted into the clean comparison data.
+- The existing note editor, six-photo PhotosPicker flow, photo removal, dual journal/habit persistence, haptics, difficult-day pattern prompt, previous-day logging, recent-entry opening, export/import, iCloud restore, app-limit lifecycle, and scene cleanup remain wired through the original screen/view model callbacks.
+- Daily Spark, conditional Pattern details, Week Archive, Random memory, Log history, and Recent Log remain below the reference-matched first viewport. Accessibility-tree inspection and simulator scrolling confirmed their real controls remain enabled and reachable.
+- Tapping Life Grid opened the existing Week Archive. The pushed detail now hides the root floating dock, and Back restored the Log root and dock.
+- The preview deduplicates the same five dated source families used by Week Archive. Log observes Daily Spark, clarity-action, and settle-session counts and refreshes on journal/habit lifecycle events, so newly recorded days update without inventing a mood.
+- VoiceOver exposes 44 × 44 pt header actions, three 109 × 97 pt mood buttons, a 353 × 51 pt photo action, a 352 × 50 pt Save action, one combined Life Grid label/value, and three 126 × 58 pt tab targets.
+- At Dynamic Type `accessibility-extra-large`, the mood choices stack vertically, text wraps, the full form remains scrollable, the 10 × 3 grid remains inside its card, and all retained secondary tools remain readable and reachable without truncating their actions.
+- Final build: `xcodebuild -project Mori.xcodeproj -scheme Mori -configuration Debug -destination 'platform=iOS Simulator,id=35FCA784-6B78-43A1-8BE6-B35CBAE64A0B' -derivedDataPath .codex-build/LogRedesignDerivedData build` → `** BUILD SUCCEEDED **`.
+- English, Traditional Chinese, and Simplified Chinese remembered-day strings pass `plutil -lint`.
+- The repository has no XCTest/UI-test target. Production-route simulator interaction, accessibility-tree inspection, Dynamic Type captures, full/focused reference comparisons, and the exact native build provide the proportionate regression evidence for this scoped redesign.
+- `rg --fixed-strings 'More from your Log' Features DesignSystem` returns no production match, and `git diff --check` passes.
+- Independent final re-review confirmed the composite remembered-day semantics, truthful non-mood rendering, refresh paths, build correctness, and preservation of all reviewed Log actions; it found no remaining blocker.
+
+final result: passed
+
+---
+
 # Mori active Deep Session reference rebuild — Design QA (2026-07-21)
 
 ## Comparison target

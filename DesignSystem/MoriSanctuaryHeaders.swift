@@ -1,5 +1,10 @@
 import SwiftUI
 
+enum MoriRootHeaderStyle {
+    case sanctuary
+    case editorial
+}
+
 struct MoriPageHeader: View {
     let eyebrow: String
     let title: String
@@ -33,29 +38,40 @@ struct MoriPageHeader: View {
 struct MoriRootHeader<Trailing: View>: View {
     let title: String
     let subtitle: String?
+    let style: MoriRootHeaderStyle
     private let trailing: Trailing
 
     init(
         title: String,
         subtitle: String? = nil,
+        style: MoriRootHeaderStyle = .sanctuary,
         @ViewBuilder trailing: () -> Trailing
     ) {
         self.title = title
         self.subtitle = subtitle
+        self.style = style
         self.trailing = trailing()
     }
 
     var body: some View {
         HStack(alignment: .top, spacing: 14) {
-            VStack(alignment: .leading, spacing: 7) {
+            VStack(alignment: .leading, spacing: style == .editorial ? 10 : 7) {
                 Text(MoriL10n.display(title))
-                    .font(MoriTypography.sanctuaryRootTitle)
+                    .font(
+                        style == .editorial
+                            ? MoriTheme.Typography.pageTitle
+                            : MoriTypography.sanctuaryRootTitle
+                    )
                     .foregroundColor(MoriColors.sanctuaryInk)
                     .fixedSize(horizontal: false, vertical: true)
 
                 if let subtitle {
                     Text(MoriL10n.display(subtitle))
-                        .font(MoriTypography.callout.weight(.medium))
+                        .font(
+                            style == .editorial
+                                ? MoriTheme.Typography.supporting
+                                : MoriTypography.callout.weight(.medium)
+                        )
                         .foregroundColor(MoriColors.sanctuaryInkSoft.opacity(0.92))
                         .lineSpacing(2)
                         .fixedSize(horizontal: false, vertical: true)
@@ -70,9 +86,14 @@ struct MoriRootHeader<Trailing: View>: View {
 }
 
 extension MoriRootHeader where Trailing == EmptyView {
-    init(title: String, subtitle: String? = nil) {
+    init(
+        title: String,
+        subtitle: String? = nil,
+        style: MoriRootHeaderStyle = .sanctuary
+    ) {
         self.title = title
         self.subtitle = subtitle
+        self.style = style
         self.trailing = EmptyView()
     }
 }
@@ -81,6 +102,8 @@ struct MoriRootHeaderBlock<Trailing: View>: View {
     let title: String
     let subtitle: String?
     let safeAreaTopInset: CGFloat
+    let minimumTopInset: CGFloat?
+    let style: MoriRootHeaderStyle
     let topAnchorID: String?
     private let trailing: Trailing
 
@@ -88,19 +111,29 @@ struct MoriRootHeaderBlock<Trailing: View>: View {
         title: String,
         subtitle: String? = nil,
         safeAreaTopInset: CGFloat,
+        minimumTopInset: CGFloat? = nil,
+        style: MoriRootHeaderStyle = .sanctuary,
         topAnchorID: String? = nil,
         @ViewBuilder trailing: () -> Trailing
     ) {
         self.title = title
         self.subtitle = subtitle
         self.safeAreaTopInset = safeAreaTopInset
+        self.minimumTopInset = minimumTopInset
+        self.style = style
         self.topAnchorID = topAnchorID
         self.trailing = trailing()
     }
 
     var body: some View {
         rootHeader
-            .padding(.top, MoriRootScreenMetrics.topInset(for: safeAreaTopInset))
+            .padding(
+                .top,
+                max(
+                    minimumTopInset ?? 0,
+                    MoriRootScreenMetrics.topInset(for: safeAreaTopInset)
+                )
+            )
             .padding(.bottom, MoriRootScreenMetrics.headerContentGap)
             .applyOptionalID(topAnchorID)
     }
@@ -109,6 +142,7 @@ struct MoriRootHeaderBlock<Trailing: View>: View {
         MoriRootHeader(
             title: title,
             subtitle: subtitle,
+            style: style,
             trailing: { trailing }
         )
     }
@@ -119,11 +153,15 @@ extension MoriRootHeaderBlock where Trailing == EmptyView {
         title: String,
         subtitle: String? = nil,
         safeAreaTopInset: CGFloat,
+        minimumTopInset: CGFloat? = nil,
+        style: MoriRootHeaderStyle = .sanctuary,
         topAnchorID: String? = nil
     ) {
         self.title = title
         self.subtitle = subtitle
         self.safeAreaTopInset = safeAreaTopInset
+        self.minimumTopInset = minimumTopInset
+        self.style = style
         self.topAnchorID = topAnchorID
         self.trailing = EmptyView()
     }
@@ -147,6 +185,8 @@ struct MoriRootScrollScreen<HeaderTrailing: View, Content: View>: View {
     var horizontalPadding: CGFloat = 20
     var bottomPadding: CGFloat = MoriMainTabBarMetrics.scrollBottomInset
     var backgroundVariant: MoriBotanicalScreenBackdrop.Variant = .settings
+    var minimumTopInset: CGFloat?
+    var headerStyle: MoriRootHeaderStyle = .sanctuary
     var topAnchorID: String?
     private let onScrollAppear: ((ScrollViewProxy) -> Void)?
     private let headerTrailing: HeaderTrailing
@@ -159,6 +199,8 @@ struct MoriRootScrollScreen<HeaderTrailing: View, Content: View>: View {
         horizontalPadding: CGFloat = 20,
         bottomPadding: CGFloat = MoriMainTabBarMetrics.scrollBottomInset,
         backgroundVariant: MoriBotanicalScreenBackdrop.Variant = .settings,
+        minimumTopInset: CGFloat? = nil,
+        headerStyle: MoriRootHeaderStyle = .sanctuary,
         topAnchorID: String? = nil,
         onScrollAppear: ((ScrollViewProxy) -> Void)? = nil,
         @ViewBuilder headerTrailing: () -> HeaderTrailing,
@@ -170,6 +212,8 @@ struct MoriRootScrollScreen<HeaderTrailing: View, Content: View>: View {
         self.horizontalPadding = horizontalPadding
         self.bottomPadding = bottomPadding
         self.backgroundVariant = backgroundVariant
+        self.minimumTopInset = minimumTopInset
+        self.headerStyle = headerStyle
         self.topAnchorID = topAnchorID
         self.onScrollAppear = onScrollAppear
         self.headerTrailing = headerTrailing()
@@ -186,6 +230,8 @@ struct MoriRootScrollScreen<HeaderTrailing: View, Content: View>: View {
                                 title: title,
                                 subtitle: subtitle,
                                 safeAreaTopInset: proxy.safeAreaInsets.top,
+                                minimumTopInset: minimumTopInset,
+                                style: headerStyle,
                                 topAnchorID: topAnchorID,
                                 trailing: { headerTrailing }
                             )
@@ -214,6 +260,8 @@ extension MoriRootScrollScreen where HeaderTrailing == EmptyView {
         horizontalPadding: CGFloat = 20,
         bottomPadding: CGFloat = MoriMainTabBarMetrics.scrollBottomInset,
         backgroundVariant: MoriBotanicalScreenBackdrop.Variant = .settings,
+        minimumTopInset: CGFloat? = nil,
+        headerStyle: MoriRootHeaderStyle = .sanctuary,
         topAnchorID: String? = nil,
         onScrollAppear: ((ScrollViewProxy) -> Void)? = nil,
         @ViewBuilder content: () -> Content
@@ -224,6 +272,8 @@ extension MoriRootScrollScreen where HeaderTrailing == EmptyView {
         self.horizontalPadding = horizontalPadding
         self.bottomPadding = bottomPadding
         self.backgroundVariant = backgroundVariant
+        self.minimumTopInset = minimumTopInset
+        self.headerStyle = headerStyle
         self.topAnchorID = topAnchorID
         self.onScrollAppear = onScrollAppear
         self.headerTrailing = EmptyView()

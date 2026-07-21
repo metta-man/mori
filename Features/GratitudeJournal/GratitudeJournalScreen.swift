@@ -42,6 +42,8 @@ struct GratitudeJournalScreen: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var viewModel = GratitudeJournalViewModel()
     @StateObject private var dailySparkStore = DailySparkStore.shared
+    @StateObject private var clarityStore = MoriClarityStore.shared
+    @StateObject private var settleStore = SettleSessionStore.shared
     @StateObject private var appLimitManager = AppLimitManager.shared
 
     @State private var navigationPath: [GratitudeJournalRoute] = []
@@ -56,13 +58,17 @@ struct GratitudeJournalScreen: View {
     @State private var persistedDailyEntryPhotos: [GratitudePhotoAttachment] = []
     @State private var selectedDailyPhotoItems: [PhotosPickerItem] = []
     @State private var activeSheet: GratitudeJournalSheet?
+    @State private var lifeGridSnapshot = JournalLifeGridSnapshot.current()
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
             MoriRootScrollScreen(
                 title: "Log",
                 subtitle: "One small note is enough.",
+                spacing: 16,
                 backgroundVariant: .journal,
+                minimumTopInset: 66,
+                headerStyle: .editorial,
                 headerTrailing: {
                     GratitudeJournalHeaderActions(
                         onLogPreviousDay: openLogbook,
@@ -80,6 +86,7 @@ struct GratitudeJournalScreen: View {
                     dailyEntryPhotos: $dailyEntryPhotos,
                     selectedDailyPhotoItems: $selectedDailyPhotoItems,
                     recentEntries: viewModel.recentEntries,
+                    lifeGridSnapshot: lifeGridSnapshot,
                     onDailySparkSaved: handleDailySparkSaved,
                     onSelectTone: selectToneFromJournal,
                     onSaveDailyEntry: saveDailyEntryFromJournal,
@@ -120,6 +127,7 @@ struct GratitudeJournalScreen: View {
                     GratitudeHistoryView()
                 case .weekArchiveDetail:
                     WeekArchiveDetailView()
+                        .moriHidesMainTabBar()
                 }
             }
             .gratitudeJournalToast(
@@ -131,9 +139,18 @@ struct GratitudeJournalScreen: View {
                 scenePhase: scenePhase,
                 onPrepare: prepareJournal,
                 onCleanup: cleanupJournalSession,
-                onReloadJournal: viewModel.loadData,
+                onReloadJournal: reloadJournalData,
                 onReloadHabitData: loadHabitData
             )
+            .moriOnChange(of: dailySparkStore.entries.count) { _ in
+                reloadJournalData()
+            }
+            .moriOnChange(of: clarityStore.actions.count) { _ in
+                refreshLifeGridSnapshot()
+            }
+            .moriOnChange(of: settleStore.sessions.count) { _ in
+                refreshLifeGridSnapshot()
+            }
             .moriPhotoPickerImporter(
                 selectedItems: $selectedDailyPhotoItems,
                 onImport: attachDailyEntryPhoto
@@ -189,6 +206,7 @@ struct GratitudeJournalScreen: View {
     }
 
     private func handleDailySparkSaved(_ entry: DailySparkEntry) {
+        reloadJournalData()
         showJournalToast(message: "Daily Spark saved to Log")
     }
 
@@ -213,12 +231,18 @@ struct GratitudeJournalScreen: View {
         selectedTone = todayHabitEntry?.tone
         dailyEntryNote = todayHabitEntry?.note ?? ""
         loadDailyEntryPhotos()
+        refreshLifeGridSnapshot()
     }
 
     private func prepareJournal() {
-        viewModel.loadData()
+        reloadJournalData()
         loadHabitData()
         startJournalAppLimitIfPossible()
+    }
+
+    private func reloadJournalData() {
+        viewModel.loadData()
+        refreshLifeGridSnapshot()
     }
 
     private func selectToneFromJournal(_ tone: HabitDayTone) {
@@ -281,6 +305,7 @@ struct GratitudeJournalScreen: View {
             loadDailyEntryPhotos(for: entry.date)
         }
         viewModel.loadData()
+        refreshLifeGridSnapshot()
 
         _ = MoriClarityStore.shared.recordDailyOnce(
             kind: .dailyCheckIn,
@@ -356,6 +381,15 @@ struct GratitudeJournalScreen: View {
         let photos = GratitudeEntryStore.live.dayLogEntry(on: date)?.photoAttachments ?? []
         dailyEntryPhotos = photos
         persistedDailyEntryPhotos = photos
+    }
+
+    private func refreshLifeGridSnapshot() {
+        lifeGridSnapshot = JournalLifeGridSnapshot.current(
+            dailySparks: dailySparkStore.entries,
+            journalEntries: viewModel.getAllEntries(),
+            actions: clarityStore.actions,
+            sessions: settleStore.sessions
+        )
     }
 
     private func attachDailyEntryPhoto(from data: Data) {

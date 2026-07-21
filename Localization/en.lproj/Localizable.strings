@@ -428,6 +428,8 @@
 "A short note about the day." = "A short note about the day.";
 "Journal" = "Journal";
 "Log" = "Log";
+"day remembered" = "day remembered";
+"days remembered" = "days remembered";
 "Optional memory from that day." = "Optional memory from that day.";
 "Add photos" = "Add photos";
 "Add photos to logbook entry" = "Add photos to logbook entry";

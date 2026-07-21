@@ -804,27 +804,33 @@ struct MoriMoodSelector<Value: Hashable>: View {
     let options: [MoriMoodOption<Value>]
     @Binding private var selection: Value?
     let onSelectionChange: ((Value) -> Void)?
+    let optionSpacing: CGFloat
+    let optionMinimumHeight: CGFloat
 
     init(
         options: [MoriMoodOption<Value>],
         selection: Binding<Value?>,
+        optionSpacing: CGFloat = MoriTheme.Spacing.xSmall,
+        optionMinimumHeight: CGFloat = 88,
         onSelectionChange: ((Value) -> Void)? = nil
     ) {
         self.options = options
         self._selection = selection
+        self.optionSpacing = optionSpacing
+        self.optionMinimumHeight = optionMinimumHeight
         self.onSelectionChange = onSelectionChange
     }
 
     @ViewBuilder
     var body: some View {
         if dynamicTypeSize.isAccessibilitySize {
-            VStack(spacing: MoriTheme.Spacing.xSmall) {
+            VStack(spacing: optionSpacing) {
                 ForEach(options) { option in
                     moodButton(option)
                 }
             }
         } else {
-            HStack(alignment: .top, spacing: MoriTheme.Spacing.xSmall) {
+            HStack(alignment: .top, spacing: optionSpacing) {
                 ForEach(options) { option in
                     moodButton(option)
                 }
@@ -850,7 +856,7 @@ struct MoriMoodSelector<Value: Hashable>: View {
                     .lineLimit(dynamicTypeSize.isAccessibilitySize ? nil : 2)
             }
             .frame(maxWidth: .infinity)
-            .frame(minHeight: 88)
+            .frame(minHeight: optionMinimumHeight)
             .padding(.horizontal, MoriTheme.Spacing.xxSmall)
             .background(
                 isSelected
@@ -893,6 +899,8 @@ struct MoriMoodSelector<Value: Hashable>: View {
 extension MoriMoodSelector where Value == MoriMoodTone {
     init(
         selection: Binding<MoriMoodTone?>,
+        optionSpacing: CGFloat = MoriTheme.Spacing.xSmall,
+        optionMinimumHeight: CGFloat = 88,
         onSelectionChange: ((MoriMoodTone) -> Void)? = nil
     ) {
         self.init(
@@ -900,6 +908,8 @@ extension MoriMoodSelector where Value == MoriMoodTone {
                 MoriMoodOption(id: $0, title: $0.title, tone: $0)
             },
             selection: selection,
+            optionSpacing: optionSpacing,
+            optionMinimumHeight: optionMinimumHeight,
             onSelectionChange: onSelectionChange
         )
     }
@@ -999,11 +1009,18 @@ struct MoriCalendarCell: View {
 struct MoriLifeGridPreviewDay: Identifiable, Hashable {
     let id: Int
     let tone: MoriMoodTone?
+    let isRemembered: Bool
     let isFuture: Bool
 
-    init(id: Int, tone: MoriMoodTone?, isFuture: Bool = false) {
+    init(
+        id: Int,
+        tone: MoriMoodTone?,
+        isRemembered: Bool? = nil,
+        isFuture: Bool = false
+    ) {
         self.id = id
         self.tone = tone
+        self.isRemembered = isRemembered ?? (tone != nil)
         self.isFuture = isFuture
     }
 }
@@ -1013,6 +1030,13 @@ struct MoriLifeGridPreview: View {
     let summary: String
     let days: [MoriLifeGridPreviewDay]
     let columnCount: Int
+    let columnSpacing: CGFloat
+    let rowSpacing: CGFloat
+    let cardPadding: CGFloat
+    let cornerRadius: CGFloat
+    let shadow: MoriTheme.Shadow?
+    let contentSpacing: CGFloat
+    let contentOffsetY: CGFloat
     let action: () -> Void
 
     init(
@@ -1020,12 +1044,26 @@ struct MoriLifeGridPreview: View {
         summary: String,
         days: [MoriLifeGridPreviewDay],
         columnCount: Int = 14,
+        columnSpacing: CGFloat = 7,
+        rowSpacing: CGFloat = 7,
+        cardPadding: CGFloat = MoriTheme.Spacing.medium,
+        cornerRadius: CGFloat = MoriTheme.CornerRadius.card,
+        shadow: MoriTheme.Shadow? = MoriTheme.Shadows.card,
+        contentSpacing: CGFloat = MoriTheme.Spacing.medium,
+        contentOffsetY: CGFloat = 0,
         action: @escaping () -> Void
     ) {
         self.title = title
         self.summary = summary
         self.days = days
         self.columnCount = max(1, columnCount)
+        self.columnSpacing = columnSpacing
+        self.rowSpacing = rowSpacing
+        self.cardPadding = cardPadding
+        self.cornerRadius = cornerRadius
+        self.shadow = shadow
+        self.contentSpacing = contentSpacing
+        self.contentOffsetY = contentOffsetY
         self.action = action
     }
 
@@ -1033,11 +1071,11 @@ struct MoriLifeGridPreview: View {
         Button(action: action) {
             MoriCard(
                 tone: .paper,
-                padding: MoriTheme.Spacing.medium,
-                cornerRadius: MoriTheme.CornerRadius.card,
-                shadow: MoriTheme.Shadows.card
+                padding: cardPadding,
+                cornerRadius: cornerRadius,
+                shadow: nil
             ) {
-                VStack(alignment: .leading, spacing: MoriTheme.Spacing.medium) {
+                VStack(alignment: .leading, spacing: contentSpacing) {
                     HStack(alignment: .firstTextBaseline, spacing: MoriTheme.Spacing.xSmall) {
                         VStack(alignment: .leading, spacing: MoriTheme.Spacing.xxSmall) {
                             Text(MoriL10n.display(title))
@@ -1054,7 +1092,7 @@ struct MoriLifeGridPreview: View {
                         MoriBitmapIconImage(icon: .chevron, size: 14, opacity: 0.58)
                     }
 
-                    LazyVGrid(columns: columns, spacing: 7) {
+                    LazyVGrid(columns: columns, alignment: .leading, spacing: rowSpacing) {
                         ForEach(days) { day in
                             RoundedRectangle(cornerRadius: 3, style: .continuous)
                                 .fill(previewFill(for: day))
@@ -1062,8 +1100,14 @@ struct MoriLifeGridPreview: View {
                                 .opacity(day.isFuture ? 0.34 : 1)
                         }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
                 }
+                .offset(y: contentOffsetY)
             }
+            .clipShape(
+                RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+            )
+            .moriThemeShadow(shadow)
         }
         .buttonStyle(MoriComponentPressButtonStyle())
         .accessibilityElement(children: .ignore)
@@ -1073,17 +1117,19 @@ struct MoriLifeGridPreview: View {
 
     private var columns: [GridItem] {
         Array(
-            repeating: GridItem(.flexible(minimum: 5), spacing: 7),
+            repeating: GridItem(.flexible(minimum: 5), spacing: columnSpacing),
             count: columnCount
         )
     }
 
     private func previewFill(for day: MoriLifeGridPreviewDay) -> Color {
-        guard let tone = day.tone else {
-            return MoriTheme.Colors.noEntry.opacity(0.56)
+        if let tone = day.tone {
+            return tone.color.opacity(0.66)
         }
 
-        return tone.color.opacity(0.66)
+        return day.isRemembered
+            ? MoriTheme.Colors.sage.opacity(0.34)
+            : MoriTheme.Colors.noEntry.opacity(0.56)
     }
 }
 

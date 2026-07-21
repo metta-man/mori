@@ -428,6 +428,8 @@
 "A short note about the day." = "关于这一天的一句短备注。";
 "Journal" = "记录";
 "Log" = "记录";
+"day remembered" = "天已记录";
+"days remembered" = "天已记录";
 "Optional memory from that day." = "那一天的可选记忆。";
 "Add photos" = "添加照片";
 "Add photos to logbook entry" = "为日志条目添加照片";
