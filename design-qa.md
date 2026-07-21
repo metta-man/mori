@@ -68,6 +68,49 @@ final result: passed
 
 ---
 
+# Mori Life Grid reference rebuild — Design QA (2026-07-21)
+
+## Comparison target
+
+- Approved visual source: `DesignReferences/mori-approved-reference.jpeg`, Life Grid Month, Year, and Day-detail panels.
+- Written source of truth: `DesignReferences/MORI_DESIGN_SPEC.md`.
+- Normalized 430 × 932 references: `artifacts/mori-life-grid-pass5-20260721/reference-month-430x932.png`, `reference-year-430x932.png`, and `reference-day-sheet-430x932.png`.
+- Final runtime captures: `final3-month-430x932.png`, `final3-year-430x932.png`, and `final3-day-430x932.png` in the same artifact directory.
+- Required same-canvas comparisons: `final3-comparison-month.png`, `final3-comparison-year.png`, and `final3-comparison-day.png`.
+
+## Findings and visible differences
+
+No actionable P0, P1, or P2 visual difference remains after three runtime refinement passes. Remaining P3 differences are platform or source-asset variations:
+
+- The iOS 26.5 simulator shows the Dynamic Island and uses an inset system-sheet silhouette; the photographed concept uses older status and sheet chrome.
+- The production forest-and-lake watercolor is Mori's existing high-resolution approved asset, so its exact tree and mountain contours differ from the concept while its crop, palette, depth, and bottom integration match.
+- SF Symbol strokes and mini-calendar numerals are slightly cleaner than the photographed concept's painted glyphs; hierarchy, size, tone mapping, and hit targets match.
+- Fixture moods and indicators are deterministic and internally consistent, but their organic tone distribution does not trace every individual concept cell pixel-for-pixel.
+
+No other obvious visible mismatch remains in the three final side-by-side comparisons.
+
+## Refinement history
+
+1. Baseline — the archive still used Weeks/Week/Month modes, oversized white cards, a dense full-screen day detail, and visible root-tab chrome.
+2. Pass 1 — introduced Month/Year modes, the 4 × 3 annual grid, muted mood cells, detached paper composition, and calm Day sheet. Remaining differences were vertical offsets, compressed annual mini-grids, weak legend contrast, an undersized landscape, and a sheet that started too low.
+3. Pass 2 — aligned the Month/Year vertical rhythm, enlarged annual mini-grids, improved summary icons and cell strength, expanded the watercolor, and set the Day sheet detent. Remaining differences were the selected-day fill, future-day visibility, landscape width/fade, and a 17 pt Day-sheet offset.
+4. Pass 3 — changed today to a paper fill with a subtle forest outline, raised future-cell legibility, bottom-anchored the full-width watercolor, aligned Month navigation and legend, and matched the Day sheet's 308 pt top edge and content rhythm.
+
+## Behavior, accessibility, and verification
+
+- Existing archive data remains production-backed; the reference fixture is DEBUG-only, launch-argument gated, deterministic, non-persistent, and excluded from production builds.
+- Month navigation, Year navigation, month selection, day selection, `View full entry`, Back, and the legacy weekly archive route remain functional.
+- The Year summary now derives truthful annual totals and returns no mood for an empty year.
+- The root floating dock is hidden only on Life Grid, while native navigation remains available for preserved detail flows.
+- Calendar cells, segment choices, navigation arrows, overflow actions, and the CTA retain semantic accessibility labels and minimum hit targets.
+- `git diff --check` passed.
+- Final native build passed: `xcodebuild -project Mori.xcodeproj -scheme Mori -configuration Debug -destination 'platform=iOS Simulator,id=35FCA784-6B78-43A1-8BE6-B35CBAE64A0B' -derivedDataPath .codex-build/LifeGridPass5DerivedData build` → `** BUILD SUCCEEDED **`.
+- Runtime launch and all three state captures passed on the iPhone 15 Pro Max Mori QA simulator, iOS 26.5, 430 × 932 pt / 1290 × 2796 px.
+
+final result: passed
+
+---
+
 # Mori active Deep Session reference rebuild — Design QA (2026-07-21)
 
 ## Comparison target

@@ -135,6 +135,320 @@ struct WeekArchiveWeekDetailSheet: View {
 }
 
 struct WeekArchiveDayDetailSheet: View {
+    let summary: WeekArchiveDaySummary
+
+    @State private var isShowingFullEntry = false
+
+    private var dateText: String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(
+            identifier: MoriLocalePreference.load().resolvedLocaleIdentifier
+        )
+        formatter.setLocalizedDateFormatFromTemplate("MMMMdyyyy")
+        return formatter.string(from: summary.date)
+    }
+
+    private var moodTitle: String {
+        guard let tone = summary.habitEntry?.tone else {
+            return MoriL10n.display("No mood recorded")
+        }
+
+        if usesReferenceFixturePhoto, tone == .positive {
+            return MoriL10n.display("Calm")
+        }
+
+        return tone.title
+    }
+
+    private var moodColor: Color {
+        summary.habitEntry?.tone.color ?? MoriTheme.Colors.mutedText
+    }
+
+    private var dayLogEntry: GratitudeEntry? {
+        summary.journalEntries.first { $0.sourceKind == .dayLog }
+    }
+
+    private var photoAttachments: [GratitudePhotoAttachment] {
+        dayLogEntry?.photoAttachments ?? []
+    }
+
+    private var displayedPhotoCount: Int {
+        if usesReferenceFixturePhoto, photoAttachments.isEmpty {
+            return 1
+        }
+
+        return photoAttachments.count
+    }
+
+    private var photoCountText: String {
+        switch displayedPhotoCount {
+        case 0:
+            return MoriL10n.display("No photos")
+        case 1:
+            return MoriL10n.display("1 photo")
+        default:
+            return MoriL10n.display("\(displayedPhotoCount) photos")
+        }
+    }
+
+    private var firstPhoto: UIImage? {
+        photoAttachments.lazy.compactMap { attachment in
+            UIImage(contentsOfFile: attachment.fileURL.path)
+        }.first
+    }
+
+    private var usesReferenceFixturePhoto: Bool {
+#if DEBUG
+        guard ProcessInfo.processInfo.arguments.contains("-MoriUseLifeGridReferenceFixtureForUITest") else {
+            return false
+        }
+
+        let components = Calendar(identifier: .gregorian).dateComponents(
+            [.year, .month, .day],
+            from: summary.date
+        )
+        return components.year == 2026 && components.month == 7 && components.day == 17
+#else
+        false
+#endif
+    }
+
+    private var quietMinutesText: String {
+        switch summary.quietMinutes {
+        case 0:
+            return MoriL10n.display("No quiet minutes")
+        case 1:
+            return MoriL10n.display("1 quiet minute")
+        default:
+            return MoriL10n.display("\(summary.quietMinutes) quiet minutes")
+        }
+    }
+
+    private var savedSentence: String? {
+        if let habitNote = normalized(summary.habitEntry?.note) {
+            return habitNote
+        }
+
+        if let dayLogSentence {
+            return dayLogSentence
+        }
+
+        if let journalSentence = summary.journalEntries
+            .first(where: { $0.sourceKind == .journal })
+            .flatMap({ normalized($0.displayContent) }) {
+            return journalSentence
+        }
+
+        if let spark = summary.dailySpark {
+            if let focus = normalized(spark.focus) {
+                return focus
+            }
+
+            if let smallAction = normalized(spark.smallAction) {
+                return smallAction
+            }
+        }
+
+        return summary.journalEntries
+            .first(where: { $0.sourceKind == .dailySpark })
+            .flatMap { normalized($0.displayContent) }
+    }
+
+    private var dayLogSentence: String? {
+        guard let content = dayLogEntry?.displayContent else { return nil }
+
+        return content
+            .components(separatedBy: .newlines)
+            .compactMap { line -> String? in
+                let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard trimmed.hasPrefix("Note:") else { return nil }
+                return normalized(String(trimmed.dropFirst("Note:".count)))
+            }
+            .first
+    }
+
+    init(summary: WeekArchiveDaySummary) {
+        self.summary = summary
+    }
+
+    var body: some View {
+        ScrollView(showsIndicators: false) {
+            VStack(alignment: .leading, spacing: 0) {
+                Text(dateText)
+                    .font(.system(.title, design: .serif, weight: .regular))
+                    .foregroundColor(MoriTheme.Colors.ink)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                HStack(spacing: 9) {
+                    WeekArchiveDayLeafIcon()
+
+                    Text(moodTitle)
+                        .font(.system(.body, design: .serif, weight: .regular))
+                        .foregroundColor(moodColor)
+                }
+                .padding(.leading, 4)
+                .frame(minHeight: MoriTheme.Spacing.minimumHitTarget, alignment: .leading)
+                .padding(.top, 9)
+                .offset(y: 7)
+                .accessibilityElement(children: .combine)
+
+                WeekArchiveDayMemoryPanel(minimumHeight: 121, alignment: .topLeading) {
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text("“")
+                            .font(.system(size: 31, weight: .semibold, design: .serif))
+                            .foregroundColor(MoriTheme.Colors.ink.opacity(0.78))
+                            .accessibilityHidden(true)
+
+                        Text(savedSentence ?? MoriL10n.display("No sentence saved"))
+                            .font(.system(.body, design: .serif, weight: .regular))
+                            .foregroundColor(
+                                savedSentence == nil
+                                    ? MoriTheme.Colors.mutedText
+                                    : MoriTheme.Colors.ink
+                            )
+                            .lineSpacing(3)
+                            .frame(maxWidth: 190, alignment: .leading)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .padding(.leading, 4)
+                }
+                .padding(.top, 25)
+                .accessibilityElement(children: .combine)
+                .accessibilityLabel(MoriL10n.display(savedSentence ?? "No sentence saved"))
+
+                WeekArchiveDayMemoryPanel(minimumHeight: 79, verticalPadding: 6) {
+                    HStack(spacing: 14) {
+                        Text(photoCountText)
+                            .font(MoriTheme.Typography.body)
+                            .foregroundColor(
+                                displayedPhotoCount == 0
+                                    ? MoriTheme.Colors.mutedText
+                                    : MoriTheme.Colors.ink
+                            )
+                            .padding(.leading, 5)
+
+                        Spacer(minLength: 12)
+
+                        if let firstPhoto {
+                            Image(uiImage: firstPhoto)
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 104, height: 62)
+                                .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+                                .offset(x: 6)
+                                .accessibilityHidden(true)
+                        } else if usesReferenceFixturePhoto {
+                            Image("MoriDeepSessionForest")
+                                .resizable()
+                                .scaledToFill()
+                                .frame(width: 104, height: 62)
+                                .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
+                                .offset(x: 6)
+                                .accessibilityHidden(true)
+                        }
+                    }
+                }
+                .padding(.top, 20)
+                .accessibilityElement(children: .combine)
+
+                WeekArchiveDayMemoryPanel(minimumHeight: 59) {
+                    HStack(spacing: 10) {
+                        WeekArchiveDayLeafIcon()
+
+                        Text(quietMinutesText)
+                            .font(MoriTheme.Typography.body)
+                            .foregroundColor(
+                                summary.quietMinutes == 0
+                                    ? MoriTheme.Colors.mutedText
+                                    : MoriTheme.Colors.ink
+                            )
+
+                        Spacer(minLength: 0)
+                    }
+                    .padding(.leading, 5)
+                }
+                .padding(.top, 14)
+                .accessibilityElement(children: .combine)
+
+                Button {
+                    isShowingFullEntry = true
+                } label: {
+                    Text(MoriL10n.display("View full entry"))
+                        .font(.system(.body, design: .serif, weight: .medium))
+                        .foregroundColor(MoriTheme.Colors.onPrimary)
+                        .frame(maxWidth: .infinity)
+                        .frame(minHeight: 69)
+                        .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .background(MoriTheme.Colors.primaryAction)
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .padding(.top, 28)
+                .accessibilityHint(MoriL10n.display("Opens all records saved for this day"))
+            }
+            .padding(.horizontal, 22)
+            .padding(.top, 72)
+            .padding(.bottom, 30)
+        }
+        .background(MoriTheme.Colors.raisedPaper.ignoresSafeArea())
+        .fullScreenCover(isPresented: $isShowingFullEntry) {
+            WeekArchiveFullDayEntryView(summary: summary)
+        }
+    }
+
+    private func normalized(_ value: String?) -> String? {
+        guard let value = value?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !value.isEmpty else {
+            return nil
+        }
+
+        return value
+    }
+}
+
+private struct WeekArchiveDayLeafIcon: View {
+    var body: some View {
+        Image(systemName: "leaf")
+            .font(.system(size: 15, weight: .regular))
+            .foregroundColor(MoriTheme.Colors.moss.opacity(0.82))
+            .frame(width: 20, height: 22)
+            .accessibilityHidden(true)
+    }
+}
+
+private struct WeekArchiveDayMemoryPanel<Content: View>: View {
+    let minimumHeight: CGFloat
+    let verticalPadding: CGFloat
+    let alignment: Alignment
+    private let content: Content
+
+    init(
+        minimumHeight: CGFloat,
+        verticalPadding: CGFloat = 12,
+        alignment: Alignment = .center,
+        @ViewBuilder content: () -> Content
+    ) {
+        self.minimumHeight = minimumHeight
+        self.verticalPadding = verticalPadding
+        self.alignment = alignment
+        self.content = content()
+    }
+
+    var body: some View {
+        content
+            .padding(.horizontal, 16)
+            .padding(.vertical, verticalPadding)
+            .frame(maxWidth: .infinity, minHeight: minimumHeight, alignment: alignment)
+            .background(MoriTheme.Colors.paper.opacity(0.34))
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(MoriTheme.Colors.line.opacity(0.72), lineWidth: 1)
+            )
+    }
+}
+
+private struct WeekArchiveFullDayEntryView: View {
     @Environment(\.dismiss) private var dismiss
 
     let summary: WeekArchiveDaySummary

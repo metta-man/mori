@@ -1,15 +1,15 @@
 import SwiftUI
 
 enum WeekArchiveDetailMode: String, CaseIterable, Identifiable {
-    case week
     case month
+    case year
 
     var id: String { rawValue }
 
     var title: String {
         switch self {
-        case .week: return MoriL10n.display("Week")
         case .month: return MoriL10n.display("Month")
+        case .year: return MoriL10n.display("Year")
         }
     }
 }
@@ -83,6 +83,197 @@ struct WeekArchiveData {
         )
     }
 
+    func daysRemembered(inYear year: Int) -> Int {
+        Set(
+            recordedDates
+                .filter { Calendar.current.component(.year, from: $0) == year }
+                .map { MoriDateKey.value(for: $0) }
+        ).count
+    }
+
+    func quietMinutes(inYear year: Int) -> Int {
+        actions
+            .filter {
+                Calendar.current.component(.year, from: $0.createdAt) == year &&
+                    $0.kind.isQuietArchiveAction
+            }
+            .reduce(0) { $0 + $1.minutes }
+    }
+
+    func mostCommonTone(inYear year: Int) -> HabitDayTone? {
+        let tones = habitEntries
+            .filter { Calendar.current.component(.year, from: $0.date) == year }
+            .map(\.tone)
+
+        guard !tones.isEmpty else { return nil }
+
+        return HabitDayTone.allCases.max { lhs, rhs in
+            tones.filter { $0 == lhs }.count < tones.filter { $0 == rhs }.count
+        }
+    }
+
+    func hasRecords(on date: Date) -> Bool {
+        daySummary(for: date).hasRecords
+    }
+
+#if DEBUG
+    func addingLifeGridReferenceFixture() -> WeekArchiveData {
+        let calendar = Calendar(identifier: .gregorian)
+        let fixtureYear = 2026
+        let julyTones: [Int: HabitDayTone] = [
+            1: .negative, 2: .neutral, 3: .positive, 4: .positive,
+            5: .positive, 6: .positive, 7: .positive, 8: .positive,
+            9: .positive, 10: .positive, 11: .positive, 13: .positive,
+            14: .positive, 15: .positive, 16: .positive, 17: .positive
+        ]
+
+        var fixtureHabits: [HabitEntry] = []
+
+        for month in 1...12 {
+            guard let monthDate = calendar.date(
+                from: DateComponents(year: fixtureYear, month: month, day: 1)
+            ), let dayRange = calendar.range(of: .day, in: .month, for: monthDate) else {
+                continue
+            }
+
+            for day in dayRange where shouldRememberFixtureDay(day, month: month) {
+                guard let date = calendar.date(
+                    from: DateComponents(year: fixtureYear, month: month, day: day, hour: 12)
+                ) else {
+                    continue
+                }
+
+                let tone = month == 7
+                    ? julyTones[day]
+                    : fixtureTone(month: month, day: day)
+
+                guard let tone else { continue }
+
+                fixtureHabits.append(
+                    HabitEntry(
+                        date: date,
+                        tone: tone,
+                        createdAt: date,
+                        note: month == 7 && day == 17
+                            ? "Worked slowly and felt clear."
+                            : nil
+                    )
+                )
+            }
+        }
+
+        let referenceDate = calendar.date(
+            from: DateComponents(year: fixtureYear, month: 7, day: 17, hour: 12)
+        ) ?? Date()
+        let referenceLog = GratitudeEntry(
+            date: referenceDate,
+            content: "Worked slowly and felt clear.",
+            sourceID: "day-log-life-grid-reference",
+            createdAt: referenceDate,
+            updatedAt: referenceDate
+        )
+
+        let julyReferenceLogs: [GratitudeEntry] = julyTones.keys
+            .filter { $0 != 17 }
+            .compactMap { day in
+                guard let date = calendar.date(
+                    from: DateComponents(year: fixtureYear, month: 7, day: day, hour: 12)
+                ) else {
+                    return nil
+                }
+
+                return GratitudeEntry(
+                    date: date,
+                    content: "A quiet moment remembered.",
+                    sourceID: "life-grid-reference-\(day)",
+                    createdAt: date,
+                    updatedAt: date
+                )
+            }
+
+        let julyQuietActions: [MoriMindfulAction] = [
+            (day: 1, minutes: 8),
+            (day: 5, minutes: 12),
+            (day: 11, minutes: 17),
+            (day: 17, minutes: 42)
+        ].compactMap { fixture in
+            guard let date = calendar.date(
+                from: DateComponents(
+                    year: fixtureYear,
+                    month: 7,
+                    day: fixture.day,
+                    hour: 12
+                )
+            ) else {
+                return nil
+            }
+
+            return MoriMindfulAction(
+                kind: .quietTimer,
+                title: "Quiet timer",
+                seeds: 0,
+                minutes: fixture.minutes,
+                createdAt: date
+            )
+        }
+
+        let nonJulyQuietActions = fixtureHabits
+            .map(\.date)
+            .filter { calendar.component(.month, from: $0) != 7 }
+            .enumerated()
+            .map { index, date in
+                MoriMindfulAction(
+                    kind: .quietTimer,
+                    title: "Quiet timer",
+                    seeds: 0,
+                    minutes: index < 3 ? 7 : 8,
+                    createdAt: date
+                )
+            }
+
+        return WeekArchiveData(
+            settings: settings,
+            dailySparks: dailySparks.filter {
+                guard let date = Self.date(fromDateKey: $0.dateKey) else { return true }
+                return calendar.component(.year, from: date) != fixtureYear
+            },
+            journalEntries: [referenceLog] + julyReferenceLogs + journalEntries.filter {
+                calendar.component(.year, from: $0.date) != fixtureYear
+            },
+            actions: julyQuietActions + nonJulyQuietActions + actions.filter {
+                calendar.component(.year, from: $0.createdAt) != fixtureYear
+            },
+            sessions: sessions.filter {
+                calendar.component(.year, from: $0.startedAt) != fixtureYear
+            },
+            habitEntries: fixtureHabits + habitEntries.filter {
+                calendar.component(.year, from: $0.date) != fixtureYear
+            },
+            weeklyIntentions: weeklyIntentions
+        )
+    }
+
+    private func shouldRememberFixtureDay(_ day: Int, month: Int) -> Bool {
+        if month == 7 {
+            return day <= 17 && day != 12
+        }
+
+        let rememberedDayCount = [1, 4, 10].contains(month) ? 16 : 15
+        return day <= rememberedDayCount
+    }
+
+    private func fixtureTone(month: Int, day: Int) -> HabitDayTone? {
+        switch (month * 3 + day) % 8 {
+        case 0, 1:
+            return .negative
+        case 2, 3:
+            return .neutral
+        default:
+            return .positive
+        }
+    }
+#endif
+
     private var recordedDates: [Date] {
         dailySparks.compactMap { Self.date(fromDateKey: $0.dateKey) } +
             journalEntries.map(\.date) +
@@ -112,6 +303,19 @@ struct WeekArchiveData {
         let parts = key.split(separator: "-").compactMap { Int($0) }
         guard parts.count == 3 else { return nil }
         return Calendar.current.date(from: DateComponents(year: parts[0], month: parts[1], day: parts[2]))
+    }
+}
+
+extension HabitDayTone {
+    var lifeGridMoodTone: MoriMoodTone {
+        switch self {
+        case .positive:
+            return .good
+        case .neutral:
+            return .neutral
+        case .negative:
+            return .difficult
+        }
     }
 }
 
