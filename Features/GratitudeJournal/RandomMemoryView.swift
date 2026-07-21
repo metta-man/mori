@@ -106,24 +106,12 @@ struct RandomMemoryModal: View {
                 .padding(.bottom, 32)
             } else {
                 // Empty state
-                VStack(spacing: 16) {
-                    MoriBitmapIconBadge(
-                        icon: .journal,
-                        size: 58,
-                        iconScale: 0.58,
-                        fill: MoriColors.sanctuarySurface.opacity(0.76),
-                        stroke: Color.white.opacity(0.88),
-                        shadow: MoriColors.sanctuaryShadow.opacity(0.16)
-                    )
-                    
-                    Text("No memories yet")
-                        .font(.system(size: 17, weight: .semibold, design: .rounded))
-                        .foregroundColor(MoriColors.botanicalInk)
-                    
-                    Text("Start writing to build your collection!")
-                        .font(.system(size: 14, weight: .regular))
-                        .foregroundColor(MoriColors.botanicalMuted)
-                }
+                MoriEmptyState(
+                    icon: .journal,
+                    title: "No memories yet",
+                    message: "Saved entries will appear here."
+                )
+                .frame(maxWidth: .infinity)
                 .frame(height: 300)
                 
                 Button(action: { dismiss() }) {

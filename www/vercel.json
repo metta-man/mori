@@ -1,6 +1,12 @@
 {
-  "buildCommand": "pnpm run build",
+  "buildCommand": "pnpm run build:app",
   "outputDirectory": "dist",
   "framework": "vite",
-  "installCommand": "pnpm install --frozen-lockfile"
+  "installCommand": "pnpm install --frozen-lockfile",
+  "rewrites": [
+    {
+      "source": "/mori-v2/:path*",
+      "destination": "/"
+    }
+  ]
 }

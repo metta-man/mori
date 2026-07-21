@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(xcodebuild -list -project Mori.xcodeproj)",
+      "Bash(xcodebuild -project Mori.xcodeproj -scheme Mori -destination 'generic/platform=iOS Simulator' -configuration Debug -quiet build CODE_SIGNING_ALLOWED=NO)"
+    ]
+  }
+}

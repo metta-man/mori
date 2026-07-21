@@ -67,7 +67,7 @@ struct MoriSkeleton: View {
                 }
                 isAnimating = true
             }
-            .onChange(of: reduceMotion) { shouldReduceMotion in
+            .moriOnChange(of: reduceMotion) { shouldReduceMotion in
                 isAnimating = !shouldReduceMotion
             }
     }
@@ -90,7 +90,11 @@ struct MoriErrorState: View {
                 .foregroundColor(MoriColors.botanicalMuted)
                 .multilineTextAlignment(.center)
 
-            MoriSecondaryButton(title: "Retry", action: retryAction)
+            MoriSecondaryButton(
+                title: "Retry",
+                style: .watercolorCompatibility,
+                action: retryAction
+            )
                 .padding(.horizontal, MoriSpacing.space7)
                 .padding(.top, MoriSpacing.space3)
         }

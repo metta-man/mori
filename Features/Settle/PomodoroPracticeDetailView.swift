@@ -17,12 +17,14 @@ struct PomodoroPracticeDetailView: View {
     @AppStorage("mori_settle_pomodoro_break_breathing") private var pomodoroBreakBreathingRaw: String = MoriPomodoroBreakBreathing.none.rawValue
 
     @State private var pomodoroClock = PomodoroPracticeSessionClock()
-    @State private var completedPomodoroSummary: MindfulCompletionSummary?
+    @State private var deepSessionCompletion: MoriDeepSessionCompletion?
     @State private var pomodoroBreathingRuntime = PomodoroGuidedBreathingRuntime()
     @State private var showLeaveDialog = false
     @State private var completionCoordinator = PomodoroPracticeCompletionCoordinator()
     @State private var feedbackCoordinator = PomodoroPracticeFeedbackCoordinator()
+    @State private var handledAutoStartFixture = false
     @StateObject private var darkRoomCoordinator = SettleDarkRoomCoordinator()
+    @StateObject private var appLimitManager = AppLimitManager.shared
 
     private var pomodoroDurations: PomodoroPracticeDurations {
         PomodoroPracticeDurations(
@@ -88,7 +90,12 @@ struct PomodoroPracticeDetailView: View {
 
     var body: some View {
         Group {
-            if pomodoroState.isActive {
+            if let deepSessionCompletion {
+                MoriDeepSessionCompletionSurface(
+                    completion: deepSessionCompletion,
+                    onContinue: continueAfterDeepSession
+                )
+            } else if pomodoroState.isActive {
                 activePomodoroSurface
             } else {
                 setupPomodoroSurface
@@ -96,6 +103,7 @@ struct PomodoroPracticeDetailView: View {
         }
         .pomodoroPracticeChrome(
             isDarkRoomActive: darkRoomEnabled && pomodoroState.isActive,
+            hidesNavigationChrome: deepSessionCompletion != nil || pomodoroState.isActive,
             onBack: requestClose
         )
         .pomodoroPracticeLifecycle(
@@ -125,6 +133,10 @@ struct PomodoroPracticeDetailView: View {
             shortBreakMinutes: $pomodoroShortBreakMinutes,
             longBreakMinutes: $pomodoroLongBreakMinutes,
             cycles: $pomodoroCycles,
+            soundEnabled: $soundEnabled,
+            hapticsEnabled: $hapticsEnabled,
+            animationEnabled: $animationEnabled,
+            darkRoomEnabled: $darkRoomEnabled,
             phase: pomodoroPhase,
             timerState: pomodoroState,
             progress: pomodoroPresentation.progress,
@@ -134,8 +146,6 @@ struct PomodoroPracticeDetailView: View {
             isGuidedBreathing: pomodoroPresentation.isGuidedBreathing,
             activeBreathing: pomodoroPresentation.activeBreathing,
             currentPhaseElapsedSeconds: pomodoroPresentation.phaseElapsedSeconds,
-            darkRoomEnabled: darkRoomEnabled,
-            completedSummary: completedPomodoroSummary,
             onSelectPhase: selectSetupPomodoroPhase,
             onStart: startPomodoro,
             onSelectFocusBreathing: selectPomodoroFocusBreathing,
@@ -151,6 +161,8 @@ struct PomodoroPracticeDetailView: View {
             darkRoomControlsVisible: darkRoomCoordinator.controlsVisible,
             timeText: pomodoroPresentation.timeText,
             sessionLabel: pomodoroPresentation.sessionLabel,
+            blockedAppsText: blockedAppsText,
+            blockedAppsCount: blockedAppsCount,
             primaryCueText: pomodoroPresentation.primaryCueText,
             secondaryCueText: pomodoroPresentation.secondaryCueText,
             soundEnabled: soundEnabled,
@@ -168,7 +180,11 @@ struct PomodoroPracticeDetailView: View {
             onToggleSound: togglePomodoroSound,
             onToggleHaptics: togglePomodoroHaptics,
             onToggleAnimation: { animationEnabled.toggle() },
-            onToggleDarkRoom: { darkRoomEnabled.toggle() }
+            onToggleDarkRoom: { darkRoomEnabled.toggle() },
+            onBack: requestClose,
+            onPause: pausePomodoro,
+            onResume: resumePomodoro,
+            onEnd: endIncompletePomodoro
         ) {
             PomodoroControlRow(
                 timerState: pomodoroState,
@@ -185,6 +201,25 @@ struct PomodoroPracticeDetailView: View {
         normalizePomodoroFocusBreathingSelection()
         normalizePomodoroBreakBreathingSelection()
         resetPomodoroClockIfEditable()
+
+        if ProcessInfo.processInfo.arguments.contains("-MoriShowDeepSessionCompletionForUITest") {
+            deepSessionCompletion = MoriDeepSessionCompletion(
+                quietMinutes: 25,
+                completedPlannedSession: true
+            )
+            return
+        }
+
+        guard !handledAutoStartFixture,
+              ProcessInfo.processInfo.arguments.contains("-MoriAutoStartDeepSessionForUITest")
+        else {
+            return
+        }
+
+        handledAutoStartFixture = true
+        DispatchQueue.main.async {
+            startPomodoro()
+        }
     }
 
     private func resetPomodoroClockIfEditable() {
@@ -256,7 +291,7 @@ struct PomodoroPracticeDetailView: View {
 
     private func selectSetupPomodoroPhase(_ phase: MoriPomodoroPhase) {
         guard pomodoroClock.selectSetupPhase(phase, durations: pomodoroDurations) else { return }
-        completedPomodoroSummary = nil
+        deepSessionCompletion = nil
     }
 
     private func selectPomodoroFocusBreathing(_ breathing: MoriPomodoroBreakBreathing) {
@@ -269,7 +304,7 @@ struct PomodoroPracticeDetailView: View {
 
     private func resetCompletedPomodoro() {
         resetPomodoroClock()
-        completedPomodoroSummary = nil
+        deepSessionCompletion = nil
     }
 
     private func pausePomodoro() {
@@ -294,7 +329,7 @@ struct PomodoroPracticeDetailView: View {
         pomodoroClock.start(durations: pomodoroDurations)
         resetPomodoroBreakBreathingGuidance(stopAudio: true)
         completionCoordinator.cancelSessionAppLimit()
-        completedPomodoroSummary = nil
+        deepSessionCompletion = nil
         startPomodoroAppLimitIfPossible()
         startPomodoroBreakBreathingGuidance(resetElapsed: true)
 
@@ -348,6 +383,7 @@ struct PomodoroPracticeDetailView: View {
     private func endPomodoro(recordCompletion: Bool) {
         clearDarkRoomTransientState()
         let completedCycles = pomodoroCompletedCycles
+        let protectedFocusSeconds = pomodoroFocusSecondsCompleted
 
         if recordCompletion {
             pomodoroClock.complete()
@@ -357,18 +393,47 @@ struct PomodoroPracticeDetailView: View {
         resetPomodoroBreakBreathingGuidance(stopAudio: true)
 
         if recordCompletion,
-           let summary = completionCoordinator.recordCompletion(
+           completionCoordinator.recordCompletion(
                 focusSecondsCompleted: pomodoroFocusSecondsCompleted,
                 breakSecondsCompleted: pomodoroBreakSecondsCompleted,
                 completedCycles: completedCycles
-            )
+            ) != nil
         {
-            completedPomodoroSummary = summary
+            let quietMinutes = max(1, Int((Double(protectedFocusSeconds) / 60.0).rounded(.down)))
+            deepSessionCompletion = MoriDeepSessionCompletion(
+                quietMinutes: quietMinutes,
+                completedPlannedSession: true
+            )
             playPomodoroCompletionFeedback()
+        } else if protectedFocusSeconds > 0 {
+            let quietMinutes = Int((Double(protectedFocusSeconds) / 60.0).rounded(.down))
+            deepSessionCompletion = MoriDeepSessionCompletion(
+                quietMinutes: quietMinutes,
+                completedPlannedSession: false
+            )
+            completionCoordinator.cancelSessionAppLimit()
         } else {
-            completedPomodoroSummary = nil
+            deepSessionCompletion = nil
             resetPomodoroClock()
         }
+    }
+
+    private var blockedAppsSummary: MoriScreenTimeProfileSummary {
+        appLimitManager.settingsSnapshot.profileSummary(for: .pomodoroFocus)
+    }
+
+    private var blockedAppsText: String {
+        blockedAppsSummary.selectionStatusText
+    }
+
+    private var blockedAppsCount: Int {
+        blockedAppsSummary.effectiveSelectedCount
+    }
+
+    private func continueAfterDeepSession() {
+        deepSessionCompletion = nil
+        resetPomodoroClock()
+        dismiss()
     }
 
     private func startPomodoroAppLimitIfPossible() {

@@ -8,8 +8,8 @@ struct QuietReplacementActionsCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             MoriSectionTitle(
-                title: "Replacement Actions",
-                subtitle: "Choose a different path for the same need."
+                title: "Another way",
+                subtitle: "Choose a quieter response to the same need."
             )
 
             ForEach(QuietReplacementAction.allCases) { action in
@@ -52,15 +52,12 @@ private struct QuietReplacementActionRow: View {
 
             Spacer()
 
-            Text("+\(action.seeds)")
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
-                .foregroundColor(MoriColors.botanicalRoot)
-                .padding(.horizontal, 9)
-                .padding(.vertical, 6)
-                .background(MoriColors.botanicalSeed.opacity(0.20))
-                .clipShape(Capsule())
+            Text("\(action.minutes)m")
+                .font(MoriV2Type.caption)
+                .foregroundColor(MoriV2Palette.mutedStone)
         }
         .padding(12)
+        .frame(minHeight: MoriV2Layout.minimumHitTarget)
         .background(isSelected ? action.tint.opacity(0.12) : MoriColors.botanicalPaperDeep.opacity(0.52))
         .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
     }

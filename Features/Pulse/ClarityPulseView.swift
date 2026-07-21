@@ -248,7 +248,7 @@ struct ClarityPulseView: View {
             clarityStore.savePulse(generated)
             pulse = generated
         } catch {
-            pulseErrorMessage = error.localizedDescription
+            pulseErrorMessage = "Could not load today's Pulse."
         }
     }
 

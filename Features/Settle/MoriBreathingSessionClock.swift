@@ -2,7 +2,7 @@ import Combine
 import CoreGraphics
 import Foundation
 
-enum MoriBreathingRunState {
+enum MoriBreathingRunState: Equatable {
     case idle
     case running
     case paused

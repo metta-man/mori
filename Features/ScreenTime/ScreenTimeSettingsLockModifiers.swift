@@ -30,7 +30,7 @@ private struct ScreenTimePINInputModifier: ViewModifier {
         content
             .keyboardType(.numberPad)
             .textContentType(.oneTimeCode)
-            .onChange(of: value) { newValue in
+            .moriOnChange(of: value) { newValue in
                 value = ScreenTimePINSanitizer.sanitized(newValue)
             }
     }

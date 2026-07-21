@@ -97,7 +97,7 @@ enum MoriWatchPractice: String, CaseIterable, Identifiable {
         switch self {
         case .breathe: return MoriL10n.string("practice.breathe.title", defaultValue: "Breathe")
         case .settle: return MoriL10n.string("practice.settle.title", defaultValue: "Settle")
-        case .pomodoro: return MoriL10n.string("practice.pomodoro.title", defaultValue: "Pomodoro")
+        case .pomodoro: return MoriL10n.string("practice.pomodoro.title", defaultValue: "Deep Session")
         case .bell: return MoriL10n.string("watch.practice.bell", defaultValue: "Bell")
         }
     }

@@ -33,6 +33,10 @@ struct ScreenTimeSettingsView: View {
         store: MoriAppGroup.defaults
     ) private var beforeFeedNativeGateEnabled: Bool = MoriScreenTimeShared.defaultBeforeFeedNativeGateEnabled
     @AppStorage(
+        MoriScreenTimeShared.beforeFeedHiddenAppLockEnabledKey,
+        store: MoriAppGroup.defaults
+    ) private var beforeFeedHiddenAppLockEnabled: Bool = MoriScreenTimeShared.defaultBeforeFeedHiddenAppLockEnabled
+    @AppStorage(
         MoriScreenTimeShared.beforeFeedGraceWindowSecondsKey,
         store: MoriAppGroup.defaults
     ) private var beforeFeedGraceWindowSeconds: Int = MoriScreenTimeShared.defaultBeforeFeedGraceWindowSeconds
@@ -44,6 +48,10 @@ struct ScreenTimeSettingsView: View {
         MoriScreenTimeShared.morningGateEnabledKey,
         store: MoriAppGroup.defaults
     ) private var morningGateEnabled: Bool = MoriScreenTimeShared.defaultMorningGateEnabled
+    @AppStorage(
+        MoriScreenTimeShared.morningGateHiddenAppLockEnabledKey,
+        store: MoriAppGroup.defaults
+    ) private var morningGateHiddenAppLockEnabled: Bool = MoriScreenTimeShared.defaultMorningGateHiddenAppLockEnabled
     @AppStorage(
         MoriScreenTimeShared.morningGateStartHourKey,
         store: MoriAppGroup.defaults
@@ -97,15 +105,23 @@ struct ScreenTimeSettingsView: View {
             )
             MorningGateSettingsSection(
                 isEnabled: $morningGateEnabled,
+                hiddenAppLockEnabled: $morningGateHiddenAppLockEnabled,
                 startDate: morningGateStartDateBinding,
                 durationSeconds: $morningGateDurationSeconds,
                 breathingTechniqueID: $morningGateBreathingTechniqueID,
+                morningAppSummary: presentation.morningGateSummary,
                 breathingSummary: morningGateBreathingSummary,
                 morningAppsStatusText: presentation.morningGateAppsStatusText,
-                onEditMorningApps: showMorningGatePicker
+                onEditMorningApps: {
+                    presentation.morningGateSummary.usesDefaultSelection
+                        ? showDefaultListPicker()
+                        : showMorningGatePicker()
+                },
+                onUseDefaultMorningAppsChange: { updateFeatureUsesDefaultSelection($0, for: .morningGate) }
             )
             BeforeFeedSettingsSection(
                 nativeGateEnabled: $beforeFeedNativeGateEnabled,
+                hiddenAppLockEnabled: $beforeFeedHiddenAppLockEnabled,
                 durationSeconds: $beforeFeedDurationSeconds,
                 graceWindowSeconds: $beforeFeedGraceWindowSeconds,
                 breathingTechniqueID: $beforeFeedBreathingTechniqueID,
@@ -113,7 +129,12 @@ struct ScreenTimeSettingsView: View {
                 feedAppSummary: presentation.beforeFeedSummary,
                 breathingSummary: beforeFeedBreathingSummary,
                 feedAppsStatusText: presentation.beforeFeedAppsStatusText,
-                onEditFeedApps: showBeforeFeedPicker,
+                onEditFeedApps: {
+                    presentation.beforeFeedSummary.usesDefaultSelection
+                        ? showDefaultListPicker()
+                        : showBeforeFeedPicker()
+                },
+                onUseDefaultFeedAppsChange: { updateFeatureUsesDefaultSelection($0, for: .beforeFeed) },
                 onShowShortcutGuide: showShortcutGuide
             )
             ScreenTimeMonitorHealthSection(
@@ -133,8 +154,10 @@ struct ScreenTimeSettingsView: View {
         }
         .screenTimeGateRefreshes(
             beforeFeedNativeGateEnabled: beforeFeedNativeGateEnabled,
+            beforeFeedHiddenAppLockEnabled: beforeFeedHiddenAppLockEnabled,
             beforeFeedGraceWindowSeconds: beforeFeedGraceWindowSeconds,
             morningGateEnabled: morningGateEnabled,
+            morningGateHiddenAppLockEnabled: morningGateHiddenAppLockEnabled,
             morningGateStartHour: morningGateStartHour,
             morningGateStartMinute: morningGateStartMinute,
             morningGateDurationSeconds: morningGateDurationSeconds,
@@ -247,12 +270,14 @@ struct ScreenTimeSettingsView: View {
         beforeFeedDurationSeconds = BeforeFeedGate.durationSeconds
         beforeFeedGraceWindowSeconds = BeforeFeedGate.graceWindowSeconds
         morningGateEnabled = MorningGate.isEnabled
+        morningGateHiddenAppLockEnabled = MorningGate.hiddenAppLockEnabled
         morningGateStartHour = MorningGate.startHour
         morningGateStartMinute = MorningGate.startMinute
         morningGateDurationSeconds = MorningGate.durationSeconds
     }
 
     private func refreshMonitorHealth() {
+        appLimitManager.perform(.reconcileGateAppLimit(.beforeFeed))
         monitorHealthEvents = MoriScreenTimeMonitorHealthStore.recentEvents()
     }
 

@@ -50,7 +50,7 @@ struct HabitTrackerView: View {
                             MoriPageHeader(
                                 eyebrow: "Daily Review",
                                 title: "What happened today?",
-                                subtitle: "One tone. One optional memory. The archive gets the signal."
+                                subtitle: "One tone. One optional memory."
                             )
 
                             HStack(spacing: 14) {
@@ -277,7 +277,7 @@ struct HabitTrackerView: View {
         selectedTone = entry.tone
         reflectionNote = entry.note ?? ""
 
-        let action = MoriClarityStore.shared.recordDailyOnce(
+        _ = MoriClarityStore.shared.recordDailyOnce(
             kind: .dailyCheckIn,
             title: MoriPractice.dailyCheckIn.title,
             seeds: MoriPractice.dailyCheckIn.seeds,
@@ -285,11 +285,7 @@ struct HabitTrackerView: View {
             note: MoriPractice.dailyCheckIn.note
         )
 
-        if let action {
-            toastMessage = MoriL10n.string("habit.toast.with_seeds", defaultValue: "%@ · +%d Seeds", arguments: [tone.toastMessage, action.seeds])
-        } else {
-            toastMessage = tone.toastMessage
-        }
+        toastMessage = tone.toastMessage
         showToast = true
         appLimitManager.perform(.endAppLimit(feature: .dailyCheckIn))
 

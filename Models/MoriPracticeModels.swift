@@ -182,14 +182,14 @@ struct MoriPractice: Identifiable, Equatable {
     static var focusFifteen: MoriPractice {
         MoriPractice(
             id: "focus-fifteen",
-            title: MoriL10n.string("practice.pomodoro.title", defaultValue: "Pomodoro"),
-            description: MoriL10n.string("practice.pomodoro.description", defaultValue: "15 min focused work sprint"),
+            title: MoriL10n.string("practice.pomodoro.title", defaultValue: "Deep Session"),
+            description: MoriL10n.string("practice.pomodoro.description", defaultValue: "15 quiet minutes"),
             durationText: MoriL10n.string("time.minute_compact_many", defaultValue: "%d min", arguments: [15]),
             minutes: 15,
             seeds: 2,
             icon: .timer,
             kind: .pomodoroSession,
-            note: MoriL10n.string("practice.pomodoro.note", defaultValue: "Completed a short focus cycle"),
+            note: MoriL10n.string("practice.pomodoro.note", defaultValue: "Protected a short quiet session"),
             domains: [.craft, .mind],
             route: .focusCycle
         )
@@ -215,7 +215,7 @@ struct MoriPractice: Identifiable, Equatable {
         MoriPractice(
             id: "walk-reset",
             title: MoriL10n.string("practice.walk_reset.title", defaultValue: "Walk / Offline Reset"),
-            description: MoriL10n.string("practice.walk_reset.description", defaultValue: "leave the screen"),
+            description: MoriL10n.string("practice.walk_reset.description", defaultValue: "Leave the screen"),
             durationText: MoriL10n.string("time.minute_compact_many", defaultValue: "%d min", arguments: [8]),
             minutes: 8,
             seeds: 2,

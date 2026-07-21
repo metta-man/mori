@@ -74,6 +74,14 @@ final class MoriScreenTimeMonitorExtension: DeviceActivityMonitor {
             action: "clearGraceAndApplyPassiveGate"
         )
         applyPassiveGateShieldIfNeeded()
+        // The grace schedule is repeating (a one-shot intervalDidEnd is unreliable on
+        // iOS). Now that the window has closed, stop the activity so its daily
+        // recurrence never fires again.
+        DeviceActivityCenter().stopMonitoring([.moriBeforeFeedGrace])
+        recordBeforeFeedMonitorEvent(
+            kind: .beforeFeedGraceScheduleStopped,
+            action: "stopAfterExpiry"
+        )
     }
 
     private func recordBeforeFeedMonitorEvent(
@@ -81,18 +89,23 @@ final class MoriScreenTimeMonitorExtension: DeviceActivityMonitor {
         action: String
     ) {
         let selection = selectionStore.effectiveSelection(for: .beforeFeed)
+        let displayNames = selectionStore.summary(for: .beforeFeed).displayNames
         MoriScreenTimeMonitorHealthStore.record(
             MoriScreenTimeMonitorHealthEvent(
+                traceID: beforeFeedGateStore.currentWindowTraceID(),
                 kind: kind,
                 activityName: "mori.before-feed.grace",
                 featureRawValue: MoriScreenTimeFeature.beforeFeed.rawValue,
+                activeSessionFeatureRawValue: activeSession?.feature.rawValue,
                 action: action,
+                policy: MoriScreenTimeMonitorHealthPolicy.none,
                 beforeFeedNativeGateEnabled: beforeFeedGateStore.nativeGateEnabled(),
                 beforeFeedInGraceWindow: beforeFeedGateStore.isInGraceWindow(),
                 beforeFeedHasSelection: selectionStore.hasEffectiveSelection(for: .beforeFeed),
                 applicationTokenCount: selection.applicationTokens.count,
                 webDomainTokenCount: selection.webDomainTokens.count,
-                displayNameCount: selectionStore.summary(for: .beforeFeed).displayNames.count
+                displayNameCount: displayNames.count,
+                displayNames: displayNames
             )
         )
     }

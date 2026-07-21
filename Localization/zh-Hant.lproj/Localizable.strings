@@ -78,7 +78,7 @@
 "Practice complete" = "重置完成";
 "Technique" = "技巧";
 "Breathing" = "呼吸";
-"Pomodoro" = "番茄鐘";
+"Pomodoro" = "深度時段";
 "Mindfulness Bell" = "正念鈴";
 "Bell notifications" = "鈴聲通知";
 "Notifications are off. Enable them in iOS Settings to use the bell." = "通知已關閉。請在 iOS 設定中開啟後使用鈴聲。";
@@ -283,9 +283,9 @@
 "practice.daily_check_in.title" = "每日簽到";
 "practice.daily_check_in.description" = "今天過得如何";
 "practice.daily_check_in.note" = "反思了今天過得如何";
-"practice.pomodoro.title" = "番茄鐘";
-"practice.pomodoro.description" = "15 分鐘專注衝刺";
-"practice.pomodoro.note" = "完成了一次短專注循環";
+"practice.pomodoro.title" = "深度時段";
+"practice.pomodoro.description" = "15 分鐘安靜時光";
+"practice.pomodoro.note" = "守住了一段安靜時光";
 "practice.quiet_mode.title" = "安靜模式";
 "practice.quiet_mode.description" = "滑資訊流前暫停";
 "practice.quiet_mode.note" = "滑資訊流前暫停了";
@@ -637,7 +637,7 @@
 "Plant Next Seed" = "種下下一顆種子";
 "Start Practice" = "開始重置";
 "Start Reset" = "開始重置";
-"Pomodoro sessions only record when the full cycle completes." = "番茄鐘只有在完整週期完成後才會記錄。";
+"Pomodoro sessions only record when the full cycle completes." = "深度時段完成後才會記錄。";
 "Practice" = "重置";
 "Preview" = "預覽";
 "Primary Button" = "主按鈕";
@@ -649,7 +649,7 @@
 "Quiet" = "安靜";
 "Recommended flow: choose individual feed apps here, open one normally, complete Mori, then use the open window deliberately. Category selections are ignored so apps like WhatsApp are not caught accidentally." = "建議流程：在這裡選擇單個資訊流 App，正常打開其中一個，完成 Mori，然後有意識地使用開啟視窗。類別選擇會被忽略，避免誤擋 WhatsApp 等 App。";
 "Refresh" = "重新整理";
-"Reset Pomodoro" = "重設番茄鐘";
+"Reset Pomodoro" = "重設深度時段";
 "Reset length" = "重設時長";
 "Resume" = "繼續";
 "Save Memory" = "儲存記憶";
@@ -657,7 +657,7 @@
 "Save log entry" = "儲存記錄";
 "Secondary Button" = "次按鈕";
 "Set a soft bell so one breath can meet you later." = "設定一個柔和鈴聲，讓一次呼吸稍後與你相遇。";
-"Settle, Breathing, and Pomodoro sessions are stored locally. Mori uses only aggregate Seeds, minutes, and consistency for Roots and Bloom." = "安定、呼吸和番茄鐘練習會儲存在本地。Mori 只會使用彙總的種子、分鐘數和連續性來計算根系與成長。";
+"Settle, Breathing, and Pomodoro sessions are stored locally. Mori uses only aggregate Seeds, minutes, and consistency for Roots and Bloom." = "安定、呼吸與深度時段只儲存在此裝置。Mori 只使用彙總的安靜分鐘與時段紀錄。";
 "Shortcut automation" = "捷徑自動化";
 "Shortcuts" = "捷徑";
 "Show a random past gratitude entry" = "顯示一條隨機舊記錄";
@@ -672,6 +672,31 @@
 "Starts at your chosen time each day. Completing Morning Reset opens selected apps for that morning window." = "每天在你選擇的時間開始。完成晨間重設後，所選 App 會在晨間視窗內開啟。";
 "Tap a bell to breathe" = "輕點鈴聲開始呼吸";
 "The Screen Time gate opens selected feed apps after the reset. A Shortcut automation can open Mori, but iOS does not tell Mori which app triggered it, so you may need to switch back manually." = "螢幕時間門檻會在重設後開啟所選資訊流 App。捷徑自動化可以打開 Mori，但 iOS 不會告訴 Mori 是哪個 App 觸發的，所以你可能需要手動切回去。";
+"Copy debug report" = "複製除錯報告";
+"Copy" = "複製";
+"Hide feed app icons" = "隱藏資訊流 App 圖示";
+"Selected feed apps disappear outside the open window. Turn this off to restore app icons." = "已選資訊流 App 會在開放視窗外消失。關閉此選項即可恢復 App 圖示。";
+"Use default block list" = "使用預設封鎖清單";
+"Hide morning app icons" = "隱藏晨間 App 圖示";
+"Selected morning apps disappear until Morning Reset is complete or the window ends." = "已選晨間 App 會消失，直到完成 Morning Reset 或晨間視窗結束。";
+"No trace yet" = "尚未有追蹤紀錄";
+"Complete one Before Feed reset, wait for the open window to end, then refresh." = "完成一次 Before Feed 重置，等開放視窗結束後再重新整理。";
+"PASS" = "通過";
+"FAIL" = "失敗";
+"PARTIAL" = "部分成功";
+"WAITING" = "等待中";
+"Before Feed did not reach strict lock." = "Before Feed 未進入嚴格鎖定。";
+"DeviceActivity fired at the open-window expiry and reapplied the Screen Time shield." = "DeviceActivity 已在開放視窗結束時觸發，並重新套用螢幕時間 shield。";
+"Mori applied a shield, but the post-window shield lock is missing from this trace." = "Mori 已套用 shield，但這次追蹤沒有視窗後 shield lock。";
+"Waiting for the open window to expire or for iOS to deliver the monitor callback." = "等待開放視窗結束，或等待 iOS 送出 monitor callback。";
+"DeviceActivity schedule failed." = "DeviceActivity 排程失敗。";
+"Shield lock was applied by fallback, but DeviceActivity scheduling failed for this trace." = "Fallback 已套用 shield lock，但這次追蹤的 DeviceActivity 排程失敗。";
+"Shield lock is applied now, but no DeviceActivity expiry callback appeared in this trace." = "Shield lock 現在已套用，但這次追蹤沒有 DeviceActivity 結束 callback。";
+"Shield lock applied" = "Shield lock 已套用";
+"Hidden app lock applied" = "隱藏 App 鎖定已套用";
+"Before Feed native gate is off." = "Before Feed 原生門檻已關閉。";
+"No Before Feed app token was selected." = "未選擇 Before Feed App token。";
+"Screen Time authorization is not available." = "Screen Time 授權不可用。";
 "Use Mori's Start Before Feed Reset action. Do not use Shortcuts' plain Open App action, because that would open Mori even while your feed window is still active." = "使用 Mori 的「開始資訊流前重置」動作。不要用捷徑的普通「打開 App」動作，否則資訊流開放視窗仍然有效時都會打開 Mori。";
 "Do not use Open URL with mori://; iOS may block that launch from personal automations." = "不要用 mori:// 的「打開 URL」；iOS 可能會阻止個人自動化用這種方式啟動。";
 "Screen Time prepared this reset from the blocked feed app." = "Screen Time 已從被封鎖的資訊流 App 準備好這次重置。";
@@ -769,7 +794,16 @@
 "journal.prompt.accessibility" = "提示：%@";
 "settle.timer.accessibility" = "安定計時器 %@，%@";
 "breathing.timer.accessibility" = "呼吸計時器 %@，%@";
-"pomodoro.timer.accessibility" = "番茄鐘 %@，%@";
+"breathing.remaining_seconds" = "尚餘 %d 秒";
+"breathing.remaining_time" = "尚餘 %@";
+"breathing.phase_countdown.accessibility" = "%@，尚餘 %d 秒";
+"breathing.session.close.accessibility" = "結束呼吸練習";
+"breathing.session.close.hint" = "離開前會先顯示確認。";
+"breathing.session.resume.hint" = "由目前的呼吸階段繼續。";
+"breathing.session.pause.hint" = "暫停計時器，並將水彩停留在目前階段。";
+"breathing.settings.watercolor_motion" = "水彩動態";
+"breathing.settings.dark_room" = "暗室模式";
+"pomodoro.timer.accessibility" = "深度時段計時器 %@，%@";
 "settle.recommended_minutes" = "%d 分鐘安定練習";
 "breathing.custom_pattern" = "自訂模式：%@";
 "Sound on" = "聲音開啟";
@@ -834,7 +868,7 @@
 "widget.week_archive.accessibility" = "週記錄，目前是第 %d 週";
 
 "screen_time.feature.quiet.title" = "安靜模式";
-"screen_time.feature.pomodoro_focus.title" = "番茄鐘專注";
+"screen_time.feature.pomodoro_focus.title" = "深度時段";
 "screen_time.feature.settle.title" = "安定";
 "screen_time.feature.breathing.title" = "呼吸";
 "screen_time.feature.before_feed.title" = "資訊流前";
@@ -854,7 +888,7 @@
 "screen_time.feature.daily_check_in.subtitle" = "Daily Check-In 期間保持選定 App 受限。";
 "screen_time.feature.manual_practice.subtitle" = "手動重置計時期間保持選定 App 受限。";
 "screen_time.mode.quiet" = "安靜模式";
-"screen_time.mode.pomodoro" = "番茄鐘";
+"screen_time.mode.pomodoro" = "深度時段";
 "screen_time.mode.daily_limit" = "每日限制";
 "screen_time.saved_time.social_messaging" = "社交 / 訊息";
 "screen_time.saved_time.news_reading" = "新聞 / 閱讀";
@@ -924,6 +958,8 @@
 "attention_reset.cue.morning.technique" = "先呼吸，再開始";
 "attention_reset.cue.morning.no_technique" = "從不滑資訊流開始";
 "attention_reset.running.before_feed.no_technique" = "等衝動過去";
+"Stay with the pause" = "留在這個停頓";
+"before_feed.pause.duration" = "先停留 %@，再作決定。";
 "attention_reset.running.morning.no_technique" = "守住第一個視窗";
 
 "bell.status.paused" = "鈴聲已暫停";
@@ -1234,7 +1270,7 @@
 "Inhale" = "吸氣";
 "Keep the bell inside the part of the day where a pause helps." = "把鈴聲放在一天中暫停最有幫助的時段。";
 "Kept selected apps limited during Breathing" = "呼吸期間保持所選 App 受限";
-"Kept selected apps limited during Pomodoro focus" = "番茄專注期間保持所選 App 受限";
+"Kept selected apps limited during Pomodoro focus" = "深度時段內讓所選 App 保持安靜";
 "Kept selected apps limited during Quiet Mode" = "安靜模式期間保持所選 App 受限";
 "Kept selected apps limited during Settle" = "Settle 期間保持所選 App 受限";
 "Choose one app or website Mori should slow down before the next feed opens." = "選擇一個 App 或網站，讓 Mori 在下一次資訊流打開前先放慢它。";
@@ -1281,7 +1317,7 @@
 "Morning App Limit active" = "晨間 App 限制啟用中";
 "Limited" = "已限制";
 "App-Limited Breathing" = "App 限制呼吸";
-"App-Limited Pomodoro" = "App 限制番茄鐘";
+"App-Limited Pomodoro" = "App 限制深度時段";
 "Practice App Limit active" = "重置 App 限制啟用中";
 "App-Limited Quiet Mode" = "App 限制安靜模式";
 "App-Limited Settle" = "App 限制 Settle";
@@ -1391,8 +1427,8 @@
 "Breathing haptics on" = "呼吸觸覺回饋已開啟";
 "Breathing haptics off" = "呼吸觸覺回饋已關閉";
 "Breathe again" = "再次呼吸";
-"Pomodoro bells on" = "番茄鐘鈴聲已開啟";
-"Pomodoro bells off" = "番茄鐘鈴聲已關閉";
+"Pomodoro bells on" = "深度時段鈴聲已開啟";
+"Pomodoro bells off" = "深度時段鈴聲已關閉";
 "Timing is locked while the session is active." = "練習進行時無法調整時長。";
 "Tune duration, cues, haptics, and the custom rhythm." = "調整時長、提示、觸覺回饋和自訂節奏。";
 "This week is being written" = "這一週正在被寫下";

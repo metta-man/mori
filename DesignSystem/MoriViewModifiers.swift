@@ -10,17 +10,22 @@ struct MoriMainTabBarHiddenPreferenceKey: PreferenceKey {
 }
 
 enum MoriMainTabBarMetrics {
-    static let barHeight: CGFloat = 58
-    static let reservedBottomInset: CGFloat = 70
-    static let overlayHeight: CGFloat = reservedBottomInset
-    static let scrollBottomInset: CGFloat = reservedBottomInset + 8
+    static let barHeight: CGFloat = 74
+    static let maximumBarWidth: CGFloat = 520
+    static let horizontalMargin: CGFloat = 18
+    static let cornerRadius: CGFloat = 32
+    static let floatingBottomSpacing: CGFloat = 16
+    static let topClearance: CGFloat = 14
+    static let reservedBottomInset: CGFloat = barHeight + floatingBottomSpacing + topClearance
+    static let overlayHeight: CGFloat = barHeight + floatingBottomSpacing
+    static let scrollBottomInset: CGFloat = reservedBottomInset
 }
 
 enum MoriRootScreenMetrics {
-    static let minimumTopInset: CGFloat = 112
-    static let safeAreaBreathingRoom: CGFloat = 24
-    static let visibleScrollTopOffset: CGFloat = 18
-    static let headerContentGap: CGFloat = 18
+    static let minimumTopInset: CGFloat = 52
+    static let safeAreaBreathingRoom: CGFloat = 0
+    static let visibleScrollTopOffset: CGFloat = 0
+    static let headerContentGap: CGFloat = 12
 
     static func topInset(for safeAreaTop: CGFloat) -> CGFloat {
         max(minimumTopInset, safeAreaTop + safeAreaBreathingRoom)
@@ -45,6 +50,40 @@ struct MoriKeyboardDismissAction {
 
     func callAsFunction() {
         handler()
+    }
+}
+
+extension View {
+    /// Back-deploy SwiftUI's iOS 17 onChange closure shape while Mori still supports iOS 16.
+    @ViewBuilder
+    func moriOnChange<Value: Equatable>(
+        of value: Value,
+        perform action: @escaping (Value) -> Void
+    ) -> some View {
+        if #available(iOS 17.0, *) {
+            self.onChange(of: value) { _, newValue in
+                action(newValue)
+            }
+        } else {
+            self.onChange(of: value, perform: action)
+        }
+    }
+
+    /// Back-deploy SwiftUI's iOS 17 onChange closure shape while Mori still supports iOS 16.
+    @ViewBuilder
+    func moriOnChange<Value: Equatable>(
+        of value: Value,
+        perform action: @escaping () -> Void
+    ) -> some View {
+        if #available(iOS 17.0, *) {
+            self.onChange(of: value) {
+                action()
+            }
+        } else {
+            self.onChange(of: value) { _ in
+                action()
+            }
+        }
     }
 }
 
@@ -76,16 +115,6 @@ extension View {
             .animation(MoriAnimation.standard, value: delay)
     }
     
-    /// Apply tap press animation
-    func moriTapAnimation() -> some View {
-        self.modifier(MoriTapAnimationModifier())
-    }
-}
-
-struct MoriTapAnimationModifier: ViewModifier {
-    func body(content: Content) -> some View {
-        content
-    }
 }
 
 // MARK: - Mori Color Modifiers
@@ -117,6 +146,19 @@ extension View {
                 .foregroundColor(MoriColors.botanicalInk)
                 .accessibilityLabel("Dismiss keyboard")
             }
+        }
+    }
+
+    /// Keep modal surfaces on the same warm paper material as the app shell.
+    @ViewBuilder
+    func moriBotanicalSheetPresentation() -> some View {
+        if #available(iOS 16.4, *) {
+            self
+                .presentationBackground(MoriColors.sanctuaryPaper)
+                .presentationCornerRadius(30)
+                .presentationDragIndicator(.visible)
+        } else {
+            self.presentationDragIndicator(.visible)
         }
     }
 

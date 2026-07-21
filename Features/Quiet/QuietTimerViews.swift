@@ -20,68 +20,82 @@ struct QuietTimerCard: View {
     let onToggleTimer: () -> Void
     let onResetTimer: () -> Void
 
+    @State private var showsDurationOptions = false
+
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
             MoriSectionTitle(
-                title: "Detox Timer",
-                subtitle: "Give your attention a small clearing before opening another feed."
+                title: "Quiet Session",
+                subtitle: "Stay here for as long as feels useful."
             )
 
-            durationControls
+            VStack(spacing: 10) {
+                Text(timeText)
+                    .font(.system(size: 58, weight: .regular, design: .serif))
+                    .foregroundColor(MoriV2Palette.forestInk)
+                    .monospacedDigit()
+                    .minimumScaleFactor(0.72)
 
-            if isCustomDurationSelected {
-                customDurationPicker
-            }
-
-            ZStack {
-                MoriTimerProgressRing(
-                    progress: timerProgress,
-                    tint: MoriColors.botanicalMoss,
-                    lineWidth: 12
-                )
-
-                VStack(spacing: 4) {
-                    Text(timeText)
-                        .font(.system(size: 42, weight: .semibold, design: .rounded))
-                        .foregroundColor(MoriColors.botanicalInk)
-                        .monospacedDigit()
-
-                    Text(timerStatusText)
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundColor(MoriColors.botanicalMuted)
-                }
+                Text(timerStatusText)
+                    .font(MoriV2Type.caption)
+                    .foregroundColor(MoriV2Palette.mutedStone)
+                    .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 210)
+            .padding(.vertical, 26)
+            .background(MoriV2Palette.paper.opacity(0.72))
+            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .accessibilityElement(children: .combine)
 
-            HStack(spacing: 12) {
-                Button(action: onToggleTimer) {
-                    QuietBitmapLabel(
-                        title: primaryTimerActionTitle,
-                        icon: isRunning ? .pause : .play,
-                        iconSize: 16,
-                        iconOpacity: 0.94
-                    )
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundColor(MoriColors.botanicalSurface)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 13)
-                        .background(MoriColors.botanicalInk)
-                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                }
-                .buttonStyle(.plain)
+            MoriV2PrimaryButton(
+                title: primaryTimerActionTitle,
+                icon: isRunning ? .pause : .play,
+                action: onToggleTimer
+            )
 
+            if timerSelectionIsLocked || timerProgress > 0 {
                 Button(action: onResetTimer) {
-                    MoriBitmapIconImage(icon: .refresh, size: 17, opacity: 0.86)
-                        .frame(width: 48, height: 48)
-                        .background(MoriColors.botanicalInk.opacity(0.08))
-                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                    QuietBitmapLabel(title: "Reset", icon: .refresh, iconSize: 15)
+                        .font(MoriV2Type.control)
+                        .foregroundColor(MoriV2Palette.stone)
+                        .frame(maxWidth: .infinity, minHeight: MoriV2Layout.minimumHitTarget)
                 }
-                .buttonStyle(.plain)
+                .buttonStyle(MoriV2PressButtonStyle())
                 .accessibilityLabel(MoriL10n.display("Reset timer"))
             }
+
+            if !isRunning && !timerSelectionIsLocked {
+                MoriV2QuietDisclosureRow(
+                    title: showsDurationOptions ? "Hide session options" : "Session options",
+                    subtitle: "Choose a different length only when you need it.",
+                    isExpanded: showsDurationOptions,
+                    action: { showsDurationOptions.toggle() }
+                )
+
+                if showsDurationOptions {
+                    VStack(alignment: .leading, spacing: 14) {
+                        durationControls
+
+                        if isCustomDurationSelected {
+                            customDurationPicker
+                        }
+                    }
+                    .transition(.opacity)
+                }
+            }
         }
-        .moriSanctuaryCard(cornerRadius: 24, padding: 18)
+        .padding(18)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .fill(MoriV2Palette.raisedPaper)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                .stroke(MoriV2Palette.hairline, lineWidth: 1)
+        )
+        .shadow(color: MoriV2Palette.shadow, radius: 18, x: 0, y: 10)
+        .moriReduceMotionAnimation(MoriV2Motion.disclosure, value: showsDurationOptions)
     }
 
     private var durationControls: some View {
@@ -106,13 +120,13 @@ struct QuietTimerCard: View {
             }
             .opacity(timerSelectionIsLocked ? 0.58 : 1)
 
-            Text(MoriL10n.display("10m is the recommended quick reset. Deep detox is for a longer break from feeds."))
+            Text(MoriL10n.display("Ten minutes is a gentle place to begin."))
                 .font(.system(size: 12, weight: .regular))
                 .foregroundColor(MoriColors.botanicalMuted)
                 .fixedSize(horizontal: false, vertical: true)
 
             VStack(alignment: .leading, spacing: 8) {
-                Text(MoriL10n.display("Deep detox"))
+                Text(MoriL10n.display("Longer pauses"))
                     .font(.system(size: 12, weight: .semibold))
                     .foregroundColor(MoriColors.botanicalInk)
 
@@ -150,6 +164,7 @@ struct QuietTimerCard: View {
                 .minimumScaleFactor(0.72)
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 10)
+                .frame(minHeight: MoriV2Layout.minimumHitTarget)
                 .background(isSelected ? MoriColors.botanicalInk : MoriColors.botanicalInk.opacity(0.08))
                 .clipShape(Capsule())
         }

@@ -24,7 +24,7 @@ enum MoriScreenTimeFeature: String, Codable, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .quiet: return MoriL10n.string("screen_time.feature.quiet.title", defaultValue: "Quiet Mode")
-        case .pomodoroFocus: return MoriL10n.string("screen_time.feature.pomodoro_focus.title", defaultValue: "Pomodoro Focus")
+        case .pomodoroFocus: return MoriL10n.string("screen_time.feature.pomodoro_focus.title", defaultValue: "Deep Session")
         case .settle: return MoriL10n.string("screen_time.feature.settle.title", defaultValue: "Settle")
         case .breathing: return MoriL10n.string("screen_time.feature.breathing.title", defaultValue: "Breathing")
         case .beforeFeed: return MoriL10n.string("screen_time.feature.before_feed.title", defaultValue: "Before Feed")
@@ -98,7 +98,7 @@ enum MoriScreenTimeMode: String, Codable, CaseIterable, Identifiable {
     var title: String {
         switch self {
         case .quiet: return MoriL10n.string("screen_time.mode.quiet", defaultValue: "Quiet Mode")
-        case .pomodoro: return MoriL10n.string("screen_time.mode.pomodoro", defaultValue: "Pomodoro")
+        case .pomodoro: return MoriL10n.string("screen_time.mode.pomodoro", defaultValue: "Deep Session")
         case .dailyThreshold: return MoriL10n.string("screen_time.mode.daily_limit", defaultValue: "Daily limit")
         }
     }

@@ -135,7 +135,7 @@ enum AppTab: Hashable, CaseIterable {
         case .today:
             return MoriL10n.display("Today")
         case .practice:
-            return MoriL10n.display("Reset")
+            return MoriL10n.display("Focus")
         case .journal:
             return MoriL10n.display("Log")
         }
@@ -146,7 +146,7 @@ enum AppTab: Hashable, CaseIterable {
         case .today:
             return .home
         case .practice:
-            return .breathe
+            return .focus
         case .journal:
             return .journal
         }

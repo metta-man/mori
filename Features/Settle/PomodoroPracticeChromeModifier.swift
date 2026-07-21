@@ -3,11 +3,13 @@ import SwiftUI
 extension View {
     func pomodoroPracticeChrome(
         isDarkRoomActive: Bool,
+        hidesNavigationChrome: Bool = false,
         onBack: @escaping () -> Void
     ) -> some View {
         modifier(
             PomodoroPracticeChromeModifier(
                 isDarkRoomActive: isDarkRoomActive,
+                hidesNavigationChrome: hidesNavigationChrome,
                 onBack: onBack
             )
         )
@@ -16,11 +18,12 @@ extension View {
 
 private struct PomodoroPracticeChromeModifier: ViewModifier {
     let isDarkRoomActive: Bool
+    let hidesNavigationChrome: Bool
     let onBack: () -> Void
 
     func body(content: Content) -> some View {
         content
-            .navigationTitle("Pomodoro")
+            .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .navigationBarBackButtonHidden(true)
             .toolbar {
@@ -36,10 +39,15 @@ private struct PomodoroPracticeChromeModifier: ViewModifier {
                     .accessibilityLabel("Back")
                 }
             }
-            .toolbarBackground(isDarkRoomActive ? .black : MoriColors.botanicalPaper, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarBackground(
+                isDarkRoomActive || hidesNavigationChrome
+                    ? Color.clear
+                    : MoriColors.botanicalPaper,
+                for: .navigationBar
+            )
+            .toolbarBackground(isDarkRoomActive || hidesNavigationChrome ? .hidden : .visible, for: .navigationBar)
             .toolbarColorScheme(isDarkRoomActive ? .dark : .light, for: .navigationBar)
-            .toolbar(isDarkRoomActive ? .hidden : .visible, for: .navigationBar)
+            .toolbar(isDarkRoomActive || hidesNavigationChrome ? .hidden : .visible, for: .navigationBar)
             .moriHidesMainTabBar()
     }
 }

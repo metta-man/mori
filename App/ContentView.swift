@@ -31,15 +31,20 @@ struct ContentView: View {
     
     private var mainTabView: some View {
         GeometryReader { proxy in
-            let contentHeight = mainTabBarHidden
-                ? proxy.size.height
-                : max(0, proxy.size.height - MoriMainTabBarMetrics.overlayHeight)
-
             ZStack(alignment: .bottom) {
-                selectedTabContent
-                    .frame(width: proxy.size.width, height: contentHeight)
-                    .frame(maxHeight: .infinity, alignment: .top)
+                ZStack {
+                    selectedTabContent(
+                        safeAreaTopInset: proxy.safeAreaInsets.top
+                    )
+                        .id(presentation.selectedTab)
+                        .transition(.opacity)
+                }
+                    .frame(width: proxy.size.width, height: proxy.size.height)
                     .clipped()
+                    .moriReduceMotionAnimation(
+                        MoriAnimation.screenTransition,
+                        value: presentation.selectedTab
+                    )
                     .allowsHitTesting(presentation.activeSheet == nil)
                     .disabled(presentation.activeSheet != nil)
                     .accessibilityHidden(presentation.activeSheet != nil)
@@ -51,7 +56,7 @@ struct ContentView: View {
                             open(.tab(tab), source: .userInteraction)
                         }
                     )
-                        .transition(.move(edge: .bottom).combined(with: .opacity))
+                        .transition(.opacity)
                         .allowsHitTesting(presentation.activeSheet == nil)
                         .disabled(presentation.activeSheet != nil)
                         .accessibilityHidden(presentation.activeSheet != nil)
@@ -65,11 +70,31 @@ struct ContentView: View {
             mainTabBarHidden = hidden
         }
         .background {
-            MoriPaperBackground(variant: presentation.selectedTab.backgroundVariant) {
-                Color.clear
+            if presentation.selectedTab == .today {
+                MoriPaperBackground(variant: .today) {
+                    LinearGradient(
+                        stops: [
+                            .init(color: MoriV2Palette.raisedPaper.opacity(0.70), location: 0),
+                            .init(color: MoriV2Palette.raisedPaper.opacity(0.70), location: 0.065),
+                            .init(color: MoriV2Palette.raisedPaper.opacity(0), location: 0.15),
+                            .init(color: .clear, location: 1)
+                        ],
+                        startPoint: .top,
+                        endPoint: .bottom
+                    )
+                        .ignoresSafeArea()
+                }
+            } else if presentation.selectedTab == .practice {
+                MoriV2PaperScene(variant: .focus) {
+                    Color.clear
+                }
+            } else {
+                MoriPaperBackground(variant: presentation.selectedTab.backgroundVariant) {
+                    Color.clear
+                }
             }
         }
-        .animation(MoriAnimation.standard, value: mainTabBarHidden)
+        .moriReduceMotionAnimation(MoriAnimation.standard, value: mainTabBarHidden)
         .tint(MoriColors.botanicalInk)
         .onOpenURL { url in
             open(MoriAppRouteRequest(url: url, fallbackSource: .deepLink))
@@ -97,11 +122,12 @@ struct ContentView: View {
     }
 
     @ViewBuilder
-    private var selectedTabContent: some View {
+    private func selectedTabContent(safeAreaTopInset: CGFloat) -> some View {
         switch presentation.selectedTab {
         case .today:
             TodayView(
-                launchRequest: presentation.todayLaunchRequest
+                launchRequest: presentation.todayLaunchRequest,
+                screenSafeAreaTopInset: safeAreaTopInset
             )
         case .practice:
             SettleView(
@@ -150,8 +176,16 @@ struct ContentView: View {
         let arguments = ProcessInfo.processInfo.arguments
         if arguments.contains("-MoriOpenBeforeFeedForUITest") {
             open(.beforeFeedReset, source: .screenTimeGate)
+        } else if arguments.contains("-MoriOpenDeepSessionForUITest") {
+            open(.practiceSheet(.focusCycle), source: .deepLink)
         } else if arguments.contains("-MoriOpenWeekArchiveForUITest") {
             open(.weekArchiveDetail, source: .deepLink)
+        } else if arguments.contains("-MoriOpenQuietModeForUITest") {
+            open(.practiceSheet(.quietMode), source: .deepLink)
+        } else if arguments.contains("-MoriOpenPracticeVerificationForUITest") {
+            open(.practiceSheet(.verification(.walkReset)), source: .deepLink)
+        } else if arguments.contains("-MoriOpenSettingsForUITest") {
+            open(.settings, source: .deepLink)
         }
     }
 

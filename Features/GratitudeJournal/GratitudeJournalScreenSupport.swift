@@ -42,6 +42,7 @@ extension EnvironmentValues {
 
 struct GratitudeJournalHeaderActions: View {
     @Environment(\.moriOpenGratitudeJournalRoute) private var openGratitudeRoute
+    @Environment(\.moriOpenRoute) private var openRoute
 
     let onLogPreviousDay: () -> Void
     let onExport: () -> Void
@@ -49,41 +50,62 @@ struct GratitudeJournalHeaderActions: View {
     let onRestore: () -> Void
 
     var body: some View {
-        Menu {
-            Button(action: onLogPreviousDay) {
-                menuActionLabel(title: "Log a previous day", icon: .plus)
-            }
+        HStack(spacing: 8) {
+            Menu {
+                Button(action: onLogPreviousDay) {
+                    menuActionLabel(title: "Log a previous day", icon: .plus)
+                }
 
-            Button(action: openHistory) {
-                menuActionLabel(title: "Log history", icon: .journal)
-            }
+                Button(action: openHistory) {
+                    menuActionLabel(title: "Log history", icon: .journal)
+                }
 
-            Divider()
+                Divider()
 
-            Button(action: onExport) {
-                menuActionLabel(title: "Export Log", icon: .journal)
-            }
+                Button(action: onExport) {
+                    menuActionLabel(title: "Export Log", icon: .journal)
+                }
 
-            Button(action: onImport) {
-                menuActionLabel(title: "Import Backup", icon: .plus)
-            }
+                Button(action: onImport) {
+                    menuActionLabel(title: "Import Backup", icon: .plus)
+                }
 
-            Button(action: onRestore) {
-                menuActionLabel(title: "Restore iCloud Backup", icon: .refresh)
+                Button(action: onRestore) {
+                    menuActionLabel(title: "Restore iCloud Backup", icon: .refresh)
+                }
+            } label: {
+                floatingHeaderIcon(.journal)
             }
-        } label: {
-            MoriBitmapIconImage(icon: .journal, size: 21, opacity: 0.95)
-                .frame(width: 44, height: 44)
-                .background(MoriColors.sanctuarySurface.opacity(0.74))
-                .clipShape(Circle())
+            .buttonStyle(.plain)
+            .foregroundColor(MoriColors.sanctuaryInk)
+            .accessibility(label: Text(MoriL10n.display("Log actions")))
+
+            Button(action: openSettings) {
+                floatingHeaderIcon(.settings)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(MoriL10n.display("Settings"))
         }
-        .buttonStyle(.plain)
-        .foregroundColor(MoriColors.sanctuaryInk)
-        .accessibility(label: Text("Log actions"))
     }
 
     private func openHistory() {
         openGratitudeRoute(.history)
+    }
+
+    private func openSettings() {
+        openRoute(.settings)
+    }
+
+    private func floatingHeaderIcon(_ icon: MoriBitmapIcon) -> some View {
+        MoriBitmapIconImage(icon: icon, size: 21, opacity: 0.92)
+            .frame(width: 44, height: 44)
+            .background(MoriColors.sanctuarySurface.opacity(0.82))
+            .clipShape(Circle())
+            .overlay(
+                Circle()
+                    .stroke(Color.white.opacity(0.72), lineWidth: 1)
+            )
+            .contentShape(Circle())
     }
 
     private func menuActionLabel(title: String, icon: MoriBitmapIcon) -> some View {
@@ -100,15 +122,24 @@ struct GratitudeJournalDismissButton: View {
 
     var body: some View {
         Button(action: action) {
-            MoriBitmapIconImage(icon: .chevron, size: 15, opacity: 0.88)
-                .rotationEffect(.degrees(180))
-                .frame(width: 40, height: 40)
-                .background(MoriColors.sanctuarySurface.opacity(0.84))
-                .overlay(
-                    Circle()
-                        .stroke(MoriColors.botanicalLine.opacity(0.55), lineWidth: 1)
-                )
-                .clipShape(Circle())
+            HStack(spacing: 6) {
+                MoriBitmapIconImage(icon: .chevron, size: 14, opacity: 0.9)
+                    .rotationEffect(.degrees(180))
+
+                Text(MoriL10n.display("Back"))
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(MoriColors.sanctuaryInk)
+            }
+            .padding(.leading, 13)
+            .padding(.trailing, 16)
+            .frame(minHeight: 44)
+            .background(MoriColors.sanctuarySurface.opacity(0.94))
+            .overlay(
+                Capsule(style: .continuous)
+                    .stroke(MoriColors.botanicalLine.opacity(0.62), lineWidth: 1)
+            )
+            .clipShape(Capsule(style: .continuous))
+            .shadow(color: MoriColors.sanctuaryShadow.opacity(0.10), radius: 10, x: 0, y: 5)
         }
         .buttonStyle(.plain)
         .accessibilityLabel("Back")
@@ -134,11 +165,7 @@ struct GratitudeJournalHomeContent: View {
     let onEntryTap: (GratitudeEntry) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            JournalTopRowsCard(
-                onOpenWeekArchive: onOpenWeekArchive
-            )
-
+        VStack(alignment: .leading, spacing: 18) {
             JournalTodayPanel(
                 selectedTone: selectedTone ?? todayHabitEntry?.tone,
                 note: $dailyEntryNote,
@@ -146,15 +173,18 @@ struct GratitudeJournalHomeContent: View {
                 selectedPhotoItems: $selectedDailyPhotoItems,
                 onSelect: onSelectTone,
                 onSave: onSaveDailyEntry,
-                onOpenPatternLog: onOpenPatternLog,
                 onRemovePhoto: onRemoveDailyPhoto
             )
 
-            DailySparkCard(store: dailySparkStore, onSaved: onDailySparkSaved)
-
-            RecentEntriesSection(
-                entries: recentEntries,
-                onViewAll: onViewHistory,
+            JournalMoreSection(
+                dailySparkStore: dailySparkStore,
+                selectedTone: selectedTone ?? todayHabitEntry?.tone,
+                recentEntries: recentEntries,
+                onDailySparkSaved: onDailySparkSaved,
+                onOpenPatternLog: onOpenPatternLog,
+                onOpenWeekArchive: onOpenWeekArchive,
+                onRandomMemory: onRandomMemory,
+                onViewHistory: onViewHistory,
                 onEntryTap: onEntryTap
             )
         }
@@ -168,7 +198,6 @@ struct JournalTodayPanel: View {
     @Binding var selectedPhotoItems: [PhotosPickerItem]
     let onSelect: (HabitDayTone) -> Void
     let onSave: () -> Void
-    let onOpenPatternLog: () -> Void
     let onRemovePhoto: (GratitudePhotoAttachment) -> Void
 
     private var canSave: Bool {
@@ -179,14 +208,10 @@ struct JournalTodayPanel: View {
         attachedPhotos.count < 6
     }
 
-    private var selectedToneTitle: String {
-        selectedTone?.title ?? MoriL10n.display("Not logged")
-    }
-
     private var photoCountText: String {
         switch attachedPhotos.count {
         case 0:
-            return MoriL10n.display("No photos attached")
+            return MoriL10n.display("Optional")
         case 1:
             return MoriL10n.display("1 photo attached")
         default:
@@ -195,27 +220,15 @@ struct JournalTodayPanel: View {
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .firstTextBaseline) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(MoriL10n.display("Today"))
-                        .font(MoriTypography.sanctuarySection)
-                        .foregroundColor(MoriColors.sanctuaryInk)
+        VStack(alignment: .leading, spacing: 16) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(MoriL10n.display("Mood"))
+                    .font(MoriTypography.sanctuarySection)
+                    .foregroundColor(MoriColors.sanctuaryInk)
 
-                    Text(MoriL10n.display("Choose a tone. Add a line or photo if it helps."))
-                        .font(.system(size: 13, weight: .regular))
-                        .foregroundColor(MoriColors.botanicalMuted)
-                }
-
-                Spacer(minLength: 10)
-
-                Text(selectedToneTitle)
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundColor(selectedTone?.color ?? MoriColors.botanicalMuted)
-                    .padding(.horizontal, 8)
-                    .padding(.vertical, 5)
-                    .background((selectedTone?.color ?? MoriColors.botanicalLine).opacity(0.12))
-                    .clipShape(Capsule())
+                Text(MoriL10n.display("Notice how today feels."))
+                    .font(MoriTypography.callout)
+                    .foregroundColor(MoriColors.botanicalMuted)
             }
 
             HStack(spacing: 10) {
@@ -245,35 +258,35 @@ struct JournalTodayPanel: View {
                 )
             }
 
-            ZStack(alignment: .topLeading) {
-                if note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                    Text(MoriL10n.display("One thing I want to remember about today..."))
-                        .font(.system(size: 15, weight: .regular))
-                        .foregroundColor(MoriColors.botanicalMuted.opacity(0.72))
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 13)
-                }
-
-                TextEditor(text: $note)
-                    .font(.system(size: 15, weight: .regular))
+            VStack(alignment: .leading, spacing: 8) {
+                Text(MoriL10n.display("One sentence"))
+                    .font(MoriTypography.callout.weight(.semibold))
                     .foregroundColor(MoriColors.botanicalInk)
-                    .scrollContentBackground(.hidden)
-                    .background(Color.clear)
-                    .frame(minHeight: 76)
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 8)
-            }
-            .background(MoriColors.botanicalPaperDeep.opacity(0.58))
-            .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                    .stroke(MoriColors.botanicalLine.opacity(0.55), lineWidth: 1)
-            )
 
-            if !attachedPhotos.isEmpty {
-                DailyLogPhotoStrip(
-                    attachments: attachedPhotos,
-                    onRemove: onRemovePhoto
+                ZStack(alignment: .topLeading) {
+                    if note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                        Text(MoriL10n.display("One thing worth keeping..."))
+                            .font(MoriTypography.body)
+                            .foregroundColor(MoriColors.botanicalMuted.opacity(0.76))
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 13)
+                            .allowsHitTesting(false)
+                    }
+
+                    TextEditor(text: $note)
+                        .font(MoriTypography.body)
+                        .foregroundColor(MoriColors.botanicalInk)
+                        .scrollContentBackground(.hidden)
+                        .background(Color.clear)
+                        .frame(minHeight: 72)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 8)
+                }
+                .background(MoriColors.botanicalPaperDeep.opacity(0.58))
+                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                        .stroke(MoriColors.botanicalLine.opacity(0.55), lineWidth: 1)
                 )
             }
 
@@ -289,12 +302,12 @@ struct JournalTodayPanel: View {
                         .clipShape(Circle())
 
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(MoriL10n.display(canAddPhotos ? "Add photos" : "Photo limit reached"))
-                            .font(.system(size: 14, weight: .semibold))
+                        Text(MoriL10n.display(canAddPhotos ? "Add a photo" : "Photo limit reached"))
+                            .font(MoriTypography.callout.weight(.semibold))
                             .foregroundColor(canAddPhotos ? MoriColors.botanicalInk : MoriColors.botanicalMuted)
 
                         Text(photoCountText)
-                            .font(.system(size: 12, weight: .medium))
+                            .font(MoriTypography.caption.weight(.medium))
                             .foregroundColor(MoriColors.botanicalMuted)
                     }
 
@@ -302,7 +315,8 @@ struct JournalTodayPanel: View {
 
                     MoriBitmapIconImage(icon: .plus, size: 14, opacity: canAddPhotos ? 0.74 : 0.32)
                 }
-                .padding(12)
+                .padding(.horizontal, 12)
+                .frame(minHeight: 52)
                 .background(MoriColors.botanicalPaperDeep.opacity(0.44))
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                 .overlay(
@@ -314,38 +328,208 @@ struct JournalTodayPanel: View {
             .disabled(!canAddPhotos)
             .accessibilityLabel(MoriL10n.display("Add photos to daily log"))
 
-            HStack(spacing: 10) {
-                Button(action: onSave) {
-                    HStack(spacing: 8) {
-                        MoriBitmapIconImage(icon: .leaf, size: 17, opacity: canSave ? 0.96 : 0.42)
-                            .frame(width: 24, height: 24)
-                            .background(canSave ? MoriColors.sanctuarySurface.opacity(0.86) : Color.clear)
-                            .clipShape(Circle())
+            if !attachedPhotos.isEmpty {
+                DailyLogPhotoStrip(
+                    attachments: attachedPhotos,
+                    onRemove: onRemovePhoto
+                )
+            }
 
-                        Text(MoriL10n.display("Save daily entry"))
-                    }
-                    .font(.system(size: 15, weight: .semibold))
+            Button(action: onSave) {
+                Text(MoriL10n.display("Done"))
+                    .font(MoriTypography.callout.weight(.semibold))
                     .foregroundColor(canSave ? MoriColors.botanicalSurface : MoriColors.botanicalMuted)
                     .frame(maxWidth: .infinity)
-                    .padding(.vertical, 13)
+                    .frame(minHeight: 50)
                     .background(canSave ? MoriColors.botanicalInk : MoriColors.botanicalInk.opacity(0.08))
-                    .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                }
-                .buttonStyle(.plain)
-                .disabled(!canSave)
+                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .disabled(!canSave)
+            .accessibilityLabel(MoriL10n.display("Save today's log"))
+        }
+        .moriSanctuaryCard(cornerRadius: 22, padding: 18)
+    }
+}
 
-                Button(action: onOpenPatternLog) {
-                    MoriBitmapIconImage(icon: .refresh, size: 18, opacity: canSave ? 0.90 : 0.38)
+private struct JournalMoreSection: View {
+    @ObservedObject var dailySparkStore: DailySparkStore
+    let selectedTone: HabitDayTone?
+    let recentEntries: [GratitudeEntry]
+    let onDailySparkSaved: (DailySparkEntry) -> Void
+    let onOpenPatternLog: () -> Void
+    let onOpenWeekArchive: () -> Void
+    let onRandomMemory: () -> Void
+    let onViewHistory: () -> Void
+    let onEntryTap: (GratitudeEntry) -> Void
+
+    @State private var isExpanded = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            Button {
+                isExpanded.toggle()
+            } label: {
+                HStack(spacing: 12) {
+                    MoriBitmapIconBadge(
+                        icon: .journal,
+                        size: 36,
+                        iconScale: 0.58,
+                        fill: MoriColors.sanctuarySurface.opacity(0.78),
+                        stroke: Color.white.opacity(0.88),
+                        shadow: MoriColors.sanctuaryShadow.opacity(0.14)
+                    )
+
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(MoriL10n.display("More from your Log"))
+                            .font(MoriTypography.callout.weight(.semibold))
+                            .foregroundColor(MoriColors.botanicalInk)
+
+                        Text(MoriL10n.display("Daily Spark, archive, and past entries."))
+                            .font(MoriTypography.caption)
+                            .foregroundColor(MoriColors.botanicalMuted)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    Spacer(minLength: 8)
+
+                    MoriBitmapIconImage(icon: .chevron, size: 13, opacity: 0.58)
+                        .rotationEffect(.degrees(isExpanded ? 90 : 0))
                         .frame(width: 44, height: 44)
-                        .background(MoriColors.botanicalInk.opacity(0.08))
-                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
                 }
-                .buttonStyle(.plain)
-                .disabled(!canSave)
-                .accessibilityLabel(selectedTone == .negative ? "Add trigger detail" : "Open pattern log")
+                .padding(.leading, 14)
+                .padding(.trailing, 8)
+                .padding(.vertical, 6)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(MoriColors.sanctuarySurface.opacity(0.72))
+                .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 18, style: .continuous)
+                        .stroke(MoriColors.botanicalLine.opacity(0.54), lineWidth: 1)
+                )
+                .contentShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(MoriL10n.display("More from your Log"))
+            .accessibilityValue(MoriL10n.display(isExpanded ? "Expanded" : "Collapsed"))
+            .accessibilityHint(MoriL10n.display(isExpanded ? "Hides secondary Log tools" : "Shows secondary Log tools"))
+
+            if isExpanded {
+                VStack(alignment: .leading, spacing: 16) {
+                    DailySparkCard(store: dailySparkStore, onSaved: onDailySparkSaved)
+
+                    JournalLogUtilitiesCard(
+                        selectedTone: selectedTone,
+                        onOpenPatternLog: onOpenPatternLog,
+                        onOpenWeekArchive: onOpenWeekArchive,
+                        onRandomMemory: onRandomMemory,
+                        onViewHistory: onViewHistory
+                    )
+
+                    RecentEntriesSection(
+                        entries: recentEntries,
+                        onViewAll: nil,
+                        onEntryTap: onEntryTap
+                    )
+                }
+                .transition(.opacity)
             }
         }
-        .padding(.horizontal, 4)
+        .moriReduceMotionAnimation(MoriAnimation.standard, value: isExpanded)
+    }
+}
+
+private struct JournalLogUtilitiesCard: View {
+    let selectedTone: HabitDayTone?
+    let onOpenPatternLog: () -> Void
+    let onOpenWeekArchive: () -> Void
+    let onRandomMemory: () -> Void
+    let onViewHistory: () -> Void
+
+    var body: some View {
+        VStack(spacing: 0) {
+            if selectedTone != nil {
+                utilityButton(
+                    title: selectedTone == .negative ? "Add trigger detail" : "Pattern details",
+                    subtitle: "Notice a trigger, thought, or response.",
+                    icon: .refresh,
+                    action: onOpenPatternLog
+                )
+
+                utilityDivider
+            }
+
+            utilityButton(
+                title: "Week Archive",
+                subtitle: "Return to recorded weeks when you choose.",
+                icon: .roots,
+                action: onOpenWeekArchive
+            )
+
+            utilityDivider
+
+            utilityButton(
+                title: "Random memory",
+                subtitle: "Revisit one past entry.",
+                icon: .journal,
+                action: onRandomMemory
+            )
+
+            utilityDivider
+
+            utilityButton(
+                title: "Log history",
+                subtitle: "See all saved entries.",
+                icon: .journal,
+                action: onViewHistory
+            )
+        }
+        .moriSanctuaryCard(cornerRadius: 22, padding: 8)
+    }
+
+    private func utilityButton(
+        title: String,
+        subtitle: String,
+        icon: MoriBitmapIcon,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 12) {
+                MoriBitmapIconImage(icon: icon, size: 17, opacity: 0.82)
+                    .frame(width: 36, height: 36)
+                    .background(MoriColors.botanicalInk.opacity(0.07))
+                    .clipShape(Circle())
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(MoriL10n.display(title))
+                        .font(MoriTypography.callout.weight(.semibold))
+                        .foregroundColor(MoriColors.botanicalInk)
+
+                    Text(MoriL10n.display(subtitle))
+                        .font(MoriTypography.caption)
+                        .foregroundColor(MoriColors.botanicalMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer(minLength: 8)
+
+                MoriBitmapIconImage(icon: .chevron, size: 12, opacity: 0.48)
+                    .frame(width: 24, height: 44)
+            }
+            .padding(.horizontal, 10)
+            .padding(.vertical, 7)
+            .frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(MoriL10n.display(title))
+        .accessibilityHint(MoriL10n.display(subtitle))
+    }
+
+    private var utilityDivider: some View {
+        Divider()
+            .overlay(MoriColors.botanicalLine.opacity(0.48))
+            .padding(.leading, 58)
     }
 }
 
@@ -498,10 +682,12 @@ private struct DailyLogPhotoThumbnail: View {
                             .stroke(MoriColors.botanicalInk.opacity(0.18), lineWidth: 1)
                     )
             }
-            .offset(x: 6, y: -6)
+            .frame(width: 44, height: 44)
+            .contentShape(Rectangle())
+            .offset(x: 12, y: -12)
             .accessibility(label: Text(MoriL10n.display("Remove photo")))
         }
-        .frame(width: 82, height: 82)
+        .frame(width: 88, height: 88)
     }
 }
 
@@ -692,13 +878,13 @@ private struct JournalToneButton: View {
                     )
 
                 Text(MoriL10n.display(label))
-                    .font(.system(size: 12, weight: .semibold))
+                    .font(MoriTypography.caption.weight(.semibold))
                     .foregroundColor(MoriColors.botanicalInk)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.82)
+                    .lineLimit(2)
+                    .multilineTextAlignment(.center)
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 82)
+            .frame(minHeight: 82)
             .background(isSelected ? tone.color.opacity(0.12) : MoriColors.sanctuarySurface.opacity(0.58))
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             .overlay(
@@ -708,6 +894,7 @@ private struct JournalToneButton: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(MoriL10n.string("habit.tone_day", defaultValue: "%@ day", arguments: [label]))
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
     }
 
     @ViewBuilder

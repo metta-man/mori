@@ -10,6 +10,11 @@ struct AttentionShieldScheduleFactory {
         .minute,
         .second
     ]
+    private static let timeComponents: Set<Calendar.Component> = [
+        .hour,
+        .minute,
+        .second
+    ]
 
     private let calendar: Calendar
 
@@ -38,8 +43,17 @@ struct AttentionShieldScheduleFactory {
         graceUntil: Date
     ) -> DeviceActivitySchedule? {
         let startDate = max(now.addingTimeInterval(1), graceUntil)
-        let endDate = startDate.addingTimeInterval(60)
-        return oneShotSchedule(startDate: startDate, endDate: endDate)
+        let endDate = startDate.addingTimeInterval(15 * 60)
+        guard startDate < endDate else { return nil }
+
+        // Repeating time-of-day schedule: one-shot schedules are not reliable for this
+        // callback, and repeating schedules should not carry absolute date components.
+        // Start the interval at the grace expiry and re-lock in intervalDidStart.
+        return DeviceActivitySchedule(
+            intervalStart: calendar.dateComponents(Self.timeComponents, from: startDate),
+            intervalEnd: calendar.dateComponents(Self.timeComponents, from: endDate),
+            repeats: true
+        )
     }
 
     func activeSessionSchedule(

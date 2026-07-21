@@ -3,8 +3,10 @@ import SwiftUI
 extension View {
     func screenTimeGateRefreshes(
         beforeFeedNativeGateEnabled: Bool,
+        beforeFeedHiddenAppLockEnabled: Bool,
         beforeFeedGraceWindowSeconds: Int,
         morningGateEnabled: Bool,
+        morningGateHiddenAppLockEnabled: Bool,
         morningGateStartHour: Int,
         morningGateStartMinute: Int,
         morningGateDurationSeconds: Int,
@@ -13,8 +15,10 @@ extension View {
         modifier(
             ScreenTimeGateRefreshModifier(
                 beforeFeedNativeGateEnabled: beforeFeedNativeGateEnabled,
+                beforeFeedHiddenAppLockEnabled: beforeFeedHiddenAppLockEnabled,
                 beforeFeedGraceWindowSeconds: beforeFeedGraceWindowSeconds,
                 morningGateEnabled: morningGateEnabled,
+                morningGateHiddenAppLockEnabled: morningGateHiddenAppLockEnabled,
                 morningGateStartHour: morningGateStartHour,
                 morningGateStartMinute: morningGateStartMinute,
                 morningGateDurationSeconds: morningGateDurationSeconds,
@@ -26,8 +30,10 @@ extension View {
 
 private struct ScreenTimeGateRefreshModifier: ViewModifier {
     let beforeFeedNativeGateEnabled: Bool
+    let beforeFeedHiddenAppLockEnabled: Bool
     let beforeFeedGraceWindowSeconds: Int
     let morningGateEnabled: Bool
+    let morningGateHiddenAppLockEnabled: Bool
     let morningGateStartHour: Int
     let morningGateStartMinute: Int
     let morningGateDurationSeconds: Int
@@ -35,22 +41,28 @@ private struct ScreenTimeGateRefreshModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .onChange(of: beforeFeedNativeGateEnabled) { _ in
+            .moriOnChange(of: beforeFeedNativeGateEnabled) {
                 onGateSettingsChange(.beforeFeed)
             }
-            .onChange(of: beforeFeedGraceWindowSeconds) { _ in
+            .moriOnChange(of: beforeFeedHiddenAppLockEnabled) {
                 onGateSettingsChange(.beforeFeed)
             }
-            .onChange(of: morningGateEnabled) { _ in
+            .moriOnChange(of: beforeFeedGraceWindowSeconds) {
+                onGateSettingsChange(.beforeFeed)
+            }
+            .moriOnChange(of: morningGateEnabled) {
                 onGateSettingsChange(.morningGate)
             }
-            .onChange(of: morningGateStartHour) { _ in
+            .moriOnChange(of: morningGateHiddenAppLockEnabled) {
                 onGateSettingsChange(.morningGate)
             }
-            .onChange(of: morningGateStartMinute) { _ in
+            .moriOnChange(of: morningGateStartHour) {
                 onGateSettingsChange(.morningGate)
             }
-            .onChange(of: morningGateDurationSeconds) { _ in
+            .moriOnChange(of: morningGateStartMinute) {
+                onGateSettingsChange(.morningGate)
+            }
+            .moriOnChange(of: morningGateDurationSeconds) {
                 onGateSettingsChange(.morningGate)
             }
     }

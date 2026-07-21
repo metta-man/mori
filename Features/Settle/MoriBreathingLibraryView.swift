@@ -81,7 +81,7 @@ struct MoriBreathingLibraryView: View {
                 }
             )
             .presentationDetents([.height(560), .large])
-            .presentationDragIndicator(.visible)
+            .moriBotanicalSheetPresentation()
         }
     }
 

@@ -138,6 +138,10 @@ struct WeekArchiveWeekSummary: Identifiable {
             .reduce(0) { $0 + $1.minutes }
     }
 
+    var quietActionCount: Int {
+        actions.filter { $0.kind.isQuietArchiveAction }.count
+    }
+
     var practiceMinutes: Int {
         sessions.reduce(0) { $0 + $1.actualMinutes } +
             actions
@@ -205,6 +209,10 @@ struct WeekArchiveDaySummary: Identifiable {
             .reduce(0) { $0 + $1.minutes }
     }
 
+    var quietActionCount: Int {
+        actions.filter { $0.kind.isQuietArchiveAction }.count
+    }
+
     var practiceMinutes: Int {
         sessions.reduce(0) { $0 + $1.actualMinutes } +
             actions
@@ -249,7 +257,7 @@ extension MoriMindfulActionKind {
         case .dailySpark:
             return .pulse
         case .weekArchiveProof:
-            return .roots
+            return .journal
         case .journal:
             return .journal
         case .screenTimeLimitKept:

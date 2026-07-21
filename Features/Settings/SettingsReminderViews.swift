@@ -178,9 +178,14 @@ private struct ReminderSettingsRow: View {
                         .foregroundColor(MoriColors.botanicalMuted)
                 }
             }
-            .onChange(of: isEnabled, perform: onToggle)
+            .moriOnChange(of: isEnabled, perform: onToggle)
+            .frame(minHeight: MoriV2Layout.minimumHitTarget)
 
-            DatePicker(MoriL10n.display("Time"), selection: reminderDate, displayedComponents: .hourAndMinute)
+            if isEnabled {
+                DatePicker(MoriL10n.display("Time"), selection: reminderDate, displayedComponents: .hourAndMinute)
+                    .frame(minHeight: MoriV2Layout.minimumHitTarget)
+                    .transition(.opacity)
+            }
 
             if authorizationDenied {
                 Text(MoriL10n.display("Notifications are off. Enable them in iOS Settings to use this reminder."))
@@ -189,6 +194,7 @@ private struct ReminderSettingsRow: View {
             }
         }
         .padding(.vertical, 4)
+        .moriReduceMotionAnimation(MoriV2Motion.disclosure, value: isEnabled)
     }
 }
 

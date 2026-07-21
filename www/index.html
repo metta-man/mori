@@ -6,9 +6,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Mori starts with one Screen Time App Limit, a small pause before feeds, and a quieter next open." />
     <title>Mori | First App Limit</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Crimson+Pro:wght@300;400;600&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <script>
+      const isMoriV2 = window.location.pathname === '/mori-v2' || window.location.pathname.startsWith('/mori-v2/')
+      if (!isMoriV2) {
+        document.write('<link rel="preconnect" href="https://fonts.googleapis.com">')
+        document.write('<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>')
+        document.write('<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,400&family=Crimson+Pro:wght@300;400;600&family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">')
+      }
+    </script>
   </head>
   <body>
     <div id="root"></div>

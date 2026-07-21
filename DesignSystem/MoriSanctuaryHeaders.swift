@@ -7,16 +7,16 @@ struct MoriPageHeader: View {
     var showsEyebrow = true
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
+        VStack(alignment: .leading, spacing: MoriTheme.Spacing.xSmall) {
             if showsEyebrow {
                 Text(MoriL10n.display(eyebrow).uppercased())
-                    .font(MoriTypography.micro)
+                    .font(MoriTheme.Typography.micro)
                     .tracking(1.4)
                     .foregroundColor(MoriColors.sanctuarySage)
             }
 
             Text(MoriL10n.display(title))
-                .font(MoriTypography.sanctuaryDisplay)
+                .font(MoriTheme.Typography.pageTitle)
                 .foregroundColor(MoriColors.sanctuaryInk)
                 .fixedSize(horizontal: false, vertical: true)
 
@@ -202,6 +202,7 @@ struct MoriRootScrollScreen<HeaderTrailing: View, Content: View>: View {
                 }
             }
         }
+        .ignoresSafeArea(edges: .top)
     }
 }
 

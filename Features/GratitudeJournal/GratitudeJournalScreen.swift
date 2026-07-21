@@ -61,7 +61,7 @@ struct GratitudeJournalScreen: View {
         NavigationStack(path: $navigationPath) {
             MoriRootScrollScreen(
                 title: "Log",
-                subtitle: "Record today's state, signal, and one thing worth keeping.",
+                subtitle: "One small note is enough.",
                 backgroundVariant: .journal,
                 headerTrailing: {
                     GratitudeJournalHeaderActions(
@@ -282,7 +282,7 @@ struct GratitudeJournalScreen: View {
         }
         viewModel.loadData()
 
-        let action = MoriClarityStore.shared.recordDailyOnce(
+        _ = MoriClarityStore.shared.recordDailyOnce(
             kind: .dailyCheckIn,
             title: MoriPractice.dailyCheckIn.title,
             seeds: MoriPractice.dailyCheckIn.seeds,
@@ -290,7 +290,7 @@ struct GratitudeJournalScreen: View {
             note: MoriPractice.dailyCheckIn.note
         )
 
-        showJournalToast(message: action.map { "\(tone.toastMessage) · +\($0.seeds) Seeds" } ?? tone.toastMessage)
+        showJournalToast(message: tone.toastMessage)
 
         if appLimitFeature == .dailyCheckIn {
             endActiveAppLimit()
@@ -426,8 +426,8 @@ struct GratitudeJournalScreen: View {
         case .success(let count):
             loadHabitData()
             showJournalToast(message: "Imported \(count) log entries.")
-        case .failure(let error):
-            showJournalToast(message: error.localizedDescription, type: .error)
+        case .failure:
+            showJournalToast(message: "Could not import that backup.", type: .error)
         }
     }
 
@@ -439,8 +439,8 @@ struct GratitudeJournalScreen: View {
             case .success(let count):
                 loadHabitData()
                 showJournalToast(message: "Restored \(count) iCloud entries.")
-            case .failure(let error):
-                showJournalToast(message: error.localizedDescription, type: .error)
+            case .failure:
+                showJournalToast(message: "Could not restore from iCloud.", type: .error)
             }
         }
     }

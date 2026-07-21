@@ -10,6 +10,8 @@ enum AttentionShieldMonitoringOutcome {
 @MainActor
 struct AttentionShieldMonitoringCoordinator {
     private let activityScheduler: AttentionShieldActivityScheduler
+    private let beforeFeedGateStore = BeforeFeedGateStore()
+    private let selectionStore = ScreenTimeSelectionStore()
 
     init(activityScheduler: AttentionShieldActivityScheduler? = nil) {
         self.activityScheduler = activityScheduler ?? AttentionShieldActivityScheduler()
@@ -69,9 +71,8 @@ struct AttentionShieldMonitoringCoordinator {
     ) -> AttentionShieldMonitoringOutcome {
         guard isAuthorized else {
             MoriScreenTimeMonitorHealthStore.record(
-                MoriScreenTimeMonitorHealthEvent(
+                beforeFeedHealthEvent(
                     kind: .beforeFeedGraceScheduleSkipped,
-                    activityName: "mori.before-feed.grace",
                     action: "skip",
                     message: "Screen Time authorization is not available.",
                     graceUntil: graceUntil
@@ -82,9 +83,8 @@ struct AttentionShieldMonitoringCoordinator {
         }
         guard let graceUntil else {
             MoriScreenTimeMonitorHealthStore.record(
-                MoriScreenTimeMonitorHealthEvent(
+                beforeFeedHealthEvent(
                     kind: .beforeFeedGraceScheduleSkipped,
-                    activityName: "mori.before-feed.grace",
                     action: "skip",
                     message: "No active Before Feed open window.",
                     graceUntil: nil
@@ -97,9 +97,8 @@ struct AttentionShieldMonitoringCoordinator {
         do {
             try activityScheduler.scheduleBeforeFeedGrace(graceUntil: graceUntil)
             MoriScreenTimeMonitorHealthStore.record(
-                MoriScreenTimeMonitorHealthEvent(
+                beforeFeedHealthEvent(
                     kind: .beforeFeedGraceScheduled,
-                    activityName: "mori.before-feed.grace",
                     action: "schedule",
                     graceUntil: graceUntil
                 )
@@ -107,9 +106,8 @@ struct AttentionShieldMonitoringCoordinator {
             return .scheduled
         } catch {
             MoriScreenTimeMonitorHealthStore.record(
-                MoriScreenTimeMonitorHealthEvent(
+                beforeFeedHealthEvent(
                     kind: .beforeFeedGraceScheduleFailed,
-                    activityName: "mori.before-feed.grace",
                     action: "fail",
                     message: error.localizedDescription,
                     graceUntil: graceUntil
@@ -144,5 +142,32 @@ struct AttentionShieldMonitoringCoordinator {
 
     func stopBeforeFeedGrace() {
         activityScheduler.stopBeforeFeedGrace()
+    }
+
+    private func beforeFeedHealthEvent(
+        kind: MoriScreenTimeMonitorHealthEventKind,
+        action: String,
+        message: String? = nil,
+        graceUntil: Date? = nil
+    ) -> MoriScreenTimeMonitorHealthEvent {
+        let selection = selectionStore.effectiveSelection(for: .beforeFeed)
+        let displayNames = selectionStore.summary(for: .beforeFeed).displayNames
+        return MoriScreenTimeMonitorHealthEvent(
+            traceID: beforeFeedGateStore.currentWindowTraceID(),
+            kind: kind,
+            activityName: "mori.before-feed.grace",
+            featureRawValue: MoriScreenTimeFeature.beforeFeed.rawValue,
+            action: action,
+            policy: MoriScreenTimeMonitorHealthPolicy.none,
+            message: message,
+            graceUntil: graceUntil,
+            beforeFeedNativeGateEnabled: beforeFeedGateStore.nativeGateEnabled(),
+            beforeFeedInGraceWindow: beforeFeedGateStore.isInGraceWindow(),
+            beforeFeedHasSelection: selectionStore.hasEffectiveSelection(for: .beforeFeed),
+            applicationTokenCount: selection.applicationTokens.count,
+            webDomainTokenCount: selection.webDomainTokens.count,
+            displayNameCount: displayNames.count,
+            displayNames: displayNames
+        )
     }
 }

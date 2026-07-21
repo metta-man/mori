@@ -31,14 +31,14 @@ func mindfulCompletionBanner(_ summary: MindfulCompletionSummary) -> some View {
             .clipShape(Circle())
 
         VStack(alignment: .leading, spacing: 3) {
-            Text(MoriL10n.display(summary.title))
+            Text(MoriL10n.display("One quiet session protected."))
                 .font(.system(size: 15, weight: .semibold))
                 .foregroundColor(MoriColors.botanicalInk)
 
             Text(MoriL10n.string(
-                "settle.completion.minutes_seed",
-                defaultValue: "%dm completed · %d Seeds",
-                arguments: [summary.minutes, summary.seeds]
+                "settle.completion.quiet_minutes",
+                defaultValue: "%d quiet minutes.",
+                arguments: [summary.minutes]
             ))
                 .font(.system(size: 13, weight: .regular))
                 .foregroundColor(MoriColors.botanicalMuted)
@@ -101,8 +101,8 @@ enum SettleTimerState: Equatable {
         switch self {
         case .idle: return MoriL10n.string("settle.timer.state.ready.subtitle", defaultValue: "Choose a duration and let the room get quiet.")
         case .running: return MoriL10n.string("settle.timer.state.settling.subtitle", defaultValue: "Stay with the bell and the breath.")
-        case .paused: return MoriL10n.string("settle.timer.state.paused.subtitle", defaultValue: "The reset is waiting.")
-        case .completed: return MoriL10n.string("settle.timer.state.complete.subtitle", defaultValue: "A mindful action has become a Seed.")
+        case .paused: return MoriL10n.string("settle.timer.state.paused.subtitle.v2", defaultValue: "Your quiet time is waiting.")
+        case .completed: return MoriL10n.string("settle.timer.state.complete.subtitle.v2", defaultValue: "One quiet session protected.")
         }
     }
 

@@ -241,7 +241,7 @@ struct SettlePrivacyNote: View {
             MoriBitmapIconImage(icon: .lockShield, size: 18, opacity: 0.78)
                 .padding(.top, 1)
 
-            Text("Settle, Breathing, and Pomodoro sessions are stored locally. Roots and Bloom use only aggregate Seeds, minutes, and consistency.")
+            Text("Settle, Breathing, and Deep Sessions are stored locally. Roots and Bloom use only aggregate minutes and consistency.")
                 .font(.system(size: 12, weight: .regular))
                 .foregroundColor(MoriColors.botanicalMuted)
                 .fixedSize(horizontal: false, vertical: true)

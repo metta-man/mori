@@ -227,6 +227,7 @@ struct ScreenTimeSettingsPresentation {
     let dailySignal: ScreenTimeSettingsDailySignalState
     let appLimitSummaries: [MoriScreenTimeProfileSummary]
     let beforeFeedSummary: MoriScreenTimeProfileSummary
+    let morningGateSummary: MoriScreenTimeProfileSummary
     let morningGateAppsStatusText: String
     let beforeFeedAppsStatusText: String
 
@@ -265,9 +266,12 @@ struct ScreenTimeSettingsPresentation {
         appLimitSummaries = summaries.filter { summary in
             summary.feature != .beforeFeed && summary.feature != .morningGate
         }
-        beforeFeedSummary = Self.summary(for: .beforeFeed, in: summaries)
-        morningGateAppsStatusText = Self.statusText(for: .morningGate, in: summaries)
-        beforeFeedAppsStatusText = Self.statusText(for: .beforeFeed, in: summaries)
+        let morningSummary = Self.summary(for: .morningGate, in: summaries)
+        let beforeSummary = Self.summary(for: .beforeFeed, in: summaries)
+        morningGateSummary = morningSummary
+        beforeFeedSummary = beforeSummary
+        morningGateAppsStatusText = morningSummary.statusText
+        beforeFeedAppsStatusText = beforeSummary.statusText
         overview = ScreenTimeSettingsOverviewState(
             permissionStatus: Self.permissionStatus(isAuthorized: isAuthorized),
             permissionIcon: Self.permissionIcon(isAuthorized: isAuthorized),

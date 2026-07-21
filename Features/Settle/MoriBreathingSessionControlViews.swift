@@ -146,14 +146,14 @@ struct MoriBreathingCompletionBanner: View {
                 .clipShape(Circle())
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(MoriL10n.display(summary.title))
+                Text(MoriL10n.display("One quiet session protected."))
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(MoriColors.botanicalInk)
 
                 Text(MoriL10n.string(
-                    "settle.completion.minutes_seed",
-                    defaultValue: "%dm completed · %d Seeds",
-                    arguments: [summary.minutes, summary.seeds]
+                    "settle.completion.quiet_minutes",
+                    defaultValue: "%d quiet minutes.",
+                    arguments: [summary.minutes]
                 ))
                     .font(.system(size: 13, weight: .regular))
                     .foregroundColor(MoriColors.botanicalMuted)

@@ -7,6 +7,8 @@ enum MoriGeneratedArt: String, CaseIterable {
     case cardWarmWash = "moriCardWarmWash"
     case cardCoolWash = "moriCardCoolWash"
     case botanicalScreenWash = "moriBotanicalScreenWash"
+    case breathInkBloom = "moriBreathInkBloom"
+    case breathLandscapeWash = "moriBreathLandscapeWash"
     case resetRingWash = "moriResetRingWash"
     case widgetPaperWash = "moriWidgetPaperWash"
     case widgetBotanicalWash = "moriWidgetBotanicalWash"
@@ -228,7 +230,7 @@ struct MoriBitmapIconBadge: View {
     var iconScale: CGFloat = 0.62
     var fill: Color = Color.white.opacity(0.62)
     var stroke: Color = Color.white.opacity(0.88)
-    var shadow: Color = Color.black.opacity(0.08)
+    var shadow: Color = Color(red: 0.078, green: 0.224, blue: 0.184).opacity(0.08)
 
     var body: some View {
         MoriBitmapIconImage(icon: icon, size: size * iconScale)
@@ -326,7 +328,7 @@ struct MoriProductSymbolBadge: View {
     var tint: Color = Color(red: 0.078, green: 0.224, blue: 0.184)
     var fill: Color = Color.white.opacity(0.62)
     var stroke: Color = Color.white.opacity(0.88)
-    var shadow: Color = Color.black.opacity(0.08)
+    var shadow: Color = Color(red: 0.078, green: 0.224, blue: 0.184).opacity(0.08)
 
     var body: some View {
         MoriProductSymbolView(symbol: symbol, size: size * symbolScale, tint: tint)

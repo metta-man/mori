@@ -45,9 +45,9 @@ private struct SettleTimerLifecycleModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .onAppear(perform: onPrepare)
-            .onChange(of: selectedMinutes, perform: onSelectedMinutesChange)
+            .moriOnChange(of: selectedMinutes, perform: onSelectedMinutesChange)
             .onReceive(ticker) { _ in onTick() }
-            .onChange(of: darkRoomEnabled, perform: onDarkRoomEnabledChange)
+            .moriOnChange(of: darkRoomEnabled, perform: onDarkRoomEnabledChange)
             .onDisappear(perform: onCleanup)
             .confirmationDialog(
                 "End this Settle session?",

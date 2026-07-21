@@ -1,4 +1,6 @@
 import Foundation
+import FamilyControls
+import ManagedSettings
 
 enum AttentionShieldPassiveGateAction {
     case preserveActiveSession
@@ -10,16 +12,28 @@ struct AttentionShieldPassiveGateApplier {
     private let selectionStore: ScreenTimeSelectionStore
     private let shieldApplier: AttentionShieldApplier
     private let displayNames: (MoriScreenTimeFeature) -> [String]
+    private let usesHiddenAppLock: (MoriScreenTimeFeature) -> Bool
 
     init(
         selectionStore: ScreenTimeSelectionStore,
         shieldApplier: AttentionShieldApplier,
-        displayNames: ((MoriScreenTimeFeature) -> [String])? = nil
+        displayNames: ((MoriScreenTimeFeature) -> [String])? = nil,
+        usesHiddenAppLock: ((MoriScreenTimeFeature) -> Bool)? = nil
     ) {
         self.selectionStore = selectionStore
         self.shieldApplier = shieldApplier
         self.displayNames = displayNames ?? { feature in
             selectionStore.summary(for: feature).displayNames
+        }
+        self.usesHiddenAppLock = usesHiddenAppLock ?? { feature in
+            switch feature {
+            case .beforeFeed:
+                return BeforeFeedGateStore().hiddenAppLockEnabled()
+            case .morningGate:
+                return MorningGate.hiddenAppLockEnabled
+            default:
+                return false
+            }
         }
     }
 
@@ -30,7 +44,15 @@ struct AttentionShieldPassiveGateApplier {
         case .apply(let features):
             apply(features: features)
         case .clear:
-            shieldApplier.clear()
+            // Record why the before-feed gate did not apply (which term of
+            // shouldApplyBeforeFeedGate is false) so the health log can diagnose
+            // "cleared but never re-locked" cases.
+            let beforeFeedSelection = selectionStore.effectiveSelection(for: .beforeFeed)
+            shieldApplier.clear(
+                beforeFeedHasSelection: selectionStore.hasEffectiveSelection(for: .beforeFeed),
+                beforeFeedApplicationTokenCount: beforeFeedSelection.applicationTokens.count,
+                beforeFeedWebDomainTokenCount: beforeFeedSelection.webDomainTokens.count
+            )
         }
     }
 
@@ -40,16 +62,40 @@ struct AttentionShieldPassiveGateApplier {
         let beforeFeedSelection = features.contains(.beforeFeed)
             ? selectionStore.effectiveSelection(for: .beforeFeed)
             : nil
-        shieldApplier.apply(
-            selection: selection,
-            currentFeature: currentFeature,
-            displayNames: displayNames(currentFeature),
-            beforeFeedHasSelection: features.contains(.beforeFeed)
-                ? selectionStore.hasEffectiveSelection(for: .beforeFeed)
-                : nil,
-            beforeFeedApplicationTokenCount: beforeFeedSelection?.applicationTokens.count,
-            beforeFeedWebDomainTokenCount: beforeFeedSelection?.webDomainTokens.count
-        )
+        let beforeFeedHasSelection = features.contains(.beforeFeed)
+            ? selectionStore.hasEffectiveSelection(for: .beforeFeed)
+            : nil
+        let names = displayNames(currentFeature)
+        let hiddenApplicationTokens = hiddenApplicationTokens(for: features)
+        if !hiddenApplicationTokens.isEmpty {
+            shieldApplier.apply(
+                selection: selection,
+                currentFeature: currentFeature,
+                displayNames: names,
+                beforeFeedHasSelection: beforeFeedHasSelection,
+                beforeFeedApplicationTokenCount: beforeFeedSelection?.applicationTokens.count,
+                beforeFeedWebDomainTokenCount: beforeFeedSelection?.webDomainTokens.count,
+                policy: .hiddenAppLock,
+                hiddenApplicationTokens: hiddenApplicationTokens
+            )
+        } else {
+            shieldApplier.apply(
+                selection: selection,
+                currentFeature: currentFeature,
+                displayNames: names,
+                beforeFeedHasSelection: beforeFeedHasSelection,
+                beforeFeedApplicationTokenCount: beforeFeedSelection?.applicationTokens.count,
+                beforeFeedWebDomainTokenCount: beforeFeedSelection?.webDomainTokens.count,
+                policy: features.contains(.beforeFeed) ? .shieldLock : .shieldOnly
+            )
+        }
+    }
+
+    private func hiddenApplicationTokens(for features: [MoriScreenTimeFeature]) -> Set<ApplicationToken> {
+        features.reduce(into: Set<ApplicationToken>()) { result, feature in
+            guard usesHiddenAppLock(feature) else { return }
+            result.formUnion(selectionStore.effectiveSelection(for: feature).applicationTokens)
+        }
     }
 }
 

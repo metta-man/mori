@@ -109,40 +109,9 @@
       "size" : "83.5x83.5"
     },
     {
-      "filename" : "icon_1024_paper_linework.png",
       "idiom" : "ios-marketing",
-      "platform" : "ios",
+      "scale" : "1x",
       "size" : "1024x1024"
-    },
-    {
-      "filename" : "android_icon_192_paper_linework.png",
-      "idiom" : "universal",
-      "platform" : "android",
-      "size" : "192x192"
-    },
-    {
-      "filename" : "android_icon_144_paper_linework.png",
-      "idiom" : "universal",
-      "platform" : "android",
-      "size" : "144x144"
-    },
-    {
-      "filename" : "android_icon_96_paper_linework.png",
-      "idiom" : "universal",
-      "platform" : "android",
-      "size" : "96x96"
-    },
-    {
-      "filename" : "android_icon_72_paper_linework.png",
-      "idiom" : "universal",
-      "platform" : "android",
-      "size" : "72x72"
-    },
-    {
-      "filename" : "android_icon_48_paper_linework.png",
-      "idiom" : "universal",
-      "platform" : "android",
-      "size" : "48x48"
     }
   ],
   "info" : {

@@ -29,11 +29,11 @@ struct QuietSettleSuggestionCard: View {
                     .clipShape(Circle())
 
                 VStack(alignment: .leading, spacing: 5) {
-                    Text(MoriL10n.display("Settle first"))
+                    Text(MoriL10n.display("Take a quiet pause"))
                         .font(.system(size: 18, weight: .semibold, design: .rounded))
                         .foregroundColor(MoriColors.botanicalInk)
 
-                    Text(MoriL10n.display("Before opening a feed, try a short Settle practice and let the urge soften."))
+                    Text(MoriL10n.display("Before opening a feed, try a short Quiet Session and let the urge soften."))
                         .font(.system(size: 14, weight: .regular))
                         .foregroundColor(MoriColors.botanicalMuted)
                         .fixedSize(horizontal: false, vertical: true)
@@ -54,7 +54,7 @@ struct QuietSettleSuggestionCard: View {
     }
 
     private var label: some View {
-        QuietBitmapLabel(title: "Open Settle", icon: .breathe, iconSize: 16, iconOpacity: 0.94)
+        QuietBitmapLabel(title: "Open Quiet Session", icon: .breathe, iconSize: 16, iconOpacity: 0.94)
             .font(.system(size: 15, weight: .semibold))
             .foregroundColor(MoriColors.botanicalSurface)
             .frame(maxWidth: .infinity)
@@ -95,7 +95,7 @@ struct QuietUrgeCheckInCard: View {
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
 
             Button(action: plantPause) {
-                QuietBitmapLabel(title: "Plant this pause", icon: .leaf, iconSize: 16, iconOpacity: trimmedUrgeReason.isEmpty ? 0.42 : 0.94)
+                QuietBitmapLabel(title: "Keep this note", icon: .leaf, iconSize: 16, iconOpacity: trimmedUrgeReason.isEmpty ? 0.42 : 0.94)
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(MoriColors.botanicalSurface)
                     .frame(maxWidth: .infinity)
@@ -123,58 +123,27 @@ struct QuietDailySummarySection: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             MoriSectionTitle(
-                title: "Daily Attention Summary",
-                subtitle: "A local view of the attention you reclaimed today."
+                title: "Quiet Minutes",
+                subtitle: "Time you chose to keep quiet today."
             )
 
-            LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 12) {
-                MoriMetricTile(
-                    title: "Quiet",
-                    value: "\(metrics.quietMinutesToday)m",
-                    detail: "detox minutes",
-                    icon: .quiet,
-                    tint: MoriColors.botanicalMist
-                )
+            MoriV2PaperCard(padding: 18, cornerRadius: 22) {
+                HStack(alignment: .firstTextBaseline, spacing: 10) {
+                    Text(MoriL10n.display("Today"))
+                        .font(MoriV2Type.body)
+                        .foregroundColor(MoriV2Palette.stone)
 
-                MoriMetricTile(
-                    title: "Seeds",
-                    value: "\(metrics.seedsToday)",
-                    detail: "earned today",
-                    icon: .roots,
-                    tint: MoriColors.botanicalSeed
-                )
+                    Spacer(minLength: 12)
 
-                MoriMetricTile(
-                    title: "Clarity",
-                    value: "\(metrics.clarityScore)",
-                    detail: "calm score",
-                    icon: .leaf,
-                    tint: MoriColors.botanicalMoss
-                )
+                    Text("\(metrics.quietMinutesToday)")
+                        .font(MoriV2Type.cardTitle)
+                        .foregroundColor(MoriV2Palette.forestInk)
+                        .monospacedDigit()
 
-                MoriMetricTile(
-                    title: "Reclaimed",
-                    value: "\(metrics.reclaimedMinutesToday)m",
-                    detail: "feed time saved",
-                    icon: .timer,
-                    tint: MoriColors.botanicalClay
-                )
-
-                MoriMetricTile(
-                    title: "Limited",
-                    value: "\(metrics.protectedFocusMinutesToday)m",
-                    detail: "app-limited focus",
-                    icon: .lockShield,
-                    tint: MoriColors.botanicalFern
-                )
-
-                MoriMetricTile(
-                    title: "Limits",
-                    value: "\(metrics.screenTimeThresholdsReachedToday)",
-                    detail: "threshold alerts",
-                    icon: .lockShield,
-                    tint: MoriColors.botanicalRoot
-                )
+                    Text(MoriL10n.display("min"))
+                        .font(MoriV2Type.supporting)
+                        .foregroundColor(MoriV2Palette.mutedStone)
+                }
             }
         }
     }

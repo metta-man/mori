@@ -36,6 +36,11 @@ struct MoriMorningResetSheet: View {
     }
 }
 
+private enum MoriBeforeFeedFlowStage {
+    case reason
+    case pause
+}
+
 private struct MoriAttentionResetSheet: View {
     let context: MoriAttentionResetContext
     let durationSeconds: Int
@@ -71,11 +76,17 @@ private struct MoriAttentionResetSheet: View {
     @State private var appLimitWasActive = false
     @State private var currentPhaseIndex = 0
     @State private var cueCoordinator = MoriAttentionResetCueCoordinator()
+    @State private var beforeFeedStage: MoriBeforeFeedFlowStage = .reason
+    @State private var selectedBeforeFeedReason: MoriBeforeFeedIntentReason?
+    @State private var beforeFeedIntentEventID = UUID()
+    @State private var didConfirmBeforeFeedIntent = false
+
+    private let beforeFeedGateStore = BeforeFeedGateStore()
 
     private var totalSeconds: Int {
         switch context {
         case .beforeFeed:
-            return max(30, durationSeconds)
+            return max(MoriScreenTimeShared.minBeforeFeedDurationSeconds, durationSeconds)
         case .morningGate:
             return max(5 * 60, durationSeconds)
         }
@@ -169,37 +180,53 @@ private struct MoriAttentionResetSheet: View {
         }
     }
 
+    private var beforeFeedSecondaryContext: String? {
+        switch routeSource {
+        case .screenTimeGate?:
+            return MoriL10n.display("Screen Time opened this pause. Return to the feed yourself after continuing.")
+        case .shortcut?:
+            return MoriL10n.display("A shortcut opened Mori. Return to the feed yourself after continuing.")
+        default:
+            return nil
+        }
+    }
+
+    private var beforeFeedBreathingCueText: String {
+        if secondsRemaining == 0 {
+            return MoriL10n.display("Pause complete")
+        }
+        if isRunning, breathingState.hasTechnique {
+            return breathingState.visualState.label
+        }
+        return MoriL10n.display("Breathe at your own pace")
+    }
+
     var body: some View {
         Color.clear
             .background {
-                MoriPaperBackground(variant: .appLimit) {
-                    Color.clear
+                ZStack(alignment: .bottom) {
+                    MoriPaperBackground(variant: .appLimit) {
+                        Color.clear
+                    }
+
+                    MoriGeneratedArtImage(art: .breathLandscapeWash, contentMode: .fill)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                        .opacity(0.44)
+                        .blendMode(.multiply)
+                        .allowsHitTesting(false)
                 }
             }
             .overlay(alignment: .top) {
                 VStack(spacing: 0) {
                     MoriAttentionResetSheetHeader(
                         title: context.navigationTitle,
+                        actionTitle: context == .beforeFeed
+                            ? MoriL10n.display("Close")
+                            : MoriL10n.display("Done"),
                         onDone: resetAndDismiss
                     )
 
-                    MoriAttentionResetContent(
-                        context: context,
-                        resetDurationText: resetDurationText,
-                        headerSubtitle: breathingState.headerSubtitle,
-                        progress: progress,
-                        breathingTint: breathingState.tint,
-                        showsBreathingOrb: breathingState.hasTechnique,
-                        breathingVisualState: breathingState.visualState,
-                        isRunning: isRunning,
-                        secondsRemaining: secondsRemaining,
-                        timeText: timeText,
-                        cueText: breathingState.cueText,
-                        limitText: limitText,
-                        openWindowText: openWindowText,
-                        onPrimaryAction: toggleResetRunning,
-                        onReset: reset
-                    )
+                    resetContent
                     .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
@@ -214,12 +241,69 @@ private struct MoriAttentionResetSheet: View {
             )
     }
 
+    @ViewBuilder
+    private var resetContent: some View {
+        switch context {
+        case .beforeFeed:
+            switch beforeFeedStage {
+            case .reason:
+                MoriBeforeFeedReasonContent(
+                    selectedReason: selectedBeforeFeedReason,
+                    secondaryContext: beforeFeedSecondaryContext,
+                    onSelectReason: selectBeforeFeedReason,
+                    onContinue: continueFromBeforeFeedReason
+                )
+            case .pause:
+                MoriBeforeFeedPauseContent(
+                    resetDurationText: resetDurationText,
+                    progress: progress,
+                    breathingTint: breathingState.tint,
+                    showsBreathingOrb: breathingState.hasTechnique,
+                    breathingVisualState: breathingState.visualState,
+                    isRunning: isRunning,
+                    secondsRemaining: secondsRemaining,
+                    timeText: timeText,
+                    cueText: beforeFeedBreathingCueText,
+                    secondaryContext: beforeFeedSecondaryContext,
+                    onToggleBreathing: toggleResetRunning,
+                    onContinue: confirmBeforeFeedIntent,
+                    onBack: returnToBeforeFeedReasons
+                )
+            }
+        case .morningGate:
+            MoriAttentionResetContent(
+                context: context,
+                resetDurationText: resetDurationText,
+                headerSubtitle: breathingState.headerSubtitle,
+                progress: progress,
+                breathingTint: breathingState.tint,
+                showsBreathingOrb: breathingState.hasTechnique,
+                breathingVisualState: breathingState.visualState,
+                isRunning: isRunning,
+                secondsRemaining: secondsRemaining,
+                timeText: timeText,
+                cueText: breathingState.cueText,
+                limitText: limitText,
+                openWindowText: openWindowText,
+                onPrimaryAction: toggleResetRunning,
+                onReset: reset
+            )
+        }
+    }
+
     private func prepareReset() {
         activeElapsed = 0
         secondsRemaining = totalSeconds
         resetStartDate = nil
         pausedAt = nil
         totalPausedDuration = 0
+
+        if context == .beforeFeed,
+           ProcessInfo.processInfo.arguments.contains("-MoriShowHabitBreathingForUITest") {
+            selectedBeforeFeedReason = .habit
+            beforeFeedStage = .pause
+            startOrResumeReset()
+        }
     }
 
     private func cleanupReset() {
@@ -271,12 +355,10 @@ private struct MoriAttentionResetSheet: View {
         pausedAt = nil
         totalPausedDuration = 0
         cueCoordinator.stopResetCues()
-        switch context {
-        case .beforeFeed:
-            appLimitManager.perform(.completeBeforeFeedReset())
-        case .morningGate:
-            appLimitManager.perform(.completeMorningGateReset())
-        }
+        cueCoordinator.playCompletionCues(soundEnabled: soundEnabled, hapticsEnabled: hapticsEnabled)
+        guard context == .morningGate else { return }
+
+        appLimitManager.perform(.completeMorningGateReset())
         let action = clarityStore.record(
             kind: .quietTimer,
             title: context.completionTitle,
@@ -293,9 +375,48 @@ private struct MoriAttentionResetSheet: View {
                 note: context.appLimitNote
             )
         }
-        cueCoordinator.playCompletionCues(soundEnabled: soundEnabled, hapticsEnabled: hapticsEnabled)
         appLimitWasActive = false
         _ = action
+    }
+
+    private func selectBeforeFeedReason(_ reason: MoriBeforeFeedIntentReason) {
+        selectedBeforeFeedReason = reason
+    }
+
+    private func continueFromBeforeFeedReason() {
+        guard selectedBeforeFeedReason != nil else { return }
+
+        beforeFeedStage = .pause
+        prepareReset()
+        startOrResumeReset()
+    }
+
+    private func returnToBeforeFeedReasons() {
+        reset()
+        selectedBeforeFeedReason = nil
+        beforeFeedStage = .reason
+    }
+
+    private func confirmBeforeFeedIntent() {
+        guard context == .beforeFeed,
+              let selectedBeforeFeedReason,
+              secondsRemaining == 0,
+              !didConfirmBeforeFeedIntent
+        else {
+            return
+        }
+
+        didConfirmBeforeFeedIntent = true
+        isRunning = false
+        cueCoordinator.stopResetCues()
+        appLimitManager.perform(.completeBeforeFeedReset())
+        beforeFeedGateStore.recordIntent(
+            reason: selectedBeforeFeedReason,
+            routeSource: routeSource?.rawValue,
+            eventID: beforeFeedIntentEventID
+        )
+        appLimitWasActive = false
+        dismiss()
     }
 
     private func reset() {
@@ -404,6 +525,7 @@ private struct MoriAttentionResetSheet: View {
 
 private struct MoriAttentionResetSheetHeader: View {
     let title: String
+    let actionTitle: String
     let onDone: () -> Void
 
     var body: some View {
@@ -416,7 +538,7 @@ private struct MoriAttentionResetSheetHeader: View {
             HStack {
                 Spacer()
 
-                Button(MoriL10n.display("Done")) {
+                Button(actionTitle) {
                     onDone()
                 }
                 .font(.system(size: 21, weight: .regular))

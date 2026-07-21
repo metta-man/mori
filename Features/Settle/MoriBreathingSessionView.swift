@@ -107,6 +107,26 @@ struct MoriBreathingSessionView: View {
         sessionClock.phaseRemaining(for: segments)
     }
 
+    private var phaseSecondsRemaining: Int {
+        max(1, Int(ceil(phaseRemaining)))
+    }
+
+    private var sessionRemainingText: String {
+        if secondsRemaining <= 60 {
+            return MoriL10n.string(
+                "breathing.remaining_seconds",
+                defaultValue: "%d sec remaining",
+                arguments: [secondsRemaining]
+            )
+        }
+
+        return MoriL10n.string(
+            "breathing.remaining_time",
+            defaultValue: "%@ remaining",
+            arguments: [formatTime(secondsRemaining)]
+        )
+    }
+
     private var progress: CGFloat {
         sessionClock.progress
     }
@@ -115,8 +135,13 @@ struct MoriBreathingSessionView: View {
         Group {
             if runState.isActive {
                 activeSessionSurface
+                    .transition(.opacity)
+            } else if runState == .completed {
+                completionSessionSurface
+                    .transition(.opacity)
             } else {
                 setupSessionSurface
+                    .transition(.opacity)
             }
         }
         .navigationTitle("Reset")
@@ -150,7 +175,8 @@ struct MoriBreathingSessionView: View {
         .toolbarBackground(darkRoomEnabled && runState.isActive ? .black : MoriColors.botanicalPaper, for: .navigationBar)
         .toolbarBackground(.visible, for: .navigationBar)
         .toolbarColorScheme(darkRoomEnabled && runState.isActive ? .dark : .light, for: .navigationBar)
-        .toolbar(darkRoomChromeHidden ? .hidden : .visible, for: .navigationBar)
+        .toolbar(immersiveChromeHidden ? .hidden : .visible, for: .navigationBar)
+        .moriReduceMotionAnimation(MoriAnimation.screenTransition, value: runState)
         .moriHidesMainTabBar()
         .moriBreathingSessionLifecycle(
             autoStart: autoStart,
@@ -209,7 +235,8 @@ struct MoriBreathingSessionView: View {
             technique: technique,
             visualState: visualState,
             timeText: formatTime(secondsRemaining),
-            progress: progress,
+            phaseSeconds: phaseSecondsRemaining,
+            sessionRemainingText: sessionRemainingText,
             runState: runState,
             animationEnabled: animationEnabled,
             soundEnabled: soundEnabled,
@@ -228,12 +255,28 @@ struct MoriBreathingSessionView: View {
             onStart: startBreathing,
             onPause: pauseBreathing,
             onResume: resumeBreathing,
-            onEnd: endWithoutRecording
+            onEnd: endWithoutRecording,
+            onClose: requestClose
         )
     }
 
-    private var darkRoomChromeHidden: Bool {
-        darkRoomEnabled && runState.isActive
+    @ViewBuilder
+    private var completionSessionSurface: some View {
+        if let completedSummary {
+            MoriBreathingSessionCompletionSurface(
+                summary: completedSummary,
+                onDone: { dismiss() },
+                onBreatheAgain: startBreathing
+            )
+        } else {
+            MoriPaperBackground(variant: .breath) {
+                Color.clear
+            }
+        }
+    }
+
+    private var immersiveChromeHidden: Bool {
+        runState.isActive || runState == .completed
     }
 
     private var settingsSheet: some View {
@@ -244,6 +287,8 @@ struct MoriBreathingSessionView: View {
             ),
             soundEnabled: $soundEnabled,
             hapticsEnabled: $hapticsEnabled,
+            animationEnabled: $animationEnabled,
+            darkRoomEnabled: $darkRoomEnabled,
             keepScreenOn: $keepScreenOn,
             hapticStyleRaw: $hapticStyleRaw,
             customInhaleSeconds: $customInhaleSeconds,
@@ -253,7 +298,7 @@ struct MoriBreathingSessionView: View {
             isRunning: runState.isActive
         )
         .presentationDetents([.medium, .large])
-        .presentationDragIndicator(.visible)
+        .moriBotanicalSheetPresentation()
     }
 
     private func prepareBreathingSession() {

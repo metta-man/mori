@@ -4,6 +4,8 @@ struct MoriBreathingSessionSettingsSheet: View {
     @Binding var durationMinutes: Int
     @Binding var soundEnabled: Bool
     @Binding var hapticsEnabled: Bool
+    @Binding var animationEnabled: Bool
+    @Binding var darkRoomEnabled: Bool
     @Binding var keepScreenOn: Bool
     @Binding var hapticStyleRaw: String
     @Binding var customInhaleSeconds: Double
@@ -39,6 +41,16 @@ struct MoriBreathingSessionSettingsSheet: View {
                             .tint(MoriColors.botanicalMoss)
                         Toggle("Haptic cues", isOn: $hapticsEnabled)
                             .tint(MoriColors.botanicalMoss)
+                        Toggle(MoriL10n.string(
+                            "breathing.settings.watercolor_motion",
+                            defaultValue: "Watercolor motion"
+                        ), isOn: $animationEnabled)
+                            .tint(MoriColors.botanicalMoss)
+                        Toggle(MoriL10n.string(
+                            "breathing.settings.dark_room",
+                            defaultValue: "Dark room"
+                        ), isOn: $darkRoomEnabled)
+                            .tint(MoriColors.botanicalMoss)
                         Toggle("Keep screen awake", isOn: $keepScreenOn)
                             .tint(MoriColors.botanicalMoss)
 
@@ -56,7 +68,7 @@ struct MoriBreathingSessionSettingsSheet: View {
                         CustomBreathingStepper(title: "Inhale", value: $customInhaleSeconds, range: 1...20)
                         Toggle("Hold after inhale", isOn: $customUsesHold)
                             .tint(MoriColors.botanicalMoss)
-                            .onChange(of: customUsesHold) { enabled in
+                            .moriOnChange(of: customUsesHold) { enabled in
                                 if enabled && customHoldSeconds < 1 {
                                     customHoldSeconds = 1
                                 }

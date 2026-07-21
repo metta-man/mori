@@ -70,25 +70,25 @@ private struct PomodoroPracticeLifecycleModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .onAppear(perform: onPrepare)
-            .onChange(of: focusMinutes) { _ in onDurationSettingsChange() }
-            .onChange(of: shortBreakMinutes) { _ in onDurationSettingsChange() }
-            .onChange(of: longBreakMinutes) { _ in onDurationSettingsChange() }
-            .onChange(of: cycles) { _ in onDurationSettingsChange() }
-            .onChange(of: focusBreathingRaw) { _ in onFocusBreathingChange() }
-            .onChange(of: breakBreathingRaw) { _ in onBreakBreathingChange() }
+            .moriOnChange(of: focusMinutes, perform: onDurationSettingsChange)
+            .moriOnChange(of: shortBreakMinutes, perform: onDurationSettingsChange)
+            .moriOnChange(of: longBreakMinutes, perform: onDurationSettingsChange)
+            .moriOnChange(of: cycles, perform: onDurationSettingsChange)
+            .moriOnChange(of: focusBreathingRaw, perform: onFocusBreathingChange)
+            .moriOnChange(of: breakBreathingRaw, perform: onBreakBreathingChange)
             .onReceive(ticker) { _ in onTick() }
             .onReceive(breathingTicker) { _ in onBreathingTick() }
-            .onChange(of: darkRoomEnabled, perform: onDarkRoomEnabledChange)
+            .moriOnChange(of: darkRoomEnabled, perform: onDarkRoomEnabledChange)
             .onDisappear(perform: onCleanup)
             .confirmationDialog(
-                "End this Pomodoro?",
+                "End this Deep Session?",
                 isPresented: $showLeaveDialog,
                 titleVisibility: .visible
             ) {
-                Button("Keep focusing", role: .cancel) {}
+                Button("Stay here", role: .cancel) {}
                 Button("End and leave", role: .destructive, action: onEndAndLeave)
             } message: {
-                Text("Pomodoro sessions only record when the full cycle completes.")
+                Text("You can pause or leave. Nothing is lost.")
             }
     }
 }

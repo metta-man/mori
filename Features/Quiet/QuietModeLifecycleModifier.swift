@@ -43,8 +43,8 @@ private struct QuietModeLifecycleModifier: ViewModifier {
         content
             .onAppear(perform: onPrepare)
             .onReceive(ticker) { _ in onTick() }
-            .onChange(of: selectedMinutes, perform: onSelectedMinutesChange)
-            .onChange(of: customHours, perform: onCustomHoursChange)
-            .onChange(of: customMinutes) { _ in onCustomMinutesChange() }
+            .moriOnChange(of: selectedMinutes, perform: onSelectedMinutesChange)
+            .moriOnChange(of: customHours, perform: onCustomHoursChange)
+            .moriOnChange(of: customMinutes, perform: onCustomMinutesChange)
     }
 }

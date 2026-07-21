@@ -5,6 +5,10 @@ struct PomodoroPracticeSetupSurface: View {
     @Binding var shortBreakMinutes: Int
     @Binding var longBreakMinutes: Int
     @Binding var cycles: Int
+    @Binding var soundEnabled: Bool
+    @Binding var hapticsEnabled: Bool
+    @Binding var animationEnabled: Bool
+    @Binding var darkRoomEnabled: Bool
 
     let phase: MoriPomodoroPhase
     let timerState: SettleTimerState
@@ -15,22 +19,36 @@ struct PomodoroPracticeSetupSurface: View {
     let isGuidedBreathing: Bool
     let activeBreathing: MoriPomodoroBreakBreathing
     let currentPhaseElapsedSeconds: Int
-    let darkRoomEnabled: Bool
-    let completedSummary: MindfulCompletionSummary?
     let onSelectPhase: (MoriPomodoroPhase) -> Void
     let onStart: () -> Void
     let onSelectFocusBreathing: (MoriPomodoroBreakBreathing) -> Void
     let onSelectBreakBreathing: (MoriPomodoroBreakBreathing) -> Void
 
+    @State private var showsSessionOptions = false
+
     var body: some View {
-        MoriPaperBackground(variant: .practice) {
+        ZStack {
+            MoriColors.sanctuaryPaper
+                .ignoresSafeArea()
+
+            MoriBotanicalScreenBackdrop(variant: .focus)
+                .opacity(0.16)
+                .ignoresSafeArea()
+
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 14) {
-                    MoriPageHeader(
-                        eyebrow: "Pomodoro",
-                        title: "Focus Cycle",
-                        subtitle: "A focused work rhythm with quiet breaks and completion Seeds."
-                    )
+                VStack(alignment: .leading, spacing: 20) {
+                    VStack(spacing: 6) {
+                        Text(MoriL10n.display("Deep Session"))
+                            .font(.system(size: 32, weight: .regular, design: .serif))
+                            .foregroundColor(MoriV2Palette.forestInk)
+
+                        Text(MoriL10n.display("Protect one quiet block."))
+                            .font(MoriV2Type.supporting)
+                            .foregroundColor(MoriV2Palette.stone)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .multilineTextAlignment(.center)
+                    .padding(.bottom, 2)
 
                     PomodoroSetupHeroVisual(
                         phase: phase,
@@ -38,6 +56,53 @@ struct PomodoroPracticeSetupSurface: View {
                         timeText: timeText
                     )
 
+                    PomodoroSetupStartButton(
+                        isCompleted: timerState == .completed,
+                        action: onStart
+                    )
+
+                    sessionOptionsDisclosure
+                }
+                .padding(.horizontal, 20)
+                .padding(.top, 18)
+                .padding(.bottom, MoriMainTabBarMetrics.scrollBottomInset)
+            }
+        }
+    }
+
+    private var sessionOptionsDisclosure: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Button {
+                showsSessionOptions.toggle()
+            } label: {
+                HStack(spacing: 12) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(MoriL10n.display("Session options"))
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(MoriColors.sanctuaryInk)
+
+                        Text(MoriL10n.display("Duration, quiet breaks, cues, and blocked apps."))
+                            .font(.system(size: 13, weight: .regular))
+                            .foregroundColor(MoriColors.sanctuaryMuted)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+
+                    Spacer(minLength: 12)
+
+                    MoriBitmapIconImage(
+                        icon: showsSessionOptions ? .minus : .plus,
+                        size: 15,
+                        opacity: 0.72
+                    )
+                    .frame(width: 44, height: 44)
+                }
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(showsSessionOptions ? "Hide session options" : "Show session options")
+
+            if showsSessionOptions {
+                VStack(alignment: .leading, spacing: 16) {
                     PomodoroFocusCycleRows(
                         selectedPhase: phase,
                         focusMinutes: focusMinutes,
@@ -48,36 +113,113 @@ struct PomodoroPracticeSetupSurface: View {
                         onSelectPhase: onSelectPhase
                     )
 
-                    PomodoroSetupStartButton(
-                        isCompleted: timerState == .completed,
-                        action: onStart
-                    )
-
-                    Color.clear
-                        .frame(height: 150)
-
                     PomodoroAdvancedSettingsCard(
                         canChangeDuration: timerState.canChangeDuration,
                         focusMinutes: $focusMinutes,
                         shortBreakMinutes: $shortBreakMinutes,
                         longBreakMinutes: $longBreakMinutes,
                         cycles: $cycles,
+                        soundEnabled: $soundEnabled,
+                        hapticsEnabled: $hapticsEnabled,
+                        animationEnabled: $animationEnabled,
+                        darkRoomEnabled: $darkRoomEnabled,
                         focusBreathing: focusBreathing,
                         breakBreathing: breakBreathing,
                         isGuidedBreathing: isGuidedBreathing,
                         activeBreathing: activeBreathing,
                         currentPhaseElapsedSeconds: currentPhaseElapsedSeconds,
-                        darkRoomEnabled: darkRoomEnabled,
-                        completedSummary: completedSummary,
                         onSelectFocusBreathing: onSelectFocusBreathing,
                         onSelectBreakBreathing: onSelectBreakBreathing
                     )
                 }
-                .padding(.horizontal, 20)
-                .padding(.top, 18)
-                .padding(.bottom, MoriMainTabBarMetrics.scrollBottomInset)
+                .transition(.opacity)
             }
         }
+        .padding(18)
+        .background(MoriColors.sanctuarySurface.opacity(0.96))
+        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 22, style: .continuous)
+                .stroke(MoriColors.sanctuaryHairline, lineWidth: 1)
+        }
+        .shadow(color: MoriColors.sanctuaryShadow.opacity(0.36), radius: 18, x: 0, y: 8)
+        .moriReduceMotionAnimation(MoriAnimation.slow, value: showsSessionOptions)
+    }
+}
+
+struct MoriDeepSessionCompletion: Equatable {
+    let quietMinutes: Int
+    let completedPlannedSession: Bool
+
+    var title: String {
+        if completedPlannedSession {
+            return MoriL10n.display("One quiet session protected.")
+        }
+        return quietMinutes > 0
+            ? MoriL10n.display("A quiet moment protected.")
+            : MoriL10n.display("A quiet moment.")
+    }
+
+    var detail: String? {
+        guard quietMinutes > 0 else { return nil }
+        return MoriL10n.string(
+            "deep_session.completion.minutes",
+            defaultValue: "%d quiet minutes.",
+            arguments: [quietMinutes]
+        )
+    }
+}
+
+struct MoriDeepSessionCompletionSurface: View {
+    let completion: MoriDeepSessionCompletion
+    let onContinue: () -> Void
+
+    var body: some View {
+        ZStack(alignment: .bottom) {
+            MoriColors.sanctuaryPaper
+                .ignoresSafeArea()
+
+            MoriBotanicalScreenBackdrop(variant: .focus)
+                .opacity(0.52)
+                .ignoresSafeArea()
+                .accessibilityHidden(true)
+
+            VStack(spacing: 18) {
+                Spacer(minLength: 80)
+
+                Text(MoriL10n.display("Session complete"))
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(MoriColors.sanctuaryMuted)
+
+                Text(completion.title)
+                    .font(.system(size: 38, weight: .regular, design: .serif))
+                    .foregroundColor(MoriColors.sanctuaryInk)
+                    .multilineTextAlignment(.center)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                if let detail = completion.detail {
+                    Text(detail)
+                        .font(.system(size: 22, weight: .regular, design: .serif))
+                        .foregroundColor(MoriColors.sanctuaryInkSoft)
+                }
+
+                Spacer()
+
+                Button(action: onContinue) {
+                    Text(MoriL10n.display("Continue"))
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(MoriColors.sanctuarySurface)
+                        .frame(maxWidth: .infinity)
+                        .frame(minHeight: 54)
+                        .background(MoriColors.botanicalInk)
+                        .clipShape(RoundedRectangle(cornerRadius: 17, style: .continuous))
+                }
+                .buttonStyle(.plain)
+            }
+            .padding(.horizontal, 20)
+            .padding(.bottom, 28)
+        }
+        .accessibilityElement(children: .contain)
     }
 }
 
@@ -108,15 +250,24 @@ struct PomodoroControlRow: View {
                             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
                     }
                     .buttonStyle(.plain)
-                    .accessibilityLabel("Reset Pomodoro")
+                    .accessibilityLabel("Reset Deep Session")
                 }
 
             case .running:
-                settleControlButton(title: "Pause", icon: .pause, tint: MoriColors.botanicalInk, action: onPause)
-                endButton
+                settleControlButton(
+                    title: "Pause",
+                    icon: .pause,
+                    tint: MoriColors.botanicalInk,
+                    action: onPause
+                )
 
             case .paused:
-                settleControlButton(title: "Resume", icon: .play, tint: MoriColors.botanicalInk, action: onResume)
+                settleControlButton(
+                    title: "Resume",
+                    icon: .play,
+                    tint: MoriColors.botanicalInk,
+                    action: onResume
+                )
                 endButton
             }
         }
@@ -124,17 +275,13 @@ struct PomodoroControlRow: View {
 
     private var endButton: some View {
         Button(action: onEnd) {
-            HStack(spacing: 6) {
-                MoriBitmapIconImage(icon: .stop, size: 15, opacity: 0.86)
-
-                Text("End")
-            }
-            .font(.system(size: 15, weight: .semibold))
-            .foregroundColor(MoriColors.botanicalInk)
-            .frame(width: 100)
-            .padding(.vertical, 14)
-            .background(MoriColors.botanicalInk.opacity(0.08))
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            Text(MoriL10n.display("End quietly"))
+                .font(.system(size: 15, weight: .semibold))
+                .foregroundColor(MoriColors.botanicalInk)
+                .frame(width: 116)
+                .frame(minHeight: 50)
+                .background(MoriColors.botanicalInk.opacity(0.08))
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
         }
         .buttonStyle(.plain)
     }

@@ -53,25 +53,25 @@ final class PomodoroPracticeCompletionCoordinator {
         let seeds = min(12, max(2, focusMinutes / 10 + completedCycles))
         let action = clarityStore.record(
             kind: .pomodoroSession,
-            title: "\(completedCycles)-cycle Pomodoro",
+            title: "Deep Session",
             seeds: seeds,
             minutes: actualMinutes,
-            note: "Completed a mindful focus cycle"
+            note: "Protected a quiet focus session"
         )
 
         if appLimitFocusWasActive {
             clarityStore.record(
                 kind: .screenTimeLimitKept,
-                title: "App-Limited Pomodoro",
+                title: "App-Limited Deep Session",
                 seeds: 1,
                 minutes: focusMinutes,
-                note: "Kept selected apps limited during Pomodoro focus"
+                note: "Kept selected apps limited during a Deep Session"
             )
         }
 
         appLimitFocusWasActive = false
         return MindfulCompletionSummary(
-            title: "Focus cycle complete",
+            title: "One quiet session protected",
             seeds: action.seeds,
             minutes: actualMinutes,
             icon: .timer,

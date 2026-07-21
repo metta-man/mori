@@ -47,19 +47,20 @@ struct WeekArchiveDetailView: View {
         ) {
             Button(action: dismiss.callAsFunction) {
                 HStack(spacing: 6) {
-                    MoriBitmapIconImage(icon: .chevron, size: 12, opacity: 0.88)
-                        .rotationEffect(.degrees(180))
+                    Image(systemName: "chevron.left")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundColor(MoriV2Palette.forestInk)
 
                     Text("Back")
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(MoriColors.botanicalInk)
+                        .font(MoriV2Type.control)
+                        .foregroundColor(MoriV2Palette.forestInk)
                 }
                 .padding(.horizontal, 12)
-                .frame(height: 42)
+                .frame(minHeight: MoriV2Layout.minimumHitTarget)
                 .background(MoriColors.sanctuarySurface.opacity(0.78))
                 .clipShape(Capsule(style: .continuous))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(MoriV2PressButtonStyle())
             .accessibilityLabel("Back")
         } content: {
             Picker("Week archive detail view", selection: $selectedMode) {

@@ -16,14 +16,14 @@ struct SettleTimerCompletionBanner: View {
                 .clipShape(Circle())
 
             VStack(alignment: .leading, spacing: 3) {
-                Text("Reset complete")
+                Text(MoriL10n.display("One quiet session protected."))
                     .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(MoriColors.botanicalInk)
 
                 Text(MoriL10n.string(
-                    "settle.completion.duration_seed",
-                    defaultValue: "%@ planted %d Seeds.",
-                    arguments: [session.durationText, seeds]
+                    "settle.completion.quiet_minutes",
+                    defaultValue: "%d quiet minutes.",
+                    arguments: [session.actualMinutes]
                 ))
                     .font(.system(size: 13, weight: .regular))
                     .foregroundColor(MoriColors.botanicalMuted)
@@ -117,7 +117,7 @@ struct SettleTimerCard<CompletionPrompt: View>: View {
     private var header: some View {
         HStack(alignment: .top) {
             MoriSectionTitle(
-                title: "Reset Timer",
+                title: "Quiet Session",
                 subtitle: timerState.subtitle
             )
 
@@ -132,7 +132,9 @@ struct SettleTimerCard<CompletionPrompt: View>: View {
                     .clipShape(Circle())
             }
             .buttonStyle(.plain)
-            .accessibilityLabel(MoriL10n.display(soundEnabled ? "Settle bells on" : "Settle bells off"))
+            .accessibilityLabel(MoriL10n.display("Session sounds"))
+            .accessibilityValue(Text(MoriL10n.display(soundEnabled ? "On" : "Off")))
+            .accessibilityHint(MoriL10n.display(soundEnabled ? "Turns session sounds off." : "Turns session sounds on."))
         }
     }
 
@@ -163,8 +165,9 @@ struct SettleTimerCard<CompletionPrompt: View>: View {
         }
         .frame(maxWidth: .infinity)
         .frame(height: 244)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(MoriL10n.string("settle.timer.accessibility", defaultValue: "Settle timer %@, %@", arguments: [timeText, timerState.label]))
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(MoriL10n.display("Quiet Session timer"))
+        .accessibilityValue(Text("\(timeText), \(timerState.label)"))
     }
 }
 
@@ -225,7 +228,7 @@ struct SettleLeafPulse: View {
                 pulse = true
             }
         }
-        .onChange(of: reduceMotion) { shouldReduceMotion in
+        .moriOnChange(of: reduceMotion) { shouldReduceMotion in
             if shouldReduceMotion {
                 pulse = false
             } else {

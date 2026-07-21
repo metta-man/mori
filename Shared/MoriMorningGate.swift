@@ -45,6 +45,15 @@ enum MorningGate {
         }
     }
 
+    static var hiddenAppLockEnabled: Bool {
+        get {
+            store.hiddenAppLockEnabled()
+        }
+        set {
+            store.saveHiddenAppLockEnabled(newValue)
+        }
+    }
+
     static var startComponents: DateComponents {
         DateComponents(hour: startHour, minute: startMinute)
     }
@@ -176,6 +185,17 @@ private struct MorningGateStore {
         defaults.set(normalizedDurationSeconds(seconds), forKey: MoriScreenTimeShared.morningGateDurationSecondsKey)
     }
 
+    func hiddenAppLockEnabled() -> Bool {
+        guard defaults.object(forKey: MoriScreenTimeShared.morningGateHiddenAppLockEnabledKey) != nil else {
+            return MoriScreenTimeShared.defaultMorningGateHiddenAppLockEnabled
+        }
+        return defaults.bool(forKey: MoriScreenTimeShared.morningGateHiddenAppLockEnabledKey)
+    }
+
+    func saveHiddenAppLockEnabled(_ isEnabled: Bool) {
+        defaults.set(isEnabled, forKey: MoriScreenTimeShared.morningGateHiddenAppLockEnabledKey)
+    }
+
     func hasCompletedWindow(dateKey: String) -> Bool {
         defaults.string(forKey: MoriScreenTimeShared.morningGateCompletedDateKey) == dateKey
     }
@@ -215,6 +235,10 @@ private struct MorningGateStore {
             saveStartMinute(MoriScreenTimeShared.defaultMorningGateStartMinute)
         } else {
             saveStartMinute(startMinute())
+        }
+
+        if defaults.object(forKey: MoriScreenTimeShared.morningGateHiddenAppLockEnabledKey) == nil {
+            saveHiddenAppLockEnabled(MoriScreenTimeShared.defaultMorningGateHiddenAppLockEnabled)
         }
 
         _ = durationSeconds()

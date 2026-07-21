@@ -105,9 +105,7 @@ struct MoriPracticeSheetContent: View {
                 routeSource: routeSource
             )
         case .breathingLibrary:
-            NavigationStack {
-                MoriBreathingLibraryView()
-            }
+            MoriBreathingLibrarySheetFlow()
         case .settleTimer:
             NavigationStack {
                 SettleTimerDetailView()
@@ -123,5 +121,29 @@ struct MoriPracticeSheetContent: View {
         case .dailyCheckIn:
             GratitudeJournalScreen(showsDismissButton: true, appLimitFeature: .dailyCheckIn)
         }
+    }
+}
+
+private struct MoriBreathingLibrarySheetFlow: View {
+    @State private var navigationPath = NavigationPath()
+
+    var body: some View {
+        NavigationStack(path: $navigationPath) {
+            MoriBreathingLibraryView()
+                .navigationDestination(for: SettleNavigationRoute.self) { route in
+                    if case let .breathingSession(techniqueID, durationMinutes, autoStart) = route {
+                        MoriBreathingSessionView(
+                            techniqueID: techniqueID,
+                            durationMinutes: durationMinutes,
+                            autoStart: autoStart
+                        )
+                    } else {
+                        EmptyView()
+                    }
+                }
+        }
+        .environment(\.moriOpenSettleRoute, MoriSettleRouteAction { route in
+            navigationPath.append(route)
+        })
     }
 }

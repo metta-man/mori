@@ -34,6 +34,7 @@ final class AttentionShieldManager: ObservableObject {
     private let beforeFeedGateStore = BeforeFeedGateStore()
     private var cancellable: AnyCancellable?
     private var beforeFeedReapplyTask: Task<Void, Never>?
+    private var lastScheduledBeforeFeedGraceUntil: Date?
 
     private init() {
         authorizationStatus = authorizationCenter.authorizationStatus
@@ -288,13 +289,21 @@ final class AttentionShieldManager: ObservableObject {
 
     private func completeBeforeFeedReset(now: Date = Date()) {
         let until = now.addingTimeInterval(TimeInterval(beforeFeedGateStore.graceWindowSeconds()))
+        let traceID = beforeFeedGateStore.beginWindowTrace()
         beforeFeedGateStore.saveGraceUntil(until)
-        MoriBeforeFeedWindowLiveActivityController.start(until: until, now: now)
         if activeSession?.feature == .beforeFeed {
             clearActiveShieldSession()
-            return
+        } else {
+            refreshBeforeFeedGateShield()
         }
-        refreshBeforeFeedGateShield()
+        recordBeforeFeedHealthEvent(
+            kind: .beforeFeedGraceSaved,
+            action: "completeBeforeFeedReset",
+            traceID: traceID,
+            graceUntil: until,
+            policy: .clear
+        )
+        MoriBeforeFeedWindowLiveActivityController.start(until: until, now: now)
     }
 
     @discardableResult
@@ -318,8 +327,8 @@ final class AttentionShieldManager: ObservableObject {
     }
 
     private func refreshBeforeFeedGateShield() {
-        scheduleBeforeFeedGateReapplyIfNeeded()
         refreshPassiveGateShield()
+        scheduleBeforeFeedGateReapplyIfNeeded()
     }
 
     private func refreshMorningGateShield() {
@@ -403,12 +412,33 @@ final class AttentionShieldManager: ObservableObject {
         beforeFeedReapplyTask?.cancel()
         beforeFeedReapplyTask = nil
 
-        guard BeforeFeedGate.isNativeGateEnabled,
-              let delay = BeforeFeedGate.secondsUntilGraceExpires,
-              delay > 0
-        else {
+        let now = Date()
+        if reconcileExpiredBeforeFeedGraceIfNeeded(now: now) {
+            return
+        }
+
+        guard beforeFeedGateStore.nativeGateEnabled() else {
             MoriBeforeFeedWindowLiveActivityController.endAll()
-            stopBeforeFeedGraceMonitoring()
+            stopBeforeFeedGraceMonitoring(action: "nativeGateDisabled")
+            return
+        }
+
+        guard let delay = beforeFeedGateStore.secondsUntilGraceExpires(now: now) else {
+            MoriBeforeFeedWindowLiveActivityController.endAll()
+            monitoringCoordinator.stopBeforeFeedGrace()
+            lastScheduledBeforeFeedGraceUntil = nil
+            return
+        }
+
+        guard delay > 1 else {
+            beforeFeedGateStore.clearGraceUntil()
+            MoriBeforeFeedWindowLiveActivityController.endAll()
+            stopBeforeFeedGraceMonitoring(action: "nearExpiredGrace")
+            recordBeforeFeedHealthEvent(
+                kind: .beforeFeedGraceExpired,
+                action: "nearExpiredGraceReconcile",
+                policy: MoriScreenTimeMonitorHealthPolicy.none
+            )
             return
         }
 
@@ -425,11 +455,80 @@ final class AttentionShieldManager: ObservableObject {
         }
     }
 
-    private func scheduleBeforeFeedReapplyMonitoring() {
-        applyMonitoringOutcome(
-            monitoringCoordinator.scheduleBeforeFeedGrace(
-                isAuthorized: isAuthorized,
-                graceUntil: BeforeFeedGate.graceUntil
+    @discardableResult
+    private func scheduleBeforeFeedReapplyMonitoring() -> AttentionShieldMonitoringOutcome {
+        let graceUntil = beforeFeedGateStore.graceUntil()
+        // Idempotent: avoid tearing down and re-registering an already-valid
+        // `.moriBeforeFeedGrace` schedule. Repeated stop/start cycles (triggered by
+        // every refreshScreenTimeGates() call during the grace window) cause iOS to
+        // drop the terminal intervalDidEnd callback, so the re-lock never fires.
+        if let graceUntil, graceUntil == lastScheduledBeforeFeedGraceUntil {
+            return .noChange
+        }
+
+        let outcome = monitoringCoordinator.scheduleBeforeFeedGrace(
+            isAuthorized: isAuthorized,
+            graceUntil: graceUntil
+        )
+        applyMonitoringOutcome(outcome)
+        if case .scheduled = outcome {
+            lastScheduledBeforeFeedGraceUntil = graceUntil
+        } else {
+            lastScheduledBeforeFeedGraceUntil = nil
+        }
+        return outcome
+    }
+
+    @discardableResult
+    private func reconcileExpiredBeforeFeedGraceIfNeeded(now: Date = Date()) -> Bool {
+        guard beforeFeedGateStore.clearExpiredGraceIfNeeded(now: now) else {
+            return false
+        }
+
+        MoriBeforeFeedWindowLiveActivityController.endAll()
+        stopBeforeFeedGraceMonitoring(action: "foregroundExpiredGrace")
+        recordBeforeFeedHealthEvent(
+            kind: .beforeFeedForegroundReconcile,
+            action: "foregroundExpiredGraceReconcile",
+            policy: MoriScreenTimeMonitorHealthPolicy.none
+        )
+        recordBeforeFeedHealthEvent(
+            kind: .beforeFeedGraceExpired,
+            action: "foregroundExpiredGraceReconcile",
+            policy: MoriScreenTimeMonitorHealthPolicy.none
+        )
+        return true
+    }
+
+    private func recordBeforeFeedHealthEvent(
+        kind: MoriScreenTimeMonitorHealthEventKind,
+        action: String,
+        traceID: String? = nil,
+        graceUntil: Date? = nil,
+        policy: MoriScreenTimeMonitorHealthPolicy? = nil,
+        message: String? = nil
+    ) {
+        let payload = selectionCoordinator.shieldPayload(
+            for: .beforeFeed,
+            authorizationStatus: authorizationStatus
+        )
+        MoriScreenTimeMonitorHealthStore.record(
+            MoriScreenTimeMonitorHealthEvent(
+                traceID: traceID ?? beforeFeedGateStore.currentWindowTraceID(),
+                kind: kind,
+                featureRawValue: MoriScreenTimeFeature.beforeFeed.rawValue,
+                activeSessionFeatureRawValue: activeSession?.feature.rawValue,
+                action: action,
+                policy: policy,
+                message: message,
+                graceUntil: graceUntil ?? beforeFeedGateStore.graceUntil(),
+                beforeFeedNativeGateEnabled: beforeFeedGateStore.nativeGateEnabled(),
+                beforeFeedInGraceWindow: beforeFeedGateStore.isInGraceWindow(),
+                beforeFeedHasSelection: hasEffectiveSelection(for: .beforeFeed),
+                applicationTokenCount: payload.selection.applicationTokens.count,
+                webDomainTokenCount: payload.selection.webDomainTokens.count,
+                displayNameCount: payload.displayNames.count,
+                displayNames: payload.displayNames
             )
         )
     }
@@ -447,8 +546,14 @@ final class AttentionShieldManager: ObservableObject {
         monitoringCoordinator.stopActiveSession()
     }
 
-    private func stopBeforeFeedGraceMonitoring() {
+    private func stopBeforeFeedGraceMonitoring(action: String = "stop") {
         monitoringCoordinator.stopBeforeFeedGrace()
+        recordBeforeFeedHealthEvent(
+            kind: .beforeFeedGraceScheduleStopped,
+            action: action,
+            policy: MoriScreenTimeMonitorHealthPolicy.none
+        )
+        lastScheduledBeforeFeedGraceUntil = nil
     }
 
     private func clearShield() {

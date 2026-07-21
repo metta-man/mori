@@ -57,15 +57,13 @@ struct PomodoroPracticePresentation {
         )
         let isBreathingActive = timerState == .running && isGuidedBreathing
         let breathingVisualState = breathingRuntime.visualState(for: activeBreathing)
-        let cycleText = Self.cycleText(completedCycles: completedCycles, cycles: cycles)
-
         self.activeBreathing = activeBreathing
         self.isGuidedBreathing = isGuidedBreathing
         self.isBreathingActive = isBreathingActive
         self.breathingVisualState = breathingVisualState
         self.phaseElapsedSeconds = phaseElapsedSeconds
         timeText = formatTime(secondsRemaining)
-        sessionLabel = phase.isBreak ? "Break time" : "Focus time"
+        sessionLabel = phase.isBreak ? "Quiet pause" : "Deep Session"
         primaryCueText = Self.primaryCueText(
             timerState: timerState,
             phase: phase,
@@ -74,8 +72,7 @@ struct PomodoroPracticePresentation {
         )
         secondaryCueText = Self.secondaryCueText(
             activeBreathing: activeBreathing,
-            isGuidedBreathing: isGuidedBreathing,
-            cycleText: cycleText
+            isGuidedBreathing: isGuidedBreathing
         )
         progress = Self.progress(
             secondsRemaining: secondsRemaining,
@@ -147,33 +144,25 @@ struct PomodoroPracticePresentation {
             return breathingVisualState.label
         }
 
-        return phase.title
-    }
-
-    private static func cycleText(completedCycles: Int, cycles: Int) -> String {
-        MoriL10n.string(
-            "watch.cycle.count",
-            defaultValue: "Cycle %d of %d",
-            arguments: [min(completedCycles + 1, cycles), cycles]
-        )
+        return phase.isBreak
+            ? MoriL10n.display("Rest softly")
+            : MoriL10n.display("Stay in the forest")
     }
 
     private static func secondaryCueText(
         activeBreathing: MoriPomodoroBreakBreathing,
-        isGuidedBreathing: Bool,
-        cycleText: String
+        isGuidedBreathing: Bool
     ) -> String {
         guard isGuidedBreathing else {
-            return cycleText
+            return MoriL10n.display("Nothing else needs your attention.")
         }
 
         return MoriL10n.string(
-            "pomodoro.break_breathing.cue",
-            defaultValue: "%@ · %@ · %@",
+            "deep_session.breathing.cue",
+            defaultValue: "%@ · %@",
             arguments: [
                 MoriL10n.display(activeBreathing.title),
-                activeBreathing.timingDescription,
-                cycleText
+                activeBreathing.timingDescription
             ]
         )
     }

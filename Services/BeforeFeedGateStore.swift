@@ -1,6 +1,29 @@
 import Foundation
 
+extension Notification.Name {
+    static let moriBeforeFeedIntentDidRecord = Notification.Name("mori.beforeFeed.intentDidRecord")
+}
+
+enum MoriBeforeFeedIntentReason: String, Codable, CaseIterable, Identifiable {
+    case replyToSomeone = "reply_to_someone"
+    case learn
+    case relax
+    case habit
+    case other
+
+    var id: String { rawValue }
+}
+
+struct MoriBeforeFeedIntentEvent: Codable, Equatable, Identifiable {
+    let id: UUID
+    let reason: MoriBeforeFeedIntentReason
+    let confirmedAt: Date
+    let routeSource: String?
+}
+
 struct BeforeFeedGateStore {
+    private static let intentEventsKey = "mori_before_feed_intent_events_v1"
+
     private let defaults: UserDefaults
     private let legacyDefaults: UserDefaults
 
@@ -21,6 +44,13 @@ struct BeforeFeedGateStore {
 
     func saveNativeGateEnabled(_ isEnabled: Bool) {
         defaults.set(isEnabled, forKey: MoriScreenTimeShared.beforeFeedNativeGateEnabledKey)
+    }
+
+    func hiddenAppLockEnabled() -> Bool {
+        guard defaults.object(forKey: MoriScreenTimeShared.beforeFeedHiddenAppLockEnabledKey) != nil else {
+            return MoriScreenTimeShared.defaultBeforeFeedHiddenAppLockEnabled
+        }
+        return defaults.bool(forKey: MoriScreenTimeShared.beforeFeedHiddenAppLockEnabledKey)
     }
 
     func durationSeconds() -> Int {
@@ -113,6 +143,58 @@ struct BeforeFeedGateStore {
         defaults.removeObject(forKey: MoriScreenTimeShared.beforeFeedPendingResetSourceKey)
     }
 
+    func intentEvents() -> [MoriBeforeFeedIntentEvent] {
+        guard let data = defaults.data(forKey: Self.intentEventsKey),
+              let events = try? JSONDecoder().decode([MoriBeforeFeedIntentEvent].self, from: data)
+        else {
+            return []
+        }
+
+        return events.sorted { $0.confirmedAt < $1.confirmedAt }
+    }
+
+    @discardableResult
+    func recordIntent(
+        reason: MoriBeforeFeedIntentReason,
+        routeSource: String?,
+        eventID: UUID = UUID(),
+        now: Date = Date()
+    ) -> MoriBeforeFeedIntentEvent {
+        var events = intentEvents()
+        if let existingEvent = events.first(where: { $0.id == eventID }) {
+            return existingEvent
+        }
+
+        let event = MoriBeforeFeedIntentEvent(
+            id: eventID,
+            reason: reason,
+            confirmedAt: now,
+            routeSource: routeSource
+        )
+        events.append(event)
+        if let encodedEvents = try? JSONEncoder().encode(events) {
+            defaults.set(encodedEvents, forKey: Self.intentEventsKey)
+        }
+        NotificationCenter.default.post(name: .moriBeforeFeedIntentDidRecord, object: event)
+        return event
+    }
+
+    func todayIntentCount(
+        now: Date = Date(),
+        calendar: Calendar = .current
+    ) -> Int {
+        let startOfToday = calendar.startOfDay(for: now)
+        guard let startOfTomorrow = calendar.date(byAdding: .day, value: 1, to: startOfToday) else {
+            return 0
+        }
+
+        return intentEvents().reduce(into: 0) { count, event in
+            if event.confirmedAt >= startOfToday && event.confirmedAt < startOfTomorrow {
+                count += 1
+            }
+        }
+    }
+
     func consumePendingResetLaunch() -> MoriPendingResetLaunchSource? {
         guard defaults.bool(forKey: MoriScreenTimeShared.beforeFeedPendingResetRequestKey) else {
             return nil
@@ -122,6 +204,17 @@ struct BeforeFeedGateStore {
             .flatMap(MoriPendingResetLaunchSource.init(rawValue:)) ?? .screenTimeGate
         clearPendingResetLaunch()
         return source
+    }
+
+    @discardableResult
+    func beginWindowTrace() -> String {
+        let traceID = UUID().uuidString
+        defaults.set(traceID, forKey: MoriScreenTimeShared.beforeFeedWindowTraceIDKey)
+        return traceID
+    }
+
+    func currentWindowTraceID() -> String? {
+        defaults.string(forKey: MoriScreenTimeShared.beforeFeedWindowTraceIDKey)
     }
 
     func saveGraceUntil(_ date: Date, now: Date = Date()) {

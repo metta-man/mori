@@ -40,21 +40,24 @@ struct MoriPracticeCompletionSheet: View {
                             }
 
                             VStack(alignment: .leading, spacing: 10) {
-                                Text("Seed planted.")
+                                Text(MoriL10n.display("One quiet session protected."))
                                     .font(.system(size: 34, weight: .semibold, design: .rounded))
                                     .foregroundColor(MoriColors.botanicalInk)
 
-                                Text(MoriL10n.string("today.seed_completion.nourished", defaultValue: "This nourished %@.", arguments: [practice.domainText]))
+                                Text(MoriL10n.string(
+                                    "practice.completion.quiet_time",
+                                    defaultValue: "%@ of quiet time.",
+                                    arguments: [practice.durationText]
+                                ))
                                     .font(.system(size: 18, weight: .semibold, design: .rounded))
                                     .foregroundColor(MoriColors.botanicalMoss)
 
-                                Text("This week gained a Seed.")
+                                Text(MoriL10n.display("Pause. Notice. Choose."))
                                     .font(.system(size: 15, weight: .regular))
                                     .foregroundColor(MoriColors.botanicalMuted)
                             }
 
                             FlowLayout(spacing: 8) {
-                                MoriPill(title: "+\(seeds) Seed\(seeds == 1 ? "" : "s")", icon: .roots, tint: MoriColors.botanicalSeed)
                                 MoriPill(title: practice.durationText, icon: .timer, tint: MoriColors.botanicalMist)
                                 MoriPill(title: practice.domainText, icon: .leaf, tint: MoriColors.botanicalMoss)
                             }
@@ -62,8 +65,10 @@ struct MoriPracticeCompletionSheet: View {
                             Spacer(minLength: 0)
 
                             VStack(spacing: 10) {
-                                Button(action: openWeekArchive) {
-                                    PracticeBitmapLabel(title: "View weeks", icon: .roots, iconSize: 16, iconOpacity: 0.94)
+                                Button {
+                                    dismiss()
+                                } label: {
+                                    Text(MoriL10n.display("Continue"))
                                         .font(.system(size: 15, weight: .semibold))
                                         .foregroundColor(MoriColors.botanicalSurface)
                                         .frame(maxWidth: .infinity)
@@ -73,10 +78,8 @@ struct MoriPracticeCompletionSheet: View {
                                 }
                                 .buttonStyle(.plain)
 
-                                Button {
-                                    dismiss()
-                                } label: {
-                                    Text("Done")
+                                Button(action: openWeekArchive) {
+                                    PracticeBitmapLabel(title: "Week Archive", icon: .journal, iconSize: 16, iconOpacity: 0.82)
                                         .font(.system(size: 15, weight: .semibold))
                                         .foregroundColor(MoriColors.botanicalInk)
                                         .frame(maxWidth: .infinity)
@@ -93,7 +96,7 @@ struct MoriPracticeCompletionSheet: View {
                     }
                 }
             }
-            .navigationTitle("Complete")
+            .navigationTitle("Quiet session")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(MoriColors.botanicalPaper, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)

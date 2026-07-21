@@ -12,7 +12,7 @@ private struct MoriAppLifecycleModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .onAppear(perform: activateAppServices)
-            .onChange(of: scenePhase, perform: handleScenePhase)
+            .moriOnChange(of: scenePhase, perform: handleScenePhase)
     }
 
     private func activateAppServices() {

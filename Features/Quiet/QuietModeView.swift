@@ -18,6 +18,7 @@ struct QuietModeView: View {
     @State private var didCompleteTimer = false
     @State private var quietAppLimitWasActive = false
     @State private var activeTimerSession: MoriQuietTimerSession?
+    @State private var showsMoreQuietChoices = false
 
     private let minuteOptions = [5, 10, 20, 30]
     private let deepDetoxMinuteOptions = [60, 180, 24 * 60]
@@ -34,11 +35,9 @@ struct QuietModeView: View {
                     VStack(alignment: .leading, spacing: 22) {
                         MoriPageHeader(
                             eyebrow: "Quiet",
-                            title: "Social Detox",
-                            subtitle: "Pause before scrolling. Let the urge become information instead of instruction."
+                            title: "Quiet Mode",
+                            subtitle: "A little room before the next feed."
                         )
-
-                        QuietSettleSuggestionCard()
 
                         QuietTimerCard(
                             customHours: $customHours,
@@ -61,27 +60,15 @@ struct QuietModeView: View {
                         )
 
                         if !isRunning {
-                            ScreenTimeLimitControls(contextTitle: "Quiet Mode", feature: .quiet)
+                            quietChoicesDisclosure
                         }
-
-                        QuietUrgeCheckInCard(
-                            urgeReason: $urgeReason,
-                            onPlantPause: recordUrgeCheckIn
-                        )
-
-                        QuietReplacementActionsCard(
-                            selectedReplacement: $selectedReplacement,
-                            onSelect: recordReplacementAction
-                        )
-
-                        QuietDailySummarySection(metrics: metrics)
                     }
                     .padding(.horizontal, 20)
                     .padding(.top, showsDismissButton ? 72 : 18)
                     .padding(.bottom, 40)
                 }
             }
-            .navigationTitle("Quiet")
+            .navigationTitle("")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(MoriColors.botanicalPaper, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
@@ -92,9 +79,14 @@ struct QuietModeView: View {
                         Button {
                             dismiss()
                         } label: {
-                            MoriBitmapIconImage(icon: .chevron, size: 16, opacity: 0.88)
-                                .rotationEffect(.degrees(180))
+                            Image(systemName: "chevron.left")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundColor(MoriV2Palette.forestInk)
+                                .frame(width: MoriV2Layout.minimumHitTarget, height: MoriV2Layout.minimumHitTarget)
+                                .background(MoriV2Palette.primaryForest.opacity(0.07))
+                                .clipShape(Circle())
                         }
+                        .buttonStyle(MoriV2PressButtonStyle())
                         .accessibilityLabel("Back")
                     }
                 }
@@ -128,7 +120,42 @@ struct QuietModeView: View {
         if isRunning {
             return MoriL10n.display("quiet in progress")
         }
-        return didCompleteTimer ? MoriL10n.display("seed planted") : MoriL10n.display("ready when you are")
+        return didCompleteTimer ? MoriL10n.display("one quiet session protected") : MoriL10n.display("ready when you are")
+    }
+
+    private var quietChoicesDisclosure: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            MoriV2QuietDisclosureRow(
+                title: showsMoreQuietChoices ? "Keep this simple" : "More quiet choices",
+                subtitle: showsMoreQuietChoices
+                    ? "Hide the secondary choices."
+                    : "Limits, a brief note, and other ways to pause stay here.",
+                isExpanded: showsMoreQuietChoices,
+                action: { showsMoreQuietChoices.toggle() }
+            )
+
+            if showsMoreQuietChoices {
+                VStack(spacing: 16) {
+                    QuietSettleSuggestionCard()
+
+                    ScreenTimeLimitControls(contextTitle: "Quiet Mode", feature: .quiet)
+
+                    QuietUrgeCheckInCard(
+                        urgeReason: $urgeReason,
+                        onPlantPause: recordUrgeCheckIn
+                    )
+
+                    QuietReplacementActionsCard(
+                        selectedReplacement: $selectedReplacement,
+                        onSelect: recordReplacementAction
+                    )
+
+                    QuietDailySummarySection(metrics: metrics)
+                }
+                .transition(.opacity)
+            }
+        }
+        .moriReduceMotionAnimation(MoriV2Motion.disclosure, value: showsMoreQuietChoices)
     }
 
     private var selectedDurationSeconds: Int {

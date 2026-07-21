@@ -1,5 +1,6 @@
 import { motion, useReducedMotion } from 'framer-motion'
 import { useEffect, useState } from 'react'
+import MoriV2Prototype from './MoriV2Prototype'
 import appLimitPaper from './assets/botanical/app-limit-paper.png'
 import onboardingPaper from './assets/botanical/onboarding-paper.png'
 import practicePaper from './assets/botanical/practice-paper.png'
@@ -226,7 +227,7 @@ function Footer({ copy }: CopyProps) {
   )
 }
 
-export default function App() {
+function MarketingApp() {
   const [locale, setLocale] = useState<MoriWebLocale>(() => initialLocale())
   const copy = dictionaries[locale]
 
@@ -243,4 +244,12 @@ export default function App() {
       <Footer copy={copy} />
     </div>
   )
+}
+
+export default function App() {
+  if (window.location.pathname === '/mori-v2' || window.location.pathname.startsWith('/mori-v2/')) {
+    return <MoriV2Prototype />
+  }
+
+  return <MarketingApp />
 }

@@ -4,10 +4,6 @@ struct RecentDayPatternCard: View {
     let entries: [HabitEntry]
     let todayEntry: HabitEntry?
 
-    private var recordedCount: Int {
-        entries.count
-    }
-
     private var toneSummary: String {
         guard let todayEntry else {
             return MoriL10n.display("No tone recorded today yet.")
@@ -24,7 +20,7 @@ struct RecentDayPatternCard: View {
         VStack(alignment: .leading, spacing: 16) {
             MoriSectionTitle(
                 title: "Recent day pattern",
-                subtitle: "Seven-day signal for the weeks archive. Not a streak."
+                subtitle: "A quiet look at the last seven days."
             )
 
             HStack(spacing: 12) {
@@ -41,26 +37,10 @@ struct RecentDayPatternCard: View {
                 }
             }
 
-            HStack(alignment: .firstTextBaseline, spacing: 10) {
-                Text(toneSummary)
-                    .font(.system(size: 13, weight: .regular))
-                    .foregroundColor(MoriColors.botanicalMuted)
-                    .fixedSize(horizontal: false, vertical: true)
-
-                Spacer(minLength: 8)
-
-                Text(MoriL10n.string(
-                    "daily_review.days_recorded",
-                    defaultValue: "%d/7 recorded",
-                    arguments: [recordedCount]
-                ))
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                .foregroundColor(MoriColors.botanicalInk)
-                .padding(.horizontal, 9)
-                .padding(.vertical, 5)
-                .background(MoriColors.botanicalInk.opacity(0.08))
-                .clipShape(Capsule())
-            }
+            Text(toneSummary)
+                .font(.system(size: 13, weight: .regular))
+                .foregroundColor(MoriColors.botanicalMuted)
+                .fixedSize(horizontal: false, vertical: true)
         }
         .moriSanctuaryCard(cornerRadius: 22, padding: 18)
     }

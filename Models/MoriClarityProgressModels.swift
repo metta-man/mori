@@ -50,7 +50,7 @@ enum MoriMindfulActionKind: String, Codable, CaseIterable, Identifiable {
         case .quietTimer: return "Quiet timer"
         case .settleSession: return "Settle session"
         case .breathingSession: return "Breathing session"
-        case .pomodoroSession: return "Pomodoro session"
+        case .pomodoroSession: return "Deep Session"
         case .urgeCheckIn: return "Urge check-in"
         case .replacementAction: return "Replacement action"
         case .dailyFocus: return "Daily focus"

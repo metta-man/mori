@@ -37,7 +37,7 @@ extension GratitudeEntry {
         case .journal: return .journal
         case .dayLog: return .timer
         case .dailySpark: return .pulse
-        case .weeklyIntention: return .roots
+        case .weeklyIntention: return .journal
         }
     }
 }
@@ -69,17 +69,15 @@ struct WeekArchiveDetailHeader: View {
 }
 
 struct WeekArchiveMetricsRow: View {
-    let seeds: Int
+    let quietActions: Int
     let journalCount: Int
     let quietMinutes: Int
-    let practiceMinutes: Int
 
     var body: some View {
         MoriCompactStatStrip {
-            MoriCompactStatItem(title: "Seeds", value: "\(seeds)", icon: .roots, tint: MoriColors.botanicalSeed)
-            MoriCompactStatItem(title: "Log", value: "\(journalCount)", icon: .journal, tint: MoriColors.botanicalInk)
-            MoriCompactStatItem(title: "Quiet", value: "\(quietMinutes)m", icon: .quiet, tint: MoriColors.botanicalMist)
-            MoriCompactStatItem(title: "Reset", value: "\(practiceMinutes)m", icon: .refresh, tint: MoriColors.botanicalMoss)
+            MoriCompactStatItem(title: "Quiet actions", value: "\(quietActions)", icon: .quiet, tint: MoriColors.botanicalMoss)
+            MoriCompactStatItem(title: "Quiet minutes", value: "\(quietMinutes)m", icon: .quiet, tint: MoriColors.botanicalMist)
+            MoriCompactStatItem(title: "Notes", value: "\(journalCount)", icon: .journal, tint: MoriColors.botanicalInk)
         }
     }
 }
@@ -190,7 +188,7 @@ struct WeekArchiveActionRow: View {
                 .clipShape(Circle())
 
             VStack(alignment: .leading, spacing: 3) {
-                Text(MoriL10n.display(action.title))
+                Text(MoriL10n.display(action.weekArchiveDisplayTitle))
                     .font(.system(size: 14, weight: .semibold))
                     .foregroundColor(MoriColors.botanicalInk)
 
@@ -198,23 +196,14 @@ struct WeekArchiveActionRow: View {
                     .font(.system(size: 12, weight: .regular))
                     .foregroundColor(MoriColors.botanicalMuted)
 
-                if let note = action.note, !note.isEmpty {
+                if let note = action.weekArchiveDisplayNote {
                     Text(note)
                         .font(.system(size: 12, weight: .regular))
                         .foregroundColor(MoriColors.botanicalMuted)
                         .fixedSize(horizontal: false, vertical: true)
                 }
             }
-
             Spacer(minLength: 0)
-
-            Text("+\(action.seeds)")
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                .foregroundColor(MoriColors.botanicalRoot)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 5)
-                .background(MoriColors.botanicalSeed.opacity(0.20))
-                .clipShape(Capsule())
         }
     }
 }
@@ -242,17 +231,34 @@ struct WeekArchiveSessionRow: View {
                     .font(.system(size: 12, weight: .regular))
                     .foregroundColor(MoriColors.botanicalMuted)
             }
-
             Spacer(minLength: 0)
-
-            Text("+\(session.seedsEarned)")
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                .foregroundColor(MoriColors.botanicalRoot)
-                .padding(.horizontal, 8)
-                .padding(.vertical, 5)
-                .background(MoriColors.botanicalSeed.opacity(0.20))
-                .clipShape(Capsule())
         }
+    }
+}
+
+private extension MoriMindfulAction {
+    var weekArchiveDisplayTitle: String {
+        containsRewardLanguage(title) ? kind.title : title
+    }
+
+    var weekArchiveDisplayNote: String? {
+        guard let note = note?.trimmingCharacters(in: .whitespacesAndNewlines),
+              !note.isEmpty,
+              !containsRewardLanguage(note)
+        else {
+            return nil
+        }
+        return note
+    }
+
+    func containsRewardLanguage(_ text: String) -> Bool {
+        let tokens = Set(text.lowercased().split { !$0.isLetter && !$0.isNumber }.map(String.init))
+        let rewardTokens: Set<String> = [
+            "seed", "seeds", "streak", "streaks", "reward", "rewards", "earned",
+            "bloom", "blooms", "growth", "grow", "growing", "grown", "level", "levels",
+            "xp", "coin", "coins"
+        ]
+        return !tokens.isDisjoint(with: rewardTokens)
     }
 }
 

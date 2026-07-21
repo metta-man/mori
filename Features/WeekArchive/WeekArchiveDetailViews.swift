@@ -38,13 +38,12 @@ struct WeekArchiveWeekDetailSheet: View {
             MoriPaperBackground(variant: .roots) {
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 16) {
-                        WeekArchiveDetailHeader(title: title, subtitle: dateRangeText, icon: .roots)
+                        WeekArchiveDetailHeader(title: title, subtitle: dateRangeText, icon: .journal)
 
                         WeekArchiveMetricsRow(
-                            seeds: summary.seedsPlanted,
+                            quietActions: summary.quietActionCount,
                             journalCount: summary.journalEntries.count,
-                            quietMinutes: summary.quietMinutes,
-                            practiceMinutes: summary.practiceMinutes
+                            quietMinutes: summary.quietMinutes
                         )
 
                         WeekArchiveSectionCard(title: "Week Notes", icon: .journal) {
@@ -76,7 +75,7 @@ struct WeekArchiveWeekDetailSheet: View {
                         }
 
                         if !summary.actions.isEmpty {
-                            WeekArchiveSectionCard(title: "Seeds", icon: .roots) {
+                            WeekArchiveSectionCard(title: "Daily Records", icon: .quiet) {
                                 ForEach(summary.actions.prefix(8)) { action in
                                     WeekArchiveActionRow(action: action)
                                 }
@@ -84,15 +83,11 @@ struct WeekArchiveWeekDetailSheet: View {
                         }
 
                         if !summary.sessions.isEmpty {
-                            WeekArchiveSectionCard(title: "Reset History", icon: .refresh) {
+                            WeekArchiveSectionCard(title: "Quiet Sessions", icon: .quiet) {
                                 ForEach(summary.sessions.prefix(8)) { session in
                                     WeekArchiveSessionRow(session: session)
                                 }
                             }
-                        }
-
-                        WeekArchiveSectionCard(title: "Clarity Trend", icon: .pulse) {
-                            WeekArchiveClarityTrendCompactChart(points: summary.trendPoints)
                         }
 
                         MoriSanctuaryPrimaryButton(
@@ -139,50 +134,6 @@ struct WeekArchiveWeekDetailSheet: View {
     }
 }
 
-private struct WeekArchiveClarityTrendCompactChart: View {
-    let points: [WeekArchiveTrendPoint]
-
-    private var chartPoints: [WeekArchiveTrendPoint] {
-        points.isEmpty ? WeekArchiveTrendPoint.previewWeek : points
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack(spacing: 5) {
-                Text("Clarity Trend")
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundColor(MoriColors.botanicalMuted)
-
-                MoriBitmapIconImage(icon: .leaf, size: 11, opacity: 0.62)
-            }
-
-            HStack(alignment: .bottom, spacing: 7) {
-                ForEach(Array(chartPoints.enumerated()), id: \.element.id) { index, point in
-                    VStack(spacing: 4) {
-                        Text("\(point.score)")
-                            .font(.system(size: 11, weight: .semibold, design: .rounded))
-                            .foregroundColor(MoriColors.botanicalMuted)
-                            .monospacedDigit()
-
-                        Capsule()
-                            .fill(index >= 5 ? MoriColors.botanicalMoss.opacity(0.86) : MoriColors.botanicalLine.opacity(0.88))
-                            .frame(height: max(26, CGFloat(point.score)))
-                            .frame(maxWidth: .infinity)
-
-                        Text(point.label)
-                            .font(.system(size: 10, weight: .medium))
-                            .foregroundColor(MoriColors.botanicalMuted)
-                            .lineLimit(1)
-                    }
-                    .frame(maxWidth: .infinity)
-                }
-            }
-            .frame(height: 104, alignment: .bottom)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-    }
-}
-
 struct WeekArchiveDayDetailSheet: View {
     @Environment(\.dismiss) private var dismiss
 
@@ -216,10 +167,9 @@ struct WeekArchiveDayDetailSheet: View {
                         WeekArchiveDetailHeader(title: title, subtitle: "Day records", icon: .timer)
 
                         WeekArchiveMetricsRow(
-                            seeds: summary.seedsPlanted,
+                            quietActions: summary.quietActionCount,
                             journalCount: summary.journalEntries.count,
-                            quietMinutes: summary.quietMinutes,
-                            practiceMinutes: summary.practiceMinutes
+                            quietMinutes: summary.quietMinutes
                         )
 
                         if let spark = summary.dailySpark {
@@ -270,7 +220,7 @@ struct WeekArchiveDayDetailSheet: View {
                         }
 
                         if !summary.actions.isEmpty {
-                            WeekArchiveSectionCard(title: "Seeds and Actions", icon: .roots) {
+                            WeekArchiveSectionCard(title: "Daily Records", icon: .quiet) {
                                 ForEach(summary.actions) { action in
                                     WeekArchiveActionRow(action: action)
                                 }
@@ -278,30 +228,16 @@ struct WeekArchiveDayDetailSheet: View {
                         }
 
                         if !summary.sessions.isEmpty {
-                            WeekArchiveSectionCard(title: "Reset Sessions", icon: .refresh) {
+                            WeekArchiveSectionCard(title: "Quiet Sessions", icon: .quiet) {
                                 ForEach(summary.sessions) { session in
                                     WeekArchiveSessionRow(session: session)
                                 }
                             }
                         }
 
-                        WeekArchiveSectionCard(title: "Clarity", icon: .leaf) {
-                            HStack {
-                                Text("\(summary.clarityScore)")
-                                    .font(.system(size: 44, weight: .semibold, design: .rounded))
-                                    .foregroundColor(MoriColors.botanicalInk)
-                                    .monospacedDigit()
-
-                                Text("estimated from Seeds and quiet minutes")
-                                    .font(.system(size: 13, weight: .regular))
-                                    .foregroundColor(MoriColors.botanicalMuted)
-                                    .fixedSize(horizontal: false, vertical: true)
-                            }
-                        }
-
                         if !summary.hasRecords {
                             WeekArchiveSectionCard(title: "No records yet", icon: .journal) {
-                                Text("No Spark, log note, Seed, reset, or check-in was found for this day.")
+                                Text("No daily note, log entry, quiet action, session, or check-in was found for this day.")
                                     .font(.system(size: 14, weight: .regular))
                                     .foregroundColor(MoriColors.botanicalMuted)
                                     .fixedSize(horizontal: false, vertical: true)

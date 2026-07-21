@@ -27,12 +27,6 @@ struct MoriPracticeVerificationSheet: View {
         secondsRemaining == 0 && !isRunning
     }
 
-    private var progress: Double {
-        guard verificationSeconds > 0 else { return 1 }
-        let elapsedSeconds = max(0, min(verificationSeconds, verificationSeconds - secondsRemaining))
-        return Double(elapsedSeconds) / Double(verificationSeconds)
-    }
-
     private var screenTimeFeature: MoriScreenTimeFeature {
         practice.id == MoriPractice.walkReset.id ? .walkOfflineReset : .manualPractice
     }
@@ -54,9 +48,9 @@ struct MoriPracticeVerificationSheet: View {
                             Spacer(minLength: 12)
 
                             MoriPageHeader(
-                                eyebrow: "Verify",
+                                eyebrow: "Pause",
                                 title: practice.title,
-                                subtitle: "Finish the reset first. The Seed is planted only after the timer and your confirmation."
+                                subtitle: "Take this time at your own pace. Pause whenever you need."
                             )
 
                             VStack(alignment: .leading, spacing: 18) {
@@ -72,8 +66,8 @@ struct MoriPracticeVerificationSheet: View {
                                             .foregroundColor(MoriColors.botanicalInk)
 
                                         Text(MoriL10n.string(
-                                            "practice.expected_time",
-                                            defaultValue: "Expected time %@.",
+                                            "practice.quiet_time",
+                                            defaultValue: "%@ of quiet time.",
                                             arguments: [practice.durationText]
                                         ))
                                         .font(.system(size: 14, weight: .regular))
@@ -81,77 +75,58 @@ struct MoriPracticeVerificationSheet: View {
                                     }
                                 }
 
-                                ZStack {
-                                    MoriTimerProgressRing(
-                                        progress: CGFloat(progress),
-                                        tint: MoriColors.botanicalMoss,
-                                        lineWidth: 12
-                                    )
+                                VStack(spacing: 8) {
+                                    Text(timeText)
+                                        .font(.system(size: 58, weight: .regular, design: .serif))
+                                        .foregroundColor(MoriV2Palette.forestInk)
+                                        .monospacedDigit()
+                                        .minimumScaleFactor(0.72)
 
-                                    VStack(spacing: 6) {
-                                        Text(timeText)
-                                            .font(.system(size: 46, weight: .semibold, design: .rounded))
-                                            .foregroundColor(MoriColors.botanicalInk)
-                                            .monospacedDigit()
-
-                                        Text(MoriL10n.display(canConfirmCompletion ? "ready to confirm" : isRunning ? "reset in progress" : "ready"))
-                                            .font(.system(size: 12, weight: .semibold))
-                                            .foregroundColor(MoriColors.botanicalMuted)
-                                    }
+                                    Text(MoriL10n.display(canConfirmCompletion ? "ready to finish" : isRunning ? "quiet time" : "ready when you are"))
+                                        .font(MoriV2Type.caption)
+                                        .foregroundColor(MoriV2Palette.mutedStone)
                                 }
                                 .frame(maxWidth: .infinity)
-                                .frame(height: 230)
+                                .padding(.vertical, 28)
+                                .background(MoriV2Palette.paper.opacity(0.72))
+                                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+                                .accessibilityElement(children: .ignore)
+                                .accessibilityLabel(MoriL10n.display("Quiet practice timer"))
+                                .accessibilityValue(Text("\(timeText), \(timerStatusText)"))
 
-                                FlowLayout(spacing: 8) {
-                                    MoriPill(title: practice.seedText, icon: .roots, tint: MoriColors.botanicalSeed)
-                                    MoriPill(title: practice.domainText, icon: .leaf, tint: MoriColors.botanicalMoss)
-                                }
+                                MoriV2PrimaryButton(
+                                    title: isRunning ? "Pause" : secondsRemaining == 0 ? "Restart" : "Start",
+                                    icon: timerActionIcon,
+                                    action: toggleTimer
+                                )
 
-                                HStack(spacing: 12) {
-                                    Button(action: toggleTimer) {
-                                        PracticeBitmapLabel(
-                                            title: isRunning ? "Pause" : secondsRemaining == 0 ? "Restart" : "Start",
-                                            icon: timerActionIcon,
-                                            iconSize: 16,
-                                            iconOpacity: 0.94
-                                        )
-                                            .font(.system(size: 15, weight: .semibold))
-                                            .foregroundColor(MoriColors.botanicalSurface)
-                                            .frame(maxWidth: .infinity)
-                                            .padding(.vertical, 14)
-                                            .background(MoriColors.botanicalInk)
-                                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                                    }
-                                    .buttonStyle(.plain)
-
+                                if secondsRemaining < verificationSeconds {
                                     Button(action: resetVerification) {
-                                        MoriBitmapIconImage(icon: .refresh, size: 17, opacity: 0.86)
-                                            .frame(width: 50, height: 50)
-                                            .background(MoriColors.botanicalInk.opacity(0.08))
-                                            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                        PracticeBitmapLabel(title: "Reset", icon: .refresh, iconSize: 15)
+                                            .font(MoriV2Type.control)
+                                            .foregroundColor(MoriV2Palette.stone)
+                                            .frame(maxWidth: .infinity, minHeight: MoriV2Layout.minimumHitTarget)
                                     }
-                                    .buttonStyle(.plain)
-                                    .accessibilityLabel(MoriL10n.display("Reset verification timer"))
+                                    .buttonStyle(MoriV2PressButtonStyle())
+                                    .accessibilityLabel(MoriL10n.display("Restart quiet timer"))
                                 }
 
-                                Button {
-                                    showCompletionConfirm = true
-                                } label: {
-                                    PracticeBitmapLabel(
-                                        title: "Confirm completion",
-                                        icon: .leaf,
-                                        iconSize: 16,
-                                        iconOpacity: canConfirmCompletion ? 0.94 : 0.42
-                                    )
-                                        .font(.system(size: 15, weight: .semibold))
-                                        .foregroundColor(canConfirmCompletion ? MoriColors.botanicalSurface : MoriColors.botanicalMuted)
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.vertical, 14)
-                                        .background(canConfirmCompletion ? MoriColors.botanicalMoss : MoriColors.botanicalInk.opacity(0.08))
-                                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                if canConfirmCompletion {
+                                    Button {
+                                        showCompletionConfirm = true
+                                    } label: {
+                                        PracticeBitmapLabel(
+                                            title: "Finish quiet practice",
+                                            icon: .leaf,
+                                            iconSize: 16,
+                                            iconOpacity: 0.90
+                                        )
+                                            .font(MoriV2Type.control)
+                                            .foregroundColor(MoriV2Palette.forestInk)
+                                            .frame(maxWidth: .infinity, minHeight: MoriV2Layout.minimumHitTarget)
+                                    }
+                                    .buttonStyle(MoriV2PressButtonStyle())
                                 }
-                                .buttonStyle(.plain)
-                                .disabled(!canConfirmCompletion)
                             }
                             .moriSanctuaryCard(cornerRadius: 24, padding: 18)
 
@@ -163,7 +138,7 @@ struct MoriPracticeVerificationSheet: View {
                     }
                 }
             }
-            .navigationTitle("Choose Reset")
+            .navigationTitle("Quiet practice")
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(MoriColors.botanicalPaper, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
@@ -181,16 +156,16 @@ struct MoriPracticeVerificationSheet: View {
                 tick()
             }
             .confirmationDialog(
-                "Plant this Seed?",
+                "Finish this quiet practice?",
                 isPresented: $showCompletionConfirm,
                 titleVisibility: .visible
             ) {
-                Button("Yes, plant Seed") {
+                Button("Finish") {
                     confirmCompletion()
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("Only confirm if you completed the reset.")
+                Text("Continue only if this pause feels complete.")
             }
             .onDisappear {
                 appLimitManager.perform(.endAppLimit(feature: screenTimeFeature))
@@ -202,6 +177,10 @@ struct MoriPracticeVerificationSheet: View {
         let minutes = secondsRemaining / 60
         let seconds = secondsRemaining % 60
         return String(format: "%02d:%02d", minutes, seconds)
+    }
+
+    private var timerStatusText: String {
+        MoriL10n.display(canConfirmCompletion ? "ready to finish" : isRunning ? "quiet time" : "ready")
     }
 
     private func tick() {

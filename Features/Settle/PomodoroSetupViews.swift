@@ -6,57 +6,62 @@ struct PomodoroSetupHeroVisual: View {
     let timeText: String
 
     var body: some View {
-        ZStack {
-            MoriWatercolorHeroWash(variant: .today, placement: .corner)
-                .clipShape(Circle())
-                .frame(width: 218, height: 218)
-                .opacity(0.94)
-                .shadow(color: MoriColors.sanctuaryShadow.opacity(0.18), radius: 28, x: 0, y: 16)
+        GeometryReader { proxy in
+            ZStack(alignment: .bottom) {
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .fill(MoriV2Palette.raisedPaper)
 
-            Circle()
-                .stroke(Color.white.opacity(0.72), lineWidth: 1.2)
-                .frame(width: 202, height: 202)
+                Image("MoriDeepSessionForest")
+                    .resizable()
+                    .interpolation(.high)
+                    .scaledToFill()
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+                    .clipped()
+                    .opacity(0.92)
 
-            MoriTimerProgressRing(
-                progress: progress,
-                tint: phase.tint,
-                trackTint: Color.white.opacity(0.58),
-                lineWidth: 9
-            )
-            .frame(width: 196, height: 196)
+                VStack(spacing: 8) {
+                    Text(timeText)
+                        .font(.system(size: 62, weight: .regular, design: .serif))
+                        .foregroundColor(MoriV2Palette.forestInk)
+                        .monospacedDigit()
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.72)
 
-            VStack(spacing: 8) {
-                MoriBitmapIconBadge(
-                    icon: phase.icon,
-                    size: 42,
-                    iconScale: 0.50,
-                    fill: MoriColors.sanctuarySurface.opacity(0.50),
-                    stroke: Color.white.opacity(0.74),
-                    shadow: .clear
-                )
-
-                Text(timeText)
-                    .font(.system(size: 56, weight: .regular, design: .rounded))
-                    .foregroundColor(MoriColors.sanctuaryInk)
-                    .monospacedDigit()
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.72)
-
-                Text(phase.title)
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundColor(phase.tint)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.82)
+                    Text(MoriL10n.display(quietPhaseTitle))
+                        .font(MoriV2Type.supporting)
+                        .foregroundColor(MoriV2Palette.stone)
+                        .lineLimit(1)
+                }
+                .padding(.bottom, 28)
             }
+            .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 224)
+        .frame(height: 248)
+        .overlay {
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .stroke(MoriV2Palette.hairline, lineWidth: 1)
+        }
+        .shadow(color: MoriV2Palette.shadow, radius: 20, x: 0, y: 10)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(MoriL10n.string(
-            "pomodoro.timer.accessibility",
-            defaultValue: "Pomodoro timer %@, %@",
-            arguments: [timeText, phase.title]
+            "deep_session.timer.accessibility",
+            defaultValue: "Deep Session, %@, %@",
+            arguments: [timeText, quietPhaseTitle]
         ))
+    }
+
+    private var quietPhaseTitle: String {
+        switch phase {
+        case .focus:
+            return "Stay in the forest"
+        case .shortBreak:
+            return "Quiet pause"
+        case .longBreak:
+            return "Long pause"
+        case .completed:
+            return "Session complete"
+        }
     }
 }
 
@@ -72,8 +77,8 @@ struct PomodoroFocusCycleRows: View {
     var body: some View {
         VStack(spacing: 8) {
             row(
-                title: "Focus",
-                subtitle: MoriL10n.string("pomodoro.settings.focus_minutes", defaultValue: "Focus %dm", arguments: [focusMinutes]),
+                title: "Deep Session",
+                subtitle: MoriL10n.string("deep_session.settings.focus_minutes", defaultValue: "%d quiet minutes", arguments: [focusMinutes]),
                 icon: .timer,
                 tint: MoriColors.botanicalInk,
                 isSelected: selectedPhase == .focus
@@ -82,8 +87,8 @@ struct PomodoroFocusCycleRows: View {
             }
 
             row(
-                title: "Short Break",
-                subtitle: MoriL10n.string("pomodoro.settings.short_break_minutes", defaultValue: "Short break %dm", arguments: [shortBreakMinutes]),
+                title: "Quiet pause",
+                subtitle: MoriL10n.string("deep_session.settings.short_break_minutes", defaultValue: "%d minutes", arguments: [shortBreakMinutes]),
                 icon: .leaf,
                 tint: MoriColors.botanicalMist,
                 isSelected: selectedPhase == .shortBreak
@@ -92,8 +97,8 @@ struct PomodoroFocusCycleRows: View {
             }
 
             row(
-                title: "Long Break",
-                subtitle: MoriL10n.string("pomodoro.settings.long_break_minutes", defaultValue: "Long break %dm", arguments: [longBreakMinutes]),
+                title: "Long pause",
+                subtitle: MoriL10n.string("deep_session.settings.long_break_minutes", defaultValue: "%d minutes", arguments: [longBreakMinutes]),
                 icon: .focus,
                 tint: MoriColors.botanicalSeed,
                 isSelected: selectedPhase == .longBreak
@@ -102,8 +107,8 @@ struct PomodoroFocusCycleRows: View {
             }
 
             row(
-                title: "Cycles",
-                subtitle: MoriL10n.string("pomodoro.settings.cycles", defaultValue: "Cycles %d", arguments: [cycles]),
+                title: "Repeats",
+                subtitle: MoriL10n.string("deep_session.settings.repeats", defaultValue: "%d session", arguments: [cycles]),
                 icon: .roots,
                 tint: MoriColors.botanicalMoss,
                 isSelected: false
@@ -186,7 +191,7 @@ struct PomodoroSetupStartButton: View {
                     .background(MoriColors.sanctuarySurface.opacity(0.86))
                     .clipShape(Circle())
 
-                Text(MoriL10n.display(isCompleted ? "Begin again" : "Start"))
+                Text(MoriL10n.display(isCompleted ? "Begin again" : "Start Deep Session"))
             }
             .font(.system(size: 15, weight: .semibold))
             .foregroundColor(MoriColors.botanicalSurface)

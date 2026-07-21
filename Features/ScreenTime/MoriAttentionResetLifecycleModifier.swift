@@ -37,6 +37,6 @@ private struct MoriAttentionResetLifecycleModifier: ViewModifier {
             }
             .onDisappear(perform: onCleanup)
             .onReceive(ticker, perform: onTick)
-            .onChange(of: soundEnabled, perform: onSoundEnabledChange)
+            .moriOnChange(of: soundEnabled, perform: onSoundEnabledChange)
     }
 }

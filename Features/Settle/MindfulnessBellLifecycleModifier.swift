@@ -48,13 +48,13 @@ private struct MindfulnessBellLifecycleModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .onAppear(perform: onPrepare)
-            .onChange(of: isActive, perform: onActiveChange)
-            .onChange(of: randomMode) { _ in onScheduleSettingsChange() }
-            .onChange(of: intervalMinutes) { _ in onScheduleSettingsChange() }
-            .onChange(of: bellsPerHour) { _ in onScheduleSettingsChange() }
-            .onChange(of: startHour) { _ in onScheduleSettingsChange() }
-            .onChange(of: endHour) { _ in onScheduleSettingsChange() }
-            .onChange(of: scenePhase) { phase in
+            .moriOnChange(of: isActive, perform: onActiveChange)
+            .moriOnChange(of: randomMode, perform: onScheduleSettingsChange)
+            .moriOnChange(of: intervalMinutes, perform: onScheduleSettingsChange)
+            .moriOnChange(of: bellsPerHour, perform: onScheduleSettingsChange)
+            .moriOnChange(of: startHour, perform: onScheduleSettingsChange)
+            .moriOnChange(of: endHour, perform: onScheduleSettingsChange)
+            .moriOnChange(of: scenePhase) { phase in
                 guard phase == .active else { return }
                 onSceneActive()
             }

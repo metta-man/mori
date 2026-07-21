@@ -1,5 +1,119 @@
 import SwiftUI
 
+/// The canonical dark-forest commitment action from the approved Mori design.
+/// Large primary buttons should be reserved for actions such as starting or
+/// confirming a session.
+struct MoriPrimaryButton: View {
+    enum Style {
+        case editorial
+        case v2Compatibility
+    }
+
+    let title: String
+    let icon: MoriBitmapIcon?
+    let isEnabled: Bool
+    let style: Style
+    let action: () -> Void
+
+    init(
+        title: String,
+        icon: MoriBitmapIcon? = nil,
+        isEnabled: Bool = true,
+        style: Style = .editorial,
+        action: @escaping () -> Void
+    ) {
+        self.title = title
+        self.icon = icon
+        self.isEnabled = isEnabled
+        self.style = style
+        self.action = action
+    }
+
+    @ViewBuilder
+    var body: some View {
+        switch style {
+        case .editorial:
+            editorialButton
+        case .v2Compatibility:
+            v2CompatibilityButton
+        }
+    }
+
+    private var editorialButton: some View {
+        Button(action: action) {
+            HStack(spacing: MoriTheme.Spacing.xSmall) {
+                if let icon {
+                    MoriBitmapIconImage(
+                        icon: icon,
+                        size: 18,
+                        opacity: isEnabled ? 1 : 0.46
+                    )
+                    .frame(width: 26, height: 26)
+                    .background(
+                        MoriTheme.Colors.onPrimary.opacity(isEnabled ? 0.92 : 0.42)
+                    )
+                    .clipShape(Circle())
+                }
+
+                Text(MoriL10n.display(title))
+            }
+        }
+        .buttonStyle(MoriTheme.ButtonStyles.Primary())
+        .disabled(!isEnabled)
+        .accessibilityLabel(MoriL10n.display(title))
+    }
+
+    private var v2CompatibilityButton: some View {
+        Button(action: action) {
+            HStack(spacing: 9) {
+                if let icon {
+                    MoriBitmapIconImage(
+                        icon: icon,
+                        size: 17,
+                        opacity: isEnabled ? 0.96 : 0.46
+                    )
+                    .frame(width: 26, height: 26)
+                    .background(
+                        MoriTheme.Colors.onPrimary.opacity(isEnabled ? 0.92 : 0.42)
+                    )
+                    .clipShape(Circle())
+                }
+
+                Text(MoriL10n.display(title))
+                    .font(MoriTheme.Typography.control)
+            }
+            .foregroundColor(
+                isEnabled
+                    ? MoriTheme.Colors.onPrimary
+                    : MoriTheme.Colors.mutedText
+            )
+            .frame(maxWidth: .infinity)
+            .frame(minHeight: 52)
+            .padding(.horizontal, 18)
+            .background(
+                isEnabled
+                    ? MoriTheme.Colors.primaryAction
+                    : MoriTheme.Colors.hairline
+            )
+            .clipShape(
+                RoundedRectangle(
+                    cornerRadius: MoriTheme.CornerRadius.control,
+                    style: .continuous
+                )
+            )
+            .contentShape(
+                RoundedRectangle(
+                    cornerRadius: MoriTheme.CornerRadius.control,
+                    style: .continuous
+                )
+            )
+        }
+        .buttonStyle(MoriV2PressButtonStyle())
+        .disabled(!isEnabled)
+        .accessibilityLabel(MoriL10n.display(title))
+    }
+}
+
 struct MoriButton: View {
     let title: String
     let action: () -> Void
@@ -30,11 +144,48 @@ struct MoriButton: View {
 }
 
 struct MoriSecondaryButton: View {
+    enum Style {
+        case editorial
+        case watercolorCompatibility
+    }
+
     let title: String
     let action: () -> Void
-    var isEnabled: Bool = true
+    let isEnabled: Bool
+    let style: Style
 
+    init(
+        title: String,
+        isEnabled: Bool = true,
+        style: Style = .editorial,
+        action: @escaping () -> Void
+    ) {
+        self.title = title
+        self.action = action
+        self.isEnabled = isEnabled
+        self.style = style
+    }
+
+    @ViewBuilder
     var body: some View {
+        switch style {
+        case .editorial:
+            editorialButton
+        case .watercolorCompatibility:
+            watercolorCompatibilityButton
+        }
+    }
+
+    private var editorialButton: some View {
+        Button(action: action) {
+            Text(MoriL10n.display(title))
+        }
+        .buttonStyle(MoriTheme.ButtonStyles.Secondary())
+        .disabled(!isEnabled)
+        .accessibilityLabel(MoriL10n.display(title))
+    }
+
+    private var watercolorCompatibilityButton: some View {
         Button(action: action) {
             Text(MoriL10n.display(title))
                 .font(MoriTypography.body.weight(.medium))
@@ -60,6 +211,7 @@ struct MoriSecondaryButton: View {
         }
         .buttonStyle(MoriPressScaleButtonStyle())
         .disabled(!isEnabled)
+        .accessibilityLabel(MoriL10n.display(title))
     }
 }
 
@@ -165,7 +317,7 @@ struct MoriSanctuaryPrimaryButton: View {
                     }
                 }
             )
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: MoriCornerRadius.button, style: .continuous))
         }
         .buttonStyle(.plain)
         .disabled(!isEnabled)

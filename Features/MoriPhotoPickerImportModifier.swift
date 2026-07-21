@@ -23,7 +23,7 @@ private struct MoriPhotoPickerImportModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .onChange(of: selectedItems) { newItems in
+            .moriOnChange(of: selectedItems) { newItems in
                 importPhotos(from: newItems)
             }
             .onDisappear {

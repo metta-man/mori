@@ -68,10 +68,10 @@ private struct MoriBreathingSessionLifecycleModifier: ViewModifier {
             .onAppear(perform: handleAppear)
             .onDisappear(perform: onCleanup)
             .onReceive(ticker, perform: onTick)
-            .onChange(of: soundEnabled, perform: onSoundEnabledChange)
-            .onChange(of: hapticsEnabled, perform: onHapticsEnabledChange)
-            .onChange(of: keepScreenOn) { _ in onKeepScreenOnChange() }
-            .onChange(of: darkRoomEnabled, perform: onDarkRoomEnabledChange)
+            .moriOnChange(of: soundEnabled, perform: onSoundEnabledChange)
+            .moriOnChange(of: hapticsEnabled, perform: onHapticsEnabledChange)
+            .moriOnChange(of: keepScreenOn, perform: onKeepScreenOnChange)
+            .moriOnChange(of: darkRoomEnabled, perform: onDarkRoomEnabledChange)
             .confirmationDialog(
                 "End this breathing session?",
                 isPresented: $showLeaveDialog,
@@ -89,6 +89,6 @@ private struct MoriBreathingSessionLifecycleModifier: ViewModifier {
 
         guard autoStart, !hasAutoStarted else { return }
         hasAutoStarted = true
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.15, execute: onAutoStart)
+        DispatchQueue.main.async(execute: onAutoStart)
     }
 }

@@ -17,44 +17,92 @@ enum MoriPendingResetLaunchSource: String {
 }
 
 enum MoriScreenTimeMonitorHealthEventKind: String, Codable, CaseIterable {
+    case beforeFeedGraceSaved
     case beforeFeedGraceScheduled
     case beforeFeedGraceScheduleSkipped
     case beforeFeedGraceScheduleFailed
+    case beforeFeedGraceScheduleStopped
     case beforeFeedGraceIntervalStarted
     case beforeFeedGraceIntervalEnded
     case beforeFeedGraceExpired
+    case beforeFeedForegroundReconcile
     case shieldApplied
+    case strictLockApplied
+    case hiddenAppLockApplied
     case shieldCleared
 
     var title: String {
         switch self {
+        case .beforeFeedGraceSaved:
+            return "Grace saved"
         case .beforeFeedGraceScheduled:
             return "Grace monitor scheduled"
         case .beforeFeedGraceScheduleSkipped:
             return "Grace monitor skipped"
         case .beforeFeedGraceScheduleFailed:
             return "Grace monitor failed"
+        case .beforeFeedGraceScheduleStopped:
+            return "Grace monitor stopped"
         case .beforeFeedGraceIntervalStarted:
             return "Grace monitor fired"
         case .beforeFeedGraceIntervalEnded:
             return "Grace monitor ended"
         case .beforeFeedGraceExpired:
             return "Grace expired"
+        case .beforeFeedForegroundReconcile:
+            return "Foreground reconciled"
         case .shieldApplied:
             return "Shield applied"
+        case .strictLockApplied:
+            return "Shield lock applied"
+        case .hiddenAppLockApplied:
+            return "Hidden app lock applied"
         case .shieldCleared:
             return "Shield cleared"
         }
     }
 }
 
+enum MoriScreenTimeMonitorHealthPolicy: String, Codable, Equatable {
+    case none
+    case shieldOnly
+    case shieldLock
+    case strictBlock
+    case hiddenAppLock
+    case clear
+
+    var title: String {
+        switch self {
+        case .none:
+            return "none"
+        case .shieldOnly:
+            return "shieldOnly"
+        case .shieldLock:
+            return "shieldLock"
+        case .strictBlock:
+            return "strictBlock"
+        case .hiddenAppLock:
+            return "hiddenAppLock"
+        case .clear:
+            return "clear"
+        }
+    }
+
+    var isLockingPolicy: Bool {
+        self == .shieldLock || self == .strictBlock
+    }
+}
+
 struct MoriScreenTimeMonitorHealthEvent: Identifiable, Codable, Equatable {
     var id: UUID
+    var traceID: String?
     var kind: MoriScreenTimeMonitorHealthEventKind
     var recordedAt: Date
     var activityName: String?
     var featureRawValue: String?
+    var activeSessionFeatureRawValue: String?
     var action: String?
+    var policy: MoriScreenTimeMonitorHealthPolicy?
     var message: String?
     var graceUntil: Date?
     var beforeFeedNativeGateEnabled: Bool?
@@ -63,14 +111,18 @@ struct MoriScreenTimeMonitorHealthEvent: Identifiable, Codable, Equatable {
     var applicationTokenCount: Int?
     var webDomainTokenCount: Int?
     var displayNameCount: Int?
+    var displayNames: [String]?
 
     init(
         id: UUID = UUID(),
+        traceID: String? = nil,
         kind: MoriScreenTimeMonitorHealthEventKind,
         recordedAt: Date = Date(),
         activityName: String? = nil,
         featureRawValue: String? = nil,
+        activeSessionFeatureRawValue: String? = nil,
         action: String? = nil,
+        policy: MoriScreenTimeMonitorHealthPolicy? = nil,
         message: String? = nil,
         graceUntil: Date? = nil,
         beforeFeedNativeGateEnabled: Bool? = nil,
@@ -78,14 +130,18 @@ struct MoriScreenTimeMonitorHealthEvent: Identifiable, Codable, Equatable {
         beforeFeedHasSelection: Bool? = nil,
         applicationTokenCount: Int? = nil,
         webDomainTokenCount: Int? = nil,
-        displayNameCount: Int? = nil
+        displayNameCount: Int? = nil,
+        displayNames: [String]? = nil
     ) {
         self.id = id
+        self.traceID = traceID
         self.kind = kind
         self.recordedAt = recordedAt
         self.activityName = activityName
         self.featureRawValue = featureRawValue
+        self.activeSessionFeatureRawValue = activeSessionFeatureRawValue
         self.action = action
+        self.policy = policy
         self.message = message
         self.graceUntil = graceUntil
         self.beforeFeedNativeGateEnabled = beforeFeedNativeGateEnabled
@@ -94,21 +150,32 @@ struct MoriScreenTimeMonitorHealthEvent: Identifiable, Codable, Equatable {
         self.applicationTokenCount = applicationTokenCount
         self.webDomainTokenCount = webDomainTokenCount
         self.displayNameCount = displayNameCount
+        self.displayNames = displayNames
     }
 
     var totalTokenCount: Int? {
         guard applicationTokenCount != nil || webDomainTokenCount != nil else { return nil }
         return (applicationTokenCount ?? 0) + (webDomainTokenCount ?? 0)
     }
+
+    var shortTraceID: String? {
+        traceID.map { String($0.prefix(8)) }
+    }
 }
 
 enum MoriScreenTimeMonitorHealthStore {
-    private static let maxEvents = 20
+    private static let maxEvents = 80
+    private static let duplicateSuppressionWindow: TimeInterval = 30
     private static let encoder = JSONEncoder()
     private static let decoder = JSONDecoder()
 
     static func record(_ event: MoriScreenTimeMonitorHealthEvent) {
         var events = recentEvents()
+        if let latest = events.first,
+           abs(latest.recordedAt.distance(to: event.recordedAt)) <= duplicateSuppressionWindow,
+           isDuplicate(latest, event) {
+            return
+        }
         events.insert(event, at: 0)
         if events.count > maxEvents {
             events.removeLast(events.count - maxEvents)
@@ -128,6 +195,27 @@ enum MoriScreenTimeMonitorHealthStore {
 
     static func clear() {
         MoriAppGroup.defaults.removeObject(forKey: MoriScreenTimeShared.monitorHealthEventsKey)
+    }
+
+    private static func isDuplicate(
+        _ lhs: MoriScreenTimeMonitorHealthEvent,
+        _ rhs: MoriScreenTimeMonitorHealthEvent
+    ) -> Bool {
+        lhs.traceID == rhs.traceID &&
+        lhs.kind == rhs.kind &&
+        lhs.activityName == rhs.activityName &&
+        lhs.featureRawValue == rhs.featureRawValue &&
+        lhs.activeSessionFeatureRawValue == rhs.activeSessionFeatureRawValue &&
+        lhs.action == rhs.action &&
+        lhs.policy == rhs.policy &&
+        lhs.message == rhs.message &&
+        lhs.beforeFeedNativeGateEnabled == rhs.beforeFeedNativeGateEnabled &&
+        lhs.beforeFeedInGraceWindow == rhs.beforeFeedInGraceWindow &&
+        lhs.beforeFeedHasSelection == rhs.beforeFeedHasSelection &&
+        lhs.applicationTokenCount == rhs.applicationTokenCount &&
+        lhs.webDomainTokenCount == rhs.webDomainTokenCount &&
+        lhs.displayNameCount == rhs.displayNameCount &&
+        lhs.displayNames == rhs.displayNames
     }
 }
 
@@ -179,11 +267,14 @@ enum MoriScreenTimeShared {
     static let defaultBeforeFeedDurationSeconds = 60
     static let beforeFeedNativeGateEnabledKey = "mori_before_feed_native_gate_enabled"
     static let defaultBeforeFeedNativeGateEnabled = true
+    static let beforeFeedHiddenAppLockEnabledKey = "mori_before_feed_hidden_app_lock_enabled"
+    static let defaultBeforeFeedHiddenAppLockEnabled = false
     static let beforeFeedGraceWindowSecondsKey = "mori_before_feed_grace_window_seconds"
     static let minBeforeFeedGraceWindowSeconds = 60
     static let maxBeforeFeedGraceWindowSeconds = 15 * 60
     static let defaultBeforeFeedGraceWindowSeconds = 10 * 60
     static let beforeFeedGraceUntilKey = "mori_before_feed_grace_until"
+    static let beforeFeedWindowTraceIDKey = "mori_before_feed_window_trace_id"
     static let beforeFeedPendingResetRequestKey = "mori_before_feed_pending_reset_request"
     static let beforeFeedPendingResetSourceKey = "mori_before_feed_pending_reset_source"
     static let beforeFeedBreathingTechniqueIDKey = "mori_before_feed_breathing_technique_id"
@@ -200,6 +291,8 @@ enum MoriScreenTimeShared {
     static let defaultMorningGateStartMinute = 0
     static let morningGateDurationSecondsKey = "mori_morning_gate_duration_seconds"
     static let defaultMorningGateDurationSeconds = 30 * 60
+    static let morningGateHiddenAppLockEnabledKey = "mori_morning_gate_hidden_app_lock_enabled"
+    static let defaultMorningGateHiddenAppLockEnabled = false
     static let morningGateBreathingTechniqueIDKey = "mori_morning_gate_breathing_technique_id"
     static let defaultMorningGateBreathingTechniqueID = defaultBeforeFeedBreathingTechniqueID
     static let morningGateCompletedDateKey = "mori_morning_gate_completed_date_key"

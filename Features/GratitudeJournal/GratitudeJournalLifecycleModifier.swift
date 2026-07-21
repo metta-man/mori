@@ -66,7 +66,7 @@ private struct GratitudeEditorLifecycleModifier: ViewModifier {
 
     func body(content: Content) -> some View {
         content
-            .onChange(of: entryContent) { newValue in
+            .moriOnChange(of: entryContent) { newValue in
                 characterCountStatus = CharacterCountStatus.status(for: newValue.count)
             }
     }
@@ -83,7 +83,7 @@ private struct GratitudeJournalLifecycleModifier: ViewModifier {
         content
             .onAppear(perform: onPrepare)
             .onDisappear(perform: onCleanup)
-            .onChange(of: scenePhase) { newPhase in
+            .moriOnChange(of: scenePhase) { newPhase in
                 guard newPhase == .active else { return }
                 onReloadJournal()
             }

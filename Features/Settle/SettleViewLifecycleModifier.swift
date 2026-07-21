@@ -21,8 +21,6 @@ private struct SettleLaunchRequestLifecycleModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .onAppear(perform: onHandleLaunchRequest)
-            .onChange(of: launchRequestID) { _ in
-                onHandleLaunchRequest()
-            }
+            .moriOnChange(of: launchRequestID, perform: onHandleLaunchRequest)
     }
 }

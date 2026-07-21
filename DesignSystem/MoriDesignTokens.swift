@@ -246,26 +246,16 @@ struct MoriAnimation {
     static let cardAppear = Animation.easeOut(duration: 0.25)
 
     /// Screen transition animation
-    static let screenTransition = Animation.easeOut(duration: 0.35)
+    static let screenTransition = Animation.easeInOut(duration: 0.38)
+
+    /// Breathing ink follows the phase without feeling mechanical.
+    static let breathInk = Animation.easeInOut(duration: 0.38)
 
     /// Button tap scale
     static let buttonTapScale: CGFloat = 0.97
 
     /// Grid square tap scale
     static let gridTapScale: CGFloat = 1.2
-}
-
-// MARK: - Mori Shadows
-/// Shadow values for subtle depth
-struct MoriShadow {
-    /// Card shadow
-    static let cardRadius: CGFloat = 8
-    static let cardOpacity: Double = 0.04
-    static let cardY: CGFloat = 2
-
-    /// Button shadow
-    static let buttonRadius: CGFloat = 8
-    static let buttonOpacity: Double = 0.1
 }
 
 // MARK: - Mori Icon Sizes

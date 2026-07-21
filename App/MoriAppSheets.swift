@@ -66,6 +66,7 @@ extension View {
                 onCompletePractice: onCompletePractice,
                 pulseShowsDismissButton: pulseShowsDismissButton
             )
+            .moriBotanicalSheetPresentation()
         }
     }
 }

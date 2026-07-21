@@ -7,6 +7,7 @@ struct WeekArchiveWeekGrid: View {
 
     private let spacing: CGFloat = 2.1
     private let focusedSpacing: CGFloat = 7
+    @State private var showsYearMap = false
     @State private var showsFullArchive = false
 
     private var currentArchiveYear: Int {
@@ -22,91 +23,127 @@ struct WeekArchiveWeekGrid: View {
         return (0..<52).filter { recordedWeekIndexes.contains(yearStart + $0) }.count
     }
 
+    private var currentWeekCoordinate: WeekCoordinate {
+        WeekCoordinate(year: currentArchiveYear, week: currentWeekOfYear)
+    }
+
+    private var currentWeekDetail: String {
+        if recordedWeekIndexes.contains(settings.currentWeekIndex) {
+            return "Week \(currentWeekOfYear + 1) · A note is waiting here."
+        }
+        return "Week \(currentWeekOfYear + 1) · Nothing needed from you."
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             MoriSectionTitle(
                 title: "This archive year",
-                subtitle: "Start with the weeks around now. Open the full map only when you need the long view."
+                subtitle: "Return only when there is something worth keeping."
             )
-
-            WeekArchiveFocusedYearSummary(
-                archiveYear: currentArchiveYear,
-                currentWeekOfYear: currentWeekOfYear,
-                recordedWeeks: recordedWeeksInCurrentYear
-            )
-
-            GeometryReader { proxy in
-                let availableWidth = max(proxy.size.width, 260)
-                let dotSize = max(12, min(20, (availableWidth - CGFloat(12) * focusedSpacing) / 13))
-
-                WeekArchiveFocusedYearCanvas(
-                    archiveYear: currentArchiveYear,
-                    archiveWeeksElapsed: settings.archiveWeeksElapsed,
-                    currentWeekIndex: settings.currentWeekIndex,
-                    recordedWeekIndexes: recordedWeekIndexes,
-                    dotSize: dotSize,
-                    spacing: focusedSpacing,
-                    onWeekSelected: onWeekSelected
-                )
-                .frame(width: proxy.size.width, height: dotSize * 4 + focusedSpacing * 3)
-            }
-            .frame(height: 94)
-
-            WeekArchiveFocusedYearLegend()
-
-            Divider()
-                .overlay(MoriColors.botanicalHairline.opacity(0.7))
 
             Button {
-                withAnimation(.easeInOut(duration: 0.18)) {
-                    showsFullArchive.toggle()
-                }
+                onWeekSelected(currentWeekCoordinate)
             } label: {
-                HStack(spacing: 8) {
-                    MoriBitmapIconImage(icon: .chevron, size: 11, opacity: 0.72)
-                        .rotationEffect(.degrees(showsFullArchive ? -90 : 90))
-
-                    Text(MoriL10n.display(showsFullArchive ? "Hide full archive map" : "Show full archive map"))
-                        .font(.system(size: 13, weight: .semibold))
-                        .foregroundColor(MoriColors.botanicalInk)
-
-                    Spacer(minLength: 0)
-                }
-                .contentShape(Rectangle())
+                MoriV2QuietActionRow(
+                    title: "Open the current week",
+                    subtitle: currentWeekDetail,
+                    icon: .journal
+                )
             }
-            .buttonStyle(.plain)
-            .accessibilityLabel(MoriL10n.display(showsFullArchive ? "Hide full archive map" : "Show full archive map"))
+            .buttonStyle(MoriV2PressButtonStyle())
 
-            if showsFullArchive {
+            MoriV2QuietDisclosureRow(
+                title: showsYearMap ? "Fold the archive map" : "Browse earlier weeks",
+                subtitle: showsYearMap
+                    ? "Return to the current week."
+                    : "The archive map stays folded until you need it.",
+                isExpanded: showsYearMap,
+                action: { showsYearMap.toggle() }
+            )
+
+            if showsYearMap {
                 VStack(alignment: .leading, spacing: 14) {
                     MoriSectionTitle(
-                        title: "Full archive map",
-                        subtitle: "A quiet reference map for older weeks."
+                        title: "Archive year \(currentArchiveYear + 1)",
+                        subtitle: "\(recordedWeeksInCurrentYear) weeks hold a note."
                     )
 
                     GeometryReader { proxy in
                         let availableWidth = max(proxy.size.width, 260)
-                        let dotSize = max(3.8, min(7, (availableWidth - CGFloat(51) * spacing) / 52))
+                        let dotSize = max(12, min(20, (availableWidth - CGFloat(12) * focusedSpacing) / 13))
 
-                        WeekArchiveWeeksCanvas(
-                            archiveSpanYears: settings.archiveSpanYears,
+                        WeekArchiveFocusedYearCanvas(
+                            archiveYear: currentArchiveYear,
                             archiveWeeksElapsed: settings.archiveWeeksElapsed,
                             currentWeekIndex: settings.currentWeekIndex,
                             recordedWeekIndexes: recordedWeekIndexes,
                             dotSize: dotSize,
-                            spacing: spacing,
+                            spacing: focusedSpacing,
                             onWeekSelected: onWeekSelected
                         )
-                        .frame(width: proxy.size.width, height: CGFloat(settings.archiveSpanYears) * dotSize + CGFloat(max(0, settings.archiveSpanYears - 1)) * spacing)
+                        .frame(width: proxy.size.width, height: dotSize * 4 + focusedSpacing * 3)
                     }
-                    .frame(height: CGFloat(settings.archiveSpanYears) * 7.0 + CGFloat(max(0, settings.archiveSpanYears - 1)) * spacing)
+                    .frame(height: 94)
 
-                    WeekArchiveWeekLegend()
+                    WeekArchiveFocusedYearLegend()
+
+                    Divider()
+                        .overlay(MoriColors.botanicalHairline.opacity(0.7))
+
+                    Button {
+                        showsFullArchive.toggle()
+                    } label: {
+                        HStack(spacing: 8) {
+                            MoriBitmapIconImage(icon: .chevron, size: 11, opacity: 0.72)
+                                .rotationEffect(.degrees(showsFullArchive ? -90 : 90))
+
+                            Text(MoriL10n.display(showsFullArchive ? "Hide full archive map" : "Show full archive map"))
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundColor(MoriColors.botanicalInk)
+
+                            Spacer(minLength: 0)
+                        }
+                        .frame(minHeight: MoriV2Layout.minimumHitTarget)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(MoriV2PressButtonStyle())
+                    .accessibilityLabel(MoriL10n.display(showsFullArchive ? "Hide full archive map" : "Show full archive map"))
+
+                    if showsFullArchive {
+                        VStack(alignment: .leading, spacing: 14) {
+                            MoriSectionTitle(
+                                title: "Full archive map",
+                                subtitle: "A quiet reference for older weeks."
+                            )
+
+                            GeometryReader { proxy in
+                                let availableWidth = max(proxy.size.width, 260)
+                                let dotSize = max(3.8, min(7, (availableWidth - CGFloat(51) * spacing) / 52))
+
+                                WeekArchiveWeeksCanvas(
+                                    archiveSpanYears: settings.archiveSpanYears,
+                                    archiveWeeksElapsed: settings.archiveWeeksElapsed,
+                                    currentWeekIndex: settings.currentWeekIndex,
+                                    recordedWeekIndexes: recordedWeekIndexes,
+                                    dotSize: dotSize,
+                                    spacing: spacing,
+                                    onWeekSelected: onWeekSelected
+                                )
+                                .frame(width: proxy.size.width, height: CGFloat(settings.archiveSpanYears) * dotSize + CGFloat(max(0, settings.archiveSpanYears - 1)) * spacing)
+                            }
+                            .frame(height: CGFloat(settings.archiveSpanYears) * 7.0 + CGFloat(max(0, settings.archiveSpanYears - 1)) * spacing)
+
+                            WeekArchiveWeekLegend()
+                        }
+                        .transition(.opacity)
+                    }
                 }
-                .transition(.opacity.combined(with: .move(edge: .top)))
+                .transition(.opacity)
             }
         }
         .moriSanctuaryCard(cornerRadius: 24, padding: 18)
+        .moriReduceMotionAnimation(MoriV2Motion.disclosure, value: showsYearMap)
+        .moriReduceMotionAnimation(MoriV2Motion.disclosure, value: showsFullArchive)
     }
 }
 
