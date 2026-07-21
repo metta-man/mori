@@ -1,0 +1,86 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  build:
+    runs-on: macos-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Select Xcode
+      run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+
+    - name: Show Xcode version
+      run: xcodebuild -version
+
+    - name: Install XcodeGen
+      run: brew install xcodegen
+
+    - name: Install design audit Python dependencies
+      run: python3 -m pip install Pillow
+
+    - name: Set up pnpm
+      uses: pnpm/action-setup@v4
+      with:
+        version: 11.7.0
+        run_install: false
+
+    - name: Set up Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+        cache: pnpm
+        cache-dependency-path: www/pnpm-lock.yaml
+
+    - name: Install web dependencies
+      working-directory: www
+      run: pnpm install --frozen-lockfile
+
+    - name: Check redesign release readiness
+      run: bash scripts/check_redesign_release_readiness.sh
+
+  deploy:
+    needs: build
+    runs-on: macos-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Select Xcode
+      run: sudo xcode-select -s /Applications/Xcode.app/Contents/Developer
+
+    - name: Build for archive
+      run: |
+        xcodebuild -project Mori.xcodeproj \
+          -scheme Mori \
+          -configuration Release \
+          -destination 'generic/platform=iOS' \
+          -archivePath build/Mori \
+          DEVELOPMENT_TEAM=${{ secrets.DEVELOPMENT_TEAM }} \
+          archive
+
+    - name: Export .ipa
+      run: |
+        # Update exportOptions with DEVELOPMENT_TEAM
+        /usr/libexec/PlistBuddy -c "Set :signingStyle manual" exportOptions.plist
+        /usr/libexec/PlistBuddy -c "Set :developmentTeam ${{ secrets.DEVELOPMENT_TEAM }}" exportOptions.plist
+        /usr/libexec/PlistBuddy -c "Set :signingCertificate 'Apple Distribution'" exportOptions.plist
+        /usr/libexec/PlistBuddy -c "Set :method 'ad-hoc'" exportOptions.plist
+
+        xcodebuild -exportArchive \
+          -archivePath build/Mori.xcarchive \
+          -exportPath build/output \
+          -exportOptionsPlist exportOptions.plist
+
+    - name: Upload artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: Mori-ipa
+        path: build/output/Mori.ipa
