@@ -67,115 +67,183 @@ struct PomodoroSetupHeroVisual: View {
 
 struct PomodoroFocusCycleRows: View {
     let selectedPhase: MoriPomodoroPhase
-    let focusMinutes: Int
-    let shortBreakMinutes: Int
-    let longBreakMinutes: Int
-    let cycles: Int
+    @Binding var focusMinutes: Int
+    @Binding var shortBreakMinutes: Int
+    @Binding var longBreakMinutes: Int
+    @Binding var cycles: Int
     let canChangeDuration: Bool
     let onSelectPhase: (MoriPomodoroPhase) -> Void
 
     var body: some View {
-        VStack(spacing: 8) {
-            row(
-                title: "Deep Session",
-                subtitle: MoriL10n.string("deep_session.settings.focus_minutes", defaultValue: "%d quiet minutes", arguments: [focusMinutes]),
-                icon: .timer,
-                tint: MoriColors.botanicalInk,
-                isSelected: selectedPhase == .focus
-            ) {
-                onSelectPhase(.focus)
-            }
+        VStack(alignment: .leading, spacing: 8) {
+            PomodoroSettingsSectionHeader(
+                title: "Session rhythm",
+                subtitle: "Choose a starting phase, timing, and repeats."
+            )
 
-            row(
-                title: "Quiet pause",
-                subtitle: MoriL10n.string("deep_session.settings.short_break_minutes", defaultValue: "%d minutes", arguments: [shortBreakMinutes]),
-                icon: .leaf,
-                tint: MoriColors.botanicalMist,
-                isSelected: selectedPhase == .shortBreak
-            ) {
-                onSelectPhase(.shortBreak)
-            }
+            VStack(spacing: 0) {
+                phaseRow(
+                    title: "Deep Session",
+                    valueLabel: MoriL10n.string(
+                        "deep_session.settings.focus_minutes",
+                        defaultValue: "%d quiet minutes",
+                        arguments: [focusMinutes]
+                    ),
+                    phase: .focus,
+                    value: $focusMinutes,
+                    range: 5...90,
+                    step: 5
+                )
 
-            row(
-                title: "Long pause",
-                subtitle: MoriL10n.string("deep_session.settings.long_break_minutes", defaultValue: "%d minutes", arguments: [longBreakMinutes]),
-                icon: .focus,
-                tint: MoriColors.botanicalSeed,
-                isSelected: selectedPhase == .longBreak
-            ) {
-                onSelectPhase(.longBreak)
-            }
+                rowDivider
 
-            row(
-                title: "Repeats",
-                subtitle: MoriL10n.string("deep_session.settings.repeats", defaultValue: "%d session", arguments: [cycles]),
-                icon: .roots,
-                tint: MoriColors.botanicalMoss,
-                isSelected: false
-            ) {
-                onSelectPhase(.focus)
+                phaseRow(
+                    title: "Quiet pause",
+                    valueLabel: MoriL10n.string(
+                        "deep_session.settings.short_break_minutes",
+                        defaultValue: "%d minutes",
+                        arguments: [shortBreakMinutes]
+                    ),
+                    phase: .shortBreak,
+                    value: $shortBreakMinutes,
+                    range: 1...30,
+                    step: 1
+                )
+
+                rowDivider
+
+                phaseRow(
+                    title: "Long pause",
+                    valueLabel: MoriL10n.string(
+                        "deep_session.settings.long_break_minutes",
+                        defaultValue: "%d minutes",
+                        arguments: [longBreakMinutes]
+                    ),
+                    phase: .longBreak,
+                    value: $longBreakMinutes,
+                    range: 5...45,
+                    step: 5
+                )
+
+                rowDivider
+
+                repeatsRow
+            }
+            .background(MoriV2Palette.raisedPaper.opacity(0.92))
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(MoriV2Palette.hairline, lineWidth: 1)
             }
         }
         .frame(maxWidth: .infinity)
     }
 
-    private func row(
+    private func phaseRow(
         title: String,
-        subtitle: String,
-        icon: MoriBitmapIcon,
-        tint: Color,
-        isSelected: Bool,
-        action: @escaping () -> Void
+        valueLabel: String,
+        phase: MoriPomodoroPhase,
+        value: Binding<Int>,
+        range: ClosedRange<Int>,
+        step: Int
     ) -> some View {
-        Button(action: action) {
-            OrganicCard(
-                fill: MoriColors.sanctuarySurface.opacity(isSelected ? 0.78 : 0.68),
-                radius: 22,
-                padding: 6
-            ) {
-                ZStack(alignment: .trailing) {
-                    HStack(spacing: 10) {
-                        MoriBitmapIconImage(icon: icon, size: 20, opacity: isSelected ? 0.88 : 0.54)
-                            .frame(width: 40, height: 40)
-                            .background(MoriColors.sanctuarySurface.opacity(0.58))
-                            .clipShape(Circle())
-                            .overlay(Circle().stroke(Color.white.opacity(0.72), lineWidth: 1))
+        let isSelected = selectedPhase == phase
 
-                        VStack(alignment: .leading, spacing: 3) {
-                            Text(MoriL10n.display(title))
-                                .font(.system(size: 18, weight: .semibold))
-                                .foregroundColor(MoriColors.sanctuaryInk)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.76)
+        return HStack(spacing: 8) {
+            Button {
+                onSelectPhase(phase)
+            } label: {
+                HStack(spacing: 11) {
+                    ZStack {
+                        Circle()
+                            .stroke(
+                                isSelected ? MoriV2Palette.primaryForest : MoriV2Palette.hairline,
+                                lineWidth: 1.5
+                            )
 
-                            Text(MoriL10n.display(subtitle))
-                                .font(.system(size: 13, weight: .regular))
-                                .foregroundColor(MoriColors.sanctuaryMuted)
-                                .lineLimit(1)
-                                .minimumScaleFactor(0.82)
-                                .monospacedDigit()
+                        if isSelected {
+                            Circle()
+                                .fill(MoriV2Palette.primaryForest)
+                                .padding(4)
                         }
-                        .frame(maxWidth: .infinity, alignment: .leading)
-                        .padding(.trailing, 30)
                     }
+                    .frame(width: 20, height: 20)
 
-                    MoriBitmapIconImage(icon: .chevron, size: 11, opacity: 0.62)
-                        .frame(width: 26, height: 26)
-                        .background(MoriColors.sanctuarySurface.opacity(0.60))
-                        .clipShape(Circle())
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(MoriL10n.display(title))
+                            .font(MoriV2Type.control)
+                            .foregroundColor(MoriV2Palette.forestInk)
+
+                        Text(valueLabel)
+                            .font(MoriV2Type.caption)
+                            .foregroundColor(MoriV2Palette.stone)
+                            .monospacedDigit()
+                    }
                 }
-                .frame(maxWidth: .infinity)
-                .frame(height: 42)
+                .frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)
+                .contentShape(Rectangle())
             }
-            .overlay(
-                RoundedRectangle(cornerRadius: 22, style: .continuous)
-                    .stroke(isSelected ? tint.opacity(0.48) : Color.clear, lineWidth: 1.2)
-            )
+            .buttonStyle(.plain)
+            .disabled(!canChangeDuration)
+            .accessibilityLabel(MoriL10n.string(
+                "deep_session.phase.accessibility",
+                defaultValue: "Start with %@",
+                arguments: [MoriL10n.display(title)]
+            ))
+            .accessibilityValue(isSelected ? MoriL10n.display("Selected") : valueLabel)
+
+            Stepper("", value: value, in: range, step: step)
+                .labelsHidden()
+                .disabled(!canChangeDuration)
+                .accessibilityLabel(MoriL10n.string(
+                    "deep_session.duration.accessibility",
+                    defaultValue: "%@ duration",
+                    arguments: [MoriL10n.display(title)]
+                ))
+                .accessibilityValue(valueLabel)
         }
-        .buttonStyle(.plain)
-        .disabled(!canChangeDuration)
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel("\(MoriL10n.display(title)). \(MoriL10n.display(subtitle))")
+        .padding(.leading, 14)
+        .padding(.trailing, 8)
+        .background(isSelected ? MoriV2Palette.sage.opacity(0.10) : Color.clear)
+    }
+
+    private var repeatsRow: some View {
+        HStack(spacing: 8) {
+            HStack(spacing: 11) {
+                MoriBitmapIconImage(icon: .roots, size: 17, opacity: 0.70)
+                    .frame(width: 20, height: 20)
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(MoriL10n.display("Repeats"))
+                        .font(MoriV2Type.control)
+                        .foregroundColor(MoriV2Palette.forestInk)
+
+                    Text(MoriL10n.string(
+                        "deep_session.settings.repeats",
+                        defaultValue: "%d sessions",
+                        arguments: [cycles]
+                    ))
+                    .font(MoriV2Type.caption)
+                    .foregroundColor(MoriV2Palette.stone)
+                    .monospacedDigit()
+                }
+            }
+            .frame(maxWidth: .infinity, minHeight: 56, alignment: .leading)
+
+            Stepper("", value: $cycles, in: 1...8, step: 1)
+                .labelsHidden()
+                .disabled(!canChangeDuration)
+                .accessibilityLabel(MoriL10n.display("Repeats"))
+                .accessibilityValue("\(cycles)")
+        }
+        .padding(.leading, 14)
+        .padding(.trailing, 8)
+    }
+
+    private var rowDivider: some View {
+        Divider()
+            .overlay(MoriV2Palette.hairline)
+            .padding(.leading, 45)
     }
 }
 
@@ -193,12 +261,13 @@ struct PomodoroSetupStartButton: View {
 
                 Text(MoriL10n.display(isCompleted ? "Begin again" : "Start Deep Session"))
             }
-            .font(.system(size: 15, weight: .semibold))
+            .font(MoriV2Type.control)
             .foregroundColor(MoriColors.botanicalSurface)
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
+            .frame(minHeight: 54)
+            .padding(.horizontal, 16)
             .background(MoriColors.botanicalInk)
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
         }
         .buttonStyle(.plain)
     }

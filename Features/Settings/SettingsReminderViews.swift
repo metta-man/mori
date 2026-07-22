@@ -35,19 +35,19 @@ struct ClockReminderSettingsRow: View {
     }
 
     private func handleToggle(_ enabled: Bool) {
-        authorizationDenied = false
-
         guard enabled else {
             ReminderScheduler.cancelClockReminder()
             return
         }
 
+        authorizationDenied = false
+
         ReminderScheduler.requestAuthorization { granted in
             if granted {
                 ReminderScheduler.scheduleClockReminder(hour: reminderHour, minute: reminderMinute)
             } else {
-                isEnabled = false
                 authorizationDenied = true
+                isEnabled = false
             }
         }
     }
@@ -88,20 +88,20 @@ struct JournalReminderSettingsRow: View {
     }
 
     private func handleToggle(_ enabled: Bool) {
-        authorizationDenied = false
-
         guard enabled else {
             ReminderScheduler.cancelJournalReminder()
             WidgetCenter.shared.reloadTimelines(ofKind: "MoriJournalQuickStartWidget")
             return
         }
 
+        authorizationDenied = false
+
         ReminderScheduler.requestAuthorization { granted in
             if granted {
                 ReminderScheduler.scheduleJournalReminder(hour: reminderHour, minute: reminderMinute)
             } else {
-                isEnabled = false
                 authorizationDenied = true
+                isEnabled = false
             }
 
             WidgetCenter.shared.reloadTimelines(ofKind: "MoriJournalQuickStartWidget")
@@ -142,19 +142,19 @@ struct DailySparkReminderSettingsRow: View {
     }
 
     private func handleToggle(_ enabled: Bool) {
-        authorizationDenied = false
-
         guard enabled else {
             ReminderScheduler.cancelDailySparkReminder()
             return
         }
 
+        authorizationDenied = false
+
         ReminderScheduler.requestAuthorization { granted in
             if granted {
                 ReminderScheduler.scheduleDailySparkReminder(hour: reminderHour, minute: reminderMinute)
             } else {
-                isEnabled = false
                 authorizationDenied = true
+                isEnabled = false
             }
         }
     }
@@ -169,31 +169,66 @@ private struct ReminderSettingsRow: View {
     let onToggle: (Bool) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 6) {
             Toggle(isOn: $isEnabled) {
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text(MoriL10n.display(title))
+                        .font(.system(size: 16, weight: .regular))
+                        .foregroundColor(MoriColors.botanicalInk)
+
                     Text(MoriL10n.display(subtitle))
-                        .font(.caption)
+                        .font(.system(size: 12, weight: .regular))
                         .foregroundColor(MoriColors.botanicalMuted)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
             .moriOnChange(of: isEnabled, perform: onToggle)
             .frame(minHeight: MoriV2Layout.minimumHitTarget)
+            .tint(MoriColors.botanicalInk)
 
             if isEnabled {
-                DatePicker(MoriL10n.display("Time"), selection: reminderDate, displayedComponents: .hourAndMinute)
-                    .frame(minHeight: MoriV2Layout.minimumHitTarget)
-                    .transition(.opacity)
+                Divider()
+                    .overlay(MoriColors.sanctuaryHairline)
+
+                HStack(spacing: 12) {
+                    Text(MoriL10n.display("Time"))
+                        .font(.system(size: 15, weight: .regular))
+                        .foregroundColor(MoriColors.botanicalInk)
+
+                    Spacer(minLength: 12)
+
+                    DatePicker(
+                        MoriL10n.display("Time"),
+                        selection: reminderDate,
+                        displayedComponents: .hourAndMinute
+                    )
+                    .labelsHidden()
+                    .datePickerStyle(.compact)
+                    .tint(MoriColors.botanicalInk)
+                    .accessibilityLabel(MoriL10n.display("Time"))
+                }
+                .frame(minHeight: MoriV2Layout.minimumHitTarget)
+                .transition(.opacity)
             }
 
             if authorizationDenied {
-                Text(MoriL10n.display("Notifications are off. Enable them in iOS Settings to use this reminder."))
-                    .font(.footnote)
-                    .foregroundColor(MoriColors.botanicalClay)
+                HStack(alignment: .top, spacing: 8) {
+                    MoriBitmapIconImage(icon: .bell, size: 14, opacity: 0.82)
+                        .frame(width: 22, height: 22)
+                        .background(MoriColors.botanicalClay.opacity(0.10))
+                        .clipShape(Circle())
+                        .accessibilityHidden(true)
+
+                    Text(MoriL10n.display("Notifications are off. Enable them in iOS Settings to use this reminder."))
+                        .font(.system(size: 12, weight: .regular))
+                        .foregroundColor(MoriColors.botanicalClay)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.top, 2)
+                .accessibilityElement(children: .combine)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 1)
         .moriReduceMotionAnimation(MoriV2Motion.disclosure, value: isEnabled)
     }
 }

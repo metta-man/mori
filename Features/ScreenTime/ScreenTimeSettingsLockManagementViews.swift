@@ -123,6 +123,7 @@ struct ScreenTimeSettingsLockManagementView: View {
                 removeLock()
             } label: {
                 screenTimeLockManagementLabel("Remove PIN Lock", icon: .minus)
+                    .foregroundStyle(MoriColors.botanicalClay)
             }
             .disabled(currentPIN.count != ScreenTimeSettingsLockStore.pinLength)
         }

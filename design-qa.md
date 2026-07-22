@@ -68,6 +68,73 @@ final result: passed
 
 ---
 
+# Mori Before Feed four-state flow — Design QA (2026-07-22)
+
+## Comparison target
+
+- Approved visual source: `DesignReferences/mori-approved-reference.jpeg` for Mori's paper, watercolor, typography, color, spacing, icon, and control language.
+- Exact flow direction: `DesignReferences/MORI_DESIGN_SPEC.md`, sections 7.2–7.3. The approved JPEG does not contain a Before Feed panel, so the written spec is the state/layout source of truth and the JPEG is the shared visual-language source.
+- Final runtime states from the final compiled source: `artifacts/before-feed-pass6a-20260722/final-why.png`, `final-offer.png`, `final-active.png`, and `final-completion.png`.
+- Required same-canvas evidence: `artifacts/before-feed-pass6a-20260722/final-approved-reference-comparison.png` and `final-four-state-board.png`.
+- Baseline/refinement evidence: `baseline-why-now.png`, `baseline-active.png`, the four `pass6a-p1-*.png` captures, the four `pass6a-p2-*.png` captures, `pass1-reference-flow-board.png`, `pass2-reference-flow-board.png`, and `final-baseline-vs-active.png`.
+- Accessibility and duration evidence: `accessibility-extra-large-why.png`, `accessibility-extra-large-active.png`, and `offer-30-seconds-runtime.png` in the same artifact directory.
+
+## Viewport and state
+
+- Native SwiftUI on the iPhone 15 Pro Max Mori QA simulator, iOS 26.5, 430 × 932 pt / 1290 × 2796 px, light appearance, Dynamic Type `large` for the final four-state board.
+- The production sheet was opened with the existing onboarding and Before Feed UI-test launch hooks. Two additional DEBUG-only state hooks expose the offer and completion states without changing production persistence or timing.
+- The one-minute final board uses the real configured app-group duration. A separate runtime launch verifies the 30-second configuration as `30 seconds` / `00:30`, after which the simulator preference was restored to 60 seconds.
+- Route context is truthful: the captures use the Screen Time source and therefore display the manual-return guidance beneath each state.
+
+## Findings and complete visible-difference list
+
+No actionable P0, P1, or P2 visual difference remains after two refinement passes. The following visible differences are intentional P3 source/runtime variations:
+
+- The approved JPEG shows Log, Life Grid, Focus, and Deep Session rather than Before Feed. The implementation therefore matches its visual system—warm paper, forest ink, serif editorial hierarchy, pale sage watercolor, restrained controls—while following the exact Before Feed structure in the written spec.
+- Before Feed remains the existing native system sheet with a rounded top and grabber because the flow must preserve its modal route and dismissal behavior. The reference panels are mostly full-screen roots or a different day-detail sheet.
+- The simulator uses current native Dynamic Island, status, battery, sheet-grabber, and home-indicator chrome. The photographed source uses older hardware/platform chrome.
+- The production watercolor rasters have naturally different wet-edge and landscape contours from the photographed concept. Their crop, pale center, sage/mist palette, organic alpha edges, and full-sheet continuity match the approved direction.
+- Runtime duration, route-source guidance, and selected reason are truthful rather than copied from illustrative mock data.
+
+No other obvious visible mismatch remains in the full four-state board or the approved-reference comparison.
+
+## Required fidelity surfaces
+
+- Continuous background: passed. Before Feed no longer uses the shared material header strip, divider, hard mid-screen seam, separate opaque footer, or edge-attached action bar. Paper and watercolor run continuously from the status region to the bottom landscape.
+- Header hierarchy: passed. `Before Feed` remains centered, while `Close` is a quiet 15 pt text action with a 44 pt target and no oversized capsule. Morning Gate retains its original header branch.
+- Why now: passed. A centered serif title/support line leads five spacious warm-paper reason rows. Reply, Learn, Relax, Habit, and Other all remain visible, selectable, and accessible. Continue is the only primary action and remains disabled until a reason is chosen.
+- Short pause offer: passed. The selected reason, dynamic configured duration, watercolor bloom, `Begin quiet pause` primary action, and small `Continue now` secondary action form one calm hierarchy without extra cards.
+- Active pause: passed. Title, phase cue, timer, and the phase-driven watercolor bloom are one centered composition. The previous detached cue and oversized empty lower region are gone. Pause/Resume is a compact light 46.8 pt capsule rather than a dominant dark banking-style bar.
+- Completion decision: passed. The static 00:00 bloom, intentional-choice copy, and one dark `Continue now` action are visually distinct from the running state without adding a summary card.
+- Typography, color, icons, and asset quality: passed. The flow reuses Mori's serif/sans hierarchy, sanctuary forest/sage/paper tokens, real bitmap play/pause icons, real approved watercolor rasters, and existing breathing bloom. No emoji, ASCII, inline SVG, placeholder, or code-drawn watercolor substitute was added.
+- Alternate sizing: passed. At Accessibility Extra Large, Why now remains vertically scrollable with all five reasons and Continue reachable; the active title, bloom, timer, Pause, and complete route guidance remain readable without overlap. Visible controls preserve practical 44 pt minimum targets.
+
+## Visible mismatch and automatic-refinement history
+
+1. Baseline — the sheet had a translucent material header plus divider, a 52 pt bordered Close capsule, a hard horizontal background split, a separately opaque footer, a full-width dark Pause bar, a detached phase label, and an oversized empty lower region. Only reason/running presentation states were distinct.
+2. Pass 1 — introduced reason, offer, active, and completion stages; a Before Feed-only continuous paper background; editorial hierarchy; a unified bloom/timer/phase composition; a compact Pause control; and one primary action per state. Remaining differences: the lower landscape began too low and left the active composition visually top-heavy, while compact/text-scaling resilience needed hardening.
+3. Pass 2 — raised and strengthened the bottom watercolor wash, switched the active stage to the cooler breathing backdrop, added title scaling limits, and strengthened the quiet Back mark. Final comparison removed the obvious seam, footer, empty-lower-area, and control-weight mismatches.
+4. Final review — independent review found missing route-context and VoiceOver localization. English, Traditional Chinese, and Simplified Chinese now include all visible Before Feed copy, selection hints/states, route guidance, and parameterized remaining-time accessibility text. Re-review found no remaining P0/P1/P2 issue.
+
+## Behavior, accessibility, scope, and verification
+
+- Real accessibility-tree interaction selected `Other`, changed its value to `Selected`, and enabled Continue. Continue opened the offer with `OTHER`, `1 minute`, and `01:00`.
+- Begin started the real countdown and breathing state. Pause froze `00:38` for more than two seconds and changed the control/cue to Resume/Paused; Resume changed it to Pause and the timer continued to `00:36`.
+- Close from the active state dismissed to Today without completing. Back resets the temporary session and returns to all five reasons.
+- The optional offer `Continue now` and the completion `Continue now` both dismiss intentionally through the existing `completeBeforeFeedReset()` boundary, record one reason event, and open the configured grace window. Timer completion alone still does not unlock the feed.
+- A completion interaction wrote the expected `habit` / `screen_time_gate` intent event and grace-until value into the simulator's existing app-group store. The single-shot confirmation guard prevents duplicate recording within one sheet instance.
+- The timer remains wall-clock based, excludes paused time, supports the existing configured 30–600 second range, and derives inhale/hold/exhale state from `MoriAttentionResetBreathingState` and the existing breathing-cycle timing.
+- Pause stops cues and visual motion; Resume restarts them from retained elapsed time. Reduce Motion continues to disable bloom transforms without disabling timing or controls.
+- Close, Back, sheet cleanup, native Before Feed protection, grace-window completion, DeviceActivity, ManagedSettings, FamilyControls, and intent notifications remain on their original manager/store paths.
+- Morning Gate remains on a separate visual and completion branch. Today, Focus, Log, Life Grid, Settings, and Deep Session were not modified by the Pass 6A implementation.
+- `plutil -lint` passes for English, Traditional Chinese, and Simplified Chinese strings. A literal-key audit finds no missing `MoriL10n.display(...)` entry in the scoped files.
+- Final combined simulator build passed with exit 0. The repository has no dedicated XCTest/UI-test target for this flow; native launch-state capture, production control interaction, accessibility-tree assertions, app-group state evidence, comparison boards, and an independent technical review provide proportionate verification.
+- Independent scoped re-review found no remaining P0/P1/P2 issue.
+
+final result: passed
+
+---
+
 # Mori Persistent Root Shell — Native SwiftUI QA (2026-07-22)
 
 ## Comparison target

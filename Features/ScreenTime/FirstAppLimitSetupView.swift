@@ -96,8 +96,6 @@ struct FirstAppLimitSetupView: View {
 }
 
 struct FirstAppLimitSetupSurface: View {
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-
     @ObservedObject var appLimitManager: AppLimitManager
     @AppStorage(
         MoriScreenTimeShared.beforeFeedDurationSecondsKey,
@@ -176,51 +174,84 @@ struct FirstAppLimitSetupSurface: View {
     var body: some View {
         GeometryReader { proxy in
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 22) {
-                    MoriPageHeader(
-                        eyebrow: "First App Limit",
+                VStack(alignment: .leading, spacing: 18) {
+                    MoriSectionTitle(
                         title: "Limit the next feed",
-                        subtitle: copy.headerSubtitle,
-                        showsEyebrow: proxy.size.height >= 820
-                    )
-                    .padding(.top, proxy.size.height < 820 ? 28 : 0)
-
-                    if shouldShowHero(availableHeight: proxy.size.height) && (!summary.hasEffectiveSelection || isReady) {
-                        FirstAppLimitHero(isReady: isReady)
-                    }
-
-                    FirstAppLimitSetupCard(
-                        title: isReady ? "First App Limit ready" : copy.setupTitle,
-                        emptySelectionDetail: copy.emptySelectionDetail,
-                        selectedStatusText: selectedStatusText,
-                        snapshot: snapshot,
-                        summary: summary
+                        subtitle: copy.headerSubtitle
                     )
 
-                    if summary.hasEffectiveSelection {
-                        FirstAppLimitTimingCard(
-                            durationSeconds: $beforeFeedDurationSeconds,
-                            graceWindowSeconds: $beforeFeedGraceWindowSeconds,
-                            breathingTechniqueID: $beforeFeedBreathingTechniqueID,
-                            isReady: isReady
+                    if snapshot.isAuthorized {
+                        FirstAppLimitSetupCard(
+                            title: isReady
+                                ? "First App Limit is on"
+                                : (summary.hasEffectiveSelection ? "App selected" : "Choose one app"),
+                            emptySelectionDetail: copy.emptySelectionDetail,
+                            selectedStatusText: selectedStatusText,
+                            snapshot: snapshot,
+                            summary: summary
                         )
-                    }
 
-                    FirstAppLimitBottomActions(
-                        primaryTitle: effectivePrimaryTitle,
-                        isPrimaryDisabled: primaryDisabled,
-                        secondaryTitle: secondaryTitle,
-                        onPrimary: performPrimaryAction,
-                        onSecondary: secondaryAction == nil ? nil : performSecondaryAction
-                    )
+                        if summary.hasEffectiveSelection {
+                            FirstAppLimitTimingCard(
+                                durationSeconds: $beforeFeedDurationSeconds,
+                                graceWindowSeconds: $beforeFeedGraceWindowSeconds,
+                                breathingTechniqueID: $beforeFeedBreathingTechniqueID,
+                                isReady: isReady
+                            )
+                        }
 
-                    if copy.showsReasonCard {
-                        FirstAppLimitReasonCard(copy: copy, isReady: isReady)
+                        FirstAppLimitBottomActions(
+                            primaryTitle: effectivePrimaryTitle,
+                            isPrimaryDisabled: primaryDisabled,
+                            secondaryTitle: secondaryTitle,
+                            onPrimary: performPrimaryAction,
+                            onSecondary: secondaryAction == nil ? nil : performSecondaryAction
+                        )
+                    } else {
+                        MoriPermissionState(
+                            title: "Allow Screen Time",
+                            message: "Mori needs iOS Screen Time access before you can choose an app. Permission is requested only when you tap below.",
+                            buttonTitle: "Allow Screen Time",
+                            buttonAction: performPrimaryAction
+                        )
+                        .moriSanctuaryBox(
+                            cornerRadius: 18,
+                            padding: 16,
+                            tone: .paper,
+                            castsShadow: false
+                        )
+
+                        if let lastErrorMessage = snapshot.lastErrorMessage {
+                            HStack(alignment: .top, spacing: 8) {
+                                MoriBitmapIconImage(icon: .refresh, size: 13, opacity: 0.82)
+                                    .accessibilityHidden(true)
+
+                                Text(MoriL10n.display(lastErrorMessage))
+                                    .font(MoriTypography.caption)
+                                    .foregroundColor(MoriColors.botanicalClay)
+                                    .fixedSize(horizontal: false, vertical: true)
+                            }
+                            .accessibilityElement(children: .combine)
+                        }
+
+                        if let secondaryTitle, secondaryAction != nil {
+                            Button(action: performSecondaryAction) {
+                                Text(MoriL10n.display(secondaryTitle))
+                                    .frame(maxWidth: .infinity, minHeight: MoriV2Layout.minimumHitTarget)
+                                    .contentShape(Rectangle())
+                            }
+                            .font(MoriTypography.caption)
+                            .foregroundColor(MoriColors.botanicalMuted)
+                            .buttonStyle(.plain)
+                        }
                     }
                 }
-                .padding(.horizontal, 24)
-                .padding(.top, copy.topPadding(for: proxy.size.height) + proxy.safeAreaInsets.top)
-                .padding(.bottom, 40 + proxy.safeAreaInsets.bottom)
+                .padding(.horizontal, 20)
+                .padding(
+                    .top,
+                    min(copy.topPadding(for: proxy.size.height), 28) + proxy.safeAreaInsets.top
+                )
+                .padding(.bottom, 32 + proxy.safeAreaInsets.bottom)
             }
         }
         .onAppear(perform: prepareView)
@@ -231,10 +262,6 @@ struct FirstAppLimitSetupSurface: View {
                 onDone: { finishPicker(target) }
             )
         }
-    }
-
-    private func shouldShowHero(availableHeight: CGFloat) -> Bool {
-        copy.showsHero && !dynamicTypeSize.isAccessibilitySize && availableHeight >= 820
     }
 
     private func requestAuthorization() {
@@ -306,18 +333,11 @@ struct FirstAppLimitSetupSurface: View {
 
 struct FirstAppLimitSetupCopy {
     let headerSubtitle: String
-    let setupTitle: String
     let emptySelectionDetail: String
-    let reasonSubtitle: String
-    let secondaryReasonTitle: String
-    let secondaryReasonDetail: String
     let analyticsContext: String
     let primaryAnalyticsAction: String
     let secondaryAnalyticsAction: String
     let topPadding: CGFloat
-    let bottomScrollPadding: CGFloat
-    let showsHero: Bool
-    let showsReasonCard: Bool
 
     func topPadding(for availableHeight: CGFloat) -> CGFloat {
         availableHeight < 820 ? min(topPadding, 64) : topPadding
@@ -325,34 +345,20 @@ struct FirstAppLimitSetupCopy {
 
     static let onboarding = FirstAppLimitSetupCopy(
         headerSubtitle: "Allow Screen Time, choose one app, then turn App Limit on.",
-        setupTitle: "Set first App Limit",
         emptySelectionDetail: "Pick one feed, video, news, or shopping app to slow down before it opens.",
-        reasonSubtitle: "One limited app changes behavior faster than another dashboard.",
-        secondaryReasonTitle: "Private by default",
-        secondaryReasonDetail: "Selected names stay hidden unless Screen Time data access supports display.",
         analyticsContext: "onboarding",
         primaryAnalyticsAction: "finish_onboarding",
         secondaryAnalyticsAction: "skip_app_limit",
-        topPadding: 84,
-        bottomScrollPadding: 184,
-        showsHero: true,
-        showsReasonCard: false
+        topPadding: 84
     )
 
     static let directSetup = FirstAppLimitSetupCopy(
         headerSubtitle: "Allow Screen Time, choose one app, then turn App Limit on.",
-        setupTitle: "Set first App Limit",
         emptySelectionDetail: "Pick the app or website that steals attention most often.",
-        reasonSubtitle: "A dashboard reports the problem. App Limit changes the next open.",
-        secondaryReasonTitle: "Settings can wait",
-        secondaryReasonDetail: "PIN locks and advanced timers stay in App Limits after the first App Limit exists.",
         analyticsContext: "direct_setup",
         primaryAnalyticsAction: "turn_app_limit_on",
         secondaryAnalyticsAction: "dismiss",
-        topPadding: 58,
-        bottomScrollPadding: 168,
-        showsHero: true,
-        showsReasonCard: true
+        topPadding: 58
     )
 }
 
@@ -393,7 +399,7 @@ private struct FirstAppLimitSetupCard: View {
         snapshot.isAppLimitReady(for: .beforeFeed)
     }
 
-    private var appLimitStepDetail: String {
+    private var supportingDetail: String {
         if isReady {
             return "The selected app will pause before the next feed."
         }
@@ -402,61 +408,60 @@ private struct FirstAppLimitSetupCard: View {
             return "Review timing below, then turn the limit on."
         }
 
-        return "After choosing one app, set the reset timing."
+        return emptySelectionDetail
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            MoriSectionTitle(
-                title: title,
-                subtitle: selectedStatusText
-            )
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .top, spacing: 12) {
+                MoriProductSymbolView(
+                    symbol: summary.hasEffectiveSelection ? .appLimit : .settings,
+                    size: 19,
+                    tint: MoriColors.botanicalInk,
+                    opacity: 0.92
+                )
+                .frame(width: 36, height: 36)
+                .background(MoriColors.botanicalInk.opacity(0.08))
+                .clipShape(Circle())
+                .accessibilityHidden(true)
 
-            FirstAppLimitStepRow(
-                index: 1,
-                title: snapshot.isAuthorized ? "Screen Time allowed" : "Allow Screen Time",
-                detail: snapshot.isAuthorized
-                    ? "Selected app limits can be applied."
-                    : "Required by iOS before any app limit can work.",
-                isComplete: snapshot.isAuthorized
-            )
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(MoriL10n.display(title))
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(MoriColors.sanctuaryInk)
 
-            FirstAppLimitStepRow(
-                index: 2,
-                title: summary.hasEffectiveSelection ? "App selected" : "Choose one app",
-                detail: summary.hasEffectiveSelection
-                    ? selectedStatusText
-                    : emptySelectionDetail,
-                isComplete: summary.hasEffectiveSelection
-            )
+                    Text(MoriL10n.display(selectedStatusText))
+                        .font(.system(size: 13, weight: .regular))
+                        .foregroundColor(MoriColors.sanctuaryMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
 
-            FirstAppLimitStepRow(
-                index: 3,
-                title: summary.hasEffectiveSelection ? "Timing available" : "Set reset timing",
-                detail: summary.hasEffectiveSelection
-                    ? "Choose breathing, reset duration, and app open window."
-                    : "Appears after one app is selected.",
-                isComplete: isReady
-            )
+                Spacer(minLength: 0)
+            }
 
-            FirstAppLimitStepRow(
-                index: 4,
-                title: isReady ? "App Limit on" : "Turn App Limit on",
-                detail: appLimitStepDetail,
-                isComplete: isReady
-            )
+            Text(MoriL10n.display(supportingDetail))
+                .font(MoriTypography.caption)
+                .foregroundColor(MoriColors.sanctuaryInkSoft)
+                .fixedSize(horizontal: false, vertical: true)
 
             if let lastErrorMessage = snapshot.lastErrorMessage {
-                Text(MoriL10n.display(lastErrorMessage))
-                    .font(MoriTypography.caption)
-                    .foregroundColor(MoriColors.botanicalClay)
-                    .fixedSize(horizontal: false, vertical: true)
+                HStack(alignment: .top, spacing: 8) {
+                    MoriBitmapIconImage(icon: .refresh, size: 13, opacity: 0.82)
+                        .accessibilityHidden(true)
+
+                    Text(MoriL10n.display(lastErrorMessage))
+                        .font(MoriTypography.caption)
+                        .foregroundColor(MoriColors.botanicalClay)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .accessibilityElement(children: .combine)
             }
         }
         .moriSanctuaryBox(
-            cornerRadius: 22,
-            padding: 16,
-            tone: .paper
+            cornerRadius: 18,
+            padding: 14,
+            tone: .paper,
+            castsShadow: false
         )
     }
 }
@@ -476,23 +481,23 @@ private struct FirstAppLimitTimingCard: View {
     }
 
     private var title: String {
-        isReady ? "Timing set" : "Set reset timing"
+        isReady ? "Timing" : "Reset timing"
     }
 
     private var subtitle: String {
         isReady
-            ? "You can still tune the reset before leaving."
-            : "This is the next step after choosing the app."
+            ? "Adjust these choices at any time."
+            : "Choose what happens before the app opens."
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
+        VStack(alignment: .leading, spacing: 12) {
             MoriSectionTitle(
                 title: title,
                 subtitle: subtitle
             )
 
-            VStack(spacing: 10) {
+            VStack(spacing: 0) {
                 FirstAppLimitTimingPickerRow(
                     icon: .breathe,
                     title: "Breathing",
@@ -506,6 +511,9 @@ private struct FirstAppLimitTimingCard: View {
                     }
                 }
 
+                Divider()
+                    .overlay(MoriColors.sanctuaryHairline)
+
                 FirstAppLimitTimingPickerRow(
                     icon: .timer,
                     title: "Reset duration",
@@ -517,6 +525,9 @@ private struct FirstAppLimitTimingCard: View {
                         }
                     }
                 }
+
+                Divider()
+                    .overlay(MoriColors.sanctuaryHairline)
 
                 FirstAppLimitTimingPickerRow(
                     icon: .refresh,
@@ -537,9 +548,10 @@ private struct FirstAppLimitTimingCard: View {
                 .fixedSize(horizontal: false, vertical: true)
         }
         .moriSanctuaryBox(
-            cornerRadius: 22,
-            padding: 16,
-            tone: .paper
+            cornerRadius: 18,
+            padding: 14,
+            tone: .paper,
+            castsShadow: false
         )
     }
 }
@@ -564,10 +576,11 @@ private struct FirstAppLimitTimingPickerRow<Control: View>: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 12) {
-            MoriBitmapIconImage(icon: icon, size: 17, opacity: 0.86)
-                .frame(width: 34, height: 34)
+            MoriBitmapIconImage(icon: icon, size: 16, opacity: 0.86)
+                .frame(width: 30, height: 30)
                 .background(MoriColors.botanicalInk.opacity(0.08))
                 .clipShape(Circle())
+                .accessibilityHidden(true)
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(MoriL10n.display(title))
@@ -575,7 +588,7 @@ private struct FirstAppLimitTimingPickerRow<Control: View>: View {
                     .foregroundColor(MoriColors.sanctuaryInk)
 
                 Text(MoriL10n.display(detail))
-                    .font(.system(size: 13, weight: .regular))
+                    .font(.system(size: 12, weight: .regular))
                     .foregroundColor(MoriColors.sanctuaryMuted)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -588,53 +601,8 @@ private struct FirstAppLimitTimingPickerRow<Control: View>: View {
                 .tint(MoriColors.botanicalInk)
                 .frame(maxWidth: 150, alignment: .trailing)
         }
-        .padding(12)
-        .background(MoriColors.sanctuarySurface.opacity(0.60))
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-    }
-}
-
-private struct FirstAppLimitReasonCard: View {
-    let copy: FirstAppLimitSetupCopy
-    let isReady: Bool
-
-    private var title: String {
-        isReady ? "What happens next?" : "Why this first?"
-    }
-
-    private var subtitle: String {
-        isReady
-            ? "Leave MORI. The next open is where the limit does its work."
-            : copy.reasonSubtitle
-    }
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            MoriSectionTitle(
-                title: title,
-                subtitle: subtitle
-            )
-
-            FirstAppLimitReasonRow(
-                icon: .leaf,
-                productSymbol: .beforeFeedReset,
-                title: isReady ? "Open the app normally" : "Friction beats willpower",
-                detail: isReady
-                    ? "MORI will pause before the feed instead of asking you to configure more."
-                    : "The limit slows the app at the moment you open it."
-            )
-
-            FirstAppLimitReasonRow(
-                icon: copy.secondaryReasonTitle == "Settings can wait" ? .settings : .lockShield,
-                title: copy.secondaryReasonTitle,
-                detail: copy.secondaryReasonDetail
-            )
-        }
-        .moriSanctuaryBox(
-            cornerRadius: 22,
-            padding: 16,
-            tone: .paper
-        )
+        .frame(minHeight: 56)
+        .contentShape(Rectangle())
     }
 }
 
@@ -658,7 +626,7 @@ private struct FirstAppLimitBottomActions: View {
             Text(MoriL10n.display(primaryTitle))
         }
         .buttonStyle(MoriPrimaryButtonStyle())
-        .frame(height: 56)
+        .frame(minHeight: 52)
         .contentShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
         .disabled(isPrimaryDisabled)
         .opacity(isPrimaryDisabled ? 0.48 : 1)
@@ -670,194 +638,12 @@ private struct FirstAppLimitBottomActions: View {
             Button(action: onSecondary) {
                 Text(MoriL10n.display(secondaryTitle))
                     .frame(maxWidth: .infinity)
-                    .frame(height: 32)
+                    .frame(minHeight: MoriV2Layout.minimumHitTarget)
                     .contentShape(Rectangle())
             }
             .font(MoriTypography.caption)
             .foregroundColor(MoriColors.botanicalMuted)
-        }
-    }
-}
-
-private struct FirstAppLimitHero: View {
-    let isReady: Bool
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 6) {
-                    Text(MoriL10n.display("App Limit"))
-                        .font(MoriTypography.caption)
-                        .foregroundColor(MoriColors.botanicalMoss)
-                        .textCase(.uppercase)
-
-                    Text(MoriL10n.display(isReady ? "Ready before the feed." : "One app. Less gravity."))
-                        .font(MoriTypography.sanctuarySection)
-                        .foregroundColor(MoriColors.sanctuaryInk)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-
-                Spacer()
-
-                FirstAppLimitStatusPill(isReady: isReady)
-            }
-
-            HStack(spacing: 10) {
-                FirstAppLimitMetric(value: "1", label: "app")
-                FirstAppLimitMetric(value: "iOS", label: "system")
-                FirstAppLimitMetric(value: "now", label: "before feed")
-            }
-        }
-        .padding(22)
-        .background(
-            MoriPlainWatercolorCardBackground(
-                cornerRadius: 18,
-                fill: MoriColors.sanctuarySurface.opacity(0.68),
-                paperOpacity: 0.07,
-                edgeOpacity: 0.04
-            )
-        )
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(Color.white.opacity(0.84), lineWidth: 1)
-        )
-        .accessibilityElement(children: .combine)
-        .accessibilityLabel(MoriL10n.display(isReady ? "App Limit ready before the feed." : "App Limit setup. One app. Less gravity."))
-    }
-}
-
-private struct FirstAppLimitStatusPill: View {
-    let isReady: Bool
-
-    var body: some View {
-        HStack(spacing: 7) {
-            MoriProductSymbolView(
-                symbol: isReady ? .appLimit : .settings,
-                size: 18,
-                tint: MoriColors.botanicalInk,
-                opacity: 0.92
-            )
-
-            Text(MoriL10n.display(isReady ? "Ready" : "Screen Time"))
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                .foregroundColor(MoriColors.botanicalInk)
-                .lineLimit(1)
-        }
-        .padding(.horizontal, 10)
-        .padding(.vertical, 8)
-        .background(MoriColors.sanctuarySurface.opacity(0.70))
-        .clipShape(Capsule())
-        .overlay(
-            Capsule()
-                .stroke(Color.white.opacity(0.74), lineWidth: 1)
-        )
-    }
-}
-
-private struct FirstAppLimitMetric: View {
-    let value: String
-    let label: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(MoriL10n.display(value))
-                .font(.system(size: 24, weight: .semibold, design: .serif))
-                .foregroundColor(MoriColors.sanctuaryInk)
-                .lineLimit(1)
-                .minimumScaleFactor(0.72)
-
-            Text(MoriL10n.display(label))
-                .font(MoriTypography.caption)
-                .foregroundColor(MoriColors.botanicalMuted)
-                .lineLimit(1)
-                .minimumScaleFactor(0.78)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .padding(12)
-        .background(MoriColors.sanctuarySurface.opacity(0.62))
-        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-    }
-}
-
-private struct FirstAppLimitStepRow: View {
-    let index: Int
-    let title: String
-    let detail: String
-    let isComplete: Bool
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            ZStack {
-                Circle()
-                    .fill(isComplete ? MoriColors.botanicalMoss : MoriColors.botanicalInk.opacity(0.10))
-                    .frame(width: 30, height: 30)
-
-                if isComplete {
-                    MoriProductSymbolView(
-                        symbol: .appLimit,
-                        size: 16,
-                        tint: MoriColors.sanctuarySurface,
-                        opacity: 0.96
-                    )
-                } else {
-                    Text("\(index)")
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
-                        .foregroundColor(MoriColors.botanicalInk)
-                }
-            }
-
-            VStack(alignment: .leading, spacing: 3) {
-                Text(MoriL10n.display(title))
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundColor(MoriColors.sanctuaryInk)
-
-                Text(MoriL10n.display(detail))
-                    .font(MoriTypography.caption)
-                    .foregroundColor(MoriColors.sanctuaryMuted)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-    }
-}
-
-private struct FirstAppLimitReasonRow: View {
-    let icon: MoriBitmapIcon
-    var productSymbol: MoriProductSymbol? = nil
-    let title: String
-    let detail: String
-
-    var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            rowGraphic
-                .frame(width: 34, height: 34)
-                .background(MoriColors.botanicalInk.opacity(0.10))
-                .clipShape(Circle())
-
-            VStack(alignment: .leading, spacing: 3) {
-                Text(MoriL10n.display(title))
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundColor(MoriColors.sanctuaryInk)
-
-                Text(MoriL10n.display(detail))
-                    .font(MoriTypography.caption)
-                    .foregroundColor(MoriColors.sanctuaryMuted)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
-        }
-    }
-
-    @ViewBuilder
-    private var rowGraphic: some View {
-        if let productSymbol {
-            MoriProductSymbolView(
-                symbol: productSymbol,
-                size: 20,
-                tint: MoriColors.botanicalInk,
-                opacity: 0.92
-            )
-        } else {
-            MoriBitmapIconImage(icon: icon, size: 18, opacity: 0.92)
+            .buttonStyle(.plain)
         }
     }
 }

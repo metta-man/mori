@@ -19,9 +19,7 @@ struct DailySparkCard: View {
         VStack(alignment: .leading, spacing: 16) {
             header
 
-            if isEditing {
-                editor
-            } else if let entry = store.todayEntry {
+            if let entry = store.todayEntry {
                 savedSpark(entry)
             } else {
                 compactPrompt
@@ -30,6 +28,18 @@ struct DailySparkCard: View {
         .moriSanctuaryCard(cornerRadius: 22, padding: 18)
         .onAppear(perform: loadToday)
         .onMoriDataChange(.dailySpark, perform: loadToday)
+        .sheet(isPresented: $isEditing) {
+            DailySparkEditorSheet(
+                focus: $focus,
+                smallAction: $smallAction,
+                desiredFeeling: $desiredFeeling,
+                thingToAvoid: $thingToAvoid,
+                ifThenPlan: $ifThenPlan,
+                feelingOptions: feelingOptions,
+                canSave: canSave,
+                onSave: saveSpark
+            )
+        }
     }
 
     private var header: some View {
@@ -57,17 +67,17 @@ struct DailySparkCard: View {
 
             if store.todayEntry != nil || isEditing {
                 Button {
-                    withAnimation(.spring(response: 0.28, dampingFraction: 0.82)) {
-                        isEditing.toggle()
-                    }
+                    isEditing = true
                 } label: {
-                    MoriBitmapIconImage(icon: isEditing ? .minus : .journal, size: 17, opacity: 0.88)
+                    MoriBitmapIconImage(icon: .journal, size: 17, opacity: 0.88)
                         .frame(width: 32, height: 32)
                         .background(MoriColors.botanicalInk.opacity(0.08))
                         .clipShape(Circle())
+                        .frame(width: 44, height: 44)
+                        .contentShape(Rectangle())
                 }
                 .buttonStyle(.plain)
-                .accessibilityLabel(MoriL10n.display(isEditing ? "Close Daily Spark" : "Edit Daily Spark"))
+                .accessibilityLabel(MoriL10n.display("Edit Daily Spark"))
             }
         }
     }
@@ -80,9 +90,7 @@ struct DailySparkCard: View {
                 .fixedSize(horizontal: false, vertical: true)
 
             Button {
-                withAnimation(.spring(response: 0.28, dampingFraction: 0.82)) {
-                    isEditing = true
-                }
+                isEditing = true
             } label: {
                 HStack(spacing: 10) {
                     MoriBitmapIconImage(icon: .plus, size: 15, opacity: 0.88)
@@ -137,86 +145,6 @@ struct DailySparkCard: View {
         }
     }
 
-    private var editor: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            DailySparkField(
-                title: "Today's Focus",
-                placeholder: "One thing that deserves my best attention",
-                text: $focus,
-                icon: .focus
-            )
-
-            DailySparkField(
-                title: "One small action",
-                placeholder: "One small action that protects today...",
-                text: $smallAction,
-                icon: .leaf
-            )
-
-            VStack(alignment: .leading, spacing: 10) {
-                DailySparkField(
-                    title: "Today I want to feel",
-                    placeholder: "Clear, steady, brave...",
-                    text: $desiredFeeling,
-                    icon: .heart
-                )
-
-                FlowLayout(spacing: 8) {
-                    ForEach(feelingOptions, id: \.self) { feeling in
-                        Button {
-                            desiredFeeling = feeling
-                        } label: {
-                            Text(MoriL10n.display(feeling))
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundColor(desiredFeeling == feeling ? MoriColors.botanicalSurface : MoriColors.botanicalInk)
-                                .padding(.horizontal, 10)
-                                .padding(.vertical, 7)
-                                .background(desiredFeeling == feeling ? MoriColors.botanicalInk : MoriColors.botanicalInk.opacity(0.08))
-                                .clipShape(Capsule())
-                        }
-                        .buttonStyle(.plain)
-                    }
-                }
-            }
-
-            DailySparkField(
-                title: "One thing to avoid",
-                placeholder: "The drift that usually steals the day",
-                text: $thingToAvoid,
-                icon: .lockShield
-            )
-
-            DailySparkField(
-                title: "If-then plan",
-                placeholder: "If I notice it, I will pause and come back.",
-                text: $ifThenPlan,
-                icon: .refresh
-            )
-
-            Button {
-                saveSpark()
-            } label: {
-                HStack(spacing: 8) {
-                    MoriBitmapIconImage(icon: .leaf, size: 16, opacity: canSave ? 0.96 : 0.42)
-                        .frame(width: 23, height: 23)
-                        .background(canSave ? MoriColors.sanctuarySurface.opacity(0.86) : Color.clear)
-                        .clipShape(Circle())
-
-                    Text(MoriL10n.display("Save Daily Spark"))
-                }
-                .font(.system(size: 14, weight: .semibold))
-                .foregroundColor(canSave ? MoriColors.botanicalSurface : MoriColors.botanicalMuted)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-                .background(canSave ? MoriColors.botanicalInk : MoriColors.botanicalInk.opacity(0.08))
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-            }
-            .buttonStyle(.plain)
-            .disabled(!canSave)
-            .accessibilityLabel(MoriL10n.display("Save Daily Spark"))
-        }
-    }
-
     private var canSave: Bool {
         !focus.trimmedForUI.isEmpty &&
         !smallAction.trimmedForUI.isEmpty &&
@@ -257,11 +185,145 @@ struct DailySparkCard: View {
         let generator = UIImpactFeedbackGenerator(style: .light)
         generator.impactOccurred()
 
-        withAnimation(.spring(response: 0.28, dampingFraction: 0.82)) {
-            isEditing = false
-        }
+        isEditing = false
 
         onSaved?(saved)
+    }
+}
+
+private struct DailySparkEditorSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    @Binding var focus: String
+    @Binding var smallAction: String
+    @Binding var desiredFeeling: String
+    @Binding var thingToAvoid: String
+    @Binding var ifThenPlan: String
+
+    let feelingOptions: [String]
+    let canSave: Bool
+    let onSave: () -> Void
+
+    var body: some View {
+        NavigationStack {
+            MoriPaperBackground(variant: .journal) {
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 20) {
+                        Text(MoriL10n.display("Start with one small action."))
+                            .font(.system(size: 15, weight: .regular))
+                            .foregroundColor(MoriColors.botanicalMuted)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        VStack(alignment: .leading, spacing: 18) {
+                            DailySparkField(
+                                title: "Today's Focus",
+                                placeholder: "One thing that deserves my best attention",
+                                text: $focus,
+                                icon: .focus
+                            )
+
+                            DailySparkField(
+                                title: "One small action",
+                                placeholder: "One small action that protects today...",
+                                text: $smallAction,
+                                icon: .leaf
+                            )
+
+                            VStack(alignment: .leading, spacing: 10) {
+                                DailySparkField(
+                                    title: "Today I want to feel",
+                                    placeholder: "Clear, steady, brave...",
+                                    text: $desiredFeeling,
+                                    icon: .heart
+                                )
+
+                                FlowLayout(spacing: 8) {
+                                    ForEach(feelingOptions, id: \.self) { feeling in
+                                        feelingButton(feeling)
+                                    }
+                                }
+                            }
+
+                            DailySparkField(
+                                title: "One thing to avoid",
+                                placeholder: "The drift that usually steals the day",
+                                text: $thingToAvoid,
+                                icon: .lockShield
+                            )
+
+                            DailySparkField(
+                                title: "If-then plan",
+                                placeholder: "If I notice it, I will pause and come back.",
+                                text: $ifThenPlan,
+                                icon: .refresh
+                            )
+                        }
+
+                        saveButton
+                    }
+                    .padding(.horizontal, 22)
+                    .padding(.top, 20)
+                    .padding(.bottom, 32)
+                }
+            }
+            .navigationTitle(MoriL10n.display("Daily Spark"))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarColorScheme(.light, for: .navigationBar)
+            .toolbarBackground(MoriColors.botanicalPaper, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(MoriL10n.display("Cancel")) {
+                        dismiss()
+                    }
+                    .foregroundColor(MoriColors.botanicalInk)
+                }
+            }
+        }
+        .moriKeyboardDoneToolbar()
+        .presentationDetents([.large])
+        .presentationDragIndicator(.visible)
+    }
+
+    private func feelingButton(_ feeling: String) -> some View {
+        let isSelected = desiredFeeling == feeling
+
+        return Button {
+            desiredFeeling = feeling
+        } label: {
+            Text(MoriL10n.display(feeling))
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(isSelected ? MoriColors.botanicalSurface : MoriColors.botanicalInk)
+                .padding(.horizontal, 13)
+                .frame(minHeight: 44)
+                .background(isSelected ? MoriColors.botanicalInk : MoriColors.botanicalInk.opacity(0.08))
+                .clipShape(Capsule())
+                .contentShape(Capsule())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(MoriL10n.display(feeling))
+        .accessibilityValue(isSelected ? MoriL10n.display("Selected") : "")
+    }
+
+    private var saveButton: some View {
+        Button(action: onSave) {
+            HStack(spacing: 8) {
+                MoriBitmapIconImage(icon: .leaf, size: 16, opacity: canSave ? 0.96 : 0.42)
+                    .frame(width: 23, height: 23)
+                    .background(canSave ? MoriColors.sanctuarySurface.opacity(0.86) : Color.clear)
+                    .clipShape(Circle())
+
+                Text(MoriL10n.display("Save Daily Spark"))
+            }
+            .font(.system(size: 15, weight: .semibold))
+            .foregroundColor(canSave ? MoriColors.botanicalSurface : MoriColors.botanicalMuted)
+            .frame(maxWidth: .infinity, minHeight: 50)
+            .background(canSave ? MoriColors.botanicalInk : MoriColors.botanicalInk.opacity(0.08))
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .disabled(!canSave)
+        .accessibilityLabel(MoriL10n.display("Save Daily Spark"))
     }
 }
 
@@ -299,6 +361,7 @@ private struct DailySparkField: View {
                     .padding(.horizontal, 12)
                     .padding(.vertical, 11)
                     .submitLabel(.next)
+                    .accessibilityLabel(MoriL10n.display(title))
             }
             .background(MoriColors.sanctuarySurface.opacity(0.94))
             .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
@@ -306,6 +369,7 @@ private struct DailySparkField: View {
                 RoundedRectangle(cornerRadius: 12, style: .continuous)
                     .stroke(MoriColors.botanicalInk.opacity(0.14), lineWidth: 1)
             )
+            .frame(minHeight: 44)
         }
     }
 }

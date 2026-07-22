@@ -2,10 +2,6 @@ import SwiftUI
 
 struct PomodoroAdvancedSettingsCard: View {
     let canChangeDuration: Bool
-    @Binding var focusMinutes: Int
-    @Binding var shortBreakMinutes: Int
-    @Binding var longBreakMinutes: Int
-    @Binding var cycles: Int
     @Binding var soundEnabled: Bool
     @Binding var hapticsEnabled: Bool
     @Binding var animationEnabled: Bool
@@ -20,11 +16,6 @@ struct PomodoroAdvancedSettingsCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 18) {
-            MoriSectionTitle(
-                title: "Session settings",
-                subtitle: "Choose only what helps the room feel quieter."
-            )
-
             PomodoroBreathingCue(
                 isGuidedBreathing: isGuidedBreathing,
                 activeBreathing: activeBreathing,
@@ -34,10 +25,6 @@ struct PomodoroAdvancedSettingsCard: View {
 
             if canChangeDuration {
                 PomodoroSettingsSection(
-                    focusMinutes: $focusMinutes,
-                    shortBreakMinutes: $shortBreakMinutes,
-                    longBreakMinutes: $longBreakMinutes,
-                    cycles: $cycles,
                     focusBreathing: focusBreathing,
                     breakBreathing: breakBreathing,
                     onSelectFocusBreathing: onSelectFocusBreathing,
@@ -50,72 +37,57 @@ struct PomodoroAdvancedSettingsCard: View {
                     animationEnabled: $animationEnabled,
                     darkRoomEnabled: $darkRoomEnabled
                 )
-            }
 
-            if canChangeDuration {
                 ScreenTimeLimitControls(contextTitle: "Deep Session", feature: .pomodoroFocus)
+            } else if !isGuidedBreathing {
+                Text(MoriL10n.display("Timing is locked while the session is active."))
+                    .font(MoriV2Type.supporting)
+                    .foregroundColor(MoriV2Palette.stone)
+                    .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
             }
         }
-        .moriSanctuaryCard(cornerRadius: 24, padding: 18)
     }
 }
 
 private struct PomodoroSettingsSection: View {
-    @Binding var focusMinutes: Int
-    @Binding var shortBreakMinutes: Int
-    @Binding var longBreakMinutes: Int
-    @Binding var cycles: Int
     let focusBreathing: MoriPomodoroBreakBreathing
     let breakBreathing: MoriPomodoroBreakBreathing
     let onSelectFocusBreathing: (MoriPomodoroBreakBreathing) -> Void
     let onSelectBreakBreathing: (MoriPomodoroBreakBreathing) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Stepper(
-                MoriL10n.string("deep_session.settings.focus_minutes", defaultValue: "Deep Session %dm", arguments: [focusMinutes]),
-                value: $focusMinutes,
-                in: 5...90,
-                step: 5
-            )
-            Stepper(
-                MoriL10n.string("deep_session.settings.short_break_minutes", defaultValue: "Quiet pause %dm", arguments: [shortBreakMinutes]),
-                value: $shortBreakMinutes,
-                in: 1...30,
-                step: 1
-            )
-            Stepper(
-                MoriL10n.string("deep_session.settings.long_break_minutes", defaultValue: "Long pause %dm", arguments: [longBreakMinutes]),
-                value: $longBreakMinutes,
-                in: 5...45,
-                step: 5
-            )
-            Stepper(
-                MoriL10n.string("deep_session.settings.repeats", defaultValue: "Repeats %d", arguments: [cycles]),
-                value: $cycles,
-                in: 1...8,
-                step: 1
+        VStack(alignment: .leading, spacing: 8) {
+            PomodoroSettingsSectionHeader(
+                title: "Breathing cues",
+                subtitle: "Optional guidance for focus and pauses."
             )
 
-            PomodoroBreathingPicker(
-                title: "Focus breathing",
-                selection: focusBreathing,
-                tint: MoriColors.botanicalInk,
-                onSelect: onSelectFocusBreathing
-            )
+            VStack(spacing: 0) {
+                PomodoroBreathingPicker(
+                    title: "Focus breathing",
+                    selection: focusBreathing,
+                    tint: MoriColors.botanicalInk,
+                    onSelect: onSelectFocusBreathing
+                )
 
-            PomodoroBreathingPicker(
-                title: "Break breathing",
-                selection: breakBreathing,
-                tint: MoriColors.botanicalMoss,
-                onSelect: onSelectBreakBreathing
-            )
+                Divider()
+                    .overlay(MoriV2Palette.hairline)
+                    .padding(.leading, 58)
+
+                PomodoroBreathingPicker(
+                    title: "Break breathing",
+                    selection: breakBreathing,
+                    tint: MoriColors.botanicalMoss,
+                    onSelect: onSelectBreakBreathing
+                )
+            }
+            .background(MoriV2Palette.raisedPaper.opacity(0.92))
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(MoriV2Palette.hairline, lineWidth: 1)
+            }
         }
-        .font(.system(size: 15, weight: .medium))
-        .foregroundColor(MoriColors.botanicalInk)
-        .padding(14)
-        .background(MoriColors.botanicalPaperDeep.opacity(0.52))
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
     }
 }
 
@@ -126,21 +98,28 @@ private struct PomodoroSessionCueSettings: View {
     @Binding var darkRoomEnabled: Bool
 
     var body: some View {
-        VStack(spacing: 0) {
-            quietToggle("Sound cues", isOn: $soundEnabled)
-            Divider().opacity(0.42)
-            quietToggle("Haptic cues", isOn: $hapticsEnabled)
-            Divider().opacity(0.42)
-            quietToggle("Forest movement", isOn: $animationEnabled)
-            Divider().opacity(0.42)
-            quietToggle("Dark room", isOn: $darkRoomEnabled)
-        }
-        .padding(.horizontal, 14)
-        .background(MoriV2Palette.raisedPaper.opacity(0.82))
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                .stroke(MoriV2Palette.hairline, lineWidth: 1)
+        VStack(alignment: .leading, spacing: 8) {
+            PomodoroSettingsSectionHeader(
+                title: "Session cues",
+                subtitle: "Keep only the signals that help."
+            )
+
+            VStack(spacing: 0) {
+                quietToggle("Sound cues", isOn: $soundEnabled)
+                rowDivider
+                quietToggle("Haptic cues", isOn: $hapticsEnabled)
+                rowDivider
+                quietToggle("Forest movement", isOn: $animationEnabled)
+                rowDivider
+                quietToggle("Dark room", isOn: $darkRoomEnabled)
+            }
+            .padding(.horizontal, 14)
+            .background(MoriV2Palette.raisedPaper.opacity(0.92))
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(MoriV2Palette.hairline, lineWidth: 1)
+            }
         }
     }
 
@@ -151,7 +130,12 @@ private struct PomodoroSessionCueSettings: View {
                 .foregroundColor(MoriV2Palette.forestInk)
         }
         .tint(MoriV2Palette.primaryForest)
-        .frame(minHeight: MoriV2Layout.minimumHitTarget)
+        .frame(minHeight: 52)
+    }
+
+    private var rowDivider: some View {
+        Divider()
+            .overlay(MoriV2Palette.hairline)
     }
 }
 
@@ -162,27 +146,67 @@ private struct PomodoroBreathingPicker: View {
     let onSelect: (MoriPomodoroBreakBreathing) -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text(MoriL10n.display(title))
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundColor(MoriColors.botanicalMuted)
-
-            FlowLayout(spacing: 8) {
-                ForEach(MoriPomodoroBreakBreathing.allCases) { option in
-                    Button {
-                        onSelect(option)
-                    } label: {
-                        MoriPill(
-                            title: option.title,
-                            icon: option.icon,
-                            isSelected: selection == option,
-                            tint: option.hasTechnique ? option.tint : tint
-                        )
+        Menu {
+            ForEach(MoriPomodoroBreakBreathing.allCases) { option in
+                Button {
+                    onSelect(option)
+                } label: {
+                    if selection == option {
+                        Label(option.title, systemImage: "checkmark")
+                    } else {
+                        Text(option.title)
                     }
-                    .buttonStyle(.plain)
                 }
             }
+        } label: {
+            HStack(spacing: 12) {
+                MoriBitmapIconImage(icon: selection.icon, size: 17, opacity: 0.80)
+                    .frame(width: 32, height: 32)
+                    .background((selection.hasTechnique ? selection.tint : tint).opacity(0.12))
+                    .clipShape(Circle())
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(MoriL10n.display(title))
+                        .font(MoriV2Type.supporting.weight(.semibold))
+                        .foregroundColor(MoriV2Palette.forestInk)
+
+                    Text(selection.title)
+                        .font(MoriV2Type.caption)
+                        .foregroundColor(MoriV2Palette.stone)
+                        .lineLimit(1)
+                }
+
+                Spacer(minLength: 8)
+
+                MoriBitmapIconImage(icon: .chevron, size: 11, opacity: 0.58)
+                    .frame(width: 32, height: 44)
+            }
+            .padding(.horizontal, 14)
+            .frame(maxWidth: .infinity, minHeight: 58)
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
+        .accessibilityLabel(MoriL10n.display(title))
+        .accessibilityValue(selection.title)
+    }
+}
+
+struct PomodoroSettingsSectionHeader: View {
+    let title: String
+    let subtitle: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 3) {
+            Text(MoriL10n.display(title))
+                .font(MoriV2Type.caption.weight(.semibold))
+                .foregroundColor(MoriV2Palette.forestInk)
+
+            Text(MoriL10n.display(subtitle))
+                .font(.system(size: 12, weight: .regular))
+                .foregroundColor(MoriV2Palette.stone)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
 
@@ -217,9 +241,14 @@ private struct PomodoroBreathingCue: View {
 
                 Spacer(minLength: 0)
             }
-            .padding(12)
+            .padding(.horizontal, 14)
+            .frame(minHeight: 58)
             .background(darkRoomEnabled ? Color.white.opacity(0.08) : activeBreathing.tint.opacity(0.10))
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                    .stroke(darkRoomEnabled ? Color.white.opacity(0.10) : MoriV2Palette.hairline, lineWidth: 1)
+            }
         }
     }
 

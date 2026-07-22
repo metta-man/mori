@@ -5,42 +5,30 @@ struct ScreenTimeSettingsOverviewSection: View {
 
     var body: some View {
         Section {
-            LazyVGrid(
-                columns: [
-                    GridItem(.flexible(), spacing: 10),
-                    GridItem(.flexible(), spacing: 10)
-                ],
-                spacing: 10
-            ) {
-                ScreenTimeSettingsOverviewTile(
-                    title: "Access",
-                    value: state.permissionStatus,
-                    icon: state.permissionIcon,
-                    tint: state.permissionTint
-                )
-                ScreenTimeSettingsOverviewTile(
-                    title: "PIN",
-                    value: state.lockStatus,
-                    icon: .lockShield,
-                    tint: MoriColors.botanicalInk
-                )
-                ScreenTimeSettingsOverviewTile(
-                    title: "Default Apps",
-                    value: state.defaultSelectionText,
-                    icon: .lockShield,
-                    tint: MoriColors.botanicalMoss
-                )
-                ScreenTimeSettingsOverviewTile(
-                    title: "Daily Signal",
-                    value: state.dailySignalText,
-                    icon: .pulse,
-                    tint: MoriColors.botanicalClay
-                )
-            }
+            ScreenTimeSettingsOverviewRow(
+                title: "Access",
+                value: state.permissionStatus,
+                icon: state.permissionIcon
+            )
+            ScreenTimeSettingsOverviewRow(
+                title: "PIN",
+                value: state.lockStatus,
+                icon: .lockShield
+            )
+            ScreenTimeSettingsOverviewRow(
+                title: "Default Apps",
+                value: state.defaultSelectionText,
+                icon: .lockShield
+            )
+            ScreenTimeSettingsOverviewRow(
+                title: "Daily Signal",
+                value: state.dailySignalText,
+                icon: .pulse
+            )
 
             HStack(spacing: 10) {
-                MoriBitmapIconImage(icon: .settings, size: 16, opacity: 0.58)
-                    .frame(width: 26)
+                MoriBitmapIconImage(icon: .settings, size: 15, opacity: 0.58)
+                    .frame(width: 22)
 
                 Text(MoriL10n.display(state.enabledFeaturesText))
                     .font(.footnote)
@@ -48,45 +36,39 @@ struct ScreenTimeSettingsOverviewSection: View {
                     .lineLimit(2)
                     .minimumScaleFactor(0.85)
             }
-            .padding(.top, 2)
+            .frame(minHeight: MoriHitTarget.minimum)
+            .accessibilityElement(children: .combine)
         } header: {
             Text(MoriL10n.display("Control Status"))
         }
     }
 }
 
-private struct ScreenTimeSettingsOverviewTile: View {
+private struct ScreenTimeSettingsOverviewRow: View {
     let title: String
     let value: String
     let icon: MoriBitmapIcon
-    let tint: Color
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 8) {
-            MoriBitmapIconImage(icon: icon, size: 16, opacity: 0.84)
-                .frame(width: 28, height: 28)
-                .background(tint.opacity(0.10))
-                .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        HStack(alignment: .center, spacing: 10) {
+            MoriBitmapIconImage(icon: icon, size: 15, opacity: 0.72)
+                .frame(width: 22)
 
-            VStack(alignment: .leading, spacing: 2) {
-                Text(MoriL10n.display(title))
-                    .font(.caption2.weight(.semibold))
-                    .foregroundColor(MoriColors.botanicalMuted)
-                    .textCase(.uppercase)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.82)
+            Text(MoriL10n.display(title))
+                .font(.system(size: 15, weight: .regular))
+                .foregroundColor(MoriColors.botanicalInk)
 
-                Text(MoriL10n.display(value))
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(MoriColors.botanicalInk)
-                    .lineLimit(2)
-                    .minimumScaleFactor(0.78)
-            }
+            Spacer(minLength: 12)
+
+            Text(MoriL10n.display(value))
+                .font(.footnote)
+                .foregroundColor(MoriColors.botanicalMuted)
+                .multilineTextAlignment(.trailing)
+                .lineLimit(2)
+                .minimumScaleFactor(0.82)
         }
-        .frame(maxWidth: .infinity, minHeight: 82, alignment: .leading)
-        .padding(10)
-        .background(MoriColors.botanicalPaperDeep.opacity(0.52))
-        .clipShape(RoundedRectangle(cornerRadius: 8, style: .continuous))
+        .frame(maxWidth: .infinity, minHeight: MoriHitTarget.minimum, alignment: .leading)
+        .accessibilityElement(children: .combine)
     }
 }
 
@@ -140,6 +122,7 @@ struct ScreenTimeSetupSection: View {
                     onRemoveLock()
                 } label: {
                     screenTimeSettingsLabel("Remove PIN Lock", icon: .minus)
+                        .foregroundStyle(MoriColors.botanicalClay)
                 }
             } else {
                 Button {

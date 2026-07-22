@@ -15,25 +15,12 @@ struct ScreenTimeLimitControls: View {
             header
 
             if !presentation.isAuthorized {
-                Button {
-                    requestScreenTimeAuthorization()
-                } label: {
-                    HStack(spacing: 8) {
-                        MoriBitmapIconImage(icon: .lockShield, size: 15, opacity: 0.94)
-                            .frame(width: 22, height: 22)
-                            .background(MoriColors.sanctuarySurface.opacity(0.86))
-                            .clipShape(Circle())
-
-                        Text(MoriL10n.display("Allow Screen Time"))
-                    }
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(MoriColors.botanicalSurface)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background(MoriColors.botanicalInk)
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                }
-                .buttonStyle(.plain)
+                MoriPermissionState(
+                    title: "Allow Screen Time",
+                    message: "Required before this session can limit selected apps. Mori asks only after you tap Allow.",
+                    buttonTitle: "Allow Screen Time",
+                    buttonAction: requestScreenTimeAuthorization
+                )
             }
 
             if presentation.isAuthorized {
@@ -48,8 +35,7 @@ struct ScreenTimeLimitControls: View {
                 }
                 .font(.system(size: 14, weight: .semibold))
                 .foregroundColor(MoriColors.botanicalInk)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
+                .frame(maxWidth: .infinity, minHeight: MoriV2Layout.minimumHitTarget)
                 .background(MoriColors.botanicalInk.opacity(0.08))
                 .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             }
@@ -106,6 +92,7 @@ struct ScreenTimeLimitControls: View {
                     .foregroundColor(MoriColors.botanicalInk)
             }
             .tint(MoriColors.botanicalInk)
+            .frame(minHeight: MoriV2Layout.minimumHitTarget)
 
             if summary.isEnabled {
                 Picker(MoriL10n.display("App list"), selection: sourceBinding) {
@@ -114,6 +101,7 @@ struct ScreenTimeLimitControls: View {
                     }
                 }
                 .pickerStyle(.segmented)
+                .frame(minHeight: MoriV2Layout.minimumHitTarget)
 
                 HStack(alignment: .center, spacing: 10) {
                     VStack(alignment: .leading, spacing: 3) {
@@ -140,7 +128,7 @@ struct ScreenTimeLimitControls: View {
                         .font(.system(size: 12, weight: .semibold))
                         .foregroundColor(MoriColors.botanicalInk)
                         .padding(.horizontal, 11)
-                        .padding(.vertical, 8)
+                        .frame(minHeight: MoriV2Layout.minimumHitTarget)
                         .background(MoriColors.botanicalInk.opacity(0.08))
                         .clipShape(Capsule())
                     }

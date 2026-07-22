@@ -36,7 +36,7 @@ struct PomodoroPracticeSetupSurface: View {
                 .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 20) {
+                VStack(alignment: .leading, spacing: 18) {
                     VStack(spacing: 6) {
                         Text(MoriL10n.display("Deep Session"))
                             .font(.system(size: 32, weight: .regular, design: .serif))
@@ -79,46 +79,57 @@ struct PomodoroPracticeSetupSurface: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(MoriL10n.display("Session options"))
                             .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(MoriColors.sanctuaryInk)
+                            .foregroundColor(MoriV2Palette.forestInk)
 
-                        Text(MoriL10n.display("Duration, quiet breaks, cues, and blocked apps."))
+                        Text(MoriL10n.string(
+                            "deep_session.options.summary",
+                            defaultValue: "%d min · %d repeats",
+                            arguments: [focusMinutes, cycles]
+                        ))
                             .font(.system(size: 13, weight: .regular))
-                            .foregroundColor(MoriColors.sanctuaryMuted)
-                            .fixedSize(horizontal: false, vertical: true)
+                            .foregroundColor(MoriV2Palette.stone)
+                            .monospacedDigit()
                     }
 
                     Spacer(minLength: 12)
 
                     MoriBitmapIconImage(
-                        icon: showsSessionOptions ? .minus : .plus,
-                        size: 15,
+                        icon: .chevron,
+                        size: 13,
                         opacity: 0.72
                     )
                     .frame(width: 44, height: 44)
+                    .rotationEffect(.degrees(showsSessionOptions ? 90 : 0))
                 }
+                .padding(.leading, 16)
+                .padding(.trailing, 8)
+                .frame(maxWidth: .infinity, minHeight: 62)
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .accessibilityLabel(showsSessionOptions ? "Hide session options" : "Show session options")
+            .background(MoriV2Palette.raisedPaper.opacity(0.92))
+            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 18, style: .continuous)
+                    .stroke(MoriV2Palette.hairline, lineWidth: 1)
+            }
+            .shadow(color: MoriV2Palette.shadow, radius: 10, x: 0, y: 5)
 
             if showsSessionOptions {
                 VStack(alignment: .leading, spacing: 16) {
                     PomodoroFocusCycleRows(
                         selectedPhase: phase,
-                        focusMinutes: focusMinutes,
-                        shortBreakMinutes: shortBreakMinutes,
-                        longBreakMinutes: longBreakMinutes,
-                        cycles: cycles,
+                        focusMinutes: $focusMinutes,
+                        shortBreakMinutes: $shortBreakMinutes,
+                        longBreakMinutes: $longBreakMinutes,
+                        cycles: $cycles,
                         canChangeDuration: timerState.canChangeDuration,
                         onSelectPhase: onSelectPhase
                     )
 
                     PomodoroAdvancedSettingsCard(
                         canChangeDuration: timerState.canChangeDuration,
-                        focusMinutes: $focusMinutes,
-                        shortBreakMinutes: $shortBreakMinutes,
-                        longBreakMinutes: $longBreakMinutes,
-                        cycles: $cycles,
                         soundEnabled: $soundEnabled,
                         hapticsEnabled: $hapticsEnabled,
                         animationEnabled: $animationEnabled,
@@ -132,17 +143,9 @@ struct PomodoroPracticeSetupSurface: View {
                         onSelectBreakBreathing: onSelectBreakBreathing
                     )
                 }
-                .transition(.opacity)
+                .transition(.opacity.combined(with: .move(edge: .top)))
             }
         }
-        .padding(18)
-        .background(MoriColors.sanctuarySurface.opacity(0.96))
-        .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
-        .overlay {
-            RoundedRectangle(cornerRadius: 22, style: .continuous)
-                .stroke(MoriColors.sanctuaryHairline, lineWidth: 1)
-        }
-        .shadow(color: MoriColors.sanctuaryShadow.opacity(0.36), radius: 18, x: 0, y: 8)
         .moriReduceMotionAnimation(MoriAnimation.slow, value: showsSessionOptions)
     }
 }

@@ -116,10 +116,8 @@ struct ScreenTimeSettingsUnlockView: View {
         Form {
             Section {
                 HStack(spacing: 12) {
-                    MoriBitmapIconImage(icon: .lockShield, size: 21, opacity: 0.86)
-                        .frame(width: 38, height: 38)
-                        .background(MoriColors.botanicalInk.opacity(0.1))
-                        .clipShape(Circle())
+                    MoriBitmapIconImage(icon: .lockShield, size: 17, opacity: 0.74)
+                        .frame(width: 24)
 
                     VStack(alignment: .leading, spacing: 3) {
                         Text(MoriL10n.display("App Limits are locked"))
@@ -129,9 +127,7 @@ struct ScreenTimeSettingsUnlockView: View {
                             .foregroundColor(MoriColors.botanicalMuted)
                     }
                 }
-            }
 
-            Section {
                 SecureField(MoriL10n.display("6-digit PIN"), text: $pin)
                     .screenTimePINInput($pin)
 
@@ -141,19 +137,17 @@ struct ScreenTimeSettingsUnlockView: View {
                     screenTimeLockLabel("Unlock App Limits", icon: .lockShield)
                 }
                 .disabled(pin.count != ScreenTimeSettingsLockStore.pinLength || cooldownRemaining > 0)
+
+                if let errorMessage {
+                    Text(errorMessage)
+                        .font(.footnote)
+                        .foregroundColor(MoriColors.botanicalClay)
+                }
             } footer: {
                 if cooldownRemaining > 0 {
                     Text(MoriL10n.string("screen_time.lock.retry_seconds", defaultValue: "Try again in %ds.", arguments: [cooldownRemaining]))
                 } else {
                     Text(MoriL10n.display("There is no in-app forgotten-PIN reset in this version."))
-                }
-            }
-
-            if let errorMessage {
-                Section {
-                    Text(errorMessage)
-                        .font(.footnote)
-                        .foregroundColor(MoriColors.botanicalClay)
                 }
             }
         }

@@ -172,6 +172,7 @@ extension View {
     /// Keep SwiftUI forms aligned with Mori's light paper UI, independent of the device appearance.
     func moriSettingsForm() -> some View {
         self
+            .listStyle(.insetGrouped)
             .scrollContentBackground(.hidden)
             .background {
                 MoriPaperBackground(variant: .settings) {
@@ -179,7 +180,9 @@ extension View {
                 }
             }
             .tint(MoriColors.botanicalInk)
+            .foregroundColor(MoriColors.botanicalInk)
             .listRowSeparatorTint(MoriColors.botanicalLine.opacity(0.7))
+            .environment(\.defaultMinListRowHeight, MoriHitTarget.minimum)
             .environment(\.colorScheme, .light)
     }
 

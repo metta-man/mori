@@ -22,25 +22,46 @@ struct MoriEmptyState: View {
     }
 
     var body: some View {
-        VStack(spacing: MoriSpacing.space4) {
-            MoriBitmapIconImage(icon: icon, size: 48, opacity: 0.72)
+        MoriFeedbackState(
+            icon: icon,
+            title: title,
+            message: message,
+            actionTitle: buttonTitle,
+            action: buttonAction
+        )
+        .padding(MoriSpacing.space4)
+    }
+}
 
-            Text(MoriL10n.display(title))
-                .font(MoriTypography.title2)
-                .foregroundColor(MoriColors.botanicalInk)
+struct MoriPermissionState: View {
+    let icon: MoriBitmapIcon
+    let title: String
+    let message: String
+    let buttonTitle: String
+    let buttonAction: () -> Void
 
-            Text(MoriL10n.display(message))
-                .font(MoriTypography.body)
-                .foregroundColor(MoriColors.botanicalMuted)
-                .multilineTextAlignment(.center)
+    init(
+        icon: MoriBitmapIcon = .lockShield,
+        title: String,
+        message: String,
+        buttonTitle: String,
+        buttonAction: @escaping () -> Void
+    ) {
+        self.icon = icon
+        self.title = title
+        self.message = message
+        self.buttonTitle = buttonTitle
+        self.buttonAction = buttonAction
+    }
 
-            if let buttonTitle, let buttonAction {
-                MoriButton(title: buttonTitle, action: buttonAction)
-                    .padding(.horizontal, MoriSpacing.space7)
-                    .padding(.top, MoriSpacing.space3)
-            }
-        }
-        .padding(MoriSpacing.space6)
+    var body: some View {
+        MoriFeedbackState(
+            icon: icon,
+            title: title,
+            message: message,
+            actionTitle: buttonTitle,
+            action: buttonAction
+        )
     }
 }
 
@@ -74,30 +95,77 @@ struct MoriSkeleton: View {
 }
 
 struct MoriErrorState: View {
+    let title: String
     let message: String
+    let retryTitle: String
     let retryAction: () -> Void
 
+    init(
+        title: String = "The connection is unstable",
+        message: String,
+        retryTitle: String = "Retry",
+        retryAction: @escaping () -> Void
+    ) {
+        self.title = title
+        self.message = message
+        self.retryTitle = retryTitle
+        self.retryAction = retryAction
+    }
+
     var body: some View {
-        VStack(spacing: MoriSpacing.space4) {
-            MoriBitmapIconImage(icon: .refresh, size: 48, opacity: 0.72)
+        MoriFeedbackState(
+            icon: .refresh,
+            title: title,
+            message: message,
+            actionTitle: retryTitle,
+            action: retryAction
+        )
+        .padding(MoriSpacing.space4)
+    }
+}
 
-            Text("The connection is unstable")
-                .font(MoriTypography.title2)
-                .foregroundColor(MoriColors.botanicalInk)
+private struct MoriFeedbackState: View {
+    let icon: MoriBitmapIcon
+    let title: String
+    let message: String
+    let actionTitle: String?
+    let action: (() -> Void)?
 
-            Text(MoriL10n.display(message))
-                .font(MoriTypography.body)
-                .foregroundColor(MoriColors.botanicalMuted)
-                .multilineTextAlignment(.center)
+    var body: some View {
+        VStack(alignment: .leading, spacing: MoriSpacing.space4) {
+            HStack(alignment: .top, spacing: MoriSpacing.space3) {
+                MoriBitmapIconImage(icon: icon, size: 20, opacity: 0.90)
+                    .frame(width: 36, height: 36)
+                    .background(MoriColors.botanicalInk.opacity(0.08))
+                    .clipShape(Circle())
+                    .accessibilityHidden(true)
 
-            MoriSecondaryButton(
-                title: "Retry",
-                style: .watercolorCompatibility,
-                action: retryAction
-            )
-                .padding(.horizontal, MoriSpacing.space7)
-                .padding(.top, MoriSpacing.space3)
+                VStack(alignment: .leading, spacing: MoriSpacing.space1) {
+                    Text(MoriL10n.display(title))
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundColor(MoriColors.botanicalInk)
+
+                    Text(MoriL10n.display(message))
+                        .font(.system(size: 13, weight: .regular))
+                        .foregroundColor(MoriColors.botanicalMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer(minLength: 0)
+            }
+
+            if let actionTitle, let action {
+                Button(action: action) {
+                    Text(MoriL10n.display(actionTitle))
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(MoriColors.sanctuarySurface)
+                        .frame(maxWidth: .infinity, minHeight: MoriV2Layout.minimumHitTarget)
+                        .background(MoriColors.botanicalInk)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+                .buttonStyle(.plain)
+            }
         }
-        .padding(MoriSpacing.space6)
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }

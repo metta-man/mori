@@ -2,6 +2,11 @@ import SwiftUI
 
 private enum SettingsRoute: Hashable {
     case appLimits
+    case archive
+    case reminders
+    case language
+    case appAndData
+    case about
 }
 
 struct SettingsView: View {
@@ -9,42 +14,76 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @StateObject private var appLimitManager = AppLimitManager.shared
     @State private var navigationPath: [SettingsRoute] = []
-    @State private var showingClearDayCheckinsAlert = false
-    @State private var showingRestartOnboardingAlert = false
-    @State private var isEditingArchiveStartDate = false
-    @State private var draftArchiveStartDate = Date()
-    @State private var showsArchiveSettings = false
-    @State private var showsReminderSettings = false
-    @State private var showsLanguageSettings = false
-    @State private var showsAppSettings = false
-    @State private var showsAbout = false
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
-            MoriPaperBackground(variant: .settings) {
-                ScrollView(showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 14) {
-                        MoriPageHeader(
-                            eyebrow: "Mori",
-                            title: "Settings",
-                            subtitle: "Adjust only what helps."
+            Form {
+                Section {
+                    NavigationLink(value: SettingsRoute.appLimits) {
+                        SettingsNavigationLabel(
+                            title: MoriL10n.display("App Limits"),
+                            subtitle: screenTimeStatusText,
+                            icon: .lockShield
                         )
-
-                        appLimitsSection
-                        weekArchiveSection
-                        remindersSection
-                        languageSection
-                        appSection
-                        aboutSection
                     }
-                    .padding(.horizontal, 20)
-                    .padding(.top, 20)
-                    .padding(.bottom, 42)
+
+                    NavigationLink(value: SettingsRoute.archive) {
+                        SettingsNavigationLabel(
+                            title: MoriL10n.display("Week Archive"),
+                            subtitle: MoriL10n.display("Start date and archive range."),
+                            icon: .roots
+                        )
+                    }
+                } header: {
+                    SettingsSectionHeader(title: MoriL10n.display("Attention"))
                 }
+                .listRowBackground(settingsRowBackground)
+
+                Section {
+                    NavigationLink(value: SettingsRoute.reminders) {
+                        SettingsNavigationLabel(
+                            title: MoriL10n.display("Reminders"),
+                            subtitle: MoriL10n.display("Optional, gentle nudges."),
+                            icon: .bell
+                        )
+                    }
+
+                    NavigationLink(value: SettingsRoute.language) {
+                        SettingsNavigationLabel(
+                            title: MoriL10n.display("Language"),
+                            value: settings.localePreference.displayName,
+                            icon: .journal
+                        )
+                    }
+                } header: {
+                    SettingsSectionHeader(title: MoriL10n.display("Preferences"))
+                }
+                .listRowBackground(settingsRowBackground)
+
+                Section {
+                    NavigationLink(value: SettingsRoute.appAndData) {
+                        SettingsNavigationLabel(
+                            title: MoriL10n.display("App and Data"),
+                            subtitle: MoriL10n.display("Onboarding and saved check-ins."),
+                            icon: .refresh
+                        )
+                    }
+
+                    NavigationLink(value: SettingsRoute.about) {
+                        SettingsNavigationLabel(
+                            title: MoriL10n.display("About Mori"),
+                            subtitle: MoriL10n.display("Pause. Notice. Choose."),
+                            icon: .leaf
+                        )
+                    }
+                } header: {
+                    SettingsSectionHeader(title: MoriL10n.display("Mori"))
+                }
+                .listRowBackground(settingsRowBackground)
             }
-            .environment(\.colorScheme, .light)
-            .tint(MoriV2Palette.primaryForest)
-            .navigationTitle("")
+            .moriSettingsForm()
+            .listStyle(.insetGrouped)
+            .navigationTitle(MoriL10n.display("Settings"))
             .navigationBarTitleDisplayMode(.inline)
             .toolbarBackground(MoriColors.botanicalPaper, for: .navigationBar)
             .toolbarBackground(.visible, for: .navigationBar)
@@ -54,93 +93,173 @@ struct SettingsView: View {
                     Button(MoriL10n.display("Done")) {
                         dismiss()
                     }
-                    .font(MoriV2Type.control)
-                    .foregroundColor(MoriV2Palette.forestInk)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(MoriColors.botanicalInk)
                     .frame(minHeight: MoriV2Layout.minimumHitTarget)
                 }
-            }
-            .alert(MoriL10n.display("Clear day check-ins?"), isPresented: $showingClearDayCheckinsAlert) {
-                Button(MoriL10n.display("Cancel"), role: .cancel) {}
-                Button(MoriL10n.display("Clear Check-ins"), role: .destructive) {
-                    HabitDataManager.shared.clearAllEntries()
-                }
-            } message: {
-                Text(MoriL10n.display("This removes saved daily check-ins and pattern notes. It cannot be undone."))
-            }
-            .alert(MoriL10n.display("Restart onboarding?"), isPresented: $showingRestartOnboardingAlert) {
-                Button(MoriL10n.display("Cancel"), role: .cancel) {}
-                Button(MoriL10n.display("Restart")) {
-                    settings.hasCompletedOnboarding = false
-                    dismiss()
-                }
-            } message: {
-                Text(MoriL10n.display("You can go through onboarding again without deleting your saved data."))
             }
             .navigationDestination(for: SettingsRoute.self) { route in
                 switch route {
                 case .appLimits:
                     LockedScreenTimeSettingsView()
+                case .archive:
+                    ArchiveSettingsView()
+                case .reminders:
+                    ReminderSettingsView()
+                case .language:
+                    LanguageSettingsView()
+                case .appAndData:
+                    AppAndDataSettingsView(dismissSettings: { dismiss() })
+                case .about:
+                    AboutMoriSettingsView()
                 }
             }
         }
     }
 
-    private var appLimitsSection: some View {
-        NavigationLink(value: SettingsRoute.appLimits) {
-            MoriV2QuietActionRow(
-                title: "App Limits",
-                subtitle: screenTimeStatusText,
-                icon: .lockShield
-            )
-        }
-        .buttonStyle(MoriV2PressButtonStyle())
+    private var settingsRowBackground: Color {
+        MoriColors.botanicalSurface.opacity(0.74)
     }
 
-    private var weekArchiveSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            MoriV2QuietDisclosureRow(
-                title: showsArchiveSettings ? "Hide archive settings" : "Week Archive",
-                subtitle: "Start date and archive range.",
-                isExpanded: showsArchiveSettings,
-                action: { showsArchiveSettings.toggle() }
-            )
+    private var screenTimeStatusText: String {
+        ScreenTimeSettingsLinkPresentation(appLimitManager: appLimitManager).statusText
+    }
+}
 
-            if showsArchiveSettings {
-                MoriV2PaperCard(padding: 16, cornerRadius: 20) {
-                    VStack(alignment: .leading, spacing: 14) {
-                        archiveStartEditor
+private struct SettingsNavigationLabel: View {
+    let title: String
+    var subtitle: String?
+    var value: String?
+    let icon: MoriBitmapIcon
 
-                        settingsDivider
+    init(
+        title: String,
+        subtitle: String? = nil,
+        value: String? = nil,
+        icon: MoriBitmapIcon
+    ) {
+        self.title = title
+        self.subtitle = subtitle
+        self.value = value
+        self.icon = icon
+    }
 
-                        Stepper(
-                            MoriL10n.string("settings.week_archive.years_shown", defaultValue: "Archive Span: %d years", arguments: [settings.archiveSpanYears]),
-                            value: $settings.archiveSpanYears,
-                            in: 60...100
-                        )
-                        .frame(minHeight: MoriV2Layout.minimumHitTarget)
+    var body: some View {
+        HStack(spacing: 11) {
+            MoriBitmapIconImage(icon: icon, size: 17, opacity: 0.76)
+                .frame(width: 21)
 
-                        settingsDivider
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 16, weight: .regular))
+                    .foregroundColor(MoriColors.botanicalInk)
 
-                        LabeledContent(MoriL10n.display("Current archive week"), value: "\(settings.currentWeekIndex + 1)")
-                            .frame(minHeight: MoriV2Layout.minimumHitTarget)
+                if let subtitle {
+                    Text(subtitle)
+                        .font(.system(size: 12, weight: .regular))
+                        .foregroundColor(MoriColors.botanicalMuted)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
 
-                        Text(MoriL10n.display("These details only shape how older notes are organized."))
-                            .font(MoriV2Type.caption)
-                            .foregroundColor(MoriV2Palette.mutedStone)
-                            .fixedSize(horizontal: false, vertical: true)
+            Spacer(minLength: 6)
+
+            if let value {
+                Text(value)
+                    .font(.system(size: 14, weight: .regular))
+                    .foregroundColor(MoriColors.botanicalMuted)
+                    .lineLimit(1)
+            }
+        }
+        .frame(maxWidth: .infinity, minHeight: MoriV2Layout.minimumHitTarget, alignment: .leading)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+    }
+}
+
+private struct SettingsSectionHeader: View {
+    let title: String
+
+    var body: some View {
+        Text(title)
+            .font(.system(size: 12, weight: .medium))
+            .foregroundColor(MoriColors.botanicalMuted)
+    }
+}
+
+private struct ArchiveSettingsView: View {
+    @EnvironmentObject private var settings: UserSettings
+    @State private var isEditingArchiveStartDate = false
+    @State private var draftArchiveStartDate = Date()
+
+    var body: some View {
+        Form {
+            Section {
+                archiveStartEditor
+
+                Stepper(
+                    MoriL10n.string(
+                        "settings.week_archive.years_shown",
+                        defaultValue: "Archive Span: %d years",
+                        arguments: [settings.archiveSpanYears]
+                    ),
+                    value: $settings.archiveSpanYears,
+                    in: 60...100
+                )
+                .font(.system(size: 16, weight: .regular))
+                .foregroundColor(MoriColors.botanicalInk)
+                .frame(minHeight: MoriV2Layout.minimumHitTarget)
+
+                LabeledContent(
+                    MoriL10n.display("Current archive week"),
+                    value: "\(settings.currentWeekIndex + 1)"
+                )
+                .font(.system(size: 16, weight: .regular))
+                .foregroundColor(MoriColors.botanicalInk)
+                .frame(minHeight: MoriV2Layout.minimumHitTarget)
+            } footer: {
+                Text(
+                    MoriL10n.display(
+                        "This calibrates the Week Archive grid only. Mori does not need an estimated lifetime to protect your attention."
+                    )
+                )
+                .font(.footnote)
+                .foregroundColor(MoriColors.botanicalMuted)
+            }
+            .listRowBackground(settingsRowBackground)
+
+            Section {
+                NavigationLink {
+                    WeekArchiveDetailView()
+                } label: {
+                    HStack(spacing: 11) {
+                        MoriBitmapIconImage(icon: .roots, size: 17, opacity: 0.76)
+                            .frame(width: 21)
+
+                        Text(MoriL10n.display("Open Life Grid"))
+                            .font(.system(size: 16, weight: .regular))
+                            .foregroundColor(MoriColors.botanicalInk)
                     }
+                    .frame(minHeight: MoriV2Layout.minimumHitTarget)
                 }
-                .transition(.opacity)
             }
+            .listRowBackground(settingsRowBackground)
         }
-        .moriReduceMotionAnimation(MoriV2Motion.disclosure, value: showsArchiveSettings)
+        .moriSettingsForm()
+        .listStyle(.insetGrouped)
+        .navigationTitle(MoriL10n.display("Week Archive"))
+        .navigationBarTitleDisplayMode(.inline)
     }
 
     private var archiveStartEditor: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 9) {
             HStack(alignment: .center, spacing: 12) {
-                VStack(alignment: .leading, spacing: 3) {
+                VStack(alignment: .leading, spacing: 2) {
                     Text(MoriL10n.display("Archive start"))
+                        .font(.system(size: 16, weight: .regular))
+                        .foregroundColor(MoriColors.botanicalInk)
+
                     Text(Self.archiveStartDateFormatter.string(from: settings.archiveStartDate))
                         .font(.footnote)
                         .foregroundColor(MoriColors.botanicalMuted)
@@ -152,9 +271,11 @@ struct SettingsView: View {
                     Button(MoriL10n.display("Edit")) {
                         beginArchiveStartDateEdit()
                     }
-                    .font(.footnote.weight(.semibold))
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(MoriColors.botanicalInk)
                 }
             }
+            .frame(minHeight: MoriV2Layout.minimumHitTarget)
 
             if isEditingArchiveStartDate {
                 DatePicker(
@@ -163,6 +284,7 @@ struct SettingsView: View {
                     displayedComponents: .date
                 )
                 .datePickerStyle(.graphical)
+                .tint(MoriColors.botanicalInk)
 
                 HStack {
                     Button(MoriL10n.display("Cancel")) {
@@ -176,133 +298,16 @@ struct SettingsView: View {
                     }
                     .fontWeight(.semibold)
                 }
+                .font(.system(size: 15, weight: .regular))
+                .foregroundColor(MoriColors.botanicalInk)
+                .frame(minHeight: MoriV2Layout.minimumHitTarget)
             }
         }
-        .padding(.vertical, 4)
+        .padding(.vertical, 1)
     }
 
-    private var remindersSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            MoriV2QuietDisclosureRow(
-                title: showsReminderSettings ? "Hide reminders" : "Reminders",
-                subtitle: "Optional, gentle nudges.",
-                isExpanded: showsReminderSettings,
-                action: { showsReminderSettings.toggle() }
-            )
-
-            if showsReminderSettings {
-                MoriV2PaperCard(padding: 16, cornerRadius: 20) {
-                    VStack(alignment: .leading, spacing: 16) {
-                        ClockReminderSettingsRow()
-                        settingsDivider
-                        DailySparkReminderSettingsRow()
-                        settingsDivider
-                        JournalReminderSettingsRow()
-                    }
-                }
-                .transition(.opacity)
-            }
-        }
-        .moriReduceMotionAnimation(MoriV2Motion.disclosure, value: showsReminderSettings)
-    }
-
-    private var languageSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            MoriV2QuietDisclosureRow(
-                title: showsLanguageSettings ? "Hide language" : "Language",
-                subtitle: settings.localePreference.displayName,
-                isExpanded: showsLanguageSettings,
-                action: { showsLanguageSettings.toggle() }
-            )
-
-            if showsLanguageSettings {
-                MoriV2PaperCard(padding: 16, cornerRadius: 20) {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Picker(MoriL10n.display("Language"), selection: $settings.localePreference) {
-                            ForEach(MoriLocalePreference.allCases) { preference in
-                                Text(preference.displayName).tag(preference)
-                            }
-                        }
-                        .pickerStyle(.menu)
-                        .frame(maxWidth: .infinity, minHeight: MoriV2Layout.minimumHitTarget, alignment: .leading)
-
-                        Text(MoriL10n.display("System follows your iPhone language order."))
-                            .font(MoriV2Type.caption)
-                            .foregroundColor(MoriV2Palette.mutedStone)
-                    }
-                }
-                .transition(.opacity)
-            }
-        }
-        .moriReduceMotionAnimation(MoriV2Motion.disclosure, value: showsLanguageSettings)
-    }
-
-    private var appSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            MoriV2QuietDisclosureRow(
-                title: showsAppSettings ? "Hide app and data" : "App and data",
-                subtitle: "Onboarding and saved check-ins.",
-                isExpanded: showsAppSettings,
-                action: { showsAppSettings.toggle() }
-            )
-
-            if showsAppSettings {
-                MoriV2PaperCard(padding: 16, cornerRadius: 20) {
-                    VStack(alignment: .leading, spacing: 10) {
-                        Button(MoriL10n.display("Restart Onboarding")) {
-                            showingRestartOnboardingAlert = true
-                        }
-                        .font(MoriV2Type.control)
-                        .foregroundColor(MoriV2Palette.forestInk)
-                        .frame(maxWidth: .infinity, minHeight: MoriV2Layout.minimumHitTarget, alignment: .leading)
-
-                        settingsDivider
-
-                        Button(MoriL10n.display("Clear Day Check-ins")) {
-                            showingClearDayCheckinsAlert = true
-                        }
-                        .font(MoriV2Type.control)
-                        .foregroundColor(MoriV2Palette.stone)
-                        .frame(maxWidth: .infinity, minHeight: MoriV2Layout.minimumHitTarget, alignment: .leading)
-                    }
-                }
-                .transition(.opacity)
-            }
-        }
-        .moriReduceMotionAnimation(MoriV2Motion.disclosure, value: showsAppSettings)
-    }
-
-    private var aboutSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            MoriV2QuietDisclosureRow(
-                title: showsAbout ? "Hide about Mori" : "About Mori",
-                subtitle: "Pause. Notice. Choose.",
-                isExpanded: showsAbout,
-                action: { showsAbout.toggle() }
-            )
-
-            if showsAbout {
-                MoriV2PaperCard(padding: 16, cornerRadius: 20) {
-                    Text(MoriL10n.display("Mori creates one quiet moment before a feed opens."))
-                        .font(MoriV2Type.body)
-                        .foregroundColor(MoriV2Palette.stone)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                .transition(.opacity)
-            }
-        }
-        .moriReduceMotionAnimation(MoriV2Motion.disclosure, value: showsAbout)
-    }
-
-    private var settingsDivider: some View {
-        Rectangle()
-            .fill(MoriV2Palette.hairline)
-            .frame(height: 1)
-            .accessibilityHidden(true)
-    }
-
-    private var screenTimeStatusText: String {
-        ScreenTimeSettingsLinkPresentation(appLimitManager: appLimitManager).statusText
+    private var settingsRowBackground: Color {
+        MoriColors.botanicalSurface.opacity(0.74)
     }
 
     private static let archiveStartDateFormatter: DateFormatter = {
@@ -326,7 +331,144 @@ struct SettingsView: View {
         settings.archiveStartDate = draftArchiveStartDate
         isEditingArchiveStartDate = false
     }
+}
 
+private struct ReminderSettingsView: View {
+    var body: some View {
+        Form {
+            Section {
+                ClockReminderSettingsRow()
+                DailySparkReminderSettingsRow()
+                JournalReminderSettingsRow()
+            } footer: {
+                Text(
+                    MoriL10n.display(
+                        "Choose when Mori should gently nudge you. The time can be changed before or after a reminder is enabled."
+                    )
+                )
+                .font(.footnote)
+                .foregroundColor(MoriColors.botanicalMuted)
+            }
+            .listRowBackground(MoriColors.botanicalSurface.opacity(0.74))
+        }
+        .moriSettingsForm()
+        .listStyle(.insetGrouped)
+        .navigationTitle(MoriL10n.display("Reminders"))
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private struct LanguageSettingsView: View {
+    @EnvironmentObject private var settings: UserSettings
+
+    var body: some View {
+        Form {
+            Section {
+                Picker(MoriL10n.display("Language"), selection: $settings.localePreference) {
+                    ForEach(MoriLocalePreference.allCases) { preference in
+                        Text(preference.displayName).tag(preference)
+                    }
+                }
+                .pickerStyle(.inline)
+                .labelsHidden()
+            } footer: {
+                Text(
+                    MoriL10n.display(
+                        "System follows your iPhone language order. Choosing a language overrides Mori only."
+                    )
+                )
+                .font(.footnote)
+                .foregroundColor(MoriColors.botanicalMuted)
+            }
+            .listRowBackground(MoriColors.botanicalSurface.opacity(0.74))
+        }
+        .moriSettingsForm()
+        .listStyle(.insetGrouped)
+        .navigationTitle(MoriL10n.display("Language"))
+        .navigationBarTitleDisplayMode(.inline)
+    }
+}
+
+private struct AppAndDataSettingsView: View {
+    @EnvironmentObject private var settings: UserSettings
+    let dismissSettings: () -> Void
+    @State private var showingClearDayCheckinsAlert = false
+    @State private var showingRestartOnboardingAlert = false
+
+    var body: some View {
+        Form {
+            Section {
+                Button(MoriL10n.display("Restart Onboarding")) {
+                    showingRestartOnboardingAlert = true
+                }
+                .font(.system(size: 16, weight: .regular))
+                .foregroundColor(MoriColors.botanicalInk)
+                .frame(maxWidth: .infinity, minHeight: MoriV2Layout.minimumHitTarget, alignment: .leading)
+
+                Button(MoriL10n.display("Clear Day Check-ins")) {
+                    showingClearDayCheckinsAlert = true
+                }
+                .font(.system(size: 16, weight: .regular))
+                .foregroundColor(MoriColors.botanicalClay)
+                .frame(maxWidth: .infinity, minHeight: MoriV2Layout.minimumHitTarget, alignment: .leading)
+            } footer: {
+                Text(
+                    MoriL10n.display(
+                        "Restarting onboarding keeps saved data. Clearing day check-ins removes saved daily moods and pattern notes."
+                    )
+                )
+                .font(.footnote)
+                .foregroundColor(MoriColors.botanicalMuted)
+            }
+            .listRowBackground(MoriColors.botanicalSurface.opacity(0.74))
+        }
+        .moriSettingsForm()
+        .listStyle(.insetGrouped)
+        .navigationTitle(MoriL10n.display("App and Data"))
+        .navigationBarTitleDisplayMode(.inline)
+        .alert(MoriL10n.display("Clear day check-ins?"), isPresented: $showingClearDayCheckinsAlert) {
+            Button(MoriL10n.display("Cancel"), role: .cancel) {}
+            Button(MoriL10n.display("Clear Check-ins"), role: .destructive) {
+                HabitDataManager.shared.clearAllEntries()
+            }
+        } message: {
+            Text(MoriL10n.display("This removes saved daily check-ins and pattern notes. It cannot be undone."))
+        }
+        .alert(MoriL10n.display("Restart onboarding?"), isPresented: $showingRestartOnboardingAlert) {
+            Button(MoriL10n.display("Cancel"), role: .cancel) {}
+            Button(MoriL10n.display("Restart")) {
+                settings.hasCompletedOnboarding = false
+                dismissSettings()
+            }
+        } message: {
+            Text(MoriL10n.display("You can go through onboarding again without deleting your saved data."))
+        }
+    }
+}
+
+private struct AboutMoriSettingsView: View {
+    var body: some View {
+        Form {
+            Section {
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(MoriL10n.display("Pause. Notice. Choose."))
+                        .font(.system(size: 19, weight: .medium, design: .serif))
+                        .foregroundColor(MoriColors.botanicalInk)
+
+                    Text(MoriL10n.display("Mori creates one quiet moment before a feed opens."))
+                        .font(.system(size: 15, weight: .regular))
+                        .foregroundColor(MoriColors.botanicalMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                .padding(.vertical, 4)
+            }
+            .listRowBackground(MoriColors.botanicalSurface.opacity(0.74))
+        }
+        .moriSettingsForm()
+        .listStyle(.insetGrouped)
+        .navigationTitle(MoriL10n.display("About Mori"))
+        .navigationBarTitleDisplayMode(.inline)
+    }
 }
 
 #Preview {

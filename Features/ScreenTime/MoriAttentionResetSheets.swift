@@ -36,9 +36,11 @@ struct MoriMorningResetSheet: View {
     }
 }
 
-private enum MoriBeforeFeedFlowStage {
+private enum MoriBeforeFeedFlowStage: Equatable {
     case reason
+    case offer
     case pause
+    case completion
 }
 
 private struct MoriAttentionResetSheet: View {
@@ -198,22 +200,31 @@ private struct MoriAttentionResetSheet: View {
         if isRunning, breathingState.hasTechnique {
             return breathingState.visualState.label
         }
+        if beforeFeedStage == .pause, activeElapsed > 0 {
+            return MoriL10n.display("Paused")
+        }
         return MoriL10n.display("Breathe at your own pace")
     }
 
     var body: some View {
         Color.clear
             .background {
-                ZStack(alignment: .bottom) {
-                    MoriPaperBackground(variant: .appLimit) {
-                        Color.clear
-                    }
+                if context == .beforeFeed {
+                    MoriBeforeFeedSheetBackground(
+                        variant: beforeFeedStage == .pause ? .breath : .appLimit
+                    )
+                } else {
+                    ZStack(alignment: .bottom) {
+                        MoriPaperBackground(variant: .appLimit) {
+                            Color.clear
+                        }
 
-                    MoriGeneratedArtImage(art: .breathLandscapeWash, contentMode: .fill)
-                        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-                        .opacity(0.44)
-                        .blendMode(.multiply)
-                        .allowsHitTesting(false)
+                        MoriGeneratedArtImage(art: .breathLandscapeWash, contentMode: .fill)
+                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
+                            .opacity(0.44)
+                            .blendMode(.multiply)
+                            .allowsHitTesting(false)
+                    }
                 }
             }
             .overlay(alignment: .top) {
@@ -223,6 +234,7 @@ private struct MoriAttentionResetSheet: View {
                         actionTitle: context == .beforeFeed
                             ? MoriL10n.display("Close")
                             : MoriL10n.display("Done"),
+                        style: context == .beforeFeed ? .beforeFeed : .standard,
                         onDone: resetAndDismiss
                     )
 
@@ -253,19 +265,30 @@ private struct MoriAttentionResetSheet: View {
                     onSelectReason: selectBeforeFeedReason,
                     onContinue: continueFromBeforeFeedReason
                 )
+            case .offer:
+                MoriBeforeFeedPauseOfferContent(
+                    resetDurationText: resetDurationText,
+                    timeText: timeText,
+                    selectedReason: selectedBeforeFeedReason,
+                    secondaryContext: beforeFeedSecondaryContext,
+                    onBeginPause: beginBeforeFeedPause,
+                    onContinueNow: continueBeforeFeedNow,
+                    onBack: returnToBeforeFeedReasons
+                )
             case .pause:
                 MoriBeforeFeedPauseContent(
-                    resetDurationText: resetDurationText,
-                    progress: progress,
-                    breathingTint: breathingState.tint,
                     showsBreathingOrb: breathingState.hasTechnique,
                     breathingVisualState: breathingState.visualState,
                     isRunning: isRunning,
-                    secondsRemaining: secondsRemaining,
                     timeText: timeText,
                     cueText: beforeFeedBreathingCueText,
                     secondaryContext: beforeFeedSecondaryContext,
                     onToggleBreathing: toggleResetRunning,
+                    onBack: returnToBeforeFeedReasons
+                )
+            case .completion:
+                MoriBeforeFeedCompletionContent(
+                    secondaryContext: beforeFeedSecondaryContext,
                     onContinue: confirmBeforeFeedIntent,
                     onBack: returnToBeforeFeedReasons
                 )
@@ -298,8 +321,18 @@ private struct MoriAttentionResetSheet: View {
         pausedAt = nil
         totalPausedDuration = 0
 
-        if context == .beforeFeed,
-           ProcessInfo.processInfo.arguments.contains("-MoriShowHabitBreathingForUITest") {
+        guard context == .beforeFeed else { return }
+
+        let arguments = ProcessInfo.processInfo.arguments
+        if arguments.contains("-MoriShowBeforeFeedCompletionForUITest") {
+            selectedBeforeFeedReason = .habit
+            activeElapsed = TimeInterval(totalSeconds)
+            secondsRemaining = 0
+            beforeFeedStage = .completion
+        } else if arguments.contains("-MoriShowBeforeFeedOfferForUITest") {
+            selectedBeforeFeedReason = .habit
+            beforeFeedStage = .offer
+        } else if arguments.contains("-MoriShowHabitBreathingForUITest") {
             selectedBeforeFeedReason = .habit
             beforeFeedStage = .pause
             startOrResumeReset()
@@ -356,7 +389,10 @@ private struct MoriAttentionResetSheet: View {
         totalPausedDuration = 0
         cueCoordinator.stopResetCues()
         cueCoordinator.playCompletionCues(soundEnabled: soundEnabled, hapticsEnabled: hapticsEnabled)
-        guard context == .morningGate else { return }
+        guard context == .morningGate else {
+            beforeFeedStage = .completion
+            return
+        }
 
         appLimitManager.perform(.completeMorningGateReset())
         let action = clarityStore.record(
@@ -386,9 +422,24 @@ private struct MoriAttentionResetSheet: View {
     private func continueFromBeforeFeedReason() {
         guard selectedBeforeFeedReason != nil else { return }
 
+        beforeFeedStage = .offer
+    }
+
+    private func beginBeforeFeedPause() {
+        guard selectedBeforeFeedReason != nil else { return }
+
+        activeElapsed = 0
+        secondsRemaining = totalSeconds
+        resetStartDate = nil
+        pausedAt = nil
+        totalPausedDuration = 0
+        currentPhaseIndex = 0
         beforeFeedStage = .pause
-        prepareReset()
         startOrResumeReset()
+    }
+
+    private func continueBeforeFeedNow() {
+        finishBeforeFeedIntent(requiresCompletedPause: false)
     }
 
     private func returnToBeforeFeedReasons() {
@@ -398,10 +449,14 @@ private struct MoriAttentionResetSheet: View {
     }
 
     private func confirmBeforeFeedIntent() {
+        finishBeforeFeedIntent(requiresCompletedPause: true)
+    }
+
+    private func finishBeforeFeedIntent(requiresCompletedPause: Bool) {
         guard context == .beforeFeed,
               let selectedBeforeFeedReason,
-              secondsRemaining == 0,
-              !didConfirmBeforeFeedIntent
+              !didConfirmBeforeFeedIntent,
+              !requiresCompletedPause || (beforeFeedStage == .completion && secondsRemaining == 0)
         else {
             return
         }
@@ -523,15 +578,21 @@ private struct MoriAttentionResetSheet: View {
     }
 }
 
+private enum MoriAttentionResetSheetHeaderStyle {
+    case standard
+    case beforeFeed
+}
+
 private struct MoriAttentionResetSheetHeader: View {
     let title: String
     let actionTitle: String
+    let style: MoriAttentionResetSheetHeaderStyle
     let onDone: () -> Void
 
     var body: some View {
         ZStack {
             Text(title)
-                .font(.system(size: 18, weight: .semibold))
+                .font(.system(size: style == .beforeFeed ? 16 : 18, weight: .semibold))
                 .foregroundColor(MoriColors.botanicalInk)
                 .lineLimit(1)
 
@@ -541,25 +602,58 @@ private struct MoriAttentionResetSheetHeader: View {
                 Button(actionTitle) {
                     onDone()
                 }
-                .font(.system(size: 21, weight: .regular))
-                .foregroundColor(MoriColors.botanicalInk)
-                .padding(.horizontal, 21)
-                .frame(height: 52)
-                .background(MoriColors.botanicalPaper.opacity(0.92))
-                .clipShape(Capsule())
-                .overlay {
-                    Capsule()
-                        .stroke(MoriColors.botanicalLine.opacity(0.58), lineWidth: 0.8)
+                .font(.system(size: style == .beforeFeed ? 15 : 21, weight: style == .beforeFeed ? .medium : .regular))
+                .foregroundColor(style == .beforeFeed ? MoriColors.botanicalMuted : MoriColors.botanicalInk)
+                .frame(minWidth: 56, minHeight: 44)
+                .padding(.horizontal, style == .beforeFeed ? 0 : 13)
+                .background {
+                    if style == .standard {
+                        Capsule()
+                            .fill(MoriColors.botanicalPaper.opacity(0.92))
+                            .overlay {
+                                Capsule()
+                                    .stroke(MoriColors.botanicalLine.opacity(0.58), lineWidth: 0.8)
+                            }
+                    }
                 }
                 .buttonStyle(.plain)
             }
         }
         .padding(.horizontal, 20)
         .frame(maxWidth: .infinity)
-        .frame(height: 82)
+        .frame(height: style == .beforeFeed ? 64 : 82)
         .background {
-            MoriAttentionResetSheetHeaderBackground()
+            if style == .standard {
+                MoriAttentionResetSheetHeaderBackground()
+            }
         }
+    }
+}
+
+private struct MoriBeforeFeedSheetBackground: View {
+    let variant: MoriBotanicalScreenBackdrop.Variant
+
+    var body: some View {
+        GeometryReader { proxy in
+            ZStack(alignment: .bottom) {
+                MoriPaperBackground(variant: variant) {
+                    Color.clear
+                }
+
+                MoriGeneratedArtImage(art: .breathLandscapeWash, contentMode: .fill)
+                    .frame(
+                        width: proxy.size.width,
+                        height: max(420, proxy.size.height * 0.58),
+                        alignment: .bottom
+                    )
+                    .clipped()
+                    .opacity(0.50)
+                    .blendMode(.multiply)
+            }
+            .frame(width: proxy.size.width, height: proxy.size.height)
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
     }
 }
 

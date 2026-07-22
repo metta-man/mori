@@ -10,24 +10,81 @@ struct ScreenTimeSettingsPickerSheet: View {
 
     var body: some View {
         NavigationStack {
-            FamilyActivityPicker(selection: $selection)
-                .navigationTitle(MoriL10n.display(title))
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button(MoriL10n.display("Cancel")) {
-                            dismiss()
-                        }
-                    }
+            VStack(spacing: 0) {
+                selectionContext
 
-                    ToolbarItem(placement: .confirmationAction) {
-                        Button(MoriL10n.display("Done")) {
-                            onDone()
-                            dismiss()
-                        }
+                Divider()
+                    .overlay(MoriColors.sanctuaryHairline)
+
+                FamilyActivityPicker(selection: $selection)
+                    .background(MoriColors.sanctuaryPaper)
+            }
+            .background(MoriColors.sanctuaryPaper.ignoresSafeArea())
+            .navigationTitle(MoriL10n.display(title))
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(MoriL10n.display("Cancel")) {
+                        dismiss()
                     }
                 }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(MoriL10n.display("Done")) {
+                        onDone()
+                        dismiss()
+                    }
+                    .fontWeight(.semibold)
+                }
+            }
+            .toolbarBackground(MoriColors.sanctuaryPaper, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
         }
+        .tint(MoriColors.botanicalInk)
+    }
+
+    private var selectionContext: some View {
+        HStack(alignment: .top, spacing: 11) {
+            MoriBitmapIconImage(icon: .lockShield, size: 17, opacity: 0.88)
+                .frame(width: 34, height: 34)
+                .background(MoriColors.botanicalInk.opacity(0.08))
+                .clipShape(Circle())
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(MoriL10n.display("Your selection"))
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundColor(MoriColors.botanicalInk)
+
+                Text(MoriL10n.display(selectionDetail))
+                    .font(.system(size: 12, weight: .regular))
+                    .foregroundColor(MoriColors.botanicalMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+
+            Spacer(minLength: 0)
+        }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .background(MoriColors.sanctuaryPaper)
+        .accessibilityElement(children: .combine)
+    }
+
+    private var selectionDetail: String {
+        switch selectionCount {
+        case 0:
+            return "Choose apps, categories, or websites. You can change this later."
+        case 1:
+            return "1 selection"
+        default:
+            return "\(selectionCount) selections"
+        }
+    }
+
+    private var selectionCount: Int {
+        selection.applicationTokens.count +
+        selection.categoryTokens.count +
+        selection.webDomainTokens.count
     }
 }
 
