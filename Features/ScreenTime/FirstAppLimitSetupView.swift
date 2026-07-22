@@ -249,7 +249,7 @@ struct FirstAppLimitSetupSurface: View {
                 .padding(.horizontal, 20)
                 .padding(
                     .top,
-                    min(copy.topPadding(for: proxy.size.height), 28) + proxy.safeAreaInsets.top
+                    min(copy.topPadding(for: proxy.size.height), 28)
                 )
                 .padding(.bottom, 32 + proxy.safeAreaInsets.bottom)
             }

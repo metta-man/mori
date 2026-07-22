@@ -15,12 +15,15 @@ struct ScreenTimeLimitControls: View {
             header
 
             if !presentation.isAuthorized {
-                MoriPermissionState(
-                    title: "Allow Screen Time",
-                    message: "Required before this session can limit selected apps. Mori asks only after you tap Allow.",
-                    buttonTitle: "Allow Screen Time",
-                    buttonAction: requestScreenTimeAuthorization
-                )
+                Button(action: requestScreenTimeAuthorization) {
+                    Text(MoriL10n.display("Allow Screen Time"))
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundColor(MoriColors.sanctuarySurface)
+                        .frame(maxWidth: .infinity, minHeight: MoriV2Layout.minimumHitTarget)
+                        .background(MoriColors.botanicalInk)
+                        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                }
+                .buttonStyle(.plain)
             }
 
             if presentation.isAuthorized {
