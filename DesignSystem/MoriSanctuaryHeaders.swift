@@ -185,6 +185,7 @@ struct MoriRootScrollScreen<HeaderTrailing: View, Content: View>: View {
     var horizontalPadding: CGFloat = 20
     var bottomPadding: CGFloat = MoriMainTabBarMetrics.scrollBottomInset
     var backgroundVariant: MoriBotanicalScreenBackdrop.Variant = .settings
+    var showsBackground: Bool = true
     var minimumTopInset: CGFloat?
     var headerStyle: MoriRootHeaderStyle = .sanctuary
     var topAnchorID: String?
@@ -199,6 +200,7 @@ struct MoriRootScrollScreen<HeaderTrailing: View, Content: View>: View {
         horizontalPadding: CGFloat = 20,
         bottomPadding: CGFloat = MoriMainTabBarMetrics.scrollBottomInset,
         backgroundVariant: MoriBotanicalScreenBackdrop.Variant = .settings,
+        showsBackground: Bool = true,
         minimumTopInset: CGFloat? = nil,
         headerStyle: MoriRootHeaderStyle = .sanctuary,
         topAnchorID: String? = nil,
@@ -212,6 +214,7 @@ struct MoriRootScrollScreen<HeaderTrailing: View, Content: View>: View {
         self.horizontalPadding = horizontalPadding
         self.bottomPadding = bottomPadding
         self.backgroundVariant = backgroundVariant
+        self.showsBackground = showsBackground
         self.minimumTopInset = minimumTopInset
         self.headerStyle = headerStyle
         self.topAnchorID = topAnchorID
@@ -221,7 +224,13 @@ struct MoriRootScrollScreen<HeaderTrailing: View, Content: View>: View {
     }
 
     var body: some View {
-        MoriPaperBackground(variant: backgroundVariant) {
+        ZStack {
+            if showsBackground {
+                MoriPaperBackground(variant: backgroundVariant) {
+                    Color.clear
+                }
+            }
+
             GeometryReader { proxy in
                 ScrollViewReader { scrollProxy in
                     ScrollView(showsIndicators: false) {
@@ -260,6 +269,7 @@ extension MoriRootScrollScreen where HeaderTrailing == EmptyView {
         horizontalPadding: CGFloat = 20,
         bottomPadding: CGFloat = MoriMainTabBarMetrics.scrollBottomInset,
         backgroundVariant: MoriBotanicalScreenBackdrop.Variant = .settings,
+        showsBackground: Bool = true,
         minimumTopInset: CGFloat? = nil,
         headerStyle: MoriRootHeaderStyle = .sanctuary,
         topAnchorID: String? = nil,
@@ -272,6 +282,7 @@ extension MoriRootScrollScreen where HeaderTrailing == EmptyView {
         self.horizontalPadding = horizontalPadding
         self.bottomPadding = bottomPadding
         self.backgroundVariant = backgroundVariant
+        self.showsBackground = showsBackground
         self.minimumTopInset = minimumTopInset
         self.headerStyle = headerStyle
         self.topAnchorID = topAnchorID

@@ -14,6 +14,7 @@ struct ContentView: View {
         store: MoriAppGroup.defaults
     ) private var morningGateDurationSeconds: Int = MoriScreenTimeShared.defaultMorningGateDurationSeconds
     @State private var presentation = MoriAppPresentationState()
+    @State private var rootNavigationPath = NavigationPath()
     @State private var mainTabBarHidden = false
     @State private var handledUITestLaunchRoute = false
     @State private var didOpenInitialRoutes = false
@@ -32,35 +33,51 @@ struct ContentView: View {
     private var mainTabView: some View {
         GeometryReader { proxy in
             ZStack(alignment: .bottom) {
-                ZStack {
-                    selectedTabContent(
-                        safeAreaTopInset: proxy.safeAreaInsets.top
-                    )
-                        .id(presentation.selectedTab)
-                        .transition(.opacity)
-                }
+                NavigationStack(path: $rootNavigationPath) {
+                    ZStack {
+                        MoriRootShellBackground()
+                            .ignoresSafeArea()
+
+                        selectedTabContent
+                    }
                     .frame(width: proxy.size.width, height: proxy.size.height)
-                    .clipped()
-                    .moriReduceMotionAnimation(
-                        MoriAnimation.screenTransition,
-                        value: presentation.selectedTab
-                    )
                     .allowsHitTesting(presentation.activeSheet == nil)
                     .disabled(presentation.activeSheet != nil)
                     .accessibilityHidden(presentation.activeSheet != nil)
-
-                if !mainTabBarHidden {
-                    MoriBottomTabBarOverlay(
-                        selectedTab: presentation.selectedTab,
-                        onSelectTab: { tab in
-                            open(.tab(tab), source: .userInteraction)
-                        }
-                    )
-                        .transition(.opacity)
-                        .allowsHitTesting(presentation.activeSheet == nil)
-                        .disabled(presentation.activeSheet != nil)
-                        .accessibilityHidden(presentation.activeSheet != nil)
+                    .navigationTitle("")
+                    .toolbar(.hidden, for: .navigationBar)
+                    .toolbarBackground(.hidden, for: .navigationBar)
+                    .navigationDestination(for: TodayNavigationRoute.self) { route in
+                        todayDestination(route)
+                    }
+                    .navigationDestination(for: SettleNavigationRoute.self) { route in
+                        settleDestination(route)
+                    }
+                    .navigationDestination(for: GratitudeJournalRoute.self) { route in
+                        gratitudeJournalDestination(route)
+                    }
                 }
+                .background(Color.clear)
+                .environment(\.moriOpenTodayRoute, TodayRouteAction { route in
+                    rootNavigationPath.append(route)
+                })
+                .environment(\.moriOpenSettleRoute, MoriSettleRouteAction { route in
+                    rootNavigationPath.append(route)
+                })
+                .environment(\.moriOpenGratitudeJournalRoute, GratitudeJournalRouteAction { route in
+                    rootNavigationPath.append(route)
+                })
+
+                MoriBottomTabBarOverlay(
+                    selectedTab: presentation.selectedTab,
+                    onSelectTab: { tab in
+                        selectTab(tab)
+                    }
+                )
+                    .opacity(mainTabBarHidden ? 0 : 1)
+                    .allowsHitTesting(!mainTabBarHidden && presentation.activeSheet == nil)
+                    .disabled(presentation.activeSheet != nil)
+                    .accessibilityHidden(mainTabBarHidden || presentation.activeSheet != nil)
             }
             .frame(width: proxy.size.width, height: proxy.size.height)
         }
@@ -68,31 +85,6 @@ struct ContentView: View {
         .ignoresSafeArea(edges: .bottom)
         .onPreferenceChange(MoriMainTabBarHiddenPreferenceKey.self) { hidden in
             mainTabBarHidden = hidden
-        }
-        .background {
-            if presentation.selectedTab == .today {
-                MoriPaperBackground(variant: .today) {
-                    LinearGradient(
-                        stops: [
-                            .init(color: MoriV2Palette.raisedPaper.opacity(0.70), location: 0),
-                            .init(color: MoriV2Palette.raisedPaper.opacity(0.70), location: 0.065),
-                            .init(color: MoriV2Palette.raisedPaper.opacity(0), location: 0.15),
-                            .init(color: .clear, location: 1)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                        .ignoresSafeArea()
-                }
-            } else if presentation.selectedTab == .practice {
-                MoriV2PaperScene(variant: .focus) {
-                    Color.clear
-                }
-            } else {
-                MoriPaperBackground(variant: presentation.selectedTab.backgroundVariant) {
-                    Color.clear
-                }
-            }
         }
         .moriReduceMotionAnimation(MoriAnimation.standard, value: mainTabBarHidden)
         .tint(MoriColors.botanicalInk)
@@ -122,19 +114,62 @@ struct ContentView: View {
     }
 
     @ViewBuilder
-    private func selectedTabContent(safeAreaTopInset: CGFloat) -> some View {
-        switch presentation.selectedTab {
-        case .today:
-            TodayView(
-                launchRequest: presentation.todayLaunchRequest,
-                screenSafeAreaTopInset: safeAreaTopInset
-            )
-        case .practice:
+    private var selectedTabContent: some View {
+        if presentation.selectedTab == .today {
+            TodayView(launchRequest: presentation.todayLaunchRequest)
+        }
+
+        if presentation.selectedTab == .practice {
             SettleView(
                 launchRequest: presentation.practiceLaunchRequest
             )
-        case .journal:
-            GratitudeJournalScreen()
+        }
+
+        if presentation.selectedTab == .journal {
+            GratitudeJournalScreen(usesAppShellNavigation: true)
+        }
+    }
+
+    @ViewBuilder
+    private func todayDestination(_ route: TodayNavigationRoute) -> some View {
+        switch route {
+        case .weekArchiveDetail:
+            WeekArchiveDetailView()
+        }
+    }
+
+    @ViewBuilder
+    private func settleDestination(_ route: SettleNavigationRoute) -> some View {
+        switch route {
+        case .appLimits:
+            LockedScreenTimeSettingsView()
+                .moriHidesMainTabBar()
+        case .breathingLibrary:
+            MoriBreathingLibraryView()
+        case .breathingSession(let techniqueID, let durationMinutes, let autoStart):
+            MoriBreathingSessionView(
+                techniqueID: techniqueID,
+                durationMinutes: durationMinutes,
+                autoStart: autoStart
+            )
+        case .settleTimer:
+            SettleTimerDetailView()
+        case .focusCycle:
+            PomodoroPracticeDetailView()
+        case .mindfulnessBellSettings:
+            MindfulnessBellSettingsView()
+                .moriHidesMainTabBar()
+        }
+    }
+
+    @ViewBuilder
+    private func gratitudeJournalDestination(_ route: GratitudeJournalRoute) -> some View {
+        switch route {
+        case .history:
+            GratitudeHistoryView()
+        case .weekArchiveDetail:
+            WeekArchiveDetailView()
+                .moriHidesMainTabBar()
         }
     }
 
@@ -206,6 +241,11 @@ struct ContentView: View {
         open(.practiceSheet(sheet), source: .userInteraction)
     }
 
+    private func selectTab(_ tab: AppTab) {
+        guard tab != presentation.selectedTab else { return }
+        open(.tab(tab), source: .userInteraction)
+    }
+
     private func open(_ request: MoriAppRouteRequest) {
         open(request.route, source: request.source)
     }
@@ -213,6 +253,20 @@ struct ContentView: View {
     private func open(_ route: MoriAppRoute, source: MoriAppRouteSource = .userInteraction) {
         let sourceTab = presentation.selectedTab.analyticsName
         let sourceSheet = presentation.activeSheet?.analyticsName
+        let previousTab = presentation.selectedTab
+        let shouldResetRootNavigation: Bool
+        switch route {
+        case .tab, .todayLaunch, .practiceLaunch:
+            shouldResetRootNavigation = true
+        case .sheet(_, let destinationTab):
+            shouldResetRootNavigation = destinationTab != previousTab
+        case .practiceSheet, .settings, .appLimits, .appLimitSetup:
+            shouldResetRootNavigation = false
+        }
+
+        if shouldResetRootNavigation {
+            rootNavigationPath = NavigationPath()
+        }
         presentation.open(route, source: source)
         trackRouteOpened(
             route,

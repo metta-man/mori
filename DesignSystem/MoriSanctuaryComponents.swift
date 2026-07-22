@@ -82,6 +82,66 @@ struct MoriV2PaperScene<Content: View>: View {
     }
 }
 
+/// The one continuous watercolor canvas shared by the app's three root tabs.
+/// Root page content stays transparent so the status and home-indicator areas
+/// always resolve to this same artwork during tab transitions.
+struct MoriRootShellBackground: View {
+    var body: some View {
+        GeometryReader { proxy in
+            ZStack(alignment: .bottom) {
+                MoriV2Palette.paper
+
+                MoriGeneratedArtImage(art: .paperWash, contentMode: .fill)
+                    .frame(width: proxy.size.width, height: proxy.size.height)
+                    .clipped()
+                    .opacity(0.30)
+                    .blendMode(.multiply)
+
+                Image("BotanicalBackdropToday")
+                    .resizable()
+                    .interpolation(.high)
+                    .scaledToFill()
+                    .frame(
+                        width: proxy.size.width,
+                        height: max(330, proxy.size.height * 0.44),
+                        alignment: .topLeading
+                    )
+                    .clipped()
+                    .opacity(0.62)
+                    .frame(maxHeight: .infinity, alignment: .top)
+
+                Image("MoriDeepSessionForest")
+                    .resizable()
+                    .interpolation(.high)
+                    .scaledToFill()
+                    .frame(
+                        width: proxy.size.width,
+                        height: max(400, proxy.size.height * 0.46),
+                        alignment: .bottom
+                    )
+                    .clipped()
+                    .opacity(0.66)
+                    .mask(
+                        LinearGradient(
+                            stops: [
+                                .init(color: .clear, location: 0),
+                                .init(color: .white.opacity(0.28), location: 0.20),
+                                .init(color: .white, location: 0.48),
+                                .init(color: .white, location: 1)
+                            ],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+            }
+            .frame(width: proxy.size.width, height: proxy.size.height)
+            .clipped()
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
 struct MoriV2RootScrollScreen<Content: View>: View {
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var isVisible = false
@@ -93,6 +153,8 @@ struct MoriV2RootScrollScreen<Content: View>: View {
     var headerTextSpacing: CGFloat
     var headerTextLeadingInset: CGFloat
     var settingsButtonStyle: MoriV2SettingsButton.Style
+    var showsBackground: Bool
+    var animatesEntrance: Bool
     let onOpenSettings: () -> Void
     private let content: Content
 
@@ -104,6 +166,8 @@ struct MoriV2RootScrollScreen<Content: View>: View {
         headerTextSpacing: CGFloat = 8,
         headerTextLeadingInset: CGFloat = 0,
         settingsButtonStyle: MoriV2SettingsButton.Style = .floating,
+        showsBackground: Bool = true,
+        animatesEntrance: Bool = true,
         onOpenSettings: @escaping () -> Void,
         @ViewBuilder content: () -> Content
     ) {
@@ -114,14 +178,18 @@ struct MoriV2RootScrollScreen<Content: View>: View {
         self.headerTextSpacing = headerTextSpacing
         self.headerTextLeadingInset = headerTextLeadingInset
         self.settingsButtonStyle = settingsButtonStyle
+        self.showsBackground = showsBackground
+        self.animatesEntrance = animatesEntrance
         self.onOpenSettings = onOpenSettings
         self.content = content()
     }
 
     var body: some View {
         ZStack {
-            MoriV2PaperScene(variant: backgroundVariant) {
-                Color.clear
+            if showsBackground {
+                MoriV2PaperScene(variant: backgroundVariant) {
+                    Color.clear
+                }
             }
 
             GeometryReader { proxy in
@@ -134,10 +202,12 @@ struct MoriV2RootScrollScreen<Content: View>: View {
                     }
                     .padding(.horizontal, MoriV2Layout.screenEdge)
                     .padding(.bottom, MoriMainTabBarMetrics.scrollBottomInset + 12)
-                    .opacity(isVisible ? 1 : 0)
-                    .offset(y: reduceMotion || isVisible ? 0 : 8)
+                    .opacity(animatesEntrance && !isVisible ? 0 : 1)
+                    .offset(y: reduceMotion || !animatesEntrance || isVisible ? 0 : 8)
                     .animation(
-                        reduceMotion ? .easeOut(duration: 0.12) : MoriV2Motion.screen,
+                        animatesEntrance
+                            ? (reduceMotion ? .easeOut(duration: 0.12) : MoriV2Motion.screen)
+                            : nil,
                         value: isVisible
                     )
                 }

@@ -4,11 +4,11 @@ struct SettleView: View {
     let launchRequest: MoriPracticeLaunchRequest?
 
     @Environment(\.moriOpenRoute) private var openRoute
+    @Environment(\.moriOpenSettleRoute) private var openSettleRoute
     @AppStorage(
         MoriScreenTimeShared.beforeFeedDurationSecondsKey,
         store: MoriAppGroup.defaults
     ) private var beforeFeedDurationSeconds: Int = MoriScreenTimeShared.defaultBeforeFeedDurationSeconds
-    @State private var navigationPath: [SettleNavigationRoute] = []
     @State private var handledLaunchRequestID: UUID?
     @State private var showsFocusSupport = false
 
@@ -19,53 +19,28 @@ struct SettleView: View {
     }
 
     var body: some View {
-        NavigationStack(path: $navigationPath) {
-            MoriV2RootScrollScreen(
-                title: "Focus",
-                subtitle: "Protect your attention.\nChoose how you want to show up.",
-                backgroundVariant: .focus,
-                minimumTopInset: 66,
-                headerTextSpacing: 5,
-                headerTextLeadingInset: 8,
-                settingsButtonStyle: .plain,
-                onOpenSettings: openSettings
-            ) {
-                primaryModeCards
-                focusSupportDisclosure
-            }
-            .navigationTitle("")
-            .toolbar(.hidden, for: .navigationBar)
-            .toolbarBackground(.hidden, for: .navigationBar)
-            .navigationDestination(for: SettleNavigationRoute.self) { route in
-                switch route {
-                case .appLimits:
-                    LockedScreenTimeSettingsView()
-                        .moriHidesMainTabBar()
-                case .breathingLibrary:
-                    MoriBreathingLibraryView()
-                case .breathingSession(let techniqueID, let durationMinutes, let autoStart):
-                    MoriBreathingSessionView(
-                        techniqueID: techniqueID,
-                        durationMinutes: durationMinutes,
-                        autoStart: autoStart
-                    )
-                case .settleTimer:
-                    SettleTimerDetailView()
-                case .focusCycle:
-                    PomodoroPracticeDetailView()
-                case .mindfulnessBellSettings:
-                    MindfulnessBellSettingsView()
-                        .moriHidesMainTabBar()
-                }
-            }
-            .environment(\.moriOpenSettleRoute, MoriSettleRouteAction { route in
-                navigationPath.append(route)
-            })
-            .settleLaunchRequestLifecycle(
-                launchRequestID: launchRequest?.id,
-                onHandleLaunchRequest: handleLaunchRequestIfNeeded
-            )
+        MoriV2RootScrollScreen(
+            title: "Focus",
+            subtitle: "Protect your attention.\nChoose how you want to show up.",
+            backgroundVariant: .focus,
+            minimumTopInset: 66,
+            headerTextSpacing: 5,
+            headerTextLeadingInset: 8,
+            settingsButtonStyle: .plain,
+            showsBackground: false,
+            animatesEntrance: false,
+            onOpenSettings: openSettings
+        ) {
+            primaryModeCards
+            focusSupportDisclosure
         }
+        .navigationTitle("")
+        .toolbar(.hidden, for: .navigationBar)
+        .toolbarBackground(.hidden, for: .navigationBar)
+        .settleLaunchRequestLifecycle(
+            launchRequestID: launchRequest?.id,
+            onHandleLaunchRequest: handleLaunchRequestIfNeeded
+        )
     }
 
     private var primaryModeCards: some View {
@@ -79,7 +54,7 @@ struct SettleView: View {
                 emphasis: .primary,
                 height: 215,
                 cornerRadius: 18,
-                action: { navigationPath.append(.focusCycle) }
+                action: { openSettleRoute(.focusCycle) }
             )
 
             MoriModeCard(
@@ -217,13 +192,13 @@ struct SettleView: View {
         let durationMinutes = MindfulnessBellDefaults.selectedBreathingDurationMinutes()
 
         DispatchQueue.main.async {
-            navigationPath = [
+            openSettleRoute(
                 .breathingSession(
                     techniqueID: techniqueID,
                     durationMinutes: durationMinutes,
                     autoStart: true
                 )
-            ]
+            )
         }
     }
 

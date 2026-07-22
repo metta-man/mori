@@ -68,6 +68,46 @@ final result: passed
 
 ---
 
+# Mori Persistent Root Shell — Native SwiftUI QA (2026-07-22)
+
+## Comparison target
+
+- Detailed Today reference: `DesignReferences/mori-today-view-reference.jpg`
+- Supporting screen-flow reference: `DesignReferences/mori-screen-flow-reference.jpg`
+- Final three-tab board: `artifacts/mori-root-shell-safe-area-20260722/final-root-tabs-board.png`
+- Source/implementation comparison: `artifacts/mori-root-shell-safe-area-20260722/final-approved-today-comparison.png`
+- Safe-area before/after comparison: `artifacts/mori-root-shell-safe-area-20260722/final-safe-area-before-after.png`
+- Every-frame transition board: `artifacts/mori-root-shell-safe-area-20260722/final-every-frame-board.png`
+- Transition recording: `artifacts/mori-root-shell-safe-area-20260722/final-tab-transitions.mp4`
+
+## Refinement history
+
+1. Baseline capture identified a white status-bar strip, a white home-indicator gap, and whole-page fading during tab changes.
+2. Today, Focus, and Log were moved under one persistent root `NavigationStack`, continuous watercolor background, and permanently mounted custom dock.
+3. Per-tab opaque full-screen backgrounds and nested root navigation stacks were removed while preserving standalone Log modal navigation.
+4. A clipping boundary that stopped artwork at the safe areas was removed; top and bottom artwork continuity was recaptured.
+5. Root-page opacity animation was removed after frame-by-frame review exposed empty-artwork transition frames. Direct page-subtree swapping keeps the shell and dock mounted without white or blank intermediate frames.
+
+## Verification
+
+- iPhone 15 Pro Max, 430 x 932 pt: Today, Focus, and Log root screens passed visual comparison.
+- iPhone SE, 375 x 667 pt at Accessibility Large: all three root screens passed safe-area and dock checks.
+- All six directed tab transitions were recorded and reviewed frame by frame; no white fallback spike, top seam, bottom gap, or blank page frame was observed.
+- Today to Life Grid, Focus to Deep Session, and Log to Life Grid shared-root navigation passed; the dock hides on pushed details and Back remains available.
+- Canonical Debug simulator build passed.
+- Independent SwiftUI review found no P0, P1, or P2 correctness, navigation, safe-area, accessibility, or preservation findings.
+- No automated UI test target currently asserts pixel continuity; transition coverage is retained as screenshot and video evidence.
+
+## Expected reference differences
+
+- The production app keeps Mori's canonical three-tab information architecture rather than the older four-tab mockup.
+- Runtime App Limit and quiet-minute values remain truthful instead of copying illustrative reference data.
+- Watercolor contours and crops retain the production raster assets, so organic details are not pixel-identical to the photographed concept.
+
+final result: passed
+
+---
+
 # Mori Life Grid reference rebuild — Design QA (2026-07-21)
 
 ## Comparison target

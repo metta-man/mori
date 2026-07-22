@@ -73,6 +73,13 @@ The approved reference image is:
 
 `DesignReferences/mori-approved-reference.jpeg`
 
+Additional approved screen references are:
+
+- `DesignReferences/mori-today-view-reference.jpg` — detailed Today composition and floating-dock treatment
+- `DesignReferences/mori-screen-flow-reference.jpg` — Today, Life Grid, Focus, Deep Session, and Log flow overview
+
+For the Today root screen, use the detailed Today reference when it provides more specific layout or chrome guidance; use the primary reference for the broader Mori visual language.
+
 This image is the primary visual source of truth for:
 
 - composition

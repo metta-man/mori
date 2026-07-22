@@ -1,13 +1,12 @@
 import SwiftUI
 import FamilyControls
-import UIKit
 
 struct TodayView: View {
     @Environment(\.moriOpenRoute) private var openRoute
+    @Environment(\.moriOpenTodayRoute) private var openTodayRoute
     @EnvironmentObject private var settings: UserSettings
 
     let launchRequest: MoriTodayLaunchRequest?
-    let screenSafeAreaTopInset: CGFloat
 
     @StateObject private var appLimitManager = AppLimitManager.shared
     @StateObject private var clarityStore = MoriClarityStore.shared
@@ -28,7 +27,6 @@ struct TodayView: View {
         store: MoriAppGroup.defaults
     ) private var beforeFeedBreathingTechniqueID: String = MoriScreenTimeShared.defaultBeforeFeedBreathingTechniqueID
     @State private var todayFocus = TodayFocusDraftStore.live.load(for: Date())
-    @State private var navigationPath: [TodayNavigationRoute] = []
     @State private var handledLaunchRequestID: UUID?
     @State private var todayIntentCount = BeforeFeedGateStore().todayIntentCount()
 
@@ -69,77 +67,40 @@ struct TodayView: View {
             .max() ?? 0
     }
 
-    private var resolvedScreenSafeAreaTopInset: CGFloat {
-        guard screenSafeAreaTopInset <= 0 else {
-            return screenSafeAreaTopInset
-        }
-
-        return UIApplication.shared.connectedScenes
-            .compactMap { $0 as? UIWindowScene }
-            .flatMap(\.windows)
-            .first(where: \.isKeyWindow)?
-            .safeAreaInsets.top ?? 0
-    }
-
-    init(
-        launchRequest: MoriTodayLaunchRequest? = nil,
-        screenSafeAreaTopInset: CGFloat = 0
-    ) {
+    init(launchRequest: MoriTodayLaunchRequest? = nil) {
         self.launchRequest = launchRequest
-        self.screenSafeAreaTopInset = screenSafeAreaTopInset
     }
 
     var body: some View {
-        GeometryReader { proxy in
-            ZStack {
-                TodayRootBackdrop()
-                    .ignoresSafeArea()
+        TodayRootScrollScreen(
+            title: "Today",
+            subtitle: "One mindful choice at a time.",
+            onOpenSettings: openSettings
+        ) {
+            TodayPrimaryResetCard(
+                appLimitPresentation: appLimitPresentation,
+                intentCount: todayIntentCount,
+                onStartReset: openBeforeFeedReset,
+                onOpenAppLimits: openAppLimits
+            )
 
-                NavigationStack(path: $navigationPath) {
-                    TodayRootScrollScreen(
-                        title: "Today",
-                        subtitle: "One mindful choice at a time.",
-                        screenHeight: proxy.size.height,
-                        topSafeAreaInset: resolvedScreenSafeAreaTopInset,
-                        onOpenSettings: openSettings
-                    ) {
-                        TodayPrimaryResetCard(
-                            appLimitPresentation: appLimitPresentation,
-                            intentCount: todayIntentCount,
-                            onStartReset: openBeforeFeedReset,
-                            onOpenAppLimits: openAppLimits
-                        )
+            TodayQuietMetricsCard(
+                quietMinutes: quietMinutesToday,
+                longestQuietMinutes: longestQuietToday
+            )
+            .padding(.top, 18)
 
-                        TodayQuietMetricsCard(
-                            quietMinutes: quietMinutesToday,
-                            longestQuietMinutes: longestQuietToday
-                        )
-                        .padding(.top, 18)
-
-                        TodaySecondaryContextCard(
-                            focus: $todayFocus,
-                            morningDurationText: MorningGate.formattedDuration(morningGateDurationSeconds),
-                            onOpenMorningReset: openMorningReset,
-                            onOpenWeekArchive: openWeekArchive
-                        )
-                        .padding(.top, 13)
-                    }
-                    .toolbar(.hidden, for: .navigationBar)
-                    .toolbarBackground(.hidden, for: .navigationBar)
-                    .moriKeyboardDoneToolbar()
-                    .navigationDestination(for: TodayNavigationRoute.self) { route in
-                        switch route {
-                        case .weekArchiveDetail:
-                            WeekArchiveDetailView()
-                        }
-                    }
-                }
-                .background(Color.clear)
-            }
+            TodaySecondaryContextCard(
+                focus: $todayFocus,
+                morningDurationText: MorningGate.formattedDuration(morningGateDurationSeconds),
+                onOpenMorningReset: openMorningReset,
+                onOpenWeekArchive: openWeekArchive
+            )
+            .padding(.top, 13)
         }
-        .environment(\.moriOpenTodayRoute, TodayRouteAction { route in
-            navigationPath.append(route)
-        })
+        .toolbar(.hidden, for: .navigationBar)
+        .toolbarBackground(.hidden, for: .navigationBar)
+        .moriKeyboardDoneToolbar()
         .onAppear {
             todayFocus = TodayFocusDraftStore.live.load(for: Date())
             refreshIntentCount()
@@ -178,7 +139,7 @@ struct TodayView: View {
     }
 
     private func openWeekArchive() {
-        navigationPath.append(.weekArchiveDetail)
+        openTodayRoute(.weekArchiveDetail)
     }
 
     private func handleLaunchRequestIfNeeded() {
@@ -187,7 +148,7 @@ struct TodayView: View {
 
         switch launchRequest.kind {
         case .weekArchiveDetail:
-            navigationPath = [.weekArchiveDetail]
+            openTodayRoute(.weekArchiveDetail)
         }
     }
 

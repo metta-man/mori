@@ -65,84 +65,45 @@ struct TodayScreenSnapshot {
 }
 
 struct TodayRootScrollScreen<Content: View>: View {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-    @State private var isVisible = false
 
     let title: String
     let subtitle: String
-    let screenHeight: CGFloat
-    let topSafeAreaInset: CGFloat
     let onOpenSettings: () -> Void
     private let content: Content
 
     init(
         title: String,
         subtitle: String,
-        screenHeight: CGFloat,
-        topSafeAreaInset: CGFloat,
         onOpenSettings: @escaping () -> Void,
         @ViewBuilder content: () -> Content
     ) {
         self.title = title
         self.subtitle = subtitle
-        self.screenHeight = screenHeight
-        self.topSafeAreaInset = topSafeAreaInset
         self.onOpenSettings = onOpenSettings
         self.content = content()
     }
 
     var body: some View {
-        ZStack(alignment: .top) {
-            MoriV2Palette.paper
+        GeometryReader { _ in
+            ScrollView(showsIndicators: false) {
+                VStack(alignment: .leading, spacing: 0) {
+                    header
+                        .padding(
+                            .top,
+                            dynamicTypeSize.isAccessibilitySize ? 24 : 45
+                        )
+                        .padding(.leading, dynamicTypeSize.isAccessibilitySize ? 32 : 45)
+                        .padding(.trailing, dynamicTypeSize.isAccessibilitySize ? 32 : 30)
 
-            MoriColors.sanctuaryPaperWarm.opacity(0.50)
-
-            TodayRootBackdrop()
-                .frame(height: screenHeight)
-                .offset(y: -topSafeAreaInset)
-                .mask(
-                    LinearGradient(
-                        stops: [
-                            .init(color: .clear, location: 0),
-                            .init(color: .white, location: 0.07),
-                            .init(color: .white, location: 1)
-                        ],
-                        startPoint: .top,
-                        endPoint: .bottom
-                    )
-                )
-
-            GeometryReader { _ in
-                ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: 0) {
-                        header
-                            .padding(
-                                .top,
-                                dynamicTypeSize.isAccessibilitySize ? 24 : 45
-                            )
-                            .padding(.leading, dynamicTypeSize.isAccessibilitySize ? 32 : 45)
-                            .padding(.trailing, dynamicTypeSize.isAccessibilitySize ? 32 : 30)
-
-                        VStack(alignment: .leading, spacing: 0) {
-                            content
-                        }
-                        .padding(.top, dynamicTypeSize.isAccessibilitySize ? 20 : 22)
-                        .padding(.horizontal, 32)
+                        content
                     }
-                    .padding(.bottom, MoriMainTabBarMetrics.scrollBottomInset + MoriTheme.Spacing.xLarge)
-                    .opacity(isVisible ? 1 : 0)
-                    .offset(y: reduceMotion || isVisible ? 0 : 8)
-                    .animation(
-                        reduceMotion ? .easeOut(duration: 0.12) : MoriV2Motion.screen,
-                        value: isVisible
-                    )
+                    .padding(.top, dynamicTypeSize.isAccessibilitySize ? 20 : 22)
+                    .padding(.horizontal, 32)
                 }
+                .padding(.bottom, MoriMainTabBarMetrics.scrollBottomInset + MoriTheme.Spacing.xLarge)
             }
-        }
-        .clipped()
-        .onAppear {
-            isVisible = true
         }
     }
 
@@ -165,63 +126,6 @@ struct TodayRootScrollScreen<Content: View>: View {
 
             TodaySettingsButton(action: onOpenSettings)
         }
-    }
-}
-
-struct TodayRootBackdrop: View {
-    var body: some View {
-        GeometryReader { proxy in
-            ZStack(alignment: .bottom) {
-                MoriV2Palette.paper
-
-                MoriGeneratedArtImage(art: .paperWash, contentMode: .fill)
-                    .frame(width: proxy.size.width, height: proxy.size.height)
-                    .clipped()
-                    .opacity(0.30)
-                    .blendMode(.multiply)
-
-                Image("BotanicalBackdropToday")
-                    .resizable()
-                    .interpolation(.high)
-                    .scaledToFill()
-                    .frame(
-                        width: proxy.size.width,
-                        height: max(330, proxy.size.height * 0.44),
-                        alignment: .topLeading
-                    )
-                    .clipped()
-                    .opacity(0.62)
-                    .frame(maxHeight: .infinity, alignment: .top)
-
-                Image("MoriDeepSessionForest")
-                    .resizable()
-                    .interpolation(.high)
-                    .scaledToFill()
-                    .frame(
-                        width: proxy.size.width,
-                        height: max(400, proxy.size.height * 0.46),
-                        alignment: .bottom
-                    )
-                    .clipped()
-                    .opacity(0.66)
-                    .mask(
-                        LinearGradient(
-                            stops: [
-                                .init(color: .clear, location: 0),
-                                .init(color: .white.opacity(0.28), location: 0.20),
-                                .init(color: .white, location: 0.48),
-                                .init(color: .white, location: 1)
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-            }
-            .frame(width: proxy.size.width, height: proxy.size.height)
-            .clipped()
-        }
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
     }
 }
 

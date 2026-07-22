@@ -37,9 +37,11 @@ private enum GratitudeJournalSheet: Identifiable {
 struct GratitudeJournalScreen: View {
     var showsDismissButton = false
     var appLimitFeature: MoriScreenTimeFeature = .journal
+    var usesAppShellNavigation = false
 
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.moriOpenGratitudeJournalRoute) private var openGratitudeRoute
     @StateObject private var viewModel = GratitudeJournalViewModel()
     @StateObject private var dailySparkStore = DailySparkStore.shared
     @StateObject private var clarityStore = MoriClarityStore.shared
@@ -60,105 +62,121 @@ struct GratitudeJournalScreen: View {
     @State private var activeSheet: GratitudeJournalSheet?
     @State private var lifeGridSnapshot = JournalLifeGridSnapshot.current()
 
+    @ViewBuilder
     var body: some View {
-        NavigationStack(path: $navigationPath) {
-            MoriRootScrollScreen(
-                title: "Log",
-                subtitle: "One small note is enough.",
-                spacing: 16,
-                backgroundVariant: .journal,
-                minimumTopInset: 66,
-                headerStyle: .editorial,
-                headerTrailing: {
-                    GratitudeJournalHeaderActions(
-                        onLogPreviousDay: openLogbook,
-                        onExport: exportJournal,
-                        onImport: openImporter,
-                        onRestore: restoreFromCloudKit
-                    )
-                }
-            ) {
-                GratitudeJournalHomeContent(
-                    dailySparkStore: dailySparkStore,
-                    selectedTone: selectedTone,
-                    todayHabitEntry: todayHabitEntry,
-                    dailyEntryNote: $dailyEntryNote,
-                    dailyEntryPhotos: $dailyEntryPhotos,
-                    selectedDailyPhotoItems: $selectedDailyPhotoItems,
-                    recentEntries: viewModel.recentEntries,
-                    lifeGridSnapshot: lifeGridSnapshot,
-                    onDailySparkSaved: handleDailySparkSaved,
-                    onSelectTone: selectToneFromJournal,
-                    onSaveDailyEntry: saveDailyEntryFromJournal,
-                    onOpenPatternLog: openPatternLog,
-                    onOpenWeekArchive: openWeekArchive,
-                    onRemoveDailyPhoto: removeDailyEntryPhoto,
-                    onRandomMemory: openRandomMemory,
-                    onViewHistory: openHistory,
-                    onEntryTap: selectEntry
+        if usesAppShellNavigation {
+            screenContent
+        } else {
+            NavigationStack(path: $navigationPath) {
+                screenContent
+                    .navigationDestination(for: GratitudeJournalRoute.self) { route in
+                        gratitudeJournalDestination(route)
+                    }
+            }
+            .environment(\.moriOpenGratitudeJournalRoute, GratitudeJournalRouteAction { route in
+                navigationPath.append(route)
+            })
+        }
+    }
+
+    private var screenContent: some View {
+        MoriRootScrollScreen(
+            title: "Log",
+            subtitle: "One small note is enough.",
+            spacing: 16,
+            backgroundVariant: .journal,
+            showsBackground: !usesAppShellNavigation,
+            minimumTopInset: 66,
+            headerStyle: .editorial,
+            headerTrailing: {
+                GratitudeJournalHeaderActions(
+                    onLogPreviousDay: openLogbook,
+                    onExport: exportJournal,
+                    onImport: openImporter,
+                    onRestore: restoreFromCloudKit
                 )
             }
-            .overlay(alignment: .topLeading) {
-                if showsDismissButton {
-                    GratitudeJournalDismissButton {
-                        dismiss()
-                    }
-                    .padding(.leading, 20)
-                    .padding(.top, 52)
-                }
-            }
-            .scrollDismissesKeyboard(.interactively)
-            .navigationTitle("")
-            .toolbar(.hidden, for: .navigationBar)
-            .moriKeyboardDoneToolbar()
-            .sheet(item: $activeSheet) { sheet in
-                activeSheetContent(sheet)
-            }
-            .fileImporter(
-                isPresented: $showImporter,
-                allowedContentTypes: [.json],
-                allowsMultipleSelection: false
-            ) { result in
-                importJournal(result)
-            }
-            .navigationDestination(for: GratitudeJournalRoute.self) { route in
-                switch route {
-                case .history:
-                    GratitudeHistoryView()
-                case .weekArchiveDetail:
-                    WeekArchiveDetailView()
-                        .moriHidesMainTabBar()
-                }
-            }
-            .gratitudeJournalToast(
-                isPresented: $showToast,
-                message: toastMessage,
-                type: toastType
-            )
-            .gratitudeJournalLifecycle(
-                scenePhase: scenePhase,
-                onPrepare: prepareJournal,
-                onCleanup: cleanupJournalSession,
-                onReloadJournal: reloadJournalData,
-                onReloadHabitData: loadHabitData
-            )
-            .moriOnChange(of: dailySparkStore.entries.count) { _ in
-                reloadJournalData()
-            }
-            .moriOnChange(of: clarityStore.actions.count) { _ in
-                refreshLifeGridSnapshot()
-            }
-            .moriOnChange(of: settleStore.sessions.count) { _ in
-                refreshLifeGridSnapshot()
-            }
-            .moriPhotoPickerImporter(
-                selectedItems: $selectedDailyPhotoItems,
-                onImport: attachDailyEntryPhoto
+        ) {
+            GratitudeJournalHomeContent(
+                dailySparkStore: dailySparkStore,
+                selectedTone: selectedTone,
+                todayHabitEntry: todayHabitEntry,
+                dailyEntryNote: $dailyEntryNote,
+                dailyEntryPhotos: $dailyEntryPhotos,
+                selectedDailyPhotoItems: $selectedDailyPhotoItems,
+                recentEntries: viewModel.recentEntries,
+                lifeGridSnapshot: lifeGridSnapshot,
+                onDailySparkSaved: handleDailySparkSaved,
+                onSelectTone: selectToneFromJournal,
+                onSaveDailyEntry: saveDailyEntryFromJournal,
+                onOpenPatternLog: openPatternLog,
+                onOpenWeekArchive: openWeekArchive,
+                onRemoveDailyPhoto: removeDailyEntryPhoto,
+                onRandomMemory: openRandomMemory,
+                onViewHistory: openHistory,
+                onEntryTap: selectEntry
             )
         }
-        .environment(\.moriOpenGratitudeJournalRoute, GratitudeJournalRouteAction { route in
-            navigationPath.append(route)
-        })
+        .overlay(alignment: .topLeading) {
+            if showsDismissButton {
+                GratitudeJournalDismissButton {
+                    dismiss()
+                }
+                .padding(.leading, 20)
+                .padding(.top, 52)
+            }
+        }
+        .scrollDismissesKeyboard(.interactively)
+        .navigationTitle("")
+        .toolbar(.hidden, for: .navigationBar)
+        .toolbarBackground(.hidden, for: .navigationBar)
+        .moriKeyboardDoneToolbar()
+        .sheet(item: $activeSheet) { sheet in
+            activeSheetContent(sheet)
+        }
+        .fileImporter(
+            isPresented: $showImporter,
+            allowedContentTypes: [.json],
+            allowsMultipleSelection: false
+        ) { result in
+            importJournal(result)
+        }
+        .gratitudeJournalToast(
+            isPresented: $showToast,
+            message: toastMessage,
+            type: toastType
+        )
+        .gratitudeJournalLifecycle(
+            scenePhase: scenePhase,
+            onPrepare: prepareJournal,
+            onCleanup: cleanupJournalSession,
+            onReloadJournal: reloadJournalData,
+            onReloadHabitData: loadHabitData
+        )
+        .moriOnChange(of: dailySparkStore.entries.count) { _ in
+            reloadJournalData()
+        }
+        .moriOnChange(of: clarityStore.actions.count) { _ in
+            refreshLifeGridSnapshot()
+        }
+        .moriOnChange(of: settleStore.sessions.count) { _ in
+            refreshLifeGridSnapshot()
+        }
+        .moriPhotoPickerImporter(
+            selectedItems: $selectedDailyPhotoItems,
+            onImport: attachDailyEntryPhoto
+        )
+    }
+
+    @ViewBuilder
+    private func gratitudeJournalDestination(_ route: GratitudeJournalRoute) -> some View {
+        switch route {
+        case .history:
+            GratitudeHistoryView()
+        case .weekArchiveDetail:
+            WeekArchiveDetailView()
+                .moriHidesMainTabBar()
+        }
     }
 
     @ViewBuilder
@@ -215,11 +233,11 @@ struct GratitudeJournalScreen: View {
     }
 
     private func openHistory() {
-        navigationPath.append(.history)
+        openGratitudeRoute(.history)
     }
 
     private func openWeekArchive() {
-        navigationPath.append(.weekArchiveDetail)
+        openGratitudeRoute(.weekArchiveDetail)
     }
 
     private func selectEntry(_ entry: GratitudeEntry) {
