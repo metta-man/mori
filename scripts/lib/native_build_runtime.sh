@@ -7,16 +7,16 @@ mori_is_missing_simulator_runtime_failure() {
     return 1
   fi
 
-  if rg -qi -- \
+  if grep -Eqi -- \
     '(iOS|watchOS)[[:space:]]+[0-9]+([.][0-9]+)*([[:space:]]+Simulator)?[[:space:]]+(runtime[[:space:]]+)?(is[[:space:]]+not|must[[:space:]]+be)[[:space:]]+installed|missing[[:space:]]+(iOS|watchOS)[[:space:]]+simulator[[:space:]]+runtime|failed[[:space:]]+to[[:space:]]+locate[^[:cntrl:]]*(iOS|watchOS)[^[:cntrl:]]*runtime|no[[:space:]]+matching[^[:cntrl:]]*(iOS|watchOS)[^[:cntrl:]]*runtime' \
     "$log_path"; then
     return 0
   fi
 
-  if rg -qi -- \
+  if grep -Eqi -- \
     '(Unable to find a destination matching|Ineligible destinations for the .* scheme|Found no destinations)' \
     "$log_path" &&
-     rg -qi -- '(iOS Simulator|watchOS|simulator runtime)' "$log_path"; then
+     grep -Eqi -- '(iOS Simulator|watchOS|simulator runtime)' "$log_path"; then
     return 0
   fi
 

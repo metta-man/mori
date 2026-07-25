@@ -216,7 +216,6 @@ sim_destination="${MORI_SIM_DESTINATION:-generic/platform=iOS Simulator}"
 if [ "$skip_native_build" -eq 0 ]; then
   log_step "Build native iOS app"
   require_command xcodebuild
-  require_command rg
   require_command tee
   source scripts/lib/native_build_runtime.sh
 
