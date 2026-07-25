@@ -7,7 +7,7 @@
 - The reusable React component library exported from `src/index.ts`.
 - The Vercel serverless Pulse endpoints `/api/pulse/daily` and `/api/pulse/follow-up`, backed by the provider-neutral code in `server/pulse`.
 
-The web workspace uses Node.js 20 and the pinned package manager declared in `package.json`: `pnpm@11.7.0`. Run commands from this directory unless noted otherwise.
+The web workspace uses Node.js 22.13 or newer and the pinned package manager declared in `package.json`: `pnpm@11.7.0`. Run commands from this directory unless noted otherwise.
 
 ## Set up
 
