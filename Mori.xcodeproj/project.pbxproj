@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 63;
+	objectVersion = 77;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -474,14 +474,14 @@
 		18D75EAC6E3AD403504A630E /* MoriSanctuaryComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriSanctuaryComponents.swift; sourceTree = "<group>"; };
 		19218F6CE0FF42EA4090C2F4 /* QuietModeSupportViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = QuietModeSupportViews.swift; sourceTree = "<group>"; };
 		1994966EBB19629655BC65FB /* AttentionShieldActions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttentionShieldActions.swift; sourceTree = "<group>"; };
-		1994BC59159554AB67F72B49 /* MoriWidgets.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MoriWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		1994BC59159554AB67F72B49 /* MoriWidgets.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = MoriWidgets.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		1AA0D6B1025DD7BA89C262A4 /* MoriRecoveryScoring.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriRecoveryScoring.swift; sourceTree = "<group>"; };
 		1AB4A4CB0AA30B254EA5748F /* BotanicalBackdropPractice.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = BotanicalBackdropPractice.png; sourceTree = "<group>"; };
 		1BC4D4477EE9608AC58F1361 /* MoriShieldAction.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MoriShieldAction.entitlements; sourceTree = "<group>"; };
 		1CC669F01DF2CE8A73E0E696 /* MoriDataChangeEvents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriDataChangeEvents.swift; sourceTree = "<group>"; };
 		1D6B14AC7F95813A1BED8BEF /* GratitudeEntryPersistence.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GratitudeEntryPersistence.swift; sourceTree = "<group>"; };
 		1DDC3D74E0EFE05292BB83BE /* HabitTrackerStatsViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitTrackerStatsViews.swift; sourceTree = "<group>"; };
-		1E40B99B9FE529A4A5FEB4A1 /* MoriScreenTimeMonitor.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MoriScreenTimeMonitor.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		1E40B99B9FE529A4A5FEB4A1 /* MoriScreenTimeMonitor.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = MoriScreenTimeMonitor.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		1E64ABA7A4B09164729B2BB1 /* MoriBreathingSessionClock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriBreathingSessionClock.swift; sourceTree = "<group>"; };
 		2012303D3AAE3563D23C9374 /* MoriWatch.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = MoriWatch.entitlements; sourceTree = "<group>"; };
 		20CD693350CE36E2897A78F9 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/Localizable.strings; sourceTree = "<group>"; };
@@ -534,8 +534,8 @@
 		45C3E80ABFD7F3EBC6880BCD /* MoriThemeTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriThemeTokens.swift; sourceTree = "<group>"; };
 		4665ECB352C6CD0603D58FA7 /* BotanicalBackdropToday.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = BotanicalBackdropToday.png; sourceTree = "<group>"; };
 		47AA7E5DE8FCE8D2CE6F996B /* MoriRecoveryStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriRecoveryStore.swift; sourceTree = "<group>"; };
-		47DBA365758F5110E47D5F68 /* MoriShieldAction.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MoriShieldAction.appex; sourceTree = BUILT_PRODUCTS_DIR; };
-		47E42F334997A580CEAA9B3B /* MoriShieldConfiguration.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = MoriShieldConfiguration.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		47DBA365758F5110E47D5F68 /* MoriShieldAction.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = MoriShieldAction.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		47E42F334997A580CEAA9B3B /* MoriShieldConfiguration.appex */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = "wrapper.app-extension"; path = MoriShieldConfiguration.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		4802AA3982177F501E0BBF44 /* MoriWatch.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MoriWatch.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		49A6E072726B7943AC7E3085 /* GratitudeJournalLifecycleModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GratitudeJournalLifecycleModifier.swift; sourceTree = "<group>"; };
 		4A83CD28941A834C31E5E0BD /* MoriRecoveryViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriRecoveryViews.swift; sourceTree = "<group>"; };
@@ -557,7 +557,7 @@
 		617E6E8EA9E42CDEC2F60332 /* PomodoroPracticeSurfaces.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PomodoroPracticeSurfaces.swift; sourceTree = "<group>"; };
 		621655AAEDCD6569091620C4 /* LockedScreenTimeSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockedScreenTimeSettingsView.swift; sourceTree = "<group>"; };
 		627F42D21BCA57F17DE7EE24 /* ScreenTimeSettingsPickerSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenTimeSettingsPickerSupport.swift; sourceTree = "<group>"; };
-		62F9120F39BD4552A01D2CFB /* Mori.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Mori.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		62F9120F39BD4552A01D2CFB /* Mori.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Mori.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		637B113D92C69867FF51C003 /* MoriWatchBellNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriWatchBellNotifications.swift; sourceTree = "<group>"; };
 		63CEFA377BC9A2EA02F80C40 /* MoriRecoveryInsights.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriRecoveryInsights.swift; sourceTree = "<group>"; };
 		69AF7028F30930032BC63BD5 /* MoriDailyPulseMock.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriDailyPulseMock.swift; sourceTree = "<group>"; };
@@ -864,7 +864,6 @@
 				B52F275CDC73EF58846EA0EC /* HabitDataManager.swift */,
 				78A4E238060604793E4FFD88 /* HabitEntryStore.swift */,
 				EFD084466A6D3E65C823242E /* HabitStatisticsCalculator.swift */,
-				1390F6223B93D3335688EA02 /* Mori.xcdatamodeld */,
 				EE30AF395F755DDD32BD63C7 /* MoriClarityModels.swift */,
 				1481D4A97BE45AF3C7A7631A /* MoriClarityProgressModels.swift */,
 				69AF7028F30930032BC63BD5 /* MoriDailyPulseMock.swift */,
@@ -874,6 +873,7 @@
 				9B6CFFC3CA93D05495D77C1C /* UserSettings.swift */,
 				D1DE3C2F59A9835344BCDC56 /* UserSettingsStore.swift */,
 				6AFCD3BC5E66B17050B148CB /* WeekArchiveCalculator.swift */,
+				1390F6223B93D3335688EA02 /* Mori.xcdatamodeld */,
 			);
 			path = Models;
 			sourceTree = "<group>";
@@ -1447,33 +1447,39 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
-				LastUpgradeCheck = 2700;
+				LastUpgradeCheck = 1500;
 				TargetAttributes = {
 					181908B7C8755205766B6827 = {
+						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 					555F06634E0DCC958AE3C40D = {
+						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 					922E64334CDA1FE7165A6441 = {
+						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 					CE7E965D4878DFED073F6A9C = {
+						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 					D42BE5FD4DEE0BCB60B6746E = {
+						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 					E3B598FD83F77B5AD3708644 = {
+						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 					ECAD2BE1F1651AE015B21EB5 = {
+						DevelopmentTeam = "";
 						ProvisioningStyle = Automatic;
 					};
 				};
 			};
 			buildConfigurationList = 090C52AD62D8C8EBF3761C39 /* Build configuration list for PBXProject "Mori" */;
-			compatibilityVersion = "Xcode 14.0";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
 			knownRegions = (
@@ -1487,6 +1493,8 @@
 			packageReferences = (
 				4A4EBF23529CF385C7BB5077 /* XCRemoteSwiftPackageReference "posthog-ios" */,
 			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = A6E4849ADFD1B41BA2C9A6CB /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -2001,9 +2009,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ShieldAction/MoriShieldAction.entitlements;
-				DEVELOPMENT_TEAM = VU5N8NSBSN;
 				INFOPLIST_FILE = ShieldAction/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2020,9 +2026,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Widgets/MoriWidgets.entitlements;
-				DEVELOPMENT_TEAM = VU5N8NSBSN;
 				INFOPLIST_FILE = Widgets/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2041,10 +2045,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = "";
 				CODE_SIGN_ENTITLEMENTS = WatchApp/MoriWatch.entitlements;
-				DEVELOPMENT_TEAM = VU5N8NSBSN;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = WatchApp/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mettalabs.mori.watch;
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
@@ -2056,9 +2058,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ShieldConfiguration/MoriShieldConfiguration.entitlements;
-				DEVELOPMENT_TEAM = VU5N8NSBSN;
 				INFOPLIST_FILE = ShieldConfiguration/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2078,7 +2078,6 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Mori/Mori.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = VU5N8NSBSN;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Mori/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Mori;
@@ -2087,7 +2086,6 @@
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Mori can read Apple Health data you approve, including HRV, heart rate, resting heart rate, sleep, respiratory rate, temperature, workouts, active energy, and walking or running distance, to personalize recovery readiness and attention signals.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Mori does not write data to Apple Health. Recovery features only read the Apple Health data you approve.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Mori lets you choose photos to attach to your private journal entries.";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2103,9 +2101,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = Widgets/MoriWidgets.entitlements;
-				DEVELOPMENT_TEAM = VU5N8NSBSN;
 				INFOPLIST_FILE = Widgets/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2122,9 +2118,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ScreenTimeMonitor/MoriScreenTimeMonitor.entitlements;
-				DEVELOPMENT_TEAM = VU5N8NSBSN;
 				INFOPLIST_FILE = ScreenTimeMonitor/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2143,10 +2137,8 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = "";
 				CODE_SIGN_ENTITLEMENTS = WatchApp/MoriWatch.entitlements;
-				DEVELOPMENT_TEAM = VU5N8NSBSN;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = WatchApp/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				PRODUCT_BUNDLE_IDENTIFIER = com.mettalabs.mori.watch;
 				SDKROOT = watchos;
 				SKIP_INSTALL = YES;
@@ -2158,9 +2150,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ScreenTimeMonitor/MoriScreenTimeMonitor.entitlements;
-				DEVELOPMENT_TEAM = VU5N8NSBSN;
 				INFOPLIST_FILE = ScreenTimeMonitor/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2177,9 +2167,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ShieldAction/MoriShieldAction.entitlements;
-				DEVELOPMENT_TEAM = VU5N8NSBSN;
 				INFOPLIST_FILE = ShieldAction/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2198,9 +2186,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = "";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = "";
 				CODE_SIGN_ENTITLEMENTS = WatchWidgets/MoriWatchWidgets.entitlements;
-				DEVELOPMENT_TEAM = VU5N8NSBSN;
 				INFOPLIST_FILE = WatchWidgets/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2220,7 +2206,6 @@
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_ENTITLEMENTS = Mori/Mori.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
-				DEVELOPMENT_TEAM = VU5N8NSBSN;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = Mori/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Mori;
@@ -2229,7 +2214,6 @@
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Mori can read Apple Health data you approve, including HRV, heart rate, resting heart rate, sleep, respiratory rate, temperature, workouts, active energy, and walking or running distance, to personalize recovery readiness and attention signals.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Mori does not write data to Apple Health. Recovery features only read the Apple Health data you approve.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Mori lets you choose photos to attach to your private journal entries.";
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2245,7 +2229,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -2278,12 +2261,10 @@
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 2;
-				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = "";
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_NO_COMMON_BLOCKS = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
@@ -2302,7 +2283,6 @@
 				MTL_ENABLE_DEBUG_INFO = NO;
 				MTL_FAST_MATH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_COMPILATION_MODE = wholemodule;
 				SWIFT_OPTIMIZATION_LEVEL = "-O";
 				SWIFT_VERSION = 5.9;
@@ -2314,9 +2294,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				CODE_SIGN_ENTITLEMENTS = ShieldConfiguration/MoriShieldConfiguration.entitlements;
-				DEVELOPMENT_TEAM = VU5N8NSBSN;
 				INFOPLIST_FILE = ShieldConfiguration/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2335,9 +2313,7 @@
 				ASSETCATALOG_COMPILER_APPICON_NAME = "";
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = "";
 				CODE_SIGN_ENTITLEMENTS = WatchWidgets/MoriWatchWidgets.entitlements;
-				DEVELOPMENT_TEAM = VU5N8NSBSN;
 				INFOPLIST_FILE = WatchWidgets/Info.plist;
-				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -2354,7 +2330,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				CLANG_ANALYZER_LOCALIZABILITY_NONLOCALIZED = YES;
 				CLANG_ANALYZER_NONNULL = YES;
 				CLANG_ANALYZER_NUMBER_OBJECT_CONVERSION = YES_AGGRESSIVE;
 				CLANG_CXX_LANGUAGE_STANDARD = "gnu++14";
@@ -2387,12 +2362,10 @@
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
 				CURRENT_PROJECT_VERSION = 2;
-				DEAD_CODE_STRIPPING = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = "";
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
-				ENABLE_USER_SCRIPT_SANDBOXING = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu11;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_NO_COMMON_BLOCKS = YES;
@@ -2418,7 +2391,6 @@
 				MTL_FAST_MATH = YES;
 				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 5.9;

@@ -4,6 +4,11 @@
 # Xcode
 build/
 DerivedData/
+*.xcarchive/
+*.ipa
+*.dSYM/
+*.dSYM.zip
+*.xcresult/
 *.xcuserstate
 *.xccheckout
 xcuserdata/
@@ -13,11 +18,22 @@ xcuserdata/
 .env
 .env.*
 !.env.example
+AuthKey*.p8
+*.p12
+*.mobileprovision
+*.provisionprofile
 .vercel/
 www/.env
 www/.env.*
 !www/.env.example
 www/.vercel/
+
+# Python environments, caches, and coverage
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+coverage/
 
 # Swift Package Manager / Xcode generated package state
 .build/
@@ -27,13 +43,16 @@ www/.vercel/
 node_modules/
 www/node_modules/
 www/dist/
+.pnpm-store/
+.turbo/
 
 # Logs and temporary files
 *.log
 *.tmp
 *.swp
 
-# Local automation, archives, and generated review output
+# Local automation, assistant settings, archives, and generated review output
+.claude/settings.local.json
 .codex-build/
 .playwright-cli/
 artifacts/

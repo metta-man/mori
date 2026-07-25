@@ -3,8 +3,12 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+source scripts/lib/evidence_paths.sh
+audit_dir="$(mori_evidence_path "output/screenshot-audit/main-surfaces-2026-06-25" "${1:-}")"
+export MORI_AUDIT_DIR="$audit_dir"
+
 ruby <<'RUBY'
-audit_dir = "output/screenshot-audit/main-surfaces-2026-06-25"
+audit_dir = ENV.fetch("MORI_AUDIT_DIR")
 audit_path = File.join(audit_dir, "AUDIT.md")
 
 required_screenshots = {

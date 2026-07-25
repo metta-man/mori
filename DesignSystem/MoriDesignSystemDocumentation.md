@@ -1,395 +1,228 @@
-# Mori Design System v2 - Botanical Watercolor
+# Mori SwiftUI Design System
 
-## Overview
+**Status:** Active component guide
+**Updated:** 2026-07-25
 
-The current app design is a botanical watercolor system: textured watercolor paper, quiet botanical washes, deep leaf ink, sage highlights, and generous quiet space. Brand/logo text, seedling badges, circular emblems, and repeated leaf marks should stay out of primary app surfaces unless the OS or an external flow requires the app name.
+## Authority And Scope
 
-## Design Philosophy
+This file documents the current shared SwiftUI surface. It does not replace:
 
-### Core Principles
-- **Botanical Paper**: Surfaces should feel like watercolor on paper, not flat cream panels
-- **Action Over Logo**: UI copy should name the user action, not repeatedly name the app
-- **Logo Is Not Texture**: The app icon, wordmark, paper-linework mark, seedling badge, circular emblem, and leaf mark belong to OS, store, or external brand surfaces only. In-app cards use paper, ink, and breathing room, not a repeated brand signature.
-- **Material Over Marks**: Cards default to `MoriPlainWatercolorCardBackground`, backed by an opaque watercolor-paper base and the dedicated `moriCardPaperWash` bitmap: quiet watercolor paper grain with no repeated logo, app-icon, wordmark, paper-linework, seed-circle, seedling badge, circular emblem, or leaf-mark watermarks. Botanical painting belongs at the screen/root layer through `MoriPaperBackground`, or as a rare hero/support accent; ordinary repeated cards stay quiet instead of letting screen-level art bleed through them.
-- **Botanical Without Billboarding**: Accent boxes may use generated paper-material variants such as `moriCardSageWash`, `moriCardWarmWash`, or `moriCardCoolWash`. These are faint edge/corner watercolor paper washes, not logo, badge, seedling, circular emblem, or wordmark backgrounds.
-- **Bitmap Actions**: Primary action surfaces use the dedicated `moriButtonWash` bitmap so buttons still feel like watercolor on paper, not flat synthetic slabs or brand badges.
-- **No Card Backdrop API**: `moriSanctuaryCard` and `moriSanctuaryBox` intentionally do not accept `backdrop`, `showsWave`, or `showsTexture` parameters. Screen-level botanical paintings belong in `MoriPaperBackground`; hero wash belongs in `MoriWatercolorHeroWash`; ordinary cards stay plain paper.
-- **Minimalist Clarity**: Clean, uncluttered interfaces focus on the next useful action
-- **Accessibility First**: All components built with accessibility in mind
-- **Consistent Spacing**: 4pt grid system for visual harmony
-- **Purposeful Animation**: Gentle, meaningful interactions
+- `DesignReferences/MORI_DESIGN_SPEC.md` and `DesignReferences/mori-approved-reference.jpeg` for approved composition and visual direction,
+- `MORI_DESIGN_SYSTEM_V2.md` for product language and interaction constraints,
+- current Swift source for exact signatures and runtime behaviour.
 
-### Color System
-The palette now follows the supplied watercolor paper references:
+If an example here differs from source, source wins and this guide must be corrected. `docs/CURRENT_SOURCES.md` defines the full precedence order.
 
-- **Watercolor Paper** (`#FBF7EF`) - Main background
-- **Seed Paper** (`#FFFDF8`) - Card backgrounds
-- **Paper Line** (`#DDD6C8`) - Borders and dividers
-- **Muted Leaf Ink** (`#5F6D64`) - Secondary text/icons
-- **Deep Leaf Ink** (`#14392F`) - Primary text
-- **Deep Canopy** (`#0F2E27`) - High contrast text
-- **Leaf Wash** (`#758C6B`) - Focus/active states
-- **Soft Sage** (`#8FA883`) - Success/growth states
-- **Soft Clay** (`#B9856D`) - Warning/error states
-- **Seed Ochre** (`#D8B86F`) - Celebration states
+## Design Principles
 
-## Component Architecture
+1. **Watercolor paper is the material.** Root screens use paper and screen-level botanical art; ordinary cards remain quiet and opaque.
+2. **One dominant action.** Use hierarchy and progressive disclosure before adding more controls.
+3. **Material over marks.** App icons, logos, wordmarks, seedling badges, circular emblems, and other brand marks are not card texture.
+4. **Illustration belongs to composition.** Screen atmosphere may use botanical bitmap art; repeated cards must not inherit the same painting.
+5. **Typed artwork.** Use Mori bitmap icon and generated-art APIs on primary surfaces.
+6. **Accessibility is part of the component.** Keep 44pt targets, Dynamic Type, contrast, semantic order, and Reduce Motion behaviour.
+7. **Preserve working structure.** Follow the composition pattern already used by the affected screen unless the task explicitly includes migration.
 
-### 1. Design Tokens (`MoriDesignTokens.swift`)
+## Source Files
 
-#### Colors
+| Concern | Current source |
+| --- | --- |
+| Core color, type, spacing, radius, motion | `MoriDesignTokens.swift` |
+| Editorial semantic tokens and button styles | `MoriThemeTokens.swift` |
+| Root paper and botanical screen wash | `MoriPaperBackground.swift`, `MoriBotanicalBackdrops.swift` |
+| Reference-matched page composition | `MoriComponents.swift` |
+| Sanctuary cards and box modifiers | `MoriSanctuarySurfaces.swift`, `MoriSanctuaryBoxBackground.swift` |
+| Root headers and root scroll shell | `MoriSanctuaryHeaders.swift` |
+| Actions | `MoriActionComponents.swift` |
+| Metrics and state surfaces | `MoriSanctuaryMetrics.swift`, `MoriStateComponents.swift` |
+| Shared view behaviour | `MoriViewModifiers.swift` |
+| Typed bitmap art and icons | `Shared/MoriGeneratedArt.swift` |
+
+## Tokens
+
+### Semantic Editorial Tokens
+
+`MoriTheme` is a namespace, not a runtime light/dark theme object. Its nested types provide current semantic values:
+
 ```swift
-// Active botanical watercolor colors
-MoriColors.sanctuaryPaper       // Root watercolor paper
-MoriColors.sanctuarySurface     // Quiet card paper
-MoriColors.sanctuaryInk         // Primary deep leaf ink
-MoriColors.sanctuaryMuted       // Secondary text/icons
-MoriColors.sanctuarySage        // Focus and selected controls
-MoriColors.sanctuaryFern        // Growth accents
-MoriColors.sanctuaryLine        // Hairline borders
-MoriColors.sanctuaryShadow      // Paper shadow
+MoriTheme.Colors.paper
+MoriTheme.Colors.raisedPaper
+MoriTheme.Colors.ink
+MoriTheme.Colors.primaryAction
+MoriTheme.Typography.pageTitle
+MoriTheme.Spacing.screenEdge
+MoriTheme.CornerRadius.card
+MoriTheme.Animation.control
 ```
 
-#### Typography
+### Sanctuary Tokens
+
+The established botanical surfaces also use:
+
 ```swift
-MoriTypography.display     // 48pt Light (big numbers)
-MoriTypography.title1      // 28pt Semibold (screen titles)
-MoriTypography.title2      // 22pt Semibold (section headers)
-MoriTypography.body         // 17pt Regular (main content)
-MoriTypography.callout      // 16pt Regular (secondary info)
-MoriTypography.caption      // 14pt Regular (labels)
-MoriTypography.micro       // 12pt Medium (timestamps)
+MoriColors.sanctuaryPaper
+MoriColors.sanctuarySurface
+MoriColors.sanctuaryInk
+MoriColors.sanctuaryMuted
+MoriColors.sanctuarySage
+MoriTypography.sanctuaryRootTitle
+MoriSpacing.cardPadding
+MoriHitTarget.minimum
 ```
 
-#### Spacing
-```swift
-MoriSpacing.space1  // 4pt   - Micro gaps
-MoriSpacing.space2  // 8pt   - Tight spacing
-MoriSpacing.space3  // 12pt  - Default spacing
-MoriSpacing.space4  // 16pt  - Comfortable
-MoriSpacing.space5  // 24pt  - Section gaps
-MoriSpacing.space6  // 32pt  - Large gaps
-MoriSpacing.space7  // 48pt  - Screen margins
-MoriSpacing.space8  // 64pt  - Major sections
-```
+Use semantic tokens instead of copying literal colors or dimensions into feature code. Do not create a third token layer inside a feature.
 
-### 2. Core Components
+## Root Composition
 
-#### Paper Surfaces
+Choose the primitive already used by the screen:
+
+- `MoriPaperBackground(variant:)` supplies full-screen paper and a screen-level botanical bitmap wash.
+- `MoriRootScrollScreen` supplies the established sanctuary root header, safe-area handling, and scrolling layout.
+- `MoriPage` and `MoriLandscapeBackground` supply the newer reference-matched editorial composition.
+- `MoriPageHeader`, `MoriRootHeader`, `MoriSectionHeader`, and `MoriSectionTitle` provide shared hierarchy.
+
+Example using the established sanctuary shell:
+
 ```swift
-MoriPaperBackground(variant: .today) {
-    Content()
+MoriRootScrollScreen(
+    title: "Today",
+    subtitle: "One grounded next step",
+    backgroundVariant: .today
+) {
+    TodayContent()
 }
+```
 
+Do not nest two root backgrounds. Do not add a screen painting inside every card.
+
+## Sanctuary Cards And Boxes
+
+For established botanical surfaces:
+
+```swift
 Content()
     .moriSanctuaryCard()
 
-BotanicalPanel {
-    Content()
-}
-```
-
-#### Buttons
-Primary buttons use `MoriGeneratedArtImage(art: .buttonWash, contentMode: .fill)` for a restrained watercolor-paper material. This is an action material, not logo art, and it should not introduce app icons, wordmarks, seedling badges, circular emblems, or repeated leaf-mark textures.
-
-```swift
-// Primary button
-MoriButton(title: "Save") {
-    action()
-}
-
-// Secondary button
-MoriSecondaryButton(title: "Cancel") {
-    action()
-}
-
-// Icon button
-MoriIconButton(icon: .plus) {
-    action()
-}
-```
-
-#### Form Components
-```swift
-TextField("Enter name", text: $text)
+TextField("Name", text: $name)
     .padding(MoriSpacing.inputPadding)
     .moriSanctuaryBox(
         cornerRadius: MoriCornerRadius.input,
         padding: 0,
+        tone: .paper,
         castsShadow: false
     )
-
-Toggle("Enable notifications", isOn: $isOn)
-    .tint(MoriColors.sanctuarySage)
-
-Picker("Mode", selection: $selection) {
-    Text("Day").tag("day")
-    Text("Week").tag("week")
-    Text("Month").tag("month")
-}
-.pickerStyle(.segmented)
 ```
 
-#### Progress Components
+`moriSanctuaryCard` and `moriSanctuaryBox` resolve through `MoriSanctuaryBoxBackground` and `MoriPlainWatercolorCardBackground`.
+
+Available box tones are `.paper`, `.mist`, `.sage`, `.sand`, `.blue`, and `.root`. Use tone to communicate hierarchy, not to decorate every section.
+
+Card surfaces intentionally do not expose screen-art, wave, or texture toggles. Screen-level paintings belong in `MoriPaperBackground`; a deliberate hero moment may use `MoriWatercolorHeroWash`.
+
+Other current shared surfaces include:
+
+- `BotanicalPanel` and `OrganicCard`
+- `MoriPracticeCard`
+- `MoriMetricTile` and `MoriCompactStatStrip`
+- `MoriEmptyState`, `MoriPermissionState`, `MoriErrorState`, and `MoriSkeleton`
+
+Avoid nested cards and repeated card chrome where typography and spacing are sufficient.
+
+## Actions
+
+`MoriPrimaryButton` is the canonical large commitment action. `MoriSecondaryButton` is the quieter alternative. Use `MoriIconButton` for a compact typed-icon action.
+
 ```swift
-MoriBotanicalProgressBar(value: 0.6)
+VStack(spacing: MoriTheme.Spacing.small) {
+    MoriPrimaryButton(title: "Turn App Limit On") {
+        enableAppLimit()
+    }
 
-MoriTimerProgressRing(progress: 0.75)
-
-ProgressView("Loading...")
-    .tint(MoriColors.sanctuarySage)
-
-MoriSkeleton(width: 180, height: 20)
-```
-
-#### App Shell Components
-```swift
-@State private var selectedTab = AppTab.defaultTab
-
-// App shell tab bar
-MoriBottomTabBarOverlay(
-    selectedTab: selectedTab,
-    onSelectTab: { selectedTab = $0 }
-)
-```
-
-#### State Components
-```swift
-// Empty state
-MoriEmptyState(
-    icon: "book.closed",
-    title: "No content",
-    message: "Get started by adding something",
-    buttonTitle: "Add",
-    buttonAction: { action() }
-)
-
-// Error state
-MoriErrorState(
-    message: "Connection failed",
-    retryAction: { action() }
-)
-
-// Compact metric tile
-MoriMetricTile(title: "quiet minutes", value: "24", detail: "reclaimed before feeds")
-```
-
-### 4. View Modifiers (`MoriViewModifiers.swift`)
-
-#### Styling Modifiers
-```swift
-// Text styles
-Text("Title").moriTitle()
-Text("Body").moriBody()
-Text("Caption").moriCaption()
-
-// Card styling
-Content().moriCard()
-Content().moriCardPadding()
-
-// Color modifiers
-Text("Primary").moriTextPrimary()
-Text("Secondary").moriTextSecondary()
-Text("Accent").moriTextAccent()
-```
-
-#### Animation Modifiers
-```swift
-// Fade in animation
-Content().moriFadeIn()
-
-// Tap animation
-Button("Tap me").moriTapAnimation()
-
-// Conditional animation
-Content().moriAnimation(MoriAnimation.standard, value: isTapped)
-```
-
-### 5. Theme System
-
-#### Theme Configuration
-```swift
-// Light theme
-let lightTheme = MoriTheme.light
-
-// Dark theme
-let darkTheme = MoriTheme.dark
-
-// Apply theme
-content.background(theme.background)
-      .foregroundColor(theme.primary)
-```
-
-## Usage Patterns
-
-### 1. Screen Layout Pattern
-```swift
-struct ExampleScreen: View {
-    @State private var selectedTab = AppTab.defaultTab
-
-    var body: some View {
-        ZStack(alignment: .bottom) {
-            MoriPaperBackground {
-                ScrollView {
-                    VStack(spacing: MoriSpacing.space5) {
-                        MoriRootHeader(
-                            title: "Example",
-                            subtitle: "One focused surface."
-                        )
-
-                        Content()
-                            .moriSanctuaryCard()
-
-                        OrganicCard {
-                            Content()
-                        }
-
-                        MoriButton(title: "Action") {
-                            action()
-                        }
-                    }
-                    .padding(MoriSpacing.space6)
-                    .padding(.bottom, MoriMainTabBarMetrics.scrollBottomInset)
-                }
-            }
-
-            MoriBottomTabBarOverlay(
-                selectedTab: selectedTab,
-                onSelectTab: { selectedTab = $0 }
-            )
-        }
+    MoriSecondaryButton(title: "Not now") {
+        dismiss()
     }
 }
 ```
 
-### 2. Form Pattern
+Use `MoriSanctuaryPrimaryButton` only where the existing screen needs its compact sanctuary treatment. `MoriButton` remains a watercolor compatibility component; do not choose it by default for a new reference-matched flow.
+
+All primary actions must retain a clear enabled/disabled state, a semantic label, and at least a 44pt target.
+
+## Forms And Sheets
+
+Current shared modifiers include:
+
 ```swift
-struct FormExample: View {
-    @State var name = ""
-    @State var email = ""
-    @State var newsletter = false
-    @State var accountType = "personal"
-    
-    var body: some View {
-        VStack(spacing: MoriSpacing.space5) {
-            TextField("Full name", text: $name)
-                .padding(MoriSpacing.inputPadding)
-                .moriSanctuaryBox(
-                    cornerRadius: MoriCornerRadius.input,
-                    padding: 0,
-                    castsShadow: false
-                )
-
-            TextField("Email address", text: $email)
-                .keyboardType(.emailAddress)
-                .textInputAutocapitalization(.never)
-                .padding(MoriSpacing.inputPadding)
-                .moriSanctuaryBox(
-                    cornerRadius: MoriCornerRadius.input,
-                    padding: 0,
-                    castsShadow: false
-                )
-
-            Toggle("Subscribe to newsletter", isOn: $newsletter)
-                .tint(MoriColors.sanctuarySage)
-
-            Picker("Account type", selection: $accountType) {
-                Text("Personal").tag("personal")
-                Text("Business").tag("business")
-            }
-            .pickerStyle(.segmented)
-            
-            MoriButton(title: "Create Account") {
-                submitForm()
-            }
-        }
-        .padding(MoriSpacing.space6)
-        .moriSanctuaryCard()
-    }
+Form {
+    SettingsContent()
 }
+.moriSettingsForm()
+.moriKeyboardDoneToolbar()
+.moriBotanicalSheetPresentation()
 ```
 
-## Animation Guidelines
+Use `moriHidesMainTabBar()` only for immersive pushed practice flows that already own navigation. Do not hide root navigation as incidental styling.
 
-### Default Animation Values
-- **Standard**: 0.3s ease-out (comfortable)
-- **Fast**: 0.2s ease-out (quick interactions)
-- **Slow**: 0.5s ease-out (transitions)
-- **Spring**: Spring response 0.3s, damping 0.7 (playful)
-- **Gentle**: 2.0s ease-in-out infinite (celebrations)
+## Motion
 
-### Usage Rules
-- Use standard animations for most interactions
-- Use fast animations for button taps
-- Use spring animations sparingly for playful elements
-- Use gentle animations only for special states
-- Always respect reduce motion accessibility settings
+Motion must be short, calm, and optional:
 
-## Accessibility Features
-
-### Built-in Support
-- **Minimum Hit Targets**: 44pt minimum tap size
-- **Reduce Motion**: Respects system accessibility settings
-- **Color Contrast**: token-level WCAG AA text combinations guarded by `scripts/check_color_contrast_tokens.sh`
-- **Semantic Labels**: Proper accessibility labels on components
-- **Focus Management**: Clear focus indicators
-
-### Customization
 ```swift
-// Apply minimum hit target
-Button("Action")
-    .moriHitTarget(minimum: 48)
-
-// Conditional animation
 Content()
-    .moriAnimation(MoriAnimation.standard, value: value)
+    .moriReduceMotionAnimation(
+        MoriTheme.Animation.disclosure,
+        value: isExpanded
+    )
 ```
 
-## Performance Considerations
+Use `moriAnimation(_:value:)` or `moriReduceMotionAnimation(_:value:)` so state changes respect Reduce Motion. Guard continuous ambient motion with `@Environment(\.accessibilityReduceMotion)` or `moriAllowsMotion`.
 
-### Optimization Tips
-- Use LazyVGrid/LazyHGrid for large lists
-- Minimize animation complexity
-- Use appropriate shadow values
-- Leverage SwiftUI's view builder efficiency
-- Consider view modifiers for reusability
+Never delay an action for animation or encode essential state only through motion.
 
-### Memory Management
-- Avoid creating unnecessary views in loops
-- Use @State for mutable data
-- Minimize @Binding usage when possible
-- Use efficient layouts to prevent over-composition
+## Artwork
 
-## Current Status
+- `MoriPaperBackground` owns root-level paper and botanical atmosphere.
+- `MoriGeneratedArtImage` renders a typed `MoriGeneratedArt` asset.
+- `MoriBitmapIconImage` and `MoriBitmapIconBadge` render typed UI icons.
+- Card material uses the generated paper washes selected by `MoriSanctuaryBoxTone`.
 
-### v2 Botanical Watercolor
-- Active design direction: textured watercolor paper, quiet botanical washes, deep leaf ink, and generated bitmap assets.
-- Active app shell: custom root navigation with `MoriPaperBackground`, `MoriRootHeader`, and `MoriBottomTabBarOverlay`. Screen-level watercolor botanical paintings live in `MoriPaperBackground`, not repeated inside every card.
-- Active icon rule: use Mori bitmap icons for primary app surfaces; add a generated bitmap asset when a matching icon is missing.
-- Active visual rule: cards default to `MoriPlainWatercolorCardBackground` with the dedicated `moriCardPaperWash` bitmap, no repeated logo, app-icon, wordmark, paper-linework, seed-circle, seedling badge, circular emblem, or leaf-mark watermark. The shared card/box API has no `backdrop`, `showsWave`, or `showsTexture` parameters; use `MoriWatercolorHeroWash` only when a specific hero or anchor moment needs hierarchy, and never use brand art as surface decoration.
-- Active action rule: primary button materials use `moriButtonWash`, compiled with the app and extensions alongside the screen, card, widget, and icon bitmap assets.
-- Completion remains unclaimed until simulator screenshots cover the main surfaces and the active source, docs, and compiled artifact gates pass without exceptions.
+Do not add inline SVG, ad hoc SF Symbol strings, or brand-lockup wallpaper to a primary surface when a typed Mori asset exists.
 
-## Contributing
+## Life Grid Naming
 
-### Guidelines
-- Follow existing code patterns
-- Use proper documentation
-- Test on multiple devices
-- Respect accessibility standards
-- Maintain consistency
+The interface and current product documentation say **Life Grid**. Internal Swift types, files, routes, stores, and persistence seams keep the `WeekArchive*` prefix.
 
-### Code Style
-- Use SwiftLint when available
-- Follow Swift naming conventions
-- Document public APIs
-- Use view builders for composability
-- Maintain consistency with existing components
+For example, a view implemented under `Features/WeekArchive/` may display “Life Grid”. Keep localization at the presentation boundary; do not rename persisted identifiers as a visual cleanup.
 
-## Support
+## Accessibility Checklist
 
-For issues, questions, or contributions, please refer to the project documentation or contact the design team.
+- Minimum interactive target: `MoriHitTarget.minimum`
+- Dynamic Type can grow without hiding the primary action
+- Selection is communicated by more than color
+- Decorative paper and botanical art are accessibility-hidden
+- VoiceOver order follows visual hierarchy
+- Sheet content has an obvious dismissal path
+- Reduced Motion disables repeated scale, parallax, and ambient drift
+- Text remains on quiet paper or clear negative space
 
----
+## Change Workflow
 
-*The Mori Design System v2 is designed to be flexible, accessible, and maintainable while maintaining the quiet botanical watercolor aesthetic used across the app.*
+Before editing an affected UI:
+
+1. Read `AGENTS.md`.
+2. Inspect the approved reference image.
+3. Find the existing composition and component usage in the feature source.
+4. Preserve functional behaviour and persistence.
+5. Implement toward the reference.
+6. Build and run the affected target.
+7. Capture and compare screenshots.
+8. Complete at least two visual-refinement passes.
+9. Run the relevant design and release gates.
+
+The broad readiness command is:
+
+```sh
+bash scripts/check_redesign_release_readiness.sh
+```
+
+Use the focused audit commands in `MORI_REDESIGN_RELEASE_AUDIT.md` for the surfaces changed.
