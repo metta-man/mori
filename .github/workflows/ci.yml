@@ -38,7 +38,11 @@ jobs:
       run: xcodegen --version
 
     - name: Install design audit Python dependencies
-      run: python3 -m pip install Pillow
+      run: |
+        audit_venv="$RUNNER_TEMP/mori-design-audit-venv"
+        python3 -m venv "$audit_venv"
+        "$audit_venv/bin/python" -m pip install "Pillow==12.1.1"
+        echo "$audit_venv/bin" >> "$GITHUB_PATH"
 
     - name: Set up pnpm
       uses: pnpm/action-setup@v4
