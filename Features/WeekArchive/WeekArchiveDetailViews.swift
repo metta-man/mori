@@ -1,4 +1,5 @@
 import SwiftUI
+import PhotosUI
 import UIKit
 
 private enum WeekArchiveWeekDetailSheetDestination: Identifiable {
@@ -135,9 +136,17 @@ struct WeekArchiveWeekDetailSheet: View {
 }
 
 struct WeekArchiveDayDetailSheet: View {
-    let summary: WeekArchiveDaySummary
+    @State private var summary: WeekArchiveDaySummary
+    @State private var isShowingEditor = false
 
     @State private var isShowingFullEntry = false
+
+    let onSaveDayLog: (
+        Date,
+        HabitDayTone,
+        String?,
+        [GratitudePhotoAttachment]
+    ) -> WeekArchiveDaySummary
 
     private var dateText: String {
         let formatter = DateFormatter()
@@ -267,17 +276,42 @@ struct WeekArchiveDayDetailSheet: View {
             .first
     }
 
-    init(summary: WeekArchiveDaySummary) {
-        self.summary = summary
+    init(
+        summary: WeekArchiveDaySummary,
+        onSaveDayLog: @escaping (
+            Date,
+            HabitDayTone,
+            String?,
+            [GratitudePhotoAttachment]
+        ) -> WeekArchiveDaySummary
+    ) {
+        _summary = State(initialValue: summary)
+        self.onSaveDayLog = onSaveDayLog
     }
 
     var body: some View {
         ScrollView(showsIndicators: false) {
             VStack(alignment: .leading, spacing: 0) {
-                Text(dateText)
-                    .font(.system(.title, design: .serif, weight: .regular))
-                    .foregroundColor(MoriTheme.Colors.ink)
-                    .fixedSize(horizontal: false, vertical: true)
+                HStack(alignment: .firstTextBaseline, spacing: 16) {
+                    Text(dateText)
+                        .font(.system(.title, design: .serif, weight: .regular))
+                        .foregroundColor(MoriTheme.Colors.ink)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Spacer(minLength: 8)
+
+                    Button {
+                        isShowingEditor = true
+                    } label: {
+                        Text(MoriL10n.display("Edit"))
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundColor(MoriTheme.Colors.ink)
+                            .frame(minWidth: 44, minHeight: 44)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityLabel(MoriL10n.display("Edit journal for this day"))
+                }
 
                 HStack(spacing: 9) {
                     WeekArchiveDayLeafIcon()
@@ -391,6 +425,11 @@ struct WeekArchiveDayDetailSheet: View {
             .padding(.bottom, 30)
         }
         .background(MoriTheme.Colors.raisedPaper.ignoresSafeArea())
+        .sheet(isPresented: $isShowingEditor) {
+            WeekArchiveDayEditSheet(summary: summary) { tone, note, photoAttachments in
+                summary = onSaveDayLog(summary.date, tone, note, photoAttachments)
+            }
+        }
         .fullScreenCover(isPresented: $isShowingFullEntry) {
             WeekArchiveFullDayEntryView(summary: summary)
         }
@@ -403,6 +442,326 @@ struct WeekArchiveDayDetailSheet: View {
         }
 
         return value
+    }
+}
+
+private struct WeekArchiveDayEditSheet: View {
+    @Environment(\.dismiss) private var dismiss
+
+    let date: Date
+    let originalPhotos: [GratitudePhotoAttachment]
+    let onSave: (HabitDayTone, String?, [GratitudePhotoAttachment]) -> Void
+
+    @State private var selectedTone: HabitDayTone?
+    @State private var note: String
+    @State private var attachedPhotos: [GratitudePhotoAttachment]
+    @State private var selectedPhotoItems: [PhotosPickerItem] = []
+    @State private var didSave = false
+
+    private var canSave: Bool {
+        selectedTone != nil
+    }
+
+    private var canAddPhotos: Bool {
+        attachedPhotos.count < 6
+    }
+
+    private var dateText: String {
+        let formatter = DateFormatter()
+        formatter.locale = Locale(
+            identifier: MoriLocalePreference.load().resolvedLocaleIdentifier
+        )
+        formatter.setLocalizedDateFormatFromTemplate("MMMMdyyyy")
+        return formatter.string(from: date)
+    }
+
+    private var toneSelection: Binding<HabitDayTone?> {
+        Binding(
+            get: { selectedTone },
+            set: { selectedTone = $0 }
+        )
+    }
+
+    private var moodOptions: [MoriMoodOption<HabitDayTone>] {
+        [
+            MoriMoodOption(id: .positive, title: "Good", tone: .good),
+            MoriMoodOption(id: .neutral, title: "Neutral", tone: .neutral),
+            MoriMoodOption(id: .negative, title: "Difficult", tone: .difficult)
+        ]
+    }
+
+    init(
+        summary: WeekArchiveDaySummary,
+        onSave: @escaping (HabitDayTone, String?, [GratitudePhotoAttachment]) -> Void
+    ) {
+        let photos = summary.journalEntries
+            .first(where: { $0.sourceKind == .dayLog })?
+            .photoAttachments ?? []
+        let initialNote = summary.habitEntry?.note
+            ?? Self.dayLogSentence(from: summary.journalEntries)
+            ?? ""
+
+        date = summary.date
+        originalPhotos = photos
+        self.onSave = onSave
+        _selectedTone = State(initialValue: summary.habitEntry?.tone)
+        _note = State(initialValue: initialNote)
+        _attachedPhotos = State(initialValue: photos)
+    }
+
+    var body: some View {
+        NavigationStack {
+            MoriPaperBackground(variant: .journal) {
+                ScrollView(showsIndicators: false) {
+                    VStack(alignment: .leading, spacing: 24) {
+                        VStack(alignment: .leading, spacing: 7) {
+                            Text(MoriL10n.display("Edit Log"))
+                                .font(.system(size: 30, weight: .regular, design: .serif))
+                                .foregroundColor(MoriColors.botanicalInk)
+
+                            Text(dateText)
+                                .font(MoriTypography.callout)
+                                .foregroundColor(MoriColors.botanicalMuted)
+                        }
+
+                        VStack(alignment: .leading, spacing: 16) {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text(MoriL10n.display("Mood"))
+                                    .font(MoriTypography.sanctuarySection)
+                                    .foregroundColor(MoriColors.sanctuaryInk)
+
+                                Text(MoriL10n.display("Notice how this day felt."))
+                                    .font(MoriTypography.callout)
+                                    .foregroundColor(MoriColors.botanicalMuted)
+                            }
+
+                            MoriMoodSelector(
+                                options: moodOptions,
+                                selection: toneSelection,
+                                optionSpacing: 12,
+                                optionMinimumHeight: 97
+                            )
+
+                            VStack(alignment: .leading, spacing: 11) {
+                                Text(MoriL10n.display("One sentence"))
+                                    .font(MoriTypography.callout.weight(.semibold))
+                                    .foregroundColor(MoriColors.botanicalInk)
+
+                                ZStack(alignment: .topLeading) {
+                                    if note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                                        Text(MoriL10n.display("One thing worth keeping..."))
+                                            .font(MoriTypography.body)
+                                            .foregroundColor(MoriColors.botanicalMuted.opacity(0.76))
+                                            .padding(.horizontal, 14)
+                                            .padding(.vertical, 13)
+                                            .allowsHitTesting(false)
+                                    }
+
+                                    TextEditor(text: $note)
+                                        .font(MoriTypography.body)
+                                        .foregroundColor(MoriColors.botanicalInk)
+                                        .scrollContentBackground(.hidden)
+                                        .background(Color.clear)
+                                        .frame(minHeight: 96)
+                                        .padding(.horizontal, 10)
+                                        .padding(.vertical, 8)
+                                }
+                                .background(MoriColors.botanicalPaperDeep.opacity(0.58))
+                                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                        .stroke(MoriColors.botanicalLine.opacity(0.55), lineWidth: 1)
+                                )
+                            }
+
+                            PhotosPicker(
+                                selection: $selectedPhotoItems,
+                                maxSelectionCount: max(1, 6 - attachedPhotos.count),
+                                matching: .images
+                            ) {
+                                HStack(spacing: 10) {
+                                    Image(systemName: "photo")
+                                        .font(.system(size: 16, weight: .light))
+                                        .foregroundColor(MoriColors.botanicalMuted)
+                                        .frame(width: 22, height: 22)
+
+                                    Text(MoriL10n.display(canAddPhotos ? "Add a photo" : "Photo limit reached"))
+                                        .font(MoriTypography.callout.weight(.semibold))
+                                        .foregroundColor(
+                                            canAddPhotos
+                                                ? MoriColors.botanicalInk
+                                                : MoriColors.botanicalMuted
+                                        )
+
+                                    Spacer(minLength: 0)
+
+                                    Image(systemName: "plus")
+                                        .font(.system(size: 15, weight: .regular))
+                                        .foregroundColor(MoriColors.botanicalMuted.opacity(0.52))
+                                }
+                                .padding(.horizontal, 12)
+                                .frame(minHeight: 50)
+                                .background(MoriColors.botanicalPaperDeep.opacity(0.44))
+                                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                                .overlay(
+                                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                        .stroke(MoriColors.botanicalLine.opacity(0.50), lineWidth: 1)
+                                )
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(!canAddPhotos)
+                            .accessibilityLabel(MoriL10n.display("Add photos to daily log"))
+
+                            if !attachedPhotos.isEmpty {
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 10) {
+                                        ForEach(attachedPhotos) { attachment in
+                                            WeekArchiveDayEditPhotoThumbnail(
+                                                attachment: attachment,
+                                                onRemove: { removePhoto(attachment) }
+                                            )
+                                        }
+                                    }
+                                    .padding(.vertical, 2)
+                                }
+                            }
+                        }
+                        .padding(19)
+                        .background(
+                            MoriSanctuaryBoxBackground(
+                                cornerRadius: 20,
+                                tone: .paper
+                            )
+                        )
+                    }
+                    .padding(.horizontal, 20)
+                    .padding(.top, 22)
+                    .padding(.bottom, 44)
+                }
+            }
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbarBackground(MoriColors.botanicalPaper, for: .navigationBar)
+            .toolbarBackground(.visible, for: .navigationBar)
+            .toolbarColorScheme(.light, for: .navigationBar)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button(MoriL10n.display("Cancel")) {
+                        dismiss()
+                    }
+                    .foregroundColor(MoriColors.botanicalMuted)
+                }
+
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(MoriL10n.display("Save"), action: save)
+                        .fontWeight(.semibold)
+                        .foregroundColor(
+                            canSave
+                                ? MoriColors.botanicalInk
+                                : MoriColors.botanicalMuted.opacity(0.52)
+                        )
+                        .disabled(!canSave)
+                }
+            }
+        }
+        .moriKeyboardDoneToolbar()
+        .presentationDetents([.large])
+        .moriPhotoPickerImporter(
+            selectedItems: $selectedPhotoItems,
+            onImport: attachPhoto
+        )
+        .onDisappear {
+            guard !didSave else { return }
+
+            attachedPhotos
+                .filter { !originalPhotos.contains($0) }
+                .forEach(GratitudePhotoStore.deletePhoto)
+        }
+    }
+
+    private func save() {
+        guard let selectedTone else { return }
+
+        let trimmedNote = note.trimmingCharacters(in: .whitespacesAndNewlines)
+        didSave = true
+        onSave(
+            selectedTone,
+            trimmedNote.isEmpty ? nil : trimmedNote,
+            attachedPhotos
+        )
+        dismiss()
+    }
+
+    private func attachPhoto(from data: Data) {
+        guard attachedPhotos.count < 6,
+              let attachment = try? GratitudePhotoStore.savePhotoData(data) else {
+            return
+        }
+
+        attachedPhotos.append(attachment)
+    }
+
+    private func removePhoto(_ attachment: GratitudePhotoAttachment) {
+        attachedPhotos.removeAll { $0.id == attachment.id }
+
+        if !originalPhotos.contains(attachment) {
+            GratitudePhotoStore.deletePhoto(attachment)
+        }
+    }
+
+    private static func dayLogSentence(from entries: [GratitudeEntry]) -> String? {
+        guard let content = entries.first(where: { $0.sourceKind == .dayLog })?.displayContent else {
+            return nil
+        }
+
+        return content
+            .components(separatedBy: .newlines)
+            .compactMap { line -> String? in
+                let trimmed = line.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard trimmed.hasPrefix("Note:") else { return nil }
+                let sentence = String(trimmed.dropFirst("Note:".count))
+                    .trimmingCharacters(in: .whitespacesAndNewlines)
+                return sentence.isEmpty ? nil : sentence
+            }
+            .first
+    }
+}
+
+private struct WeekArchiveDayEditPhotoThumbnail: View {
+    let attachment: GratitudePhotoAttachment
+    let onRemove: () -> Void
+
+    var body: some View {
+        ZStack(alignment: .topTrailing) {
+            Group {
+                if let image = UIImage(contentsOfFile: attachment.fileURL.path) {
+                    Image(uiImage: image)
+                        .resizable()
+                        .scaledToFill()
+                } else {
+                    MoriBitmapIconImage(icon: .journal, size: 28, opacity: 0.54)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(MoriColors.botanicalPaperDeep.opacity(0.72))
+                }
+            }
+            .frame(width: 76, height: 76)
+            .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
+
+            Button(action: onRemove) {
+                MoriBitmapIconImage(icon: .minus, size: 13, opacity: 0.92)
+                    .frame(width: 24, height: 24)
+                    .background(MoriColors.botanicalSurface.opacity(0.92))
+                    .clipShape(Circle())
+                    .overlay(
+                        Circle()
+                            .stroke(MoriColors.botanicalInk.opacity(0.18), lineWidth: 1)
+                    )
+            }
+            .frame(width: 44, height: 44)
+            .contentShape(Rectangle())
+            .offset(x: 12, y: -12)
+            .accessibilityLabel(MoriL10n.display("Remove photo"))
+        }
+        .frame(width: 88, height: 88)
     }
 }
 
