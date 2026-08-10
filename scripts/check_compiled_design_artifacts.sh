@@ -3,11 +3,12 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-app_bundle="${1:-.codex-build/DerivedData/Build/Products/Debug-iphonesimulator/Mori.app}"
+source scripts/lib/evidence_paths.sh
+app_bundle="$(mori_evidence_path ".codex-build/DerivedData/Build/Products/Debug-iphonesimulator/Mori.app" "${1:-}")"
 
 if [ ! -d "$app_bundle" ]; then
   printf '\n::error::Compiled app bundle not found: %s\n' "$app_bundle"
-  printf 'Build first, for example: xcodebuild -project Mori.xcodeproj -scheme Mori -destination "platform=iOS Simulator,name=iPhone 15 Pro Max Mori QA" -derivedDataPath .codex-build/DerivedData build\n'
+  printf 'Pass an app bundle explicitly, or set MORI_EVIDENCE_ROOT to an archive containing .codex-build/DerivedData/Build/Products/Debug-iphonesimulator/Mori.app.\n'
   exit 1
 fi
 

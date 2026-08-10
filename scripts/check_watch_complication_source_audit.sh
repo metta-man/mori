@@ -3,12 +3,24 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+source scripts/lib/evidence_paths.sh
+audit_dir="$(mori_evidence_path "outputs/design-audit/watch-complications-source-20260626" "${1:-}")"
+compiled_app_bundle="$(mori_evidence_path ".codex-build/DerivedData/Build/Products/Debug-iphonesimulator/Mori.app" "${2:-}")"
+export MORI_AUDIT_DIR="$audit_dir"
+export MORI_COMPILED_APP_BUNDLE="$compiled_app_bundle"
+
 ruby -rjson <<'RUBY'
-audit_dir = "outputs/design-audit/watch-complications-source-20260626"
+audit_dir = ENV.fetch("MORI_AUDIT_DIR")
 audit_path = File.join(audit_dir, "AUDIT.md")
 watch_source = "WatchWidgets/MoriWatchWidgets.swift"
 project_path = "project.yml"
-compiled_appex = ".codex-build/DerivedData/Build/Products/Debug-iphonesimulator/Mori.app/Watch/MoriWatch.app/PlugIns/MoriWatchWidgets.appex"
+compiled_appex = File.join(
+  ENV.fetch("MORI_COMPILED_APP_BUNDLE"),
+  "Watch",
+  "MoriWatch.app",
+  "PlugIns",
+  "MoriWatchWidgets.appex"
+)
 compiled_assets = File.join(compiled_appex, "Assets.car")
 compiled_info = File.join(compiled_appex, "Info.plist")
 

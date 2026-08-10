@@ -3,8 +3,12 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+source scripts/lib/evidence_paths.sh
+audit_dir="$(mori_evidence_path "output/accessibility-audit/reduced-motion-2026-06-26" "${1:-}")"
+export MORI_AUDIT_DIR="$audit_dir"
+
 ruby <<'RUBY'
-audit_path = "output/accessibility-audit/reduced-motion-2026-06-26/AUDIT.md"
+audit_path = File.join(ENV.fetch("MORI_AUDIT_DIR"), "AUDIT.md")
 problems = []
 
 unless File.file?(audit_path)

@@ -2,6 +2,9 @@
   "name": "mori-ui",
   "version": "1.0.0",
   "packageManager": "pnpm@11.7.0",
+  "engines": {
+    "node": ">=22.13.0"
+  },
   "description": "Mori UI System - React Component Library",
   "main": "dist/mori-ui.umd.cjs",
   "module": "dist/mori-ui.es.js",

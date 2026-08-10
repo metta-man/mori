@@ -19,11 +19,30 @@ jobs:
     - name: Show Xcode version
       run: xcodebuild -version
 
-    - name: Install XcodeGen
-      run: brew install xcodegen
+    - name: Install pinned XcodeGen
+      env:
+        XCODEGEN_VERSION: "2.45.4"
+        XCODEGEN_SHA256: "090ec29491aad50aec10631bf6e62253fed733c50f3aab0f5ffc86bc170bdbef"
+      run: |
+        tool_root="$RUNNER_TEMP/xcodegen-$XCODEGEN_VERSION"
+        mkdir -p "$tool_root"
+        curl --fail --location --retry 3 \
+          --output "$tool_root/xcodegen.zip" \
+          "https://github.com/yonaskolb/XcodeGen/releases/download/$XCODEGEN_VERSION/xcodegen.zip"
+        printf '%s  %s\n' "$XCODEGEN_SHA256" "$tool_root/xcodegen.zip" |
+          shasum -a 256 --check
+        unzip -q "$tool_root/xcodegen.zip" -d "$tool_root"
+        echo "$tool_root/xcodegen/bin" >> "$GITHUB_PATH"
+
+    - name: Show XcodeGen version
+      run: xcodegen --version
 
     - name: Install design audit Python dependencies
-      run: python3 -m pip install Pillow
+      run: |
+        audit_venv="$RUNNER_TEMP/mori-design-audit-venv"
+        python3 -m venv "$audit_venv"
+        "$audit_venv/bin/python" -m pip install "Pillow==12.1.1"
+        echo "$audit_venv/bin" >> "$GITHUB_PATH"
 
     - name: Set up pnpm
       uses: pnpm/action-setup@v4
@@ -34,7 +53,7 @@ jobs:
     - name: Set up Node
       uses: actions/setup-node@v4
       with:
-        node-version: 20
+        node-version: 22
         cache: pnpm
         cache-dependency-path: www/pnpm-lock.yaml
 
@@ -42,8 +61,23 @@ jobs:
       working-directory: www
       run: pnpm install --frozen-lockfile
 
-    - name: Check redesign release readiness
-      run: bash scripts/check_redesign_release_readiness.sh
+    - name: Check repository hygiene
+      run: bash scripts/check_repo_hygiene.sh
+
+    - name: Test web
+      working-directory: www
+      run: pnpm test
+
+    - name: Build web app
+      working-directory: www
+      run: pnpm build:app
+
+    - name: Build web component library
+      working-directory: www
+      run: pnpm build:library
+
+    - name: Check reproducible redesign release readiness
+      run: bash scripts/check_redesign_release_readiness.sh --skip-web-build
 
   deploy:
     needs: build
