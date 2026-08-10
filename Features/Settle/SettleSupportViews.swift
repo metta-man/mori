@@ -6,6 +6,8 @@ enum SettleNavigationRoute: Hashable {
     case breathingSession(techniqueID: String, durationMinutes: Int, autoStart: Bool)
     case settleTimer
     case focusCycle
+    case quietMode
+    case essentialMode
     case mindfulnessBellSettings
 }
 

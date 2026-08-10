@@ -25,7 +25,8 @@ struct AttentionShieldApplier {
         beforeFeedApplicationTokenCount: Int? = nil,
         beforeFeedWebDomainTokenCount: Int? = nil,
         policy: MoriScreenTimeMonitorHealthPolicy? = nil,
-        hiddenApplicationTokens: Set<ApplicationToken>? = nil
+        hiddenApplicationTokens: Set<ApplicationToken>? = nil,
+        restrictionPolicy: MoriScreenTimeRestrictionPolicy = .blockSelected
     ) {
         let effectivePolicy = policy ?? (currentFeature == .beforeFeed ? .shieldLock : .shieldOnly)
         if effectivePolicy == .hiddenAppLock {
@@ -33,9 +34,17 @@ struct AttentionShieldApplier {
         } else {
             clearApplicationRestrictions()
         }
-        managedStore.shield.applications = selection.applicationTokens.isEmpty ? nil : selection.applicationTokens
-        managedStore.shield.applicationCategories = nil
-        managedStore.shield.webDomains = selection.webDomainTokens.isEmpty ? nil : selection.webDomainTokens
+        switch restrictionPolicy {
+        case .blockSelected:
+            managedStore.shield.applications = selection.applicationTokens.isEmpty ? nil : selection.applicationTokens
+            managedStore.shield.applicationCategories = nil
+            managedStore.shield.webDomains = selection.webDomainTokens.isEmpty ? nil : selection.webDomainTokens
+        case .allowSelected:
+            clearApplicationRestrictions()
+            managedStore.shield.applications = nil
+            managedStore.shield.applicationCategories = .all(except: selection.applicationTokens)
+            managedStore.shield.webDomains = nil
+        }
         stateStore.saveCurrentShield(feature: currentFeature, displayNames: displayNames)
         let isBeforeFeedShield = currentFeature == .beforeFeed
         let eventKind: MoriScreenTimeMonitorHealthEventKind = {

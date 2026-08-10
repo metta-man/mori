@@ -146,6 +146,8 @@ struct PomodoroPracticeDetailView: View {
             isGuidedBreathing: pomodoroPresentation.isGuidedBreathing,
             activeBreathing: pomodoroPresentation.activeBreathing,
             currentPhaseElapsedSeconds: pomodoroPresentation.phaseElapsedSeconds,
+            blockedAppsText: blockedAppsText,
+            blockedAppsCount: blockedAppsCount,
             onSelectPhase: selectSetupPomodoroPhase,
             onStart: startPomodoro,
             onSelectFocusBreathing: selectPomodoroFocusBreathing,

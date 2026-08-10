@@ -6,43 +6,36 @@ struct PomodoroSetupHeroVisual: View {
     let timeText: String
 
     var body: some View {
-        GeometryReader { proxy in
-            ZStack(alignment: .bottom) {
-                RoundedRectangle(cornerRadius: 28, style: .continuous)
-                    .fill(MoriV2Palette.raisedPaper)
+        ZStack {
+            Circle()
+                .stroke(MoriV2Palette.forestInk.opacity(0.13), lineWidth: 4)
+                .frame(width: 242, height: 242)
 
-                Image("MoriDeepSessionForest")
-                    .resizable()
-                    .interpolation(.high)
-                    .scaledToFill()
-                    .frame(width: proxy.size.width, height: proxy.size.height)
-                    .clipped()
-                    .opacity(0.92)
+            Circle()
+                .trim(from: 0, to: max(0.018, progress))
+                .stroke(
+                    MoriV2Palette.primaryForest,
+                    style: StrokeStyle(lineWidth: 4, lineCap: .round)
+                )
+                .frame(width: 242, height: 242)
+                .rotationEffect(.degrees(-90))
 
-                VStack(spacing: 8) {
-                    Text(timeText)
-                        .font(.system(size: 62, weight: .regular, design: .serif))
-                        .foregroundColor(MoriV2Palette.forestInk)
-                        .monospacedDigit()
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.72)
+            VStack(spacing: 8) {
+                Text(timeText)
+                    .font(.system(size: 62, weight: .regular, design: .serif))
+                    .foregroundColor(MoriV2Palette.forestInk)
+                    .monospacedDigit()
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.72)
 
-                    Text(MoriL10n.display(quietPhaseTitle))
-                        .font(MoriV2Type.supporting)
-                        .foregroundColor(MoriV2Palette.stone)
-                        .lineLimit(1)
-                }
-                .padding(.bottom, 28)
+                Text(MoriL10n.display(quietPhaseTitle))
+                    .font(MoriV2Type.supporting)
+                    .foregroundColor(MoriV2Palette.stone)
+                    .lineLimit(1)
             }
-            .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 248)
-        .overlay {
-            RoundedRectangle(cornerRadius: 28, style: .continuous)
-                .stroke(MoriV2Palette.hairline, lineWidth: 1)
-        }
-        .shadow(color: MoriV2Palette.shadow, radius: 20, x: 0, y: 10)
+        .frame(height: 270)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(MoriL10n.string(
             "deep_session.timer.accessibility",

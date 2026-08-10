@@ -19,6 +19,8 @@ struct PomodoroPracticeSetupSurface: View {
     let isGuidedBreathing: Bool
     let activeBreathing: MoriPomodoroBreakBreathing
     let currentPhaseElapsedSeconds: Int
+    let blockedAppsText: String
+    let blockedAppsCount: Int
     let onSelectPhase: (MoriPomodoroPhase) -> Void
     let onStart: () -> Void
     let onSelectFocusBreathing: (MoriPomodoroBreakBreathing) -> Void
@@ -32,8 +34,25 @@ struct PomodoroPracticeSetupSurface: View {
                 .ignoresSafeArea()
 
             MoriBotanicalScreenBackdrop(variant: .focus)
-                .opacity(0.16)
+                .opacity(0.20)
                 .ignoresSafeArea()
+
+            Image("MoriActiveDeepSessionValley")
+                .resizable()
+                .scaledToFill()
+                .ignoresSafeArea()
+                .opacity(0.44)
+
+            LinearGradient(
+                colors: [
+                    MoriColors.sanctuaryPaper.opacity(0.96),
+                    MoriColors.sanctuaryPaper.opacity(0.42),
+                    MoriColors.sanctuaryPaper.opacity(0.78)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 18) {
@@ -56,6 +75,8 @@ struct PomodoroPracticeSetupSurface: View {
                         timeText: timeText
                     )
 
+                    blockedAppsPanel
+
                     PomodoroSetupStartButton(
                         isCompleted: timerState == .completed,
                         action: onStart
@@ -64,9 +85,47 @@ struct PomodoroPracticeSetupSurface: View {
                     sessionOptionsDisclosure
                 }
                 .padding(.horizontal, 20)
-                .padding(.top, 18)
+                .padding(.top, 72)
                 .padding(.bottom, MoriMainTabBarMetrics.scrollBottomInset)
             }
+        }
+    }
+
+    private var blockedAppsPanel: some View {
+        HStack(spacing: 12) {
+            MoriBitmapIconImage(icon: .lockShield, size: 17, opacity: 0.86)
+                .frame(width: 40, height: 40)
+                .background(MoriV2Palette.sage.opacity(0.12))
+                .clipShape(Circle())
+
+            VStack(alignment: .leading, spacing: 3) {
+                Text(MoriL10n.display("Blocked apps"))
+                    .font(MoriV2Type.control)
+                    .foregroundColor(MoriV2Palette.forestInk)
+
+                Text(MoriL10n.display(blockedAppsText))
+                    .font(MoriV2Type.caption)
+                    .foregroundColor(MoriV2Palette.stone)
+                    .lineLimit(2)
+            }
+
+            Spacer(minLength: 8)
+
+            Text(MoriL10n.string(
+                "deep_session.blocked_count",
+                defaultValue: blockedAppsCount == 1 ? "1 app" : "%d apps",
+                arguments: [blockedAppsCount]
+            ))
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(MoriV2Palette.forestInk)
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, minHeight: 68)
+        .background(MoriV2Palette.raisedPaper.opacity(0.88))
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 18, style: .continuous)
+                .stroke(MoriV2Palette.hairline, lineWidth: 1)
         }
     }
 

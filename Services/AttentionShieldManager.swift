@@ -92,6 +92,8 @@ final class AttentionShieldManager: ObservableObject {
             return startTimedShieldIfPossible(feature: feature, duration: duration, now: now)
         case .startTimedShieldSeconds(let feature, let remainingSeconds, let now):
             return startTimedShieldIfPossible(feature: feature, remainingSeconds: remainingSeconds, now: now)
+        case .startManualShield(let feature, let now):
+            return startManualShieldIfPossible(feature: feature, now: now)
         case .beginResetProtectionRequest(let feature, let remainingSeconds, let usesNativeBeforeFeedGate, let now):
             return beginResetProtection(
                 feature: feature,
@@ -151,7 +153,9 @@ final class AttentionShieldManager: ObservableObject {
     private func setFeatureUsesDefaultSelection(_ usesDefaultSelection: Bool, for feature: MoriScreenTimeFeature) {
         selectionCoordinator.updateProfile(for: feature) { profile in
             profile.isEnabled = true
-            profile.usesDefaultSelection = usesDefaultSelection
+            profile.usesDefaultSelection = feature == .walkOfflineReset
+                ? false
+                : usesDefaultSelection
         }
         handleFeatureProfileChange(for: feature)
     }
@@ -160,8 +164,12 @@ final class AttentionShieldManager: ObservableObject {
         isAuthorized && selectionCoordinator.hasEffectiveSelection(for: feature)
     }
 
-    private func startShield(feature: MoriScreenTimeFeature, endDate: Date) {
-        let now = Date()
+    private func startShield(
+        feature: MoriScreenTimeFeature,
+        endDate: Date,
+        endPolicy: MoriScreenTimeSessionEndPolicy = .timed,
+        now: Date = Date()
+    ) {
         let clearedExpiredSession = clearExpiredActiveSessionIfNeeded(now: now)
         guard endDate > now else {
             if clearedExpiredSession {
@@ -178,7 +186,16 @@ final class AttentionShieldManager: ObservableObject {
             return
         }
 
-        let session = activeSessionStore.startSession(feature: feature, endDate: endDate)
+        if let activeSession, activeSession.feature != feature {
+            clearShieldAndActiveSession(clearStoredSession: true)
+        }
+
+        let session = activeSessionStore.startSession(
+            feature: feature,
+            endDate: endDate,
+            endPolicy: endPolicy,
+            now: now
+        )
         activeSession = session
         applyShield(for: session)
         scheduleActiveSessionMonitoring(for: session)
@@ -204,8 +221,22 @@ final class AttentionShieldManager: ObservableObject {
         now: Date = Date()
     ) -> Bool {
         let endDate = now.addingTimeInterval(max(1, duration))
-        startShield(feature: feature, endDate: endDate)
+        startShield(feature: feature, endDate: endDate, now: now)
         return activeSession?.feature == feature && activeSession?.isExpired(at: now) == false
+    }
+
+    @discardableResult
+    private func startManualShieldIfPossible(
+        feature: MoriScreenTimeFeature,
+        now: Date = Date()
+    ) -> Bool {
+        startShield(
+            feature: feature,
+            endDate: .distantFuture,
+            endPolicy: .manual,
+            now: now
+        )
+        return activeSession?.feature == feature && activeSession?.endPolicy == .manual
     }
 
     @discardableResult
@@ -381,7 +412,8 @@ final class AttentionShieldManager: ObservableObject {
         shieldApplier.apply(
             selection: payload.selection,
             currentFeature: feature,
-            displayNames: payload.displayNames
+            displayNames: payload.displayNames,
+            restrictionPolicy: payload.restrictionPolicy
         )
     }
 
@@ -534,6 +566,10 @@ final class AttentionShieldManager: ObservableObject {
     }
 
     private func scheduleActiveSessionMonitoring(for session: MoriScreenTimeActiveSession) {
+        guard session.endPolicy == .timed else {
+            stopActiveSessionMonitoring()
+            return
+        }
         applyMonitoringOutcome(
             monitoringCoordinator.scheduleActiveSession(
                 isAuthorized: isAuthorized,

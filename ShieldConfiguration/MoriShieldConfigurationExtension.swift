@@ -59,6 +59,8 @@ final class MoriShieldConfigurationExtension: ShieldConfigurationDataSource {
             return .morning
         case .beforeFeed:
             return .beforeFeed
+        case .walkOfflineReset:
+            return .essential
         default:
             return .practice
         }
@@ -92,6 +94,14 @@ private struct MoriShieldCopy {
         iconAssetName: "moriIconLockShield",
         title: "Reset App Limit active",
         subtitle: "Return to Mori to finish the app-limited session.",
+        primaryButtonTitle: "Close app",
+        secondaryButtonTitle: nil
+    )
+
+    static let essential = MoriShieldCopy(
+        iconAssetName: "moriIconLeaf",
+        title: "Essential Mode is on",
+        subtitle: "This app is resting for now. Return to Mori when you want to make your whole phone available again.",
         primaryButtonTitle: "Close app",
         secondaryButtonTitle: nil
     )

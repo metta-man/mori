@@ -4,6 +4,7 @@ import FamilyControls
 struct AttentionShieldSelectionPayload {
     let selection: FamilyActivitySelection
     let displayNames: [String]
+    let restrictionPolicy: MoriScreenTimeRestrictionPolicy
 }
 
 @MainActor
@@ -92,7 +93,8 @@ struct AttentionShieldSelectionCoordinator {
     ) -> AttentionShieldSelectionPayload {
         AttentionShieldSelectionPayload(
             selection: selectionStore.supportedSelection(selectionStore.effectiveSelection(for: feature)),
-            displayNames: displayNames(for: feature, authorizationStatus: authorizationStatus)
+            displayNames: displayNames(for: feature, authorizationStatus: authorizationStatus),
+            restrictionPolicy: selectionStore.profile(for: feature).restrictionPolicy
         )
     }
 
@@ -188,7 +190,8 @@ struct AttentionShieldSelectionCoordinator {
             usesDefaultSelection: summary.usesDefaultSelection,
             customSelectedCount: summary.customSelectedCount,
             effectiveSelectedCount: summary.effectiveSelectedCount,
-            displayNames: []
+            displayNames: [],
+            restrictionPolicy: summary.restrictionPolicy
         )
     }
 
