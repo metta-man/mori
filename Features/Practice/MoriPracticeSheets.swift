@@ -11,6 +11,7 @@ enum MoriPracticeSheet: Identifiable {
     case settleTimer
     case focusCycle
     case quietMode
+    case essentialMode
     case journal
     case dailyCheckIn
 
@@ -36,6 +37,8 @@ enum MoriPracticeSheet: Identifiable {
             return "focus-cycle"
         case .quietMode:
             return "quiet-mode"
+        case .essentialMode:
+            return "essential-mode"
         case .journal:
             return "journal"
         case .dailyCheckIn:
@@ -46,7 +49,9 @@ enum MoriPracticeSheet: Identifiable {
     static func destination(for practice: MoriPractice) -> MoriPracticeSheet {
         switch practice.route {
         case .quickComplete:
-            return .verification(practice)
+            return practice.id == MoriPractice.walkReset.id
+                ? .essentialMode
+                : .verification(practice)
         case .breathing:
             return .breathingLibrary
         case .settle:
@@ -115,7 +120,13 @@ struct MoriPracticeSheetContent: View {
                 PomodoroPracticeDetailView()
             }
         case .quietMode:
-            QuietModeView(showsDismissButton: true)
+            NavigationStack {
+                QuietModeView(showsDismissButton: true)
+            }
+        case .essentialMode:
+            NavigationStack {
+                EssentialModeView(showsDismissButton: true)
+            }
         case .journal:
             GratitudeJournalScreen(showsDismissButton: true)
         case .dailyCheckIn:

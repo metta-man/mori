@@ -18,7 +18,8 @@ extension AttentionShieldSettingsSnapshot {
             usesDefaultSelection: false,
             customSelectedCount: 0,
             effectiveSelectedCount: 0,
-            displayNames: []
+            displayNames: [],
+            restrictionPolicy: .blockSelected
         )
     }
 
@@ -61,6 +62,7 @@ enum AttentionShieldAction {
     case commitSelectionDraft(AttentionShieldSelectionDraft)
     case startTimedShieldDuration(feature: MoriScreenTimeFeature, duration: TimeInterval, now: Date)
     case startTimedShieldSeconds(feature: MoriScreenTimeFeature, remainingSeconds: Int, now: Date)
+    case startManualShield(feature: MoriScreenTimeFeature, now: Date)
     case beginResetProtectionRequest(
         feature: MoriScreenTimeFeature,
         remainingSeconds: Int,
@@ -105,6 +107,13 @@ extension AttentionShieldAction {
         now: Date = Date()
     ) -> Self {
         .startTimedShield(feature: feature, duration: duration, now: now)
+    }
+
+    static func startManualAppLimit(
+        feature: MoriScreenTimeFeature,
+        now: Date = Date()
+    ) -> Self {
+        .startManualShield(feature: feature, now: now)
     }
 
     static func startTimedShield(

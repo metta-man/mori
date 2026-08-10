@@ -29,7 +29,7 @@ enum MoriScreenTimeFeature: String, Codable, CaseIterable, Identifiable {
         case .breathing: return MoriL10n.string("screen_time.feature.breathing.title", defaultValue: "Breathing")
         case .beforeFeed: return MoriL10n.string("screen_time.feature.before_feed.title", defaultValue: "Before Feed")
         case .morningGate: return MoriL10n.string("screen_time.feature.morning_gate.title", defaultValue: "Morning Gate")
-        case .walkOfflineReset: return MoriL10n.string("screen_time.feature.walk_offline_reset.title", defaultValue: "Walk / Offline Reset")
+        case .walkOfflineReset: return MoriL10n.string("screen_time.feature.walk_offline_reset.title", defaultValue: "Essential Mode")
         case .journal: return MoriL10n.string("screen_time.feature.journal.title", defaultValue: "Log")
         case .dailyCheckIn: return MoriL10n.string("screen_time.feature.daily_check_in.title", defaultValue: "Daily Check-In")
         case .manualPractice: return MoriL10n.string("screen_time.feature.manual_practice.title", defaultValue: "Manual Reset")
@@ -44,7 +44,7 @@ enum MoriScreenTimeFeature: String, Codable, CaseIterable, Identifiable {
         case .breathing: return MoriL10n.string("screen_time.feature.breathing.subtitle", defaultValue: "Keep selected apps limited during breathing reset.")
         case .beforeFeed: return MoriL10n.string("screen_time.feature.before_feed.subtitle", defaultValue: "Limit feed apps before the reset completes.")
         case .morningGate: return MoriL10n.string("screen_time.feature.morning_gate.subtitle", defaultValue: "Keep the first morning window clear.")
-        case .walkOfflineReset: return MoriL10n.string("screen_time.feature.walk_offline_reset.subtitle", defaultValue: "Keep the phone quiet while you step away.")
+        case .walkOfflineReset: return MoriL10n.string("screen_time.feature.walk_offline_reset.subtitle", defaultValue: "Keep only the apps you choose available.")
         case .journal: return MoriL10n.string("screen_time.feature.journal.subtitle", defaultValue: "Keep selected apps limited while writing.")
         case .dailyCheckIn: return MoriL10n.string("screen_time.feature.daily_check_in.subtitle", defaultValue: "Keep selected apps limited during Daily Check-In.")
         case .manualPractice: return MoriL10n.string("screen_time.feature.manual_practice.subtitle", defaultValue: "Keep selected apps limited during manual reset timers.")
@@ -75,6 +75,16 @@ enum MoriScreenTimeFeature: String, Codable, CaseIterable, Identifiable {
             return .leaf
         }
     }
+}
+
+enum MoriScreenTimeRestrictionPolicy: String, Codable, Equatable {
+    case blockSelected
+    case allowSelected
+}
+
+enum MoriScreenTimeSessionEndPolicy: String, Codable, Equatable {
+    case timed
+    case manual
 }
 
 enum MoriScreenTimeMode: String, Codable, CaseIterable, Identifiable {
@@ -217,11 +227,18 @@ struct MoriScreenTimeActiveSession: Codable, Equatable {
     let feature: MoriScreenTimeFeature
     let startedAt: Date
     let endDate: Date
+    let endPolicy: MoriScreenTimeSessionEndPolicy
 
-    init(feature: MoriScreenTimeFeature, startedAt: Date, endDate: Date) {
+    init(
+        feature: MoriScreenTimeFeature,
+        startedAt: Date,
+        endDate: Date,
+        endPolicy: MoriScreenTimeSessionEndPolicy = .timed
+    ) {
         self.feature = feature
         self.startedAt = startedAt
         self.endDate = endDate
+        self.endPolicy = endPolicy
     }
 
     var mode: MoriScreenTimeMode? {
@@ -237,7 +254,7 @@ struct MoriScreenTimeActiveSession: Codable, Equatable {
     }
 
     func isExpired(at date: Date) -> Bool {
-        endDate <= date
+        endPolicy == .timed && endDate <= date
     }
 
     private enum CodingKeys: String, CodingKey {
@@ -245,6 +262,7 @@ struct MoriScreenTimeActiveSession: Codable, Equatable {
         case mode
         case startedAt
         case endDate
+        case endPolicy
     }
 
     init(from decoder: Decoder) throws {
@@ -265,6 +283,10 @@ struct MoriScreenTimeActiveSession: Codable, Equatable {
         }
         startedAt = try container.decode(Date.self, forKey: .startedAt)
         endDate = try container.decode(Date.self, forKey: .endDate)
+        endPolicy = try container.decodeIfPresent(
+            MoriScreenTimeSessionEndPolicy.self,
+            forKey: .endPolicy
+        ) ?? .timed
     }
 
     func encode(to encoder: Encoder) throws {
@@ -272,6 +294,7 @@ struct MoriScreenTimeActiveSession: Codable, Equatable {
         try container.encode(feature, forKey: .feature)
         try container.encode(startedAt, forKey: .startedAt)
         try container.encode(endDate, forKey: .endDate)
+        try container.encode(endPolicy, forKey: .endPolicy)
     }
 }
 

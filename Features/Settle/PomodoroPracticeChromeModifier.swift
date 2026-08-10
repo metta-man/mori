@@ -39,13 +39,8 @@ private struct PomodoroPracticeChromeModifier: ViewModifier {
                     .accessibilityLabel("Back")
                 }
             }
-            .toolbarBackground(
-                isDarkRoomActive || hidesNavigationChrome
-                    ? Color.clear
-                    : MoriColors.botanicalPaper,
-                for: .navigationBar
-            )
-            .toolbarBackground(isDarkRoomActive || hidesNavigationChrome ? .hidden : .visible, for: .navigationBar)
+            .toolbarBackground(Color.clear, for: .navigationBar)
+            .toolbarBackground(.hidden, for: .navigationBar)
             .toolbarColorScheme(isDarkRoomActive ? .dark : .light, for: .navigationBar)
             .toolbar(isDarkRoomActive || hidesNavigationChrome ? .hidden : .visible, for: .navigationBar)
             .moriHidesMainTabBar()

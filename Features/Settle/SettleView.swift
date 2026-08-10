@@ -11,6 +11,8 @@ struct SettleView: View {
     ) private var beforeFeedDurationSeconds: Int = MoriScreenTimeShared.defaultBeforeFeedDurationSeconds
     @State private var handledLaunchRequestID: UUID?
     @State private var showsFocusSupport = false
+    @StateObject private var appLimitManager = AppLimitManager.shared
+    @AppStorage("mori_essential_mode_duration") private var essentialDurationRaw = EssentialModeDuration.oneHour.rawValue
 
     init(
         launchRequest: MoriPracticeLaunchRequest? = nil
@@ -60,23 +62,24 @@ struct SettleView: View {
             MoriModeCard(
                 title: "Quiet Mode",
                 description: "Read, rest, meditate,\nor sit quietly.",
-                duration: "15 min",
+                duration: "10 min",
                 scene: .quietMode,
                 artwork: .asset("MoriDeepSessionForest"),
                 height: 208,
                 cornerRadius: 18,
-                action: { openPracticeSheet(.quietMode) }
+                action: { openSettleRoute(.quietMode) }
             )
 
             MoriModeCard(
-                title: "Offline Reset",
-                description: "Walk, stretch,\nmake tea, or\nleave the screen.",
-                duration: "8 min",
+                title: "Essential Mode",
+                description: "Keep only calls, maps,\nand the apps you choose.",
+                duration: essentialModeCardStatus,
                 scene: .offlineReset,
                 artwork: .asset("MoriDeepSessionForest"),
                 height: 208,
                 cornerRadius: 18,
-                action: { openPracticeSheet(.verification(.walkReset)) }
+                quickAction: quickStartEssentialMode,
+                action: { openSettleRoute(.essentialMode) }
             )
         }
         .padding(.leading, 3)
@@ -169,6 +172,36 @@ struct SettleView: View {
         openRoute(.settings)
     }
 
+    private var essentialModeCardStatus: String {
+        let summary = appLimitManager.settingsSnapshot.profileSummary(for: .walkOfflineReset)
+        guard appLimitManager.settingsSnapshot.isAuthorized, summary.hasEffectiveSelection else {
+            return "Set up"
+        }
+        return EssentialModeDuration(rawValue: essentialDurationRaw)?.compactTitle ?? "1 hr"
+    }
+
+    private func quickStartEssentialMode() {
+        let snapshot = appLimitManager.settingsSnapshot
+        let summary = snapshot.profileSummary(for: .walkOfflineReset)
+        guard snapshot.isAuthorized,
+              summary.hasEffectiveSelection,
+              appLimitManager.activeSession == nil
+        else {
+            openSettleRoute(.essentialMode)
+            return
+        }
+
+        let duration = EssentialModeDuration(rawValue: essentialDurationRaw) ?? .oneHour
+        if let seconds = duration.seconds {
+            _ = appLimitManager.perform(
+                .startTimedAppLimit(feature: .walkOfflineReset, remainingSeconds: seconds)
+            )
+        } else {
+            _ = appLimitManager.perform(.startManualAppLimit(feature: .walkOfflineReset))
+        }
+        openSettleRoute(.essentialMode)
+    }
+
     private func openPracticeSheet(_ sheet: MoriPracticeSheet) {
         openRoute(.practiceSheet(sheet))
     }
@@ -184,6 +217,12 @@ struct SettleView: View {
         switch launchRequest.kind {
         case .mindfulnessBellBreathing:
             openMindfulnessBellBreathing()
+        case .deepSession:
+            openSettleRoute(.focusCycle)
+        case .quietMode:
+            openSettleRoute(.quietMode)
+        case .essentialMode:
+            openSettleRoute(.essentialMode)
         }
     }
 
