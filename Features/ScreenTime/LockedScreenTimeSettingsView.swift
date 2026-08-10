@@ -13,9 +13,7 @@ struct LockedScreenTimeSettingsView: View {
                     isUnlocked = true
                 }
             } else {
-                ScreenTimeSettingsPINSetupView {
-                    isUnlocked = true
-                }
+                ScreenTimeSettingsView()
             }
         }
         .screenTimeSettingsLockLifecycle(onRefresh: lockStore.refresh)
