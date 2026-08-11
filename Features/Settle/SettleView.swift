@@ -140,7 +140,7 @@ struct SettleView: View {
                 MoriV2QuietActionRow(
                     title: "Before Feed",
                     subtitle: "Pause \(BeforeFeedGate.formattedDuration(beforeFeedDurationSeconds)) before the next feed.",
-                    icon: .lockShield
+                    icon: .beforeFeedReset
                 )
             }
             .buttonStyle(MoriV2PressButtonStyle())
@@ -149,7 +149,7 @@ struct SettleView: View {
                 MoriV2QuietActionRow(
                     title: "App Limits",
                     subtitle: "Choose which apps stay quiet during a session.",
-                    icon: .lockShield
+                    icon: .appLimit
                 )
             }
             .buttonStyle(MoriV2PressButtonStyle())

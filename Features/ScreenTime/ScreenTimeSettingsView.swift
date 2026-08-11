@@ -117,7 +117,7 @@ struct ScreenTimeSettingsView: View {
                             title: "Before Feed",
                             subtitle: "Pause before selected feeds open.",
                             status: beforeFeedModeStatus(presentation.beforeFeedSummary),
-                            icon: .lockShield,
+                            icon: .beforeFeedReset,
                             isActive: beforeFeedIsReady
                         )
                     }

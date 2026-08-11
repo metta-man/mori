@@ -515,7 +515,7 @@ private struct JournalLogUtilitiesCard: View {
                 utilityButton(
                     title: selectedTone == .negative ? "Add trigger detail" : "Pattern details",
                     subtitle: "Notice a trigger, thought, or response.",
-                    icon: .refresh,
+                    icon: .pattern,
                     action: onOpenPatternLog
                 )
 
@@ -865,7 +865,7 @@ struct JournalDailyEntryCard: View {
                 .disabled(!canSave)
 
                 Button(action: onOpenPatternLog) {
-                    MoriBitmapIconImage(icon: .refresh, size: 18, opacity: canSave ? 0.90 : 0.38)
+                    MoriBitmapIconImage(icon: .pattern, size: 18, opacity: canSave ? 0.90 : 0.38)
                         .frame(width: 46, height: 46)
                         .background(MoriColors.botanicalInk.opacity(0.08))
                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))

@@ -85,7 +85,7 @@ struct DailyReflectionCard: View {
                 .disabled(!canSave)
 
                 Button(action: onOpenPatternLog) {
-                    MoriBitmapIconImage(icon: .refresh, size: 16, opacity: canSave ? 0.86 : 0.38)
+                    MoriBitmapIconImage(icon: .pattern, size: 16, opacity: canSave ? 0.86 : 0.38)
                         .frame(width: 46, height: 46)
                         .background(MoriColors.botanicalInk.opacity(0.08))
                         .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))

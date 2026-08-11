@@ -91,7 +91,7 @@ private struct MoriShieldCopy {
     )
 
     static let practice = MoriShieldCopy(
-        iconAssetName: "moriIconLockShield",
+        iconAssetName: "moriIconAppLimit",
         title: "Reset App Limit active",
         subtitle: "Return to Mori to finish the app-limited session.",
         primaryButtonTitle: "Close app",

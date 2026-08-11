@@ -84,7 +84,7 @@ struct AppLimitsReadinessCard: View {
                 .frame(minHeight: 50)
             } else {
                 HStack(spacing: 8) {
-                    MoriBitmapIconImage(icon: .leaf, size: 15, opacity: 0.88)
+                    MoriBitmapIconImage(icon: .beforeFeedReset, size: 15, opacity: 0.88)
                         .accessibilityHidden(true)
                     Text(MoriL10n.display("Before Feed is active"))
                         .font(.system(size: 14, weight: .semibold))
@@ -119,7 +119,7 @@ struct AppLimitsProtectedAppsCard: View {
     var body: some View {
         Button(action: onEdit) {
             HStack(spacing: 13) {
-                MoriBitmapIconImage(icon: .lockShield, size: 18, opacity: 0.86)
+                MoriBitmapIconImage(icon: .appLimit, size: 18, opacity: 0.86)
                     .frame(width: 36, height: 36)
                     .background(MoriColors.botanicalInk.opacity(0.07))
                     .clipShape(Circle())
@@ -306,7 +306,7 @@ struct ScreenTimeSettingsOverviewSection: View {
             ScreenTimeSettingsOverviewRow(
                 title: "Default Apps",
                 value: state.defaultSelectionText,
-                icon: .lockShield
+                icon: .appLimit
             )
             ScreenTimeSettingsOverviewRow(
                 title: "Daily Signal",

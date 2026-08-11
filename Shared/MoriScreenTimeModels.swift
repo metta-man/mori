@@ -64,7 +64,7 @@ enum MoriScreenTimeFeature: String, Codable, CaseIterable, Identifiable {
         case .settle, .breathing:
             return .breathe
         case .beforeFeed:
-            return .lockShield
+            return .beforeFeedReset
         case .morningGate:
             return .leaf
         case .walkOfflineReset:

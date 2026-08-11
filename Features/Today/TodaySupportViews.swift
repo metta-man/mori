@@ -748,7 +748,7 @@ struct TodayQuickActionsCard: View {
                 TodayQuickActionRow(
                     title: "App Limit Setup",
                     subtitle: "Choose or adjust the app Mori slows down.",
-                    icon: .lockShield,
+                    icon: .appLimit,
                     productSymbol: .appLimit,
                     action: onOpenAppLimits
                 )

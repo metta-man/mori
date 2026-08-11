@@ -110,7 +110,7 @@ struct PatternLogSummaryCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            WeekArchiveBitmapLabel(title: "Pattern Log", icon: .refresh, iconSize: 16, iconOpacity: 0.86)
+            WeekArchiveBitmapLabel(title: "Pattern Log", icon: .pattern, iconSize: 16, iconOpacity: 0.86)
                 .font(.system(size: 16, weight: .semibold, design: .rounded))
                 .foregroundColor(MoriColors.botanicalMoss)
 

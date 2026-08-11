@@ -102,7 +102,7 @@ struct TodaySmallWidget: View {
     var body: some View {
         MoriWidgetShell {
             VStack(alignment: .leading, spacing: 10) {
-                MoriWidgetHeader(title: "Today", icon: .lockShield)
+                MoriWidgetHeader(title: "Today", icon: .appLimit)
 
                 Spacer(minLength: 0)
 
@@ -144,7 +144,7 @@ struct TodayMediumWidget: View {
         MoriWidgetShell {
             HStack(spacing: 18) {
                 VStack(alignment: .leading, spacing: 8) {
-                    MoriWidgetHeader(title: "App Limit", icon: .lockShield)
+                    MoriWidgetHeader(title: "App Limit", icon: .appLimit)
 
                     Spacer(minLength: 0)
 
