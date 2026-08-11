@@ -156,6 +156,12 @@ struct ContentView: View {
             SettleTimerDetailView()
         case .focusCycle:
             PomodoroPracticeDetailView()
+        case .quietMode:
+            QuietModeView()
+                .moriHidesMainTabBar()
+        case .essentialMode:
+            EssentialModeView()
+                .moriHidesMainTabBar()
         case .mindfulnessBellSettings:
             MindfulnessBellSettingsView()
                 .moriHidesMainTabBar()
@@ -209,16 +215,20 @@ struct ContentView: View {
         handledUITestLaunchRoute = true
 
         let arguments = ProcessInfo.processInfo.arguments
-        if arguments.contains("-MoriOpenBeforeFeedForUITest") {
+        if arguments.contains("-MoriOpenFocusForUITest") {
+            open(.practiceTab, source: .deepLink)
+        } else if arguments.contains("-MoriOpenBeforeFeedForUITest") {
             open(.beforeFeedReset, source: .screenTimeGate)
         } else if arguments.contains("-MoriOpenDeepSessionForUITest") {
-            open(.practiceSheet(.focusCycle), source: .deepLink)
+            open(.practiceLaunch(.deepSession), source: .deepLink)
         } else if arguments.contains("-MoriOpenWeekArchiveForUITest") {
             open(.weekArchiveDetail, source: .deepLink)
         } else if arguments.contains("-MoriOpenQuietModeForUITest") {
-            open(.practiceSheet(.quietMode), source: .deepLink)
+            open(.practiceLaunch(.quietMode), source: .deepLink)
         } else if arguments.contains("-MoriOpenPracticeVerificationForUITest") {
-            open(.practiceSheet(.verification(.walkReset)), source: .deepLink)
+            open(.practiceLaunch(.essentialMode), source: .deepLink)
+        } else if arguments.contains("-MoriOpenEssentialModeForUITest") {
+            open(.practiceLaunch(.essentialMode), source: .deepLink)
         } else if arguments.contains("-MoriOpenSettingsForUITest") {
             open(.settings, source: .deepLink)
         }

@@ -38,14 +38,12 @@ Recent 2026 logo and app-icon research supports this direction:
 - `brand-assets/mori-paper-linework-wordmark.png` is the active light-background wordmark PNG.
 - `brand-assets/mori-paper-linework-logo-reverse.png` is the forest-dark horizontal logo PNG.
 - `brand-assets/mori-paper-linework-wordmark-reverse.png` is the forest-dark wordmark PNG.
-- `outputs/logos/mori-paper-linework/` contains generated source routes, final exports, size checks, review board files, and selection metadata.
 
 ## Review Board
 
-- Local review board: `outputs/logos/mori-paper-linework/review-board.html`
-- Local contact sheet: `outputs/logos/mori-paper-linework/logo-contact-sheet.png`
 - Canva review board: https://www.canva.com/d/B-gx0PaN7GTpJW1
+- Historical local generation routes, contact sheets, and review exports are release evidence, not tracked source. They are retained in the dated external archive when available.
 
 ## Source Of Truth
 
-This paper-linework family is the active brand source of truth. Do not keep alternate logo families in `brand-assets/`; use research or archive folders for historical exploration only.
+This paper-linework family is the active source for external brand and app-icon use. It does not override the in-app UI authority in `DesignReferences/`; use the precedence in `docs/CURRENT_SOURCES.md`. Do not keep alternate logo families in `brand-assets/`; use `docs/archive/` for historical exploration.

@@ -2,9 +2,15 @@
 
 Date: 2026-06-26 HKT
 
+## Evidence Status
+
+This is a historical audit, not automatic proof for the current checkout. Its local payload was moved out of the repository and preserved in the dated external archive recorded against source commit `1f0ee314f936609e50fc1be6f7c05d7355508f50`.
+
+Paths beginning with `output/` or `outputs/` below are relative to that archive's `evidence/` payload. Use `scripts/check_runtime_evidence.sh --evidence-root <archive-path>` to validate the archive manifest, checksums, commit SHA, and audits. A commit mismatch is stale evidence and must not be presented as current release proof.
+
 ## Audit Scope
 
-This audit reviews the current redesign evidence for the active Mori product direction:
+This audit records the redesign evidence inspected for the active Mori product direction at the audit date:
 
 - Screen Time-first onboarding
 - Botanical watercolor visual system

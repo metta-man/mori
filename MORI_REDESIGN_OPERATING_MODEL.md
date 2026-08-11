@@ -1,80 +1,93 @@
 # Mori Redesign Operating Model
 
-## Current Design Promise
+## Current Product Promise
 
-Mori is a Screen Time-first calm app with a botanical watercolor interface. The product promise is simple: help the user put a limit between impulse and feed, then offer one quiet reset path.
+Mori is a Screen Time-first calm app with a botanical watercolor interface. It helps the user place a deliberate boundary between impulse and feed, choose a quiet reset, and keep light evidence of lived time.
 
-The active visual system is watercolor paper, botanical bitmap washes, deep leaf ink, sage controls, and restrained spacing. App logo art belongs in OS, marketing, and external brand surfaces. It does not belong inside primary app cards, onboarding cards, widgets, or repeated decorative UI backgrounds. Mori should be recognizable by material, rhythm, and restraint, not by stamping the mark across the app.
+The active visual system is watercolor paper, botanical bitmap washes, deep leaf ink, sage controls, editorial hierarchy, and restrained spacing. Brand marks belong on OS, store, marketing, and other external brand surfaces. Primary app cards, onboarding cards, widgets, and repeated UI backgrounds are recognized by material and rhythm, not by stamping the logo across them.
 
-## First-Principles Product Rules
+## First-Principles Rules
 
 1. Delete before polishing.
-2. App Limit and Screen Time flows are the primary onboarding path.
-3. Cards are content containers, not brand billboards.
-4. Botanical art is screen atmosphere, hero support, or a tiny functional accent, not repeated card wallpaper.
-5. Bitmap assets are the visual material source; synthetic SVG/gradient motif work is not the current direction.
-6. Every active UI surface must point at the same design system, generated project, and CI gates.
+2. App Limit and Screen Time flows lead onboarding.
+3. Each screen has one clear job and one dominant next action.
+4. Cards contain meaningful groups; they are not brand billboards.
+5. Botanical art provides screen atmosphere, hero support, or a small functional accent.
+6. Bitmap assets are the active visual-material source; ad hoc SVG or synthetic gradient motifs are not.
+7. Preserve working behaviour and data integrity while changing presentation.
+8. Source files, generated project configuration, documentation, screenshots, and gates must describe the same product.
 
-## Active Source Of Truth
+## Source-Of-Truth Hierarchy
 
-- `DesignSystem/MoriDesignSystemDocumentation.md`
-- `brand-assets/MORI_BRAND_IDENTITY_SYSTEM.md`
-- `MORI_REDESIGN_RELEASE_AUDIT.md`
-- `q2-prep/onboarding/ONBOARDING_FLOW_DESIGN.md`
-- `project.yml`
-- `scripts/check_design_direction.sh`
-- `scripts/check_redesign_release_readiness.sh`
-- `scripts/check_compiled_design_artifacts.sh`
-- `scripts/check_web_screenshot_audit.sh`
-- `scripts/check_main_surface_screenshot_audit.sh`
-- Current app source under `App/`, `Features/`, `DesignSystem/`, `Shared/`, `Services/`, `Widgets/`, `WatchApp/`, `WatchWidgets/`, `ShieldAction/`, `ShieldConfiguration/`, and `ScreenTimeMonitor/`
-- Current web source under `www/src/`
+The complete map and conflict rules live in `docs/CURRENT_SOURCES.md`.
 
-The `design/`, `docs/`, `mockups/`, `research/`, and `icon-concepts/` folders are historical archives only. `q2-prep/` is historical except for the onboarding design file above.
+1. Runtime behaviour and target membership: current source plus `project.yml`
+2. Approved UI composition and visual direction: `DesignReferences/MORI_DESIGN_SPEC.md` and the images in `DesignReferences/`
+3. Product language and interaction constraints: `MORI_DESIGN_SYSTEM_V2.md`
+4. SwiftUI component usage: `DesignSystem/MoriDesignSystemDocumentation.md` and the corresponding Swift files
+5. Brand identity and external asset use: `brand-assets/MORI_BRAND_IDENTITY_SYSTEM.md`
+6. App Limit-first onboarding: `q2-prep/onboarding/ONBOARDING_FLOW_DESIGN.md`
+7. Verification state and evidence limits: `MORI_REDESIGN_RELEASE_AUDIT.md`
 
-## Retired Concepts
+`MORI_REDESIGN_RELEASE_AUDIT.md` can prove or qualify implementation status, but it does not supersede the approved visual reference. Historical work is under `docs/archive/` and is never active direction.
 
-Do not reintroduce these as product direction:
+## Product Terminology
 
-- Mortality-countdown onboarding
-- Old life-grid naming or UI framing
+- **Life Grid** is the user-facing name in UI copy, product prose, accessibility labels, and new screenshots.
+- `WeekArchive*` remains the internal prefix for Swift types, feature paths, stores, routes, and persistence seams.
+- Treat this as an intentional presentation boundary. Do not leak the internal name into new UI, and do not destabilize persisted or cross-target identifiers for a cosmetic rename.
+
+## Retired Direction
+
+Do not reintroduce:
+
+- Mortality-countdown onboarding or death-framed setup copy
+- Legacy mortality-first framing around Life Grid
 - Location or life-expectancy setup
 - Hourglass, funnel, old time-seed, forest-ring, or badge-seal motifs
-- Logo, wordmark, app-icon, paper-linework mark, seedling, circular emblem, or leaf-mark art used as an in-app surface background
-- Flat cream-panel UI that ignores the watercolor paper material
-- SF Symbol-first visual language on product surfaces
+- Logo, wordmark, app-icon, paper-linework mark, seedling, circular emblem, or leaf-mark art as an in-app surface background
+- Flat cream panels that ignore the approved watercolor-paper composition
+- SF Symbol-first artwork on primary product surfaces
+- Streaks, XP, coins, confetti, competitive scores, or punitive progress language
 
-Migration code may keep legacy compatibility names only at data boundary seams, and those boundaries must stay covered by `scripts/check_design_direction.sh`.
+Legacy compatibility names may remain at data-boundary seams when required for persistence or migration. Keep those seams explicit and covered by the design-direction gate.
 
-## Surface Rules
+## Surface Contract
 
-Native root screens should use `MoriPaperBackground` with a screen-level botanical bitmap variant. Native cards should use `moriSanctuaryBox` / `MoriSanctuaryBoxBackground`, backed by `MoriPlainWatercolorCardBackground`, so repeated cards read as quiet opaque watercolor paper rather than translucent windows into the same logo, badge, paper-linework, or app-icon wallpaper. A card may use botanical tone through color, generated paper grain (`moriCardSageWash`, `moriCardWarmWash`, `moriCardCoolWash`), iconography, or a deliberately small hero accent; it must not use the brand mark as the texture.
+For native root screens, begin with the composition already used by the affected feature. Current shared primitives include `MoriPaperBackground`, `MoriPage`, `MoriRootScrollScreen`, `MoriPageHeader`, and `MoriRootHeader`. Do not migrate a working screen between composition layers as incidental cleanup.
 
-Web cards should use the mirrored `www/src/assets/botanical/card-paper.png` bitmap material. Web and native icons should use typed Mori bitmap icon APIs instead of ad hoc symbol strings or inline SVG artwork.
+Use `.moriSanctuaryCard(...)` or `.moriSanctuaryBox(...)` for the established sanctuary card treatment. These surfaces resolve through `MoriSanctuaryBoxBackground` and `MoriPlainWatercolorCardBackground`, keeping repeated cards opaque and quiet. Card surfaces do not accept screen-level artwork parameters.
 
-Widgets and watch surfaces should keep the same rule: quiet paper cards, botanical accent only when it adds hierarchy.
+Use `MoriPrimaryButton` for the canonical commitment action, `MoriSecondaryButton` for a quieter alternative, and typed Mori bitmap icon APIs for primary artwork. Generated paper washes such as `moriCardPaperWash`, `moriCardSageWash`, `moriCardWarmWash`, `moriCardCoolWash`, and `moriButtonWash` are material assets, not brand marks.
+
+Web cards mirror the paper treatment through current assets and styles under `www/src/`. Widgets and watch surfaces follow the same rule: quiet paper, clear hierarchy, and botanical accent only where it communicates function.
+
+## Functional Safety
+
+UI work must preserve, unless explicitly changed:
+
+- FamilyControls authorization and selection
+- DeviceActivity schedules and ManagedSettings shielding
+- Before Feed and App Limit state
+- Quiet/deep-session timing and interruption behaviour
+- persistence, app-group data, notifications, deep links, and widget/watch sync
+- navigation reachability and dismissal
+- accessibility semantics and reduced-motion behaviour
 
 ## Infrastructure Contract
 
-The generated Xcode project must be produced from `project.yml` and committed in sync. CI verifies this by running `xcodegen generate` and checking `Mori.xcodeproj` for drift.
+`project.yml` is the XcodeGen source of truth. The generated `Mori.xcodeproj` must remain in sync. Active native source paths are listed in `docs/CURRENT_SOURCES.md`.
 
-Before treating the redesign as shippable, run the full local release-readiness line:
+Run the full readiness line before treating a broad redesign change as shippable:
 
 ```sh
 bash scripts/check_redesign_release_readiness.sh
 ```
 
-For a fast non-native pass while iterating on docs or web-only materials, run:
+For a fast documentation or web-only pass:
 
 ```sh
 bash scripts/check_redesign_release_readiness.sh --skip-native-build
 ```
 
-For visual release checks, refresh the screenshot evidence first, then validate the audit files:
-
-```sh
-bash scripts/check_web_screenshot_audit.sh
-bash scripts/check_main_surface_screenshot_audit.sh
-```
-
-The goal is not "a prettier theme." The goal is one integrated product system: source files, generated assets, project configuration, CI checks, screenshots, and app copy all saying the same thing.
+For affected UI, refresh screenshot evidence and run the relevant audit scripts named in `MORI_REDESIGN_RELEASE_AUDIT.md`. A green source gate is not a substitute for the two visual-refinement passes required by `AGENTS.md`.

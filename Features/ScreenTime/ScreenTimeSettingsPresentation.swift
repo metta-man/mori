@@ -96,7 +96,8 @@ struct ScreenTimeInlineLimitPresentation {
             usesDefaultSelection: true,
             customSelectedCount: 0,
             effectiveSelectedCount: 0,
-            displayNames: []
+            displayNames: [],
+            restrictionPolicy: .blockSelected
         )
     }
 
@@ -300,7 +301,8 @@ struct ScreenTimeSettingsPresentation {
             usesDefaultSelection: true,
             customSelectedCount: 0,
             effectiveSelectedCount: 0,
-            displayNames: []
+            displayNames: [],
+            restrictionPolicy: .blockSelected
         )
     }
 

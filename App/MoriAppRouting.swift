@@ -3,6 +3,9 @@ import SwiftUI
 struct MoriPracticeLaunchRequest: Equatable {
     enum Kind: Equatable {
         case mindfulnessBellBreathing
+        case deepSession
+        case quietMode
+        case essentialMode
     }
 
     let id = UUID()
@@ -281,6 +284,8 @@ extension MoriPracticeSheet {
             return "focus_cycle"
         case .quietMode:
             return "quiet_mode"
+        case .essentialMode:
+            return "essential_mode"
         case .journal:
             return "journal"
         case .dailyCheckIn:
@@ -366,6 +371,12 @@ private extension MoriPracticeLaunchRequest.Kind {
         switch self {
         case .mindfulnessBellBreathing:
             return "mindfulness_bell_breathing"
+        case .deepSession:
+            return "deep_session"
+        case .quietMode:
+            return "quiet_mode"
+        case .essentialMode:
+            return "essential_mode"
         }
     }
 }

@@ -3,6 +3,10 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+source scripts/lib/evidence_paths.sh
+audit_dir="$(mori_evidence_path "output/healthkit-audit/recovery-healthkit-samples-2026-06-26" "${1:-}")"
+export MORI_AUDIT_DIR="$audit_dir"
+
 tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/mori-recovery-healthkit-probe.XXXXXX")"
 trap 'rm -rf "$tmp_dir"' EXIT
 
@@ -24,7 +28,7 @@ xcrun swiftc \
 
 ruby - "$probe_output" <<'RUBY'
 probe_output_path = ARGV.fetch(0)
-audit_path = "output/healthkit-audit/recovery-healthkit-samples-2026-06-26/AUDIT.md"
+audit_path = File.join(ENV.fetch("MORI_AUDIT_DIR"), "AUDIT.md")
 problems = []
 
 def require_file(path, problems)

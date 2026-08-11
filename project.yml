@@ -1,5 +1,6 @@
 name: Mori
 options:
+  minimumXcodeGenVersion: "2.45.4"
   bundleIdPrefix: com.mettalabs
   deploymentTarget:
     iOS: "16.0"
@@ -32,6 +33,8 @@ targets:
     sources:
       - path: App
       - path: Features
+        excludes:
+          - "**/*.md"
       - path: Models
       - path: DesignSystem
         excludes:

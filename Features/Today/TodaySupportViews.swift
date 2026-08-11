@@ -818,7 +818,8 @@ struct TodayAppLimitPresentation {
             usesDefaultSelection: false,
             customSelectedCount: 0,
             effectiveSelectedCount: 0,
-            displayNames: []
+            displayNames: [],
+            restrictionPolicy: .blockSelected
         )
         self.profileSummary = summary
         self.effectiveSelection = effectiveSelection

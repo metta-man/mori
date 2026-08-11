@@ -23,28 +23,66 @@ struct QuietTimerCard: View {
     @State private var showsDurationOptions = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 18) {
-            MoriSectionTitle(
-                title: "Quiet Session",
-                subtitle: "Stay here for as long as feels useful."
-            )
+        VStack(alignment: .leading, spacing: 16) {
+            ZStack {
+                Image("MoriDeepSessionForest")
+                    .resizable()
+                    .scaledToFill()
+                    .frame(height: 315)
+                    .clipped()
+                    .scaleEffect(1.16)
+                    .offset(y: -34)
+                    .saturation(0.66)
+                    .brightness(0.09)
+                    .opacity(0.82)
 
-            VStack(spacing: 10) {
-                Text(timeText)
-                    .font(.system(size: 58, weight: .regular, design: .serif))
-                    .foregroundColor(MoriV2Palette.forestInk)
-                    .monospacedDigit()
-                    .minimumScaleFactor(0.72)
+                LinearGradient(
+                    colors: [
+                        MoriV2Palette.raisedPaper.opacity(0.20),
+                        MoriV2Palette.raisedPaper.opacity(0.56),
+                        MoriV2Palette.raisedPaper.opacity(0.86)
+                    ],
+                    startPoint: .top,
+                    endPoint: .bottom
+                )
 
-                Text(timerStatusText)
-                    .font(MoriV2Type.caption)
-                    .foregroundColor(MoriV2Palette.mutedStone)
-                    .multilineTextAlignment(.center)
+                Circle()
+                    .stroke(MoriV2Palette.forestInk.opacity(0.12), lineWidth: 3)
+                    .frame(width: 190, height: 190)
+
+                Circle()
+                    .trim(from: 0, to: max(0.018, timerProgress))
+                    .stroke(
+                        MoriV2Palette.primaryForest,
+                        style: StrokeStyle(lineWidth: 3, lineCap: .round)
+                    )
+                    .frame(width: 190, height: 190)
+                    .rotationEffect(.degrees(-90))
+
+                VStack(spacing: 10) {
+                    Text(MoriL10n.display("Quiet Session"))
+                        .font(.system(size: 17, weight: .regular, design: .serif))
+                        .foregroundColor(MoriV2Palette.forestInk)
+
+                    Text(timeText)
+                        .font(.system(size: 58, weight: .regular, design: .serif))
+                        .foregroundColor(MoriV2Palette.forestInk)
+                        .monospacedDigit()
+                        .minimumScaleFactor(0.72)
+
+                    Text(timerStatusText)
+                        .font(MoriV2Type.caption)
+                        .foregroundColor(MoriV2Palette.mutedStone)
+                        .multilineTextAlignment(.center)
+                }
             }
             .frame(maxWidth: .infinity)
-            .padding(.vertical, 26)
-            .background(MoriV2Palette.paper.opacity(0.72))
-            .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            .frame(height: 315)
+            .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+            .overlay {
+                RoundedRectangle(cornerRadius: 28, style: .continuous)
+                    .stroke(MoriV2Palette.hairline, lineWidth: 1)
+            }
             .accessibilityElement(children: .combine)
 
             MoriV2PrimaryButton(
@@ -84,17 +122,7 @@ struct QuietTimerCard: View {
                 }
             }
         }
-        .padding(18)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .fill(MoriV2Palette.raisedPaper)
-        )
-        .overlay(
-            RoundedRectangle(cornerRadius: 24, style: .continuous)
-                .stroke(MoriV2Palette.hairline, lineWidth: 1)
-        )
-        .shadow(color: MoriV2Palette.shadow, radius: 18, x: 0, y: 10)
         .moriReduceMotionAnimation(MoriV2Motion.disclosure, value: showsDurationOptions)
     }
 

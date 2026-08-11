@@ -5,15 +5,36 @@ struct MoriScreenTimeFeatureProfile: Codable, Equatable {
     var isEnabled: Bool
     var usesDefaultSelection: Bool
     var displayNames: [String]
+    var restrictionPolicy: MoriScreenTimeRestrictionPolicy
 
     init(
         isEnabled: Bool = false,
         usesDefaultSelection: Bool = true,
-        displayNames: [String] = []
+        displayNames: [String] = [],
+        restrictionPolicy: MoriScreenTimeRestrictionPolicy = .blockSelected
     ) {
         self.isEnabled = isEnabled
         self.usesDefaultSelection = usesDefaultSelection
         self.displayNames = displayNames
+        self.restrictionPolicy = restrictionPolicy
+    }
+
+    private enum CodingKeys: String, CodingKey {
+        case isEnabled
+        case usesDefaultSelection
+        case displayNames
+        case restrictionPolicy
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        isEnabled = try container.decodeIfPresent(Bool.self, forKey: .isEnabled) ?? false
+        usesDefaultSelection = try container.decodeIfPresent(Bool.self, forKey: .usesDefaultSelection) ?? true
+        displayNames = try container.decodeIfPresent([String].self, forKey: .displayNames) ?? []
+        restrictionPolicy = try container.decodeIfPresent(
+            MoriScreenTimeRestrictionPolicy.self,
+            forKey: .restrictionPolicy
+        ) ?? .blockSelected
     }
 }
 
@@ -24,6 +45,7 @@ struct MoriScreenTimeProfileSummary: Identifiable, Equatable {
     let customSelectedCount: Int
     let effectiveSelectedCount: Int
     let displayNames: [String]
+    let restrictionPolicy: MoriScreenTimeRestrictionPolicy
 
     var id: String { feature.id }
 
@@ -105,7 +127,12 @@ struct ScreenTimeSelectionStore {
     }
 
     func profile(for feature: MoriScreenTimeFeature) -> MoriScreenTimeFeatureProfile {
-        profiles()[feature.rawValue] ?? defaultProfile(for: feature)
+        var profile = profiles()[feature.rawValue] ?? defaultProfile(for: feature)
+        if feature == .walkOfflineReset {
+            profile.usesDefaultSelection = false
+            profile.restrictionPolicy = .allowSelected
+        }
+        return profile
     }
 
     func saveProfile(_ profile: MoriScreenTimeFeatureProfile, for feature: MoriScreenTimeFeature) {
@@ -120,9 +147,10 @@ struct ScreenTimeSelectionStore {
 
     func summary(for feature: MoriScreenTimeFeature) -> MoriScreenTimeProfileSummary {
         let profile = profile(for: feature)
-        let customCount = selectedCount(loadSelection(for: feature))
+        let customSelection = loadSelection(for: feature)
+        let customCount = selectedCount(customSelection, policy: profile.restrictionPolicy)
         let effectiveSelection = effectiveSelection(for: feature)
-        let effectiveCount = selectedCount(effectiveSelection)
+        let effectiveCount = selectedCount(effectiveSelection, policy: profile.restrictionPolicy)
         let names = profile.usesDefaultSelection ? loadDefaultDisplayNames() : profile.displayNames
 
         return MoriScreenTimeProfileSummary(
@@ -131,7 +159,8 @@ struct ScreenTimeSelectionStore {
             usesDefaultSelection: profile.usesDefaultSelection,
             customSelectedCount: customCount,
             effectiveSelectedCount: effectiveCount,
-            displayNames: names
+            displayNames: names,
+            restrictionPolicy: profile.restrictionPolicy
         )
     }
 
@@ -144,16 +173,34 @@ struct ScreenTimeSelectionStore {
     }
 
     func hasEffectiveSelection(for feature: MoriScreenTimeFeature) -> Bool {
-        profile(for: feature).isEnabled && selectedCount(effectiveSelection(for: feature)) > 0
+        let profile = profile(for: feature)
+        return profile.isEnabled && selectedCount(
+            effectiveSelection(for: feature),
+            policy: profile.restrictionPolicy
+        ) > 0
     }
 
     func effectiveSelectedCount(for feature: MoriScreenTimeFeature) -> Int {
-        selectedCount(effectiveSelection(for: feature))
+        let profile = profile(for: feature)
+        return selectedCount(effectiveSelection(for: feature), policy: profile.restrictionPolicy)
     }
 
     func selectedCount(_ selection: FamilyActivitySelection) -> Int {
         let selection = supportedSelection(selection)
         return selection.applicationTokens.count + selection.webDomainTokens.count
+    }
+
+    private func selectedCount(
+        _ selection: FamilyActivitySelection,
+        policy: MoriScreenTimeRestrictionPolicy
+    ) -> Int {
+        let selection = supportedSelection(selection)
+        switch policy {
+        case .blockSelected:
+            return selection.applicationTokens.count + selection.webDomainTokens.count
+        case .allowSelected:
+            return selection.applicationTokens.count
+        }
     }
 
     func loadDefaultDisplayNames() -> [String] {
@@ -178,7 +225,13 @@ struct ScreenTimeSelectionStore {
             return MoriScreenTimeFeatureProfile(isEnabled: true, usesDefaultSelection: true)
         case .morningGate:
             return MoriScreenTimeFeatureProfile(isEnabled: true, usesDefaultSelection: true)
-        case .settle, .breathing, .beforeFeed, .walkOfflineReset, .journal, .dailyCheckIn, .manualPractice:
+        case .walkOfflineReset:
+            return MoriScreenTimeFeatureProfile(
+                isEnabled: false,
+                usesDefaultSelection: false,
+                restrictionPolicy: .allowSelected
+            )
+        case .settle, .breathing, .beforeFeed, .journal, .dailyCheckIn, .manualPractice:
             return MoriScreenTimeFeatureProfile(isEnabled: false, usesDefaultSelection: true)
         }
     }

@@ -3,10 +3,14 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+source scripts/lib/evidence_paths.sh
+audit_dir="$(mori_evidence_path "outputs/design-audit/widget-runtime-20260626" "${1:-}")"
+export MORI_AUDIT_DIR="$audit_dir"
+
 ruby <<'RUBY'
 require "open3"
 
-audit_dir = "outputs/design-audit/widget-runtime-20260626"
+audit_dir = ENV.fetch("MORI_AUDIT_DIR")
 audit_path = File.join(audit_dir, "AUDIT.md")
 gallery_path = File.join(audit_dir, "ios-widget-gallery-today-small.jpg")
 before_path = File.join(audit_dir, "ios-home-mori-today-small-widget-rendered.jpg")

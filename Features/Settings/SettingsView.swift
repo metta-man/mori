@@ -17,87 +17,84 @@ struct SettingsView: View {
 
     var body: some View {
         NavigationStack(path: $navigationPath) {
-            Form {
-                Section {
-                    NavigationLink(value: SettingsRoute.appLimits) {
-                        SettingsNavigationLabel(
-                            title: MoriL10n.display("App Limits"),
-                            subtitle: screenTimeStatusText,
-                            icon: .lockShield
-                        )
+            MoriRootScrollScreen(
+                title: "Settings",
+                subtitle: "Keep Mori quiet, personal, and yours.",
+                spacing: 22,
+                bottomPadding: 42,
+                backgroundVariant: .settings,
+                minimumTopInset: 18,
+                headerStyle: .editorial,
+                headerTrailing: {
+                    Button(MoriL10n.display("Done")) {
+                        dismiss()
                     }
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundColor(MoriColors.botanicalInk)
+                    .padding(.horizontal, 16)
+                    .frame(minHeight: MoriV2Layout.minimumHitTarget)
+                    .background(MoriColors.botanicalSurface.opacity(0.78))
+                    .clipShape(Capsule())
+                }
+            ) {
+                NavigationLink(value: SettingsRoute.appLimits) {
+                    SettingsAppLimitsCard(statusText: screenTimeStatusText)
+                }
+                .buttonStyle(.plain)
 
+                SettingsLinkSection(title: "Your Mori") {
                     NavigationLink(value: SettingsRoute.archive) {
-                        SettingsNavigationLabel(
-                            title: MoriL10n.display("Week Archive"),
-                            subtitle: MoriL10n.display("Start date and archive range."),
+                        SettingsCompactLink(
+                            title: "Week Archive",
+                            subtitle: "Start date and archive range.",
                             icon: .roots
                         )
                     }
-                } header: {
-                    SettingsSectionHeader(title: MoriL10n.display("Attention"))
-                }
-                .listRowBackground(settingsRowBackground)
 
-                Section {
+                    SettingsLinkDivider()
+
                     NavigationLink(value: SettingsRoute.reminders) {
-                        SettingsNavigationLabel(
-                            title: MoriL10n.display("Reminders"),
-                            subtitle: MoriL10n.display("Optional, gentle nudges."),
+                        SettingsCompactLink(
+                            title: "Reminders",
+                            subtitle: "Optional, gentle nudges.",
                             icon: .bell
                         )
                     }
 
+                    SettingsLinkDivider()
+
                     NavigationLink(value: SettingsRoute.language) {
-                        SettingsNavigationLabel(
-                            title: MoriL10n.display("Language"),
+                        SettingsCompactLink(
+                            title: "Language",
                             value: settings.localePreference.displayName,
                             icon: .journal
                         )
                     }
-                } header: {
-                    SettingsSectionHeader(title: MoriL10n.display("Preferences"))
                 }
-                .listRowBackground(settingsRowBackground)
 
-                Section {
+                SettingsLinkSection(title: "Mori") {
                     NavigationLink(value: SettingsRoute.appAndData) {
-                        SettingsNavigationLabel(
-                            title: MoriL10n.display("App and Data"),
-                            subtitle: MoriL10n.display("Onboarding and saved check-ins."),
+                        SettingsCompactLink(
+                            title: "App and Data",
+                            subtitle: "Onboarding and saved check-ins.",
                             icon: .refresh
                         )
                     }
 
+                    SettingsLinkDivider()
+
                     NavigationLink(value: SettingsRoute.about) {
-                        SettingsNavigationLabel(
-                            title: MoriL10n.display("About Mori"),
-                            subtitle: MoriL10n.display("Pause. Notice. Choose."),
+                        SettingsCompactLink(
+                            title: "About Mori",
+                            subtitle: "Pause. Notice. Choose.",
                             icon: .leaf
                         )
                     }
-                } header: {
-                    SettingsSectionHeader(title: MoriL10n.display("Mori"))
-                }
-                .listRowBackground(settingsRowBackground)
-            }
-            .moriSettingsForm()
-            .listStyle(.insetGrouped)
-            .navigationTitle(MoriL10n.display("Settings"))
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbarBackground(MoriColors.botanicalPaper, for: .navigationBar)
-            .toolbarBackground(.visible, for: .navigationBar)
-            .toolbarColorScheme(.light, for: .navigationBar)
-            .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
-                    Button(MoriL10n.display("Done")) {
-                        dismiss()
-                    }
-                    .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(MoriColors.botanicalInk)
-                    .frame(minHeight: MoriV2Layout.minimumHitTarget)
                 }
             }
+            .navigationTitle("")
+            .toolbar(.hidden, for: .navigationBar)
+            .toolbarBackground(.hidden, for: .navigationBar)
             .navigationDestination(for: SettingsRoute.self) { route in
                 switch route {
                 case .appLimits:
@@ -117,12 +114,136 @@ struct SettingsView: View {
         }
     }
 
-    private var settingsRowBackground: Color {
-        MoriColors.botanicalSurface.opacity(0.74)
-    }
-
     private var screenTimeStatusText: String {
         ScreenTimeSettingsLinkPresentation(appLimitManager: appLimitManager).statusText
+    }
+}
+
+private struct SettingsAppLimitsCard: View {
+    let statusText: String
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            HStack(alignment: .top, spacing: 13) {
+                MoriProductSymbolView(
+                    symbol: .appLimit,
+                    size: 22,
+                    tint: MoriColors.botanicalInk,
+                    opacity: 0.94
+                )
+                .frame(width: 42, height: 42)
+                .background(MoriColors.botanicalInk.opacity(0.09))
+                .clipShape(Circle())
+                .accessibilityHidden(true)
+
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(MoriL10n.display("Protect your attention"))
+                        .font(.system(size: 20, weight: .medium, design: .serif))
+                        .foregroundColor(MoriColors.botanicalInk)
+
+                    Text(MoriL10n.display(statusText))
+                        .font(MoriTypography.caption)
+                        .foregroundColor(MoriColors.botanicalMuted)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
+
+            HStack(spacing: 8) {
+                Text(MoriL10n.display("Open App Limits"))
+                    .font(.system(size: 14, weight: .semibold))
+
+                Spacer()
+
+                MoriBitmapIconImage(icon: .chevron, size: 13, opacity: 0.72)
+                    .accessibilityHidden(true)
+            }
+            .foregroundColor(MoriColors.botanicalInk)
+            .frame(minHeight: MoriV2Layout.minimumHitTarget)
+            .padding(.horizontal, 14)
+            .background(MoriColors.botanicalInk.opacity(0.075))
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .moriSanctuaryBox(cornerRadius: 22, padding: 16, tone: .paper, castsShadow: true)
+        .accessibilityElement(children: .combine)
+        .accessibilityAddTraits(.isButton)
+    }
+}
+
+private struct SettingsLinkSection<Content: View>: View {
+    let title: String
+    private let content: Content
+
+    init(title: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 9) {
+            Text(MoriL10n.display(title))
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundColor(MoriColors.botanicalMuted)
+                .padding(.leading, 2)
+
+            VStack(spacing: 0) {
+                content
+            }
+            .moriSanctuaryBox(cornerRadius: 20, padding: 0, tone: .paper, castsShadow: false)
+        }
+    }
+}
+
+private struct SettingsCompactLink: View {
+    let title: String
+    var subtitle: String?
+    var value: String?
+    let icon: MoriBitmapIcon
+
+    var body: some View {
+        HStack(spacing: 12) {
+            MoriBitmapIconImage(icon: icon, size: 17, opacity: 0.74)
+                .frame(width: 30, height: 30)
+                .background(MoriColors.botanicalInk.opacity(0.055))
+                .clipShape(Circle())
+                .accessibilityHidden(true)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(MoriL10n.display(title))
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundColor(MoriColors.botanicalInk)
+
+                if let subtitle {
+                    Text(MoriL10n.display(subtitle))
+                        .font(.system(size: 12, weight: .regular))
+                        .foregroundColor(MoriColors.botanicalMuted)
+                        .lineLimit(2)
+                }
+            }
+
+            Spacer(minLength: 8)
+
+            if let value {
+                Text(value)
+                    .font(.system(size: 13, weight: .regular))
+                    .foregroundColor(MoriColors.botanicalMuted)
+                    .lineLimit(1)
+            }
+
+            MoriBitmapIconImage(icon: .chevron, size: 12, opacity: 0.48)
+                .accessibilityHidden(true)
+        }
+        .padding(.horizontal, 14)
+        .frame(maxWidth: .infinity, minHeight: 66, alignment: .leading)
+        .contentShape(Rectangle())
+        .accessibilityElement(children: .combine)
+    }
+}
+
+private struct SettingsLinkDivider: View {
+    var body: some View {
+        Divider()
+            .overlay(MoriColors.botanicalLine.opacity(0.56))
+            .padding(.leading, 56)
     }
 }
 

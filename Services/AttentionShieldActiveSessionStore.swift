@@ -12,9 +12,15 @@ struct AttentionShieldActiveSessionStore {
     func startSession(
         feature: MoriScreenTimeFeature,
         endDate: Date,
+        endPolicy: MoriScreenTimeSessionEndPolicy = .timed,
         now: Date = Date()
     ) -> MoriScreenTimeActiveSession {
-        let session = MoriScreenTimeActiveSession(feature: feature, startedAt: now, endDate: endDate)
+        let session = MoriScreenTimeActiveSession(
+            feature: feature,
+            startedAt: now,
+            endDate: endDate,
+            endPolicy: endPolicy
+        )
         persist(session)
         return session
     }
@@ -31,7 +37,7 @@ struct AttentionShieldActiveSessionStore {
 
     func loadUnexpiredSession(now: Date = Date()) -> MoriScreenTimeActiveSession? {
         guard let session = load() else { return nil }
-        guard session.endDate > now else {
+        guard !session.isExpired(at: now) else {
             clear()
             return nil
         }

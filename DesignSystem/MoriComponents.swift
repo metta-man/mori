@@ -514,11 +514,11 @@ struct MoriModeCard: View {
     var height: CGFloat = MoriTheme.IllustrationSpacing.modeCardHeight
     var cornerRadius: CGFloat = MoriTheme.CornerRadius.card
     var isEnabled = true
+    var quickAction: (() -> Void)? = nil
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            ZStack(alignment: .bottomLeading) {
+        ZStack(alignment: .bottomLeading) {
                 cardArtwork
 
                 LinearGradient(
@@ -575,59 +575,74 @@ struct MoriModeCard: View {
                                 : MoriTheme.IllustrationSpacing.textClearance
                         )
 
-                        MoriPlayTriangle()
-                            .fill(
-                                isEnabled
-                                    ? MoriTheme.Colors.onPrimary
-                                    : MoriTheme.Colors.mutedText
-                            )
-                            .frame(width: 15, height: 18)
-                            .offset(x: 1)
-                            .frame(width: 48, height: 48)
-                            .background(
-                                isEnabled
-                                    ? MoriTheme.Colors.primaryAction
-                                    : MoriTheme.Colors.hairline
-                            )
-                            .clipShape(Circle())
+                        Button(action: quickAction ?? action) {
+                            MoriPlayTriangle()
+                                .fill(
+                                    isEnabled
+                                        ? MoriTheme.Colors.onPrimary
+                                        : MoriTheme.Colors.mutedText
+                                )
+                                .frame(width: 15, height: 18)
+                                .offset(x: 1)
+                                .frame(width: 48, height: 48)
+                                .background(
+                                    isEnabled
+                                        ? MoriTheme.Colors.primaryAction
+                                        : MoriTheme.Colors.hairline
+                                )
+                                .clipShape(Circle())
+                        }
+                        .buttonStyle(MoriComponentPressButtonStyle())
+                        .disabled(!isEnabled)
+                        .accessibilityLabel(MoriL10n.string(
+                            "focus.mode.quick_start",
+                            defaultValue: "Start %@",
+                            arguments: [MoriL10n.display(title)]
+                        ))
                     }
                 }
                 .padding(.horizontal, 26)
                 .padding(.vertical, 20)
-            }
-            .frame(maxWidth: .infinity)
-            .modifier(MoriModeCardHeightModifier(height: height))
-            .clipShape(
-                RoundedRectangle(
-                    cornerRadius: cornerRadius,
-                    style: .continuous
-                )
+        }
+        .frame(maxWidth: .infinity)
+        .modifier(MoriModeCardHeightModifier(height: height))
+        .clipShape(
+            RoundedRectangle(
+                cornerRadius: cornerRadius,
+                style: .continuous
             )
-            .overlay(
+        )
+        .overlay(
                 RoundedRectangle(
                     cornerRadius: cornerRadius,
                     style: .continuous
                 )
                 .stroke(MoriTheme.Colors.ink.opacity(0.055), lineWidth: 0.7)
+        )
+        .contentShape(
+            RoundedRectangle(
+                cornerRadius: cornerRadius,
+                style: .continuous
             )
-            .contentShape(
-                RoundedRectangle(
-                    cornerRadius: cornerRadius,
-                    style: .continuous
-                )
-            )
-            .shadow(
-                color: MoriTheme.Colors.ink.opacity(0.035),
-                radius: 11,
-                x: 0,
-                y: 5
-            )
+        )
+        .shadow(
+            color: MoriTheme.Colors.ink.opacity(0.035),
+            radius: 11,
+            x: 0,
+            y: 5
+        )
+        .onTapGesture {
+            guard isEnabled else { return }
+            action()
         }
-        .buttonStyle(MoriComponentPressButtonStyle())
-        .disabled(!isEnabled)
+        .opacity(isEnabled ? 1 : 0.58)
+        .accessibilityAddTraits(.isButton)
         .accessibilityLabel(MoriL10n.display(title))
         .accessibilityValue(MoriL10n.display(duration))
         .accessibilityHint(MoriL10n.display(description))
+        .accessibilityAction {
+            action()
+        }
     }
 
     @ViewBuilder
