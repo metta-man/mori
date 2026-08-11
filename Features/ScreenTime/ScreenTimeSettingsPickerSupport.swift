@@ -45,7 +45,7 @@ struct ScreenTimeSettingsPickerSheet: View {
 
     private var selectionContext: some View {
         HStack(alignment: .top, spacing: 11) {
-            MoriBitmapIconImage(icon: .lockShield, size: 17, opacity: 0.88)
+            MoriBitmapIconImage(icon: .appLimit, size: 17, opacity: 0.88)
                 .frame(width: 34, height: 34)
                 .background(MoriColors.botanicalInk.opacity(0.08))
                 .clipShape(Circle())

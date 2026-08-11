@@ -166,7 +166,7 @@ struct MoriBeforeFeedReasonContent: View {
                         .accessibilityHint(MoriL10n.display("This is context about how the pause opened."))
                 }
 
-                MoriBeforeFeedPrimaryButton(
+                MoriResetPrimaryButton(
                     title: MoriL10n.display("Continue"),
                     isEnabled: selectedReason != nil,
                     action: onContinue
@@ -285,7 +285,8 @@ struct MoriBeforeFeedPauseOfferContent: View {
                     }
                     .padding(.top, 8)
 
-                    MoriBeforeFeedBreathingComposition(
+                    MoriResetBreathingComposition(
+                        context: .beforeFeed,
                         visualState: .idle,
                         isRunning: false,
                         showsBreathingOrb: true,
@@ -295,7 +296,7 @@ struct MoriBeforeFeedPauseOfferContent: View {
                     .frame(height: 300)
                     .padding(.top, 4)
 
-                    MoriBeforeFeedPrimaryButton(
+                    MoriResetPrimaryButton(
                         title: MoriL10n.display("Begin quiet pause"),
                         icon: .play,
                         action: onBeginPause
@@ -361,7 +362,8 @@ struct MoriBeforeFeedPauseContent: View {
                     }
                     .padding(.top, 8)
 
-                    MoriBeforeFeedBreathingComposition(
+                    MoriResetBreathingComposition(
+                        context: .beforeFeed,
                         visualState: breathingVisualState,
                         isRunning: isRunning,
                         showsBreathingOrb: showsBreathingOrb,
@@ -371,8 +373,9 @@ struct MoriBeforeFeedPauseContent: View {
                     .frame(height: 340)
                     .padding(.top, 2)
 
-                    MoriBeforeFeedCompactPauseButton(
-                        isRunning: isRunning,
+                    MoriResetCompactButton(
+                        title: MoriL10n.display(isRunning ? "Pause" : "Resume"),
+                        icon: isRunning ? .pause : .play,
                         action: onToggleBreathing
                     )
 
@@ -421,7 +424,8 @@ struct MoriBeforeFeedCompletionContent: View {
                     }
                     .padding(.top, 12)
 
-                    MoriBeforeFeedBreathingComposition(
+                    MoriResetBreathingComposition(
+                        context: .beforeFeed,
                         visualState: .idle,
                         isRunning: false,
                         showsBreathingOrb: true,
@@ -431,7 +435,7 @@ struct MoriBeforeFeedCompletionContent: View {
                     .frame(height: 310)
                     .padding(.top, 2)
 
-                    MoriBeforeFeedPrimaryButton(
+                    MoriResetPrimaryButton(
                         title: MoriL10n.display("Continue now"),
                         action: onContinue
                     )
@@ -454,7 +458,8 @@ struct MoriBeforeFeedCompletionContent: View {
     }
 }
 
-private struct MoriBeforeFeedBreathingComposition: View {
+private struct MoriResetBreathingComposition: View {
+    let context: MoriAttentionResetContext
     let visualState: MoriBreathingCycleVisualState
     let isRunning: Bool
     let showsBreathingOrb: Bool
@@ -493,13 +498,16 @@ private struct MoriBeforeFeedBreathingComposition: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(
-            MoriL10n.string(
-                "before_feed.breath.time_remaining_accessibility",
-                defaultValue: "%@ remaining. %@",
-                arguments: [timeText, cueText]
-            )
+        .accessibilityLabel(accessibilityDescription)
+    }
+
+    private var accessibilityDescription: String {
+        let remainingDescription = MoriL10n.string(
+            "before_feed.breath.time_remaining_accessibility",
+            defaultValue: "%@ remaining. %@",
+            arguments: [timeText, cueText]
         )
+        return "\(context.navigationTitle). \(remainingDescription)"
     }
 }
 
@@ -523,7 +531,7 @@ private struct MoriBeforeFeedBackAction: View {
     }
 }
 
-private struct MoriBeforeFeedPrimaryButton: View {
+private struct MoriResetPrimaryButton: View {
     let title: String
     var icon: MoriBitmapIcon?
     var isEnabled = true
@@ -556,20 +564,23 @@ private struct MoriBeforeFeedPrimaryButton: View {
     }
 }
 
-private struct MoriBeforeFeedCompactPauseButton: View {
-    let isRunning: Bool
+private struct MoriResetCompactButton: View {
+    let title: String
+    let icon: MoriBitmapIcon
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
             HStack(spacing: 8) {
                 MoriBitmapIconImage(
-                    icon: isRunning ? .pause : .play,
+                    icon: icon,
                     size: 13,
                     opacity: 0.78
                 )
 
-                Text(MoriL10n.display(isRunning ? "Pause" : "Resume"))
+                Text(title)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.82)
             }
             .font(.system(size: 15, weight: .medium))
             .foregroundColor(MoriColors.sanctuaryInkSoft)
@@ -587,15 +598,14 @@ private struct MoriBeforeFeedCompactPauseButton: View {
     }
 }
 
-struct MoriAttentionResetContent: View {
+struct MoriMorningResetContent: View {
     let context: MoriAttentionResetContext
     let resetDurationText: String
     let headerSubtitle: String
-    let progress: CGFloat
-    let breathingTint: Color
     let showsBreathingOrb: Bool
     let breathingVisualState: MoriBreathingCycleVisualState
     let isRunning: Bool
+    let hasStarted: Bool
     let secondsRemaining: Int
     let timeText: String
     let cueText: String
@@ -604,229 +614,143 @@ struct MoriAttentionResetContent: View {
     let onPrimaryAction: () -> Void
     let onReset: () -> Void
 
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    private var isComplete: Bool {
+        secondsRemaining == 0
+    }
+
+    private var isPaused: Bool {
+        hasStarted && !isRunning && !isComplete
+    }
+
     var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 24) {
-                MoriPageHeader(
-                    eyebrow: context.eyebrow,
-                    title: context.title(durationText: resetDurationText),
-                    subtitle: headerSubtitle
-                )
+        GeometryReader { proxy in
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 0) {
+                    VStack(spacing: 7) {
+                        Text(context.eyebrow.uppercased())
+                            .font(.system(size: 11, weight: .semibold))
+                            .tracking(1.1)
+                            .foregroundColor(MoriColors.sanctuarySage)
 
-                MoriAttentionResetTimerVisual(
-                    progress: progress,
-                    breathingTint: breathingTint,
-                    showsBreathingOrb: showsBreathingOrb,
-                    breathingVisualState: breathingVisualState,
-                    isRunning: isRunning,
-                    timeText: timeText,
-                    cueText: cueText
-                )
+                        Text(context.title(durationText: resetDurationText))
+                            .font(MoriTypography.sanctuaryDisplay)
+                            .foregroundColor(MoriColors.sanctuaryInk)
+                            .multilineTextAlignment(.center)
+                            .lineLimit(dynamicTypeSize.isAccessibilitySize ? 3 : 1)
+                            .minimumScaleFactor(dynamicTypeSize.isAccessibilitySize ? 0.78 : 0.64)
 
-                MoriAttentionResetAppLimitCard(
-                    limitText: limitText,
-                    openWindowText: openWindowText
-                )
+                        Text(headerSubtitle)
+                            .font(MoriTheme.Typography.supporting)
+                            .foregroundColor(MoriColors.sanctuaryMuted)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .frame(maxWidth: 330)
+                    }
+                    .padding(.top, dynamicTypeSize.isAccessibilitySize ? 16 : 26)
 
-                MoriAttentionResetControlRow(
-                    context: context,
-                    isRunning: isRunning,
-                    secondsRemaining: secondsRemaining,
-                    onPrimaryAction: onPrimaryAction,
-                    onReset: onReset
-                )
+                    MoriResetBreathingComposition(
+                        context: context,
+                        visualState: breathingVisualState,
+                        isRunning: isRunning,
+                        showsBreathingOrb: showsBreathingOrb,
+                        timeText: timeText,
+                        cueText: cueText
+                    )
+                    .frame(height: dynamicTypeSize.isAccessibilitySize ? 286 : 326)
+                    .padding(.top, dynamicTypeSize.isAccessibilitySize ? 0 : 8)
+
+                    controlContent
+                        .padding(.top, dynamicTypeSize.isAccessibilitySize ? 6 : 12)
+
+                    MoriResetAppLimitNote(
+                        limitText: limitText,
+                        openWindowText: openWindowText
+                    )
+                    .padding(.top, 22)
+                }
+                .frame(maxWidth: .infinity, alignment: .top)
+                .frame(minHeight: proxy.size.height, alignment: .top)
+                .padding(.horizontal, 26)
+                .padding(.bottom, 32)
             }
-            .frame(maxWidth: .infinity, alignment: .top)
-            .padding(.horizontal, 20)
-            .padding(.top, 24)
-            .padding(.bottom, 28)
+        }
+    }
+
+    @ViewBuilder
+    private var controlContent: some View {
+        if isRunning || isPaused {
+            HStack(spacing: 14) {
+                MoriResetCompactButton(
+                    title: MoriL10n.display(isRunning ? "Pause" : "Resume"),
+                    icon: isRunning ? .pause : .play,
+                    action: onPrimaryAction
+                )
+
+                MoriResetLightweightAction(
+                    title: MoriL10n.display("Reset"),
+                    icon: .refresh,
+                    action: onReset
+                )
+                .accessibilityLabel(MoriL10n.string(
+                    "attention_reset.timer.reset_accessibility",
+                    defaultValue: "Reset %@ timer",
+                    arguments: [context.navigationTitle]
+                ))
+            }
+        } else {
+            MoriResetPrimaryButton(
+                title: MoriL10n.display(isComplete ? "Restart" : "Start"),
+                icon: isComplete ? .refresh : .play,
+                action: onPrimaryAction
+            )
         }
     }
 }
 
-private struct MoriAttentionResetTimerVisual: View {
-    let progress: CGFloat
-    let breathingTint: Color
-    let showsBreathingOrb: Bool
-    let breathingVisualState: MoriBreathingCycleVisualState
-    let isRunning: Bool
-    let timeText: String
-    let cueText: String
-    var diameter: CGFloat = 294
-    var visualHeight: CGFloat = 326
-
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var watercolorPulse = false
-
-    var body: some View {
-        VStack(spacing: 8) {
-            ZStack {
-                MoriGeneratedArtImage(art: .breathInkBloom, contentMode: .fit)
-                    .opacity(watercolorBloomOpacity)
-                    .blendMode(.multiply)
-                    .blur(radius: reduceMotion ? 0 : 10)
-                    .scaleEffect(watercolorBloomScale)
-                    .accessibilityHidden(true)
-
-                MoriGeneratedArtImage(art: .breathInkBloom, contentMode: .fit)
-                    .opacity(0.72)
-                    .blendMode(.multiply)
-                    .scaleEffect(watercolorRingScale)
-                    .rotationEffect(watercolorRingRotation)
-                    .accessibilityHidden(true)
-
-                Text(timeText)
-                    .font(.system(size: 54, weight: .medium, design: .serif))
-                    .foregroundColor(MoriColors.botanicalInk)
-                    .monospacedDigit()
-            }
-            .frame(width: diameter, height: diameter)
-            .frame(maxWidth: .infinity)
-            .moriReduceMotionAnimation(.easeInOut(duration: 0.34), value: breathingVisualState.scale)
-
-            Text(cueText)
-                .font(.system(size: 13, weight: .semibold))
-                .foregroundColor(MoriColors.botanicalMuted)
-                .multilineTextAlignment(.center)
-                .lineLimit(2)
-                .minimumScaleFactor(0.82)
-        }
-        .frame(maxWidth: .infinity)
-        .frame(height: visualHeight)
-        .onAppear(perform: updateWatercolorPulse)
-        .moriOnChange(of: isRunning, perform: updateWatercolorPulse)
-        .moriOnChange(of: showsBreathingOrb, perform: updateWatercolorPulse)
-        .moriOnChange(of: reduceMotion, perform: updateWatercolorPulse)
-    }
-
-    private var shouldAnimateGraphic: Bool {
-        (isRunning || showsBreathingOrb) && !reduceMotion
-    }
-
-    private var watercolorRingScale: CGFloat {
-        guard shouldAnimateGraphic else { return 1.0 }
-        let breathScale = 1 + (breathingVisualState.scale - 1) * 0.10
-        let pulseScale: CGFloat = watercolorPulse ? 1.045 : 0.975
-        return breathScale * pulseScale
-    }
-
-    private var watercolorBloomScale: CGFloat {
-        guard shouldAnimateGraphic else { return 1.02 }
-        return watercolorPulse ? 1.12 : 0.98
-    }
-
-    private var watercolorBloomOpacity: Double {
-        guard shouldAnimateGraphic else { return 0.08 }
-        return watercolorPulse ? 0.20 : 0.08
-    }
-
-    private var watercolorRingRotation: Angle {
-        guard shouldAnimateGraphic else { return .zero }
-        let progressDrift = Double(1 - progress) * 1.2
-        let pulseDrift = watercolorPulse ? 0.7 : -0.5
-        return .degrees(progressDrift + pulseDrift)
-    }
-
-    private func updateWatercolorPulse() {
-        guard shouldAnimateGraphic else {
-            withAnimation(.easeOut(duration: 0.28)) {
-                watercolorPulse = false
-            }
-            return
-        }
-
-        withAnimation(.easeInOut(duration: 4.8).repeatForever(autoreverses: true)) {
-            watercolorPulse = true
-        }
-    }
-}
-
-private struct MoriAttentionResetAppLimitCard: View {
+private struct MoriResetAppLimitNote: View {
     let limitText: String
     let openWindowText: String
 
     var body: some View {
-        VStack(spacing: 8) {
-            HStack(spacing: 7) {
-                MoriBitmapIconImage(icon: .timer, size: 14, opacity: 0.82)
-
-                Text(limitText)
-            }
-            .font(.system(size: 13, weight: .semibold))
-            .foregroundColor(MoriColors.botanicalInk)
-            .frame(maxWidth: .infinity, alignment: .leading)
+        VStack(spacing: 7) {
+            Text(limitText)
+                .font(.system(size: 13, weight: .medium))
+                .foregroundColor(MoriColors.sanctuaryInkSoft.opacity(0.86))
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
 
             Text(openWindowText)
-                .font(.system(size: 12, weight: .regular))
-                .foregroundColor(MoriColors.botanicalMuted)
-                .frame(maxWidth: .infinity, alignment: .leading)
+                .font(MoriTypography.caption)
+                .foregroundColor(MoriColors.sanctuaryMuted)
+                .multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
         }
-        .padding(14)
-        .background(MoriColors.botanicalPaperDeep.opacity(0.55))
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .frame(maxWidth: 330)
+        .accessibilityElement(children: .combine)
     }
 }
 
-private struct MoriAttentionResetControlRow: View {
-    let context: MoriAttentionResetContext
-    let isRunning: Bool
-    let secondsRemaining: Int
-    let onPrimaryAction: () -> Void
-    let onReset: () -> Void
-
-    private var primaryTitle: String {
-        if isRunning {
-            return MoriL10n.display("Pause")
-        }
-
-        if secondsRemaining == 0 {
-            return MoriL10n.display("Restart")
-        }
-
-        switch context {
-        case .beforeFeed:
-            return MoriL10n.display("Start reset")
-        case .morningGate:
-            return MoriL10n.display("Start")
-        }
-    }
-
-    private var primaryIcon: MoriBitmapIcon {
-        isRunning ? .pause : .play
-    }
+private struct MoriResetLightweightAction: View {
+    let title: String
+    let icon: MoriBitmapIcon
+    let action: () -> Void
 
     var body: some View {
-        HStack(spacing: 12) {
-            Button(action: onPrimaryAction) {
-                HStack(spacing: 8) {
-                    MoriBitmapIconImage(icon: primaryIcon, size: 16, opacity: 0.94)
-                        .frame(width: 24, height: 24)
-                        .background(MoriColors.sanctuarySurface.opacity(0.86))
-                        .clipShape(Circle())
+        Button(action: action) {
+            HStack(spacing: 7) {
+                MoriBitmapIconImage(icon: icon, size: 12, opacity: 0.68)
 
-                    Text(primaryTitle)
-                }
-                .font(.system(size: 15, weight: .semibold))
-                .foregroundColor(MoriColors.botanicalSurface)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .background(MoriColors.botanicalInk)
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                Text(title)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.82)
             }
-            .buttonStyle(.plain)
-
-            Button(action: onReset) {
-                MoriBitmapIconImage(icon: .refresh, size: 17, opacity: 0.86)
-                    .frame(width: 50, height: 50)
-                    .background(MoriColors.botanicalInk.opacity(0.08))
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(MoriL10n.string(
-                "attention_reset.timer.reset_accessibility",
-                defaultValue: "Reset %@ timer",
-                arguments: [context.navigationTitle]
-            ))
+            .font(.system(size: 14, weight: .medium))
+            .foregroundColor(MoriColors.sanctuaryMuted)
+            .padding(.horizontal, 10)
+            .frame(minHeight: 44)
         }
+        .buttonStyle(.plain)
     }
 }

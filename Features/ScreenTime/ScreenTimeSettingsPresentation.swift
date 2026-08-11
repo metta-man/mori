@@ -19,7 +19,7 @@ enum MoriScreenTimeBlockListSource: String, CaseIterable, Identifiable {
     var icon: MoriBitmapIcon {
         switch self {
         case .defaultList, .customList:
-            return .lockShield
+            return .appLimit
         }
     }
 }

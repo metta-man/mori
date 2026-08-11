@@ -74,7 +74,7 @@ struct LogbookEntrySheet: View {
                     )
 
                     VStack(alignment: .leading, spacing: 14) {
-                        HabitTrackerBitmapLabel(title: "Pattern Log", icon: .refresh, iconSize: 16, iconOpacity: 0.86)
+                        HabitTrackerBitmapLabel(title: "Pattern Log", icon: .pattern, iconSize: 16, iconOpacity: 0.86)
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundColor(MoriColors.botanicalMoss)
 

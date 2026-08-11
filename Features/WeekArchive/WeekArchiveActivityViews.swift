@@ -28,7 +28,7 @@ struct WeekArchiveActivitySection: View {
 
             ForEach(habitEntries.filter(\.hasPatternLog).prefix(3)) { entry in
                 WeekArchiveActivityRow(
-                    icon: .refresh,
+                    icon: .pattern,
                     tint: MoriColors.botanicalSeed,
                     title: "Pattern Log",
                     subtitle: "\(dateFormatter.string(from: entry.date)) · \(entry.tone.title)",

@@ -67,7 +67,7 @@ struct SettingsView: View {
                         SettingsCompactLink(
                             title: "Language",
                             value: settings.localePreference.displayName,
-                            icon: .journal
+                            icon: .language
                         )
                     }
                 }
@@ -77,7 +77,7 @@ struct SettingsView: View {
                         SettingsCompactLink(
                             title: "App and Data",
                             subtitle: "Onboarding and saved check-ins.",
-                            icon: .refresh
+                            icon: .appData
                         )
                     }
 

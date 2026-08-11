@@ -124,7 +124,7 @@ struct HabitTrackerView: View {
                         Button {
                             openPatternLog()
                         } label: {
-                            MoriBitmapIconImage(icon: .refresh, size: 18, opacity: 0.82)
+                            MoriBitmapIconImage(icon: .pattern, size: 18, opacity: 0.82)
                         }
                         .accessibility(label: Text(MoriL10n.display("Open pattern log")))
 

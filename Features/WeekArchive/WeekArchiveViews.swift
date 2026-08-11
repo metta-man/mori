@@ -129,10 +129,46 @@ struct WeekArchiveDetailView: View {
     private func activeSheetContent(_ sheet: WeekArchiveSheet) -> some View {
         switch sheet {
         case .day(let summary):
-            WeekArchiveDayDetailSheet(summary: summary)
+            WeekArchiveDayDetailSheet(
+                summary: summary,
+                onSaveDayLog: saveDayLog
+            )
                 .presentationDetents([.height(607), .large])
                 .presentationDragIndicator(.visible)
         }
+    }
+
+    private func saveDayLog(
+        date: Date,
+        tone: HabitDayTone,
+        note: String?,
+        photoAttachments: [GratitudePhotoAttachment]
+    ) -> WeekArchiveDaySummary {
+        let existingEntry = archiveData.daySummary(for: date).habitEntry
+
+        _ = HabitDataManager.shared.saveEntry(
+            on: date,
+            tone: tone,
+            note: note,
+            trigger: existingEntry?.trigger,
+            thought: existingEntry?.thought,
+            feeling: existingEntry?.feeling,
+            responsePlan: existingEntry?.responsePlan
+        )
+
+        GratitudeEntryStore.live.saveDayLogEntry(
+            on: date,
+            tone: tone,
+            note: note,
+            trigger: existingEntry?.trigger,
+            thought: existingEntry?.thought,
+            feeling: existingEntry?.feeling,
+            responsePlan: existingEntry?.responsePlan,
+            photoAttachments: photoAttachments
+        )
+
+        loadArchiveRecords()
+        return archiveData.daySummary(for: date)
     }
 
     private func openMonth(_ month: Int) {

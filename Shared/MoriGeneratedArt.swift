@@ -38,6 +38,11 @@ enum MoriBitmapIcon: String, CaseIterable, Codable {
     case lockShield = "moriIconLockShield"
     case timer = "moriIconTimer"
     case heart = "moriIconHeart"
+    case beforeFeedReset = "moriIconBeforeFeedReset"
+    case appLimit = "moriIconAppLimit"
+    case pattern = "moriIconPattern"
+    case language = "moriIconLanguage"
+    case appData = "moriIconAppData"
 
     static func fromLegacySymbolName(_ symbolName: String) -> MoriBitmapIcon {
         let lowered = symbolName.lowercased()
@@ -48,7 +53,10 @@ enum MoriBitmapIcon: String, CaseIterable, Codable {
         if lowered.contains("spark") || lowered.contains("pulse") { return .pulse }
         if lowered.contains("book") || lowered.contains("pencil") { return .journal }
         if lowered.contains("moon") { return .quiet }
-        if lowered.contains("app") || lowered.contains("iphone") { return .lockShield }
+        if lowered.contains("language") || lowered.contains("globe") { return .language }
+        if lowered.contains("database") || lowered.contains("externaldrive") { return .appData }
+        if lowered.contains("point.3") || lowered.contains("pattern") { return .pattern }
+        if lowered.contains("app") || lowered.contains("iphone") { return .appLimit }
         if lowered.contains("gear") || lowered.contains("slider") { return .settings }
         if lowered.contains("chevron") { return .chevron }
         if lowered.contains("plus") { return .plus }
@@ -112,6 +120,16 @@ enum MoriBitmapIcon: String, CaseIterable, Codable {
             return "timer"
         case .heart:
             return "heart"
+        case .beforeFeedReset:
+            return "pause.circle"
+        case .appLimit:
+            return "shield"
+        case .pattern:
+            return "point.3.connected.trianglepath.dotted"
+        case .language:
+            return "globe"
+        case .appData:
+            return "externaldrive"
         }
     }
 }
@@ -262,13 +280,13 @@ extension MoriProductSymbol {
     var bitmapIcon: MoriBitmapIcon {
         switch self {
         case .beforeFeedReset:
-            return .leaf
+            return .beforeFeedReset
         case .morningReset:
             return .leaf
         case .attentionStreak:
             return .pulse
         case .appLimit:
-            return .lockShield
+            return .appLimit
         case .weekArchive:
             return .roots
         case .dailyLog:

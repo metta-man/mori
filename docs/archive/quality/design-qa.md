@@ -115,75 +115,6 @@ final result: passed
 
 ---
 
-# Mori Before Feed / Morning Reset alignment — Design QA (2026-08-10)
-
-## Source visual truth
-
-- Before Feed target: `/tmp/codex-remote-attachments/019feb78-e18a-7c71-838a-9ca47f5f8681/D1131809-EF74-4551-BA49-E3334A6E8856/2-Photo-2.jpg`.
-- Morning Reset baseline: `/tmp/codex-remote-attachments/019feb78-e18a-7c71-838a-9ca47f5f8681/D1131809-EF74-4551-BA49-E3334A6E8856/1-Photo-1.jpg`.
-- Product direction: `DesignReferences/MORI_DESIGN_SPEC.md`, especially the sanctuary visual language and section 7.3 attention-reset guidance.
-- Approved Mori atmosphere reference: `DesignReferences/mori-approved-reference.jpeg`.
-
-## Implementation and viewport
-
-- Implementation: `Features/ScreenTime/MoriAttentionResetSheets.swift` and `Features/ScreenTime/MoriAttentionResetSupportViews.swift`.
-- Native runtime: iPhone 15 Pro Max Simulator, 430 × 932 pt at 3× density.
-- Raw captures: 1290 × 2796 px; normalized comparisons: 590 × 1280 px to match the supplied phone captures.
-- Before Feed state: active breathing session with compact Pause control.
-- Morning Reset state: idle 30:00 session with primary Start control.
-
-## Full-view and focused evidence
-
-- Final Before Feed capture: `output/screenshot-audit/reset-alignment-2026-08-10/final/before-feed.png`.
-- Final Morning Reset capture: `output/screenshot-audit/reset-alignment-2026-08-10/final/morning-reset.png`.
-- Before Feed source/implementation comparison: `output/screenshot-audit/reset-alignment-2026-08-10/final/before-feed-comparison.png`.
-- Morning Reset alignment comparison: `output/screenshot-audit/reset-alignment-2026-08-10/final/morning-reset-comparison.png`.
-- Focused safe-area comparison: `output/screenshot-audit/reset-alignment-2026-08-10/final/bottom-safe-area-comparison.png`.
-- Focused Morning composition comparison: `output/screenshot-audit/reset-alignment-2026-08-10/final/morning-composition-focused.png`.
-- Expected state difference: the deterministic Before Feed QA route includes one extra route-context sentence that is not present in the supplied capture; the attention-reset composition beneath it is the fidelity target.
-
-## Findings
-
-No actionable P0, P1, or P2 visual, interaction, accessibility, or regression findings remain.
-
-- [P3] Accessibility Dynamic Type and non-English expansion were reviewed structurally but not captured as separate final screenshots.
-  - The screen remains scrollable, the editorial title permits additional lines at accessibility sizes, and copy continues to use existing localized keys.
-  - No concrete clipping or localization defect was found in source review.
-
-## Required fidelity surfaces
-
-- Typography: passed. Morning Reset now follows Before Feed's compact centered navigation title, quiet trailing action, centered eyebrow, one-line editorial serif title at normal sizes, and restrained supporting copy.
-- Spacing and hierarchy: passed. The title, breathing bloom/countdown, primary or compact control, and supporting note form one continuous centered composition rather than separate settings-style cards.
-- Colors and materials: passed. Both screens use the same warm paper, deep botanical ink, pale sage washes, and low-emphasis secondary text tokens.
-- Image fidelity: passed. Existing real Mori assets (`breathInkBloom`, `breathLandscapeWash`, and paper textures) are reused; no placeholder or code-drawn artwork was introduced.
-- Bottom safe area: passed. Before Feed's paper/landscape background now extends through the home-indicator inset while interactive content keeps its safe placement.
-- Copy and behavior: passed. Existing timer, start, pause/resume, reset, completion, dismissal, Morning Gate, persistence, and app-unlock paths remain wired to their original actions.
-- Accessibility: passed at source-review level. Controls retain at least 44 pt hit areas, breathing status has a contextual accessibility label, Reduce Motion remains supported by the existing bloom component, and the page remains vertically scrollable.
-
-## Comparison history
-
-1. Pass 1 — shared attention-reset background, compact header, and breathing composition implemented.
-   - [P2] Morning Reset's title wrapped to two lines and weakened the Before Feed hierarchy.
-   - [P2] A tiny timer image beside the low-priority limit note read as an orphan radio dot.
-2. Pass 2 — the normal-size Morning title was constrained to one editorial line, while accessibility sizes retain wrapping.
-   - Title/timer rhythm aligned with Before Feed; the stray note image remained the only visible P2 issue.
-3. Final refinement — removed the decorative note image and recaptured both screens.
-   - Side-by-side and focused comparisons show no remaining P0/P1/P2 mismatch.
-
-## Verification
-
-- Task-only clean simulator build: passed twice against the final two-file patch.
-- Final native runtime launch and screenshots: passed on iPhone 15 Pro Max Simulator.
-- Compiled app artifact audit (`scripts/check_compiled_design_artifacts.sh`): passed.
-- `git diff --check` for both implementation files: passed.
-- Independent focused code and screenshot review: passed with no P0/P1/P2 findings.
-- The project currently has no XCTest/UI test target; simulator execution and the production-scheme build are the available executable verification.
-- Concurrent unrelated worktree edits were preserved and excluded from this task-only verification.
-
-final result: passed
-
----
-
 # Mori Before Feed four-state flow — Design QA (2026-07-22)
 
 ## Comparison target
@@ -864,5 +795,74 @@ A separate crop was not needed: the final side-by-side comparison is retained at
 - [x] Calm root-view and modal presentation treatment implemented.
 - [x] Reduce Motion and small-screen behavior verified.
 - [x] Final source/implementation comparison passed.
+
+final result: passed
+
+---
+
+# Mori Before Feed / Morning Reset alignment — Design QA (2026-08-10)
+
+## Source visual truth
+
+- Before Feed target: `/tmp/codex-remote-attachments/019feb78-e18a-7c71-838a-9ca47f5f8681/D1131809-EF74-4551-BA49-E3334A6E8856/2-Photo-2.jpg`.
+- Morning Reset baseline: `/tmp/codex-remote-attachments/019feb78-e18a-7c71-838a-9ca47f5f8681/D1131809-EF74-4551-BA49-E3334A6E8856/1-Photo-1.jpg`.
+- Product direction: `DesignReferences/MORI_DESIGN_SPEC.md`, especially the sanctuary visual language and section 7.3 attention-reset guidance.
+- Approved Mori atmosphere reference: `DesignReferences/mori-approved-reference.jpeg`.
+
+## Implementation and viewport
+
+- Implementation: `Features/ScreenTime/MoriAttentionResetSheets.swift` and `Features/ScreenTime/MoriAttentionResetSupportViews.swift`.
+- Native runtime: iPhone 15 Pro Max Simulator, 430 × 932 pt at 3× density.
+- Raw captures: 1290 × 2796 px; normalized comparisons: 590 × 1280 px to match the supplied phone captures.
+- Before Feed state: active breathing session with compact Pause control.
+- Morning Reset state: idle 30:00 session with primary Start control.
+
+## Full-view and focused evidence
+
+- Final Before Feed capture: `output/screenshot-audit/reset-alignment-2026-08-10/final/before-feed.png`.
+- Final Morning Reset capture: `output/screenshot-audit/reset-alignment-2026-08-10/final/morning-reset.png`.
+- Before Feed source/implementation comparison: `output/screenshot-audit/reset-alignment-2026-08-10/final/before-feed-comparison.png`.
+- Morning Reset alignment comparison: `output/screenshot-audit/reset-alignment-2026-08-10/final/morning-reset-comparison.png`.
+- Focused safe-area comparison: `output/screenshot-audit/reset-alignment-2026-08-10/final/bottom-safe-area-comparison.png`.
+- Focused Morning composition comparison: `output/screenshot-audit/reset-alignment-2026-08-10/final/morning-composition-focused.png`.
+- Expected state difference: the deterministic Before Feed QA route includes one extra route-context sentence that is not present in the supplied capture; the attention-reset composition beneath it is the fidelity target.
+
+## Findings
+
+No actionable P0, P1, or P2 visual, interaction, accessibility, or regression findings remain.
+
+- [P3] Accessibility Dynamic Type and non-English expansion were reviewed structurally but not captured as separate final screenshots.
+  - The screen remains scrollable, the editorial title permits additional lines at accessibility sizes, and copy continues to use existing localized keys.
+  - No concrete clipping or localization defect was found in source review.
+
+## Required fidelity surfaces
+
+- Typography: passed. Morning Reset now follows Before Feed's compact centered navigation title, quiet trailing action, centered eyebrow, one-line editorial serif title at normal sizes, and restrained supporting copy.
+- Spacing and hierarchy: passed. The title, breathing bloom/countdown, primary or compact control, and supporting note form one continuous centered composition rather than separate settings-style cards.
+- Colors and materials: passed. Both screens use the same warm paper, deep botanical ink, pale sage washes, and low-emphasis secondary text tokens.
+- Image fidelity: passed. Existing real Mori assets (`breathInkBloom`, `breathLandscapeWash`, and paper textures) are reused; no placeholder or code-drawn artwork was introduced.
+- Bottom safe area: passed. Before Feed's paper/landscape background now extends through the home-indicator inset while interactive content keeps its safe placement.
+- Copy and behavior: passed. Existing timer, start, pause/resume, reset, completion, dismissal, Morning Gate, persistence, and app-unlock paths remain wired to their original actions.
+- Accessibility: passed at source-review level. Controls retain at least 44 pt hit areas, breathing status has a contextual accessibility label, Reduce Motion remains supported by the existing bloom component, and the page remains vertically scrollable.
+
+## Comparison history
+
+1. Pass 1 — shared attention-reset background, compact header, and breathing composition implemented.
+   - [P2] Morning Reset's title wrapped to two lines and weakened the Before Feed hierarchy.
+   - [P2] A tiny timer image beside the low-priority limit note read as an orphan radio dot.
+2. Pass 2 — the normal-size Morning title was constrained to one editorial line, while accessibility sizes retain wrapping.
+   - Title/timer rhythm aligned with Before Feed; the stray note image remained the only visible P2 issue.
+3. Final refinement — removed the decorative note image and recaptured both screens.
+   - Side-by-side and focused comparisons show no remaining P0/P1/P2 mismatch.
+
+## Verification
+
+- Task-only clean simulator build: passed twice against the final two-file patch.
+- Final native runtime launch and screenshots: passed on iPhone 15 Pro Max Simulator.
+- Compiled app artifact audit (`scripts/check_compiled_design_artifacts.sh`): passed.
+- `git diff --check` for both implementation files: passed.
+- Independent focused code and screenshot review: passed with no P0/P1/P2 findings.
+- The project currently has no XCTest/UI test target; simulator execution and the production-scheme build are the available executable verification.
+- Concurrent unrelated worktree edits were preserved and excluded from this task-only verification.
 
 final result: passed
