@@ -82,11 +82,12 @@ private struct MoriTabBarItem: View {
     var body: some View {
         Button(action: onSelect) {
             VStack(spacing: 4) {
-                Image(systemName: tab.bitmapIcon.legacySystemName)
-                    .font(.system(size: isSelected ? 24 : 22, weight: isSelected ? .medium : .regular))
-                    .foregroundColor(MoriV2Palette.forestInk)
-                    .opacity(isSelected ? 1 : 0.46)
-                    .frame(width: 34, height: 28)
+                MoriBitmapIconImage(
+                    icon: tab.bitmapIcon,
+                    size: isSelected ? 27 : 25,
+                    opacity: isSelected ? 1 : 0.46
+                )
+                .frame(width: 34, height: 29)
 
                 Text(tab.title)
                     .font(.system(size: 11.5, weight: isSelected ? .semibold : .medium))
