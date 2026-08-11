@@ -206,26 +206,30 @@ private struct MoriAttentionResetSheet: View {
         return MoriL10n.display("Breathe at your own pace")
     }
 
+    private var morningResetBreathingCueText: String {
+        if !isRunning, activeElapsed > 0, secondsRemaining > 0 {
+            return MoriL10n.display("Paused")
+        }
+
+        return breathingState.cueText
+    }
+
+    private var backgroundVariant: MoriBotanicalScreenBackdrop.Variant {
+        switch context {
+        case .beforeFeed:
+            return beforeFeedStage == .pause ? .breath : .appLimit
+        case .morningGate:
+            return (isRunning || activeElapsed > 0) && secondsRemaining > 0
+                ? .breath
+                : .appLimit
+        }
+    }
+
     var body: some View {
         Color.clear
             .background {
-                if context == .beforeFeed {
-                    MoriBeforeFeedSheetBackground(
-                        variant: beforeFeedStage == .pause ? .breath : .appLimit
-                    )
-                } else {
-                    ZStack(alignment: .bottom) {
-                        MoriPaperBackground(variant: .appLimit) {
-                            Color.clear
-                        }
-
-                        MoriGeneratedArtImage(art: .breathLandscapeWash, contentMode: .fill)
-                            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
-                            .opacity(0.44)
-                            .blendMode(.multiply)
-                            .allowsHitTesting(false)
-                    }
-                }
+                MoriAttentionResetSheetBackground(variant: backgroundVariant)
+                    .ignoresSafeArea(edges: [.top, .bottom])
             }
             .overlay(alignment: .top) {
                 VStack(spacing: 0) {
@@ -234,7 +238,6 @@ private struct MoriAttentionResetSheet: View {
                         actionTitle: context == .beforeFeed
                             ? MoriL10n.display("Close")
                             : MoriL10n.display("Done"),
-                        style: context == .beforeFeed ? .beforeFeed : .standard,
                         onDone: resetAndDismiss
                     )
 
@@ -294,18 +297,17 @@ private struct MoriAttentionResetSheet: View {
                 )
             }
         case .morningGate:
-            MoriAttentionResetContent(
+            MoriMorningResetContent(
                 context: context,
                 resetDurationText: resetDurationText,
                 headerSubtitle: breathingState.headerSubtitle,
-                progress: progress,
-                breathingTint: breathingState.tint,
                 showsBreathingOrb: breathingState.hasTechnique,
                 breathingVisualState: breathingState.visualState,
                 isRunning: isRunning,
+                hasStarted: activeElapsed > 0,
                 secondsRemaining: secondsRemaining,
                 timeText: timeText,
-                cueText: breathingState.cueText,
+                cueText: morningResetBreathingCueText,
                 limitText: limitText,
                 openWindowText: openWindowText,
                 onPrimaryAction: toggleResetRunning,
@@ -578,23 +580,19 @@ private struct MoriAttentionResetSheet: View {
     }
 }
 
-private enum MoriAttentionResetSheetHeaderStyle {
-    case standard
-    case beforeFeed
-}
-
 private struct MoriAttentionResetSheetHeader: View {
     let title: String
     let actionTitle: String
-    let style: MoriAttentionResetSheetHeaderStyle
     let onDone: () -> Void
 
     var body: some View {
         ZStack {
             Text(title)
-                .font(.system(size: style == .beforeFeed ? 16 : 18, weight: .semibold))
+                .font(.system(size: 16, weight: .semibold))
                 .foregroundColor(MoriColors.botanicalInk)
                 .lineLimit(1)
+                .minimumScaleFactor(0.82)
+                .padding(.horizontal, 68)
 
             HStack {
                 Spacer()
@@ -602,35 +600,19 @@ private struct MoriAttentionResetSheetHeader: View {
                 Button(actionTitle) {
                     onDone()
                 }
-                .font(.system(size: style == .beforeFeed ? 15 : 21, weight: style == .beforeFeed ? .medium : .regular))
-                .foregroundColor(style == .beforeFeed ? MoriColors.botanicalMuted : MoriColors.botanicalInk)
+                .font(.system(size: 15, weight: .medium))
+                .foregroundColor(MoriColors.botanicalMuted)
                 .frame(minWidth: 56, minHeight: 44)
-                .padding(.horizontal, style == .beforeFeed ? 0 : 13)
-                .background {
-                    if style == .standard {
-                        Capsule()
-                            .fill(MoriColors.botanicalPaper.opacity(0.92))
-                            .overlay {
-                                Capsule()
-                                    .stroke(MoriColors.botanicalLine.opacity(0.58), lineWidth: 0.8)
-                            }
-                    }
-                }
                 .buttonStyle(.plain)
             }
         }
         .padding(.horizontal, 20)
         .frame(maxWidth: .infinity)
-        .frame(height: style == .beforeFeed ? 64 : 82)
-        .background {
-            if style == .standard {
-                MoriAttentionResetSheetHeaderBackground()
-            }
-        }
+        .frame(minHeight: 64)
     }
 }
 
-private struct MoriBeforeFeedSheetBackground: View {
+private struct MoriAttentionResetSheetBackground: View {
     let variant: MoriBotanicalScreenBackdrop.Variant
 
     var body: some View {
@@ -653,38 +635,6 @@ private struct MoriBeforeFeedSheetBackground: View {
             .frame(width: proxy.size.width, height: proxy.size.height)
         }
         .allowsHitTesting(false)
-        .accessibilityHidden(true)
-    }
-}
-
-private struct MoriAttentionResetSheetHeaderBackground: View {
-    var body: some View {
-        ZStack {
-            Rectangle()
-                .fill(.ultraThinMaterial)
-
-            MoriGeneratedArtImage(art: .paperWash, contentMode: .fill)
-                .opacity(0.20)
-                .blendMode(.multiply)
-
-            LinearGradient(
-                colors: [
-                    MoriColors.sanctuaryFern.opacity(0.08),
-                    MoriColors.botanicalPaper.opacity(0.34),
-                    MoriColors.sanctuarySand.opacity(0.08)
-                ],
-                startPoint: .topTrailing,
-                endPoint: .bottomLeading
-            )
-            .blendMode(.multiply)
-
-            MoriColors.botanicalPaper.opacity(0.58)
-        }
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(MoriColors.botanicalLine.opacity(0.34))
-                .frame(height: 0.7)
-        }
         .accessibilityHidden(true)
     }
 }
