@@ -94,7 +94,8 @@ struct TodayView: View {
                 focus: $todayFocus,
                 morningDurationText: MorningGate.formattedDuration(morningGateDurationSeconds),
                 onOpenMorningReset: openMorningReset,
-                onOpenWeekArchive: openWeekArchive
+                onOpenWeekArchive: openWeekArchive,
+                onOpenRecovery: openRecovery
             )
             .padding(.top, 13)
         }
@@ -142,6 +143,10 @@ struct TodayView: View {
         openTodayRoute(.weekArchiveDetail)
     }
 
+    private func openRecovery() {
+        openTodayRoute(.recovery)
+    }
+
     private func handleLaunchRequestIfNeeded() {
         guard let launchRequest, handledLaunchRequestID != launchRequest.id else { return }
         handledLaunchRequestID = launchRequest.id
@@ -149,6 +154,8 @@ struct TodayView: View {
         switch launchRequest.kind {
         case .weekArchiveDetail:
             openTodayRoute(.weekArchiveDetail)
+        case .recovery:
+            openTodayRoute(.recovery)
         }
     }
 

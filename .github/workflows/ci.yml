@@ -103,10 +103,9 @@ jobs:
     - name: Export .ipa
       run: |
         # Update exportOptions with DEVELOPMENT_TEAM
-        /usr/libexec/PlistBuddy -c "Set :signingStyle manual" exportOptions.plist
+        /usr/libexec/PlistBuddy -c "Set :signingStyle automatic" exportOptions.plist
         /usr/libexec/PlistBuddy -c "Set :developmentTeam ${{ secrets.DEVELOPMENT_TEAM }}" exportOptions.plist
-        /usr/libexec/PlistBuddy -c "Set :signingCertificate 'Apple Distribution'" exportOptions.plist
-        /usr/libexec/PlistBuddy -c "Set :method 'ad-hoc'" exportOptions.plist
+        /usr/libexec/PlistBuddy -c "Set :method 'app-store-connect'" exportOptions.plist
 
         xcodebuild -exportArchive \
           -archivePath build/Mori.xcarchive \

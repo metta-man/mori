@@ -120,6 +120,14 @@ struct GratitudeCloudBackup {
         return try backup.entries.map { try $0.gratitudeEntry() }
     }
 
+    func delete() async throws {
+        do {
+            _ = try await database.deleteRecord(withID: CKRecord.ID(recordName: Self.recordName))
+        } catch let error as CKError where error.code == .unknownItem {
+            return
+        }
+    }
+
     static func encode(_ backup: GratitudeJournalBackup) throws -> Data {
         let encoder = JSONEncoder()
         encoder.outputFormatting = [.prettyPrinted, .sortedKeys]

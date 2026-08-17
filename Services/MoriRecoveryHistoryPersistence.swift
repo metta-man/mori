@@ -32,4 +32,6 @@ struct MoriRecoveryHistoryPersistence {
         guard let data = try? encoder.encode(indicators) else { return }
         defaults.set(data, forKey: Key.indicators)
     }
+
+    func clear() { defaults.removeObject(forKey: Key.indicators) }
 }

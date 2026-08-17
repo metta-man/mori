@@ -62,6 +62,16 @@ struct GratitudeEntryStore {
         MoriDataChangeEvent.gratitude.post(notificationCenter: notificationCenter)
     }
 
+    func deleteLocalEntries() {
+        defaults.removeObject(forKey: Key.entries)
+        MoriDataChangeEvent.gratitude.post(notificationCenter: notificationCenter)
+    }
+
+    func deleteICloudMirror() {
+        ubiquitousStore.removeObject(forKey: Key.iCloudEntries)
+        ubiquitousStore.synchronize()
+    }
+
     func saveJournalEntry(
         on date: Date,
         content: String,

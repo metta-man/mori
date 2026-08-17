@@ -4,6 +4,7 @@ import ManagedSettings
 
 enum TodayNavigationRoute: Hashable {
     case weekArchiveDetail
+    case recovery
 }
 
 struct TodayRouteAction {
@@ -580,6 +581,7 @@ struct TodaySecondaryContextCard: View {
     let morningDurationText: String
     let onOpenMorningReset: () -> Void
     let onOpenWeekArchive: () -> Void
+    let onOpenRecovery: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -614,7 +616,7 @@ struct TodaySecondaryContextCard: View {
         .buttonStyle(MoriV2PressButtonStyle())
         .accessibilityLabel(MoriL10n.display("Other resets"))
         .accessibilityValue(MoriL10n.display(isShowingOtherResets ? "Expanded" : "Collapsed"))
-        .accessibilityHint(MoriL10n.display(isShowingOtherResets ? "Hides other resets" : "Shows Morning Reset and Week Archive"))
+        .accessibilityHint(MoriL10n.display(isShowingOtherResets ? "Hides other resets" : "Shows Morning Reset, Recovery, and Life Grid"))
     }
 
     @ViewBuilder
@@ -623,11 +625,14 @@ struct TodaySecondaryContextCard: View {
             VStack(spacing: 0) {
                 morningResetAction
                 TodayHairlineDivider()
+                recoveryAction
+                TodayHairlineDivider()
                 weekArchiveAction
             }
             .modifier(TodaySecondaryActionSurface())
         } else {
-            HStack(spacing: 0) {
+            VStack(spacing: 0) {
+                HStack(spacing: 0) {
                 morningResetAction
 
                 Rectangle()
@@ -635,6 +640,9 @@ struct TodaySecondaryContextCard: View {
                     .frame(width: 1, height: 28)
                     .accessibilityHidden(true)
 
+                    recoveryAction
+                }
+                TodayHairlineDivider()
                 weekArchiveAction
             }
             .modifier(TodaySecondaryActionSurface())
@@ -656,10 +664,19 @@ struct TodaySecondaryContextCard: View {
 
     private var weekArchiveAction: some View {
         TodaySecondaryActionRow(
-            title: "Week Archive",
+            title: "Life Grid",
             subtitle: "Return to earlier notes only when you choose.",
             icon: .journal,
             action: onOpenWeekArchive
+        )
+    }
+
+    private var recoveryAction: some View {
+        TodaySecondaryActionRow(
+            title: "Recovery",
+            subtitle: "A private signal calculated on this iPhone.",
+            icon: .heart,
+            action: onOpenRecovery
         )
     }
 }

@@ -4,6 +4,7 @@ import SwiftUI
 struct MoriWatchApp: App {
     @Environment(\.scenePhase) private var scenePhase
     @StateObject private var notificationCenter = MoriWatchNotificationCenter.shared
+    @StateObject private var routeStore = MoriWatchRouteStore.shared
     @AppStorage(MoriLocalePreference.defaultsKey, store: MoriSharedDefaults.shared) private var localePreferenceRaw = MoriLocalePreference.system.rawValue
 
     init() {
@@ -13,10 +14,11 @@ struct MoriWatchApp: App {
 
     var body: some Scene {
         WindowGroup {
-            MoriWatchResetHub(notificationCenter: notificationCenter)
+            MoriWatchResetHub(notificationCenter: notificationCenter, routeStore: routeStore)
                 .environment(\.locale, localePreference.locale)
                 .id(localePreference.rawValue)
-                .onOpenURL { _ in
+                .onOpenURL { url in
+                    routeStore.open(url)
                     MoriWatchSettingsReceiver.shared.activate()
                 }
                 .onChange(of: scenePhase) { _, phase in

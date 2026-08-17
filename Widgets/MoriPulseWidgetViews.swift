@@ -7,36 +7,31 @@ struct PulseSmallWidget: View {
     var body: some View {
         MoriWidgetShell {
             VStack(alignment: .leading, spacing: 10) {
-                MoriWidgetHeader(title: "Pulse", icon: .pulse)
+                MoriWidgetHeader(title: "Recovery", icon: .heart)
 
-                Text(context.displayPulseTopic)
-                    .font(.system(size: 12, weight: .semibold, design: .rounded))
-                    .foregroundStyle(MoriWidgetColors.moss)
-                    .lineLimit(1)
+                Text(context.recoveryScoreText)
+                    .font(.system(size: 34, weight: .light, design: .rounded))
+                    .foregroundStyle(MoriWidgetColors.ink)
+                    .monospacedDigit()
                     .widgetAccentable()
 
-                Text(context.displayPulseHeadline)
-                    .font(.system(size: 19, weight: .semibold, design: .rounded))
-                    .foregroundStyle(MoriWidgetColors.ink)
-                    .minimumScaleFactor(0.72)
-                    .lineLimit(4)
+                Text(context.displayRecoveryState)
+                    .font(.system(size: 14, weight: .semibold, design: .rounded))
+                    .foregroundStyle(MoriWidgetColors.moss)
+                    .lineLimit(1)
 
                 Spacer(minLength: 0)
 
-                HStack(spacing: 7) {
-                    MoriWidgetMiniMetric(
-                        title: context.hasRecoverySnapshot ? "Recovery" : "Bloom",
-                        value: context.hasRecoverySnapshot ? context.recoveryScoreText : context.bloomPercentText,
-                        icon: context.hasRecoverySnapshot ? .heart : .leaf
-                    )
-                    MoriWidgetMiniMetric(title: "Seeds", value: "\(context.seedsToday)", icon: .leaf)
-                }
+                Text(context.displayRecoveryDetail)
+                    .font(.system(size: 11, weight: .medium, design: .rounded))
+                    .foregroundStyle(MoriWidgetColors.mutedInk)
+                    .lineLimit(2)
             }
         }
         .accessibilityLabel(MoriL10n.string(
-            "widget.pulse.accessibility",
-            defaultValue: "Pulse. %@. Bloom %@.",
-            arguments: [context.displayPulseHeadline, context.bloomPercentText]
+            "widget.recovery.accessibility",
+            defaultValue: "Recovery %@. %@.",
+            arguments: [context.recoveryScoreText, context.displayRecoveryState]
         ))
     }
 }
@@ -48,38 +43,38 @@ struct PulseMediumWidget: View {
         MoriWidgetShell(contentPadding: 10) {
             HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 7) {
-                    MoriWidgetHeader(title: context.isPulseFreshToday ? "Fresh Pulse" : "Pulse", icon: .pulse)
+                    MoriWidgetHeader(title: "Recovery", icon: .heart)
 
-                    Text(context.displayPulseHeadline)
+                    Text(context.displayRecoveryDetail)
                         .font(.system(size: 17, weight: .semibold, design: .rounded))
                         .foregroundStyle(MoriWidgetColors.ink)
                         .minimumScaleFactor(0.74)
                         .lineLimit(2)
 
-                    MoriWidgetActionLinks(style: .compact)
+                    Text(MoriL10n.display("Calculated privately on this iPhone."))
+                        .font(.system(size: 10, weight: .medium, design: .rounded))
+                        .foregroundStyle(MoriWidgetColors.mutedInk)
+                        .lineLimit(2)
                 }
                 .frame(maxWidth: .infinity, alignment: .topLeading)
 
                 VStack(alignment: .leading, spacing: 7) {
-                    Text(context.hasRecoverySnapshot ? context.recoveryScoreText : context.bloomPercentText)
+                    Text(context.recoveryScoreText)
                         .font(.system(size: 25, weight: .semibold, design: .rounded))
                         .foregroundStyle(MoriWidgetColors.leafAccent)
                         .minimumScaleFactor(0.72)
                         .lineLimit(1)
                         .widgetAccentable()
 
-                    Text(MoriL10n.display(context.hasRecoverySnapshot ? "Recovery" : "Bloom"))
+                    Text(MoriL10n.display(context.displayRecoveryState))
                         .font(.system(size: 10, weight: .medium, design: .rounded))
                         .foregroundStyle(MoriWidgetColors.mutedInk)
                         .lineLimit(1)
 
-                    HStack(spacing: 6) {
-                        MoriWidgetCompactStat(
-                            title: "Seeds",
-                            value: "\(context.seedsToday)"
-                        )
-                        MoriWidgetCompactStat(title: "Time", value: context.reclaimedMinutesText)
-                    }
+                    Text(MoriL10n.display(context.hasRecoverySnapshot ? "Updated from Apple Health" : "Open Mori to connect Health"))
+                        .font(.system(size: 10, weight: .medium, design: .rounded))
+                        .foregroundStyle(MoriWidgetColors.mutedInk)
+                        .lineLimit(2)
                 }
                 .frame(width: 126, alignment: .topLeading)
             }
@@ -95,9 +90,9 @@ struct PulseLargeWidget: View {
             VStack(alignment: .leading, spacing: 13) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 4) {
-                        MoriWidgetHeader(title: "Pulse", icon: .pulse)
+                        MoriWidgetHeader(title: "Recovery", icon: .heart)
 
-                        Text(context.isPulseFreshToday ? context.displayPulseTopic : MoriL10n.display("Bloom fallback"))
+                        Text(context.displayRecoveryState)
                             .font(.system(size: 13, weight: .semibold, design: .rounded))
                             .foregroundStyle(MoriWidgetColors.moss)
                             .lineLimit(1)
@@ -106,7 +101,7 @@ struct PulseLargeWidget: View {
 
                     Spacer(minLength: 0)
 
-                    Text(context.hasRecoverySnapshot ? context.recoveryScoreText : context.bloomPercentText)
+                    Text(context.recoveryScoreText)
                         .font(.system(size: 34, weight: .light, design: .monospaced))
                         .foregroundStyle(MoriWidgetColors.leafAccent)
                         .widgetAccentable()
@@ -115,7 +110,7 @@ struct PulseLargeWidget: View {
                 }
 
                 VStack(alignment: .leading, spacing: 8) {
-                    Text(context.displayPulseHeadline)
+                    Text(context.displayRecoveryDetail)
                         .font(.system(size: 23, weight: .semibold, design: .rounded))
                         .foregroundStyle(MoriWidgetColors.ink)
                         .minimumScaleFactor(0.78)
@@ -123,7 +118,7 @@ struct PulseLargeWidget: View {
 
                     HStack(spacing: 5) {
                         MoriBitmapIconImage(
-                            icon: context.hasRecoverySnapshot ? context.displayRecoveryPracticeIcon : context.suggestedPracticeIcon,
+                            icon: context.displayRecoveryPracticeIcon,
                             size: 11,
                             opacity: 0.84
                         )
@@ -131,7 +126,7 @@ struct PulseLargeWidget: View {
                         Text(MoriL10n.string(
                             "widget.pulse.suggested",
                             defaultValue: "Suggested: %@",
-                            arguments: [context.hasRecoverySnapshot ? context.displayRecoveryPracticeTitle : context.suggestedPracticeTitle]
+                            arguments: [context.displayRecoveryPracticeTitle]
                         ))
                             .font(.system(size: 13, weight: .medium, design: .rounded))
                             .foregroundStyle(MoriWidgetColors.mutedInk)
@@ -147,16 +142,7 @@ struct PulseLargeWidget: View {
                         .stroke(MoriWidgetColors.leafAccent.opacity(0.16), lineWidth: 1)
                 )
 
-                HStack(spacing: 8) {
-                    MoriWidgetCompactStat(
-                        title: context.hasRecoverySnapshot ? "Recovery" : "Clarity",
-                        value: context.hasRecoverySnapshot ? context.displayRecoveryState : "\(context.clarityScore)"
-                    )
-                    MoriWidgetCompactStat(title: "Seeds", value: "\(context.seedsToday)")
-                    MoriWidgetCompactStat(title: "Reclaimed", value: context.reclaimedMinutesText)
-                }
-
-                MoriWidgetActionLinks(style: .full)
+                MoriWidgetCompactStat(title: "Privacy", value: "On device")
             }
         }
     }
@@ -166,19 +152,19 @@ struct PulseAccessoryCircularWidget: View {
     let context: MoriWidgetContextSnapshot
 
     var body: some View {
-        Gauge(value: context.hasRecoverySnapshot ? context.recoveryProgress : context.bloomProgress) {
-            MoriBitmapIconImage(icon: context.hasRecoverySnapshot ? .heart : .pulse, size: 12)
+        Gauge(value: context.recoveryProgress) {
+            MoriBitmapIconImage(icon: .heart, size: 12)
         } currentValueLabel: {
-            Text(context.hasRecoverySnapshot ? context.recoveryScoreText : context.bloomPercentText)
+            Text(context.recoveryScoreText)
                 .font(.system(size: 12, weight: .semibold, design: .rounded))
                 .minimumScaleFactor(0.62)
                 .lineLimit(1)
         }
         .gaugeStyle(.accessoryCircularCapacity)
         .accessibilityLabel(MoriL10n.string(
-            "widget.bloom.accessibility",
-            defaultValue: "Bloom %@",
-            arguments: [context.bloomPercentText]
+            "widget.recovery.accessibility",
+            defaultValue: "Recovery %@",
+            arguments: [context.recoveryScoreText]
         ))
     }
 }
@@ -188,35 +174,23 @@ struct PulseAccessoryRectangularWidget: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            Text(context.isPulseFreshToday ? MoriL10n.string(
-                "widget.inline.pulse_topic",
-                defaultValue: "Pulse: %@",
-                arguments: [context.displayPulseTopic]
-            ) : (context.hasRecoverySnapshot ? MoriL10n.display("Recovery Pulse") : MoriL10n.display("Pulse")))
+            Text(MoriL10n.display("Recovery"))
                 .font(.headline)
                 .lineLimit(1)
                 .minimumScaleFactor(0.82)
 
-            Text(context.hasRecoverySnapshot ? context.displayRecoveryDetail : context.displayPulseHeadline)
+            Text(context.displayRecoveryDetail)
                 .font(.caption.weight(.semibold))
                 .lineLimit(1)
                 .minimumScaleFactor(0.72)
 
             HStack(spacing: 6) {
-                Text(context.hasRecoverySnapshot ? MoriL10n.string(
+                Text(MoriL10n.string(
                     "recovery.widget.score",
                     defaultValue: "Recovery %@",
                     arguments: [context.recoveryScoreText]
-                ) : MoriL10n.string(
-                    "widget.inline.bloom",
-                    defaultValue: "Bloom %@",
-                    arguments: [context.bloomPercentText]
                 ))
-                Text(MoriL10n.string(
-                    "practice.seed.count",
-                    defaultValue: "%d Seeds",
-                    arguments: [context.seedsToday]
-                ))
+                Text(context.displayRecoveryState)
             }
             .font(.caption2.weight(.medium))
             .foregroundStyle(.secondary)
@@ -224,9 +198,9 @@ struct PulseAccessoryRectangularWidget: View {
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(MoriL10n.string(
-            "widget.pulse.accessibility",
-            defaultValue: "Pulse. %@. Bloom %@.",
-            arguments: [context.displayPulseHeadline, context.bloomPercentText]
+            "widget.recovery.accessibility",
+            defaultValue: "Recovery %@. %@.",
+            arguments: [context.recoveryScoreText, context.displayRecoveryState]
         ))
     }
 }

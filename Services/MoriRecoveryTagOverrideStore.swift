@@ -37,4 +37,6 @@ struct MoriRecoveryTagOverrideStore {
         guard let data = try? encoder.encode(overrides) else { return }
         defaults.set(data, forKey: Key.overrides)
     }
+
+    func clear() { defaults.removeObject(forKey: Key.overrides) }
 }

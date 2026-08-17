@@ -87,6 +87,8 @@ struct AttentionShieldSelectionCoordinator {
         selectionStore.supportedSelection(selectionStore.loadDefaultSelection())
     }
 
+    func clearAll() { ScreenTimeSelectionPersistence().clearAll() }
+
     func shieldPayload(
         for feature: MoriScreenTimeFeature,
         authorizationStatus: AuthorizationStatus

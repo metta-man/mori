@@ -151,6 +151,16 @@ struct MoriPulseWidgetEntryView: View {
             PulseMediumWidget(context: entry.context)
         case .systemLarge:
             PulseLargeWidget(context: entry.context)
+        case .accessoryCircular:
+            PulseAccessoryCircularWidget(context: entry.context)
+        case .accessoryRectangular:
+            PulseAccessoryRectangularWidget(context: entry.context)
+        case .accessoryInline:
+            Text(MoriL10n.string(
+                "recovery.widget.score",
+                defaultValue: "Recovery %@",
+                arguments: [entry.context.recoveryScoreText]
+            ))
         default:
             PulseSmallWidget(context: entry.context)
         }
@@ -168,14 +178,17 @@ struct MoriPulseWidget: Widget {
         StaticConfiguration(kind: kind, provider: MoriPulseWidgetProvider()) { entry in
             MoriPulseWidgetEntryView(entry: entry)
                 .moriWidgetContainerBackground()
-                .widgetURL(URL(string: "mori://pulse/recovery"))
+                .widgetURL(URL(string: "mori://recovery"))
         }
-        .configurationDisplayName("Pulse")
-        .description("See today's Pulse, Recovery, Bloom, Seeds, and reclaimed time.")
+        .configurationDisplayName("Recovery")
+        .description("See a private recovery signal calculated on your iPhone.")
         .supportedFamilies([
             .systemSmall,
             .systemMedium,
-            .systemLarge
+            .systemLarge,
+            .accessoryCircular,
+            .accessoryRectangular,
+            .accessoryInline
         ])
     }
 }

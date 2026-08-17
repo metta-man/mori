@@ -43,6 +43,7 @@ struct MoriAppRouteRequest {
 struct MoriTodayLaunchRequest: Equatable {
     enum Kind: Equatable {
         case weekArchiveDetail
+        case recovery
     }
 
     let id = UUID()
@@ -195,7 +196,10 @@ enum MoriAppRoute {
     static let weekArchiveDetail: MoriAppRoute = .todayLaunch(.weekArchiveDetail)
     static let beforeFeedReset: MoriAppRoute = .sheet(.beforeFeed, tab: .today)
     static let morningGateReset: MoriAppRoute = .sheet(.morningGate, tab: .today)
-    static let pulseSheet: MoriAppRoute = .sheet(.pulse, tab: .today)
+    static let recoveryDetail: MoriAppRoute = .todayLaunch(.recovery)
+    static var pulseSheet: MoriAppRoute {
+        MoriFeatureFlags.aiPulseEnabled ? .sheet(.pulse, tab: .today) : .recoveryDetail
+    }
 
     init(url: URL) {
         let target = "\(url.host ?? "") \(url.path)".lowercased()
@@ -210,7 +214,9 @@ enum MoriAppRoute {
             self = .beforeFeedReset
         } else if target.contains("morning") {
             self = .morningGateReset
-        } else if Self.matches(target, anyOf: ["pulse", "recovery", "readiness"]) {
+        } else if Self.matches(target, anyOf: ["recovery", "readiness"]) {
+            self = .recoveryDetail
+        } else if target.contains("pulse") {
             self = .pulseSheet
         } else if Self.matches(target, anyOf: ["journal", "log", "record", "spark"]) {
             self = .journalTab
@@ -362,6 +368,8 @@ private extension MoriTodayLaunchRequest.Kind {
         switch self {
         case .weekArchiveDetail:
             return "week_archive_detail"
+        case .recovery:
+            return "recovery"
         }
     }
 }

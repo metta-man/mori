@@ -144,6 +144,8 @@ struct AttentionShieldMonitoringCoordinator {
         activityScheduler.stopBeforeFeedGrace()
     }
 
+    func stopAll() { activityScheduler.stopAll() }
+
     private func beforeFeedHealthEvent(
         kind: MoriScreenTimeMonitorHealthEventKind,
         action: String,

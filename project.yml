@@ -13,7 +13,7 @@ settings:
     SWIFT_VERSION: "5.9"
     MARKETING_VERSION: "0.1.0"
     CURRENT_PROJECT_VERSION: "2"
-    DEVELOPMENT_TEAM: ""
+    DEVELOPMENT_TEAM: "VU5N8NSBSN"
     CODE_SIGN_STYLE: Automatic
     INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
     INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
@@ -63,10 +63,14 @@ targets:
         CODE_SIGN_ENTITLEMENTS: Mori/Mori.entitlements
         INFOPLIST_FILE: Mori/Info.plist
         MORI_PULSE_PROXY_BASE_URL: "https://mori-gray.vercel.app"
+        MORI_POSTHOG_API_KEY: ""
+        MORI_POSTHOG_HOST: "https://eu.i.posthog.com"
         GENERATE_INFOPLIST_FILE: NO
         INFOPLIST_KEY_CFBundleDisplayName: Mori
         INFOPLIST_KEY_LSApplicationCategoryType: "public.app-category.lifestyle"
         INFOPLIST_KEY_MORI_PULSE_PROXY_BASE_URL: "$(MORI_PULSE_PROXY_BASE_URL)"
+        INFOPLIST_KEY_MORI_POSTHOG_API_KEY: "$(MORI_POSTHOG_API_KEY)"
+        INFOPLIST_KEY_MORI_POSTHOG_HOST: "$(MORI_POSTHOG_HOST)"
         INFOPLIST_KEY_NSHealthShareUsageDescription: "Mori can read Apple Health data you approve, including HRV, heart rate, resting heart rate, sleep, respiratory rate, temperature, workouts, active energy, and walking or running distance, to personalize recovery readiness and attention signals."
         INFOPLIST_KEY_NSHealthUpdateUsageDescription: "Mori does not write data to Apple Health. Recovery features only read the Apple Health data you approve."
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "Mori lets you choose photos to attach to your private journal entries."
@@ -179,6 +183,30 @@ targets:
         INFOPLIST_FILE: WatchWidgets/Info.plist
         SKIP_INSTALL: YES
 
+  MoriTests:
+    type: bundle.unit-test
+    platform: iOS
+    sources:
+      - path: Tests/MoriTests
+    dependencies:
+      - target: Mori
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mettalabs.mori.tests
+        GENERATE_INFOPLIST_FILE: YES
+
+  MoriUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: Tests/MoriUITests
+    dependencies:
+      - target: Mori
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.mettalabs.mori.uitests
+        GENERATE_INFOPLIST_FILE: YES
+
 schemes:
   Mori:
     build:
@@ -192,6 +220,11 @@ schemes:
       config: Debug
     archive:
       config: Release
+    test:
+      config: Debug
+      targets:
+        - MoriTests
+        - MoriUITests
 
   MoriWidgets:
     build:

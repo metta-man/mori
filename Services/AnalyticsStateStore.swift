@@ -1,5 +1,11 @@
 import Foundation
 
+enum AnalyticsConsentState: String {
+    case undecided
+    case optedIn
+    case optedOut
+}
+
 struct AnalyticsUserSnapshot {
     let hasCompletedOnboarding: Bool
     let archiveStartDate: Date?
@@ -13,6 +19,7 @@ struct AnalyticsStateStore {
         static let archiveStartDateLegacyKey = "birthDate"
         static let hasCompletedOnboarding = "hasCompletedOnboarding"
         static let screenTimeAttemptsLastSyncedAt = "analyticsScreenTimeAttemptsLastSyncedAt"
+        static let consent = "analyticsConsentState"
     }
 
     private let defaults: UserDefaults
@@ -26,9 +33,25 @@ struct AnalyticsStateStore {
             return existing
         }
 
-        let userID = "user_\(UUID().uuidString.prefix(8))"
+        let userID = "user_\(UUID().uuidString)"
         defaults.set(userID, forKey: Key.analyticsUserID)
         return userID
+    }
+
+    func existingUserID() -> String? { defaults.string(forKey: Key.analyticsUserID) }
+
+    func consentState() -> AnalyticsConsentState {
+        defaults.string(forKey: Key.consent)
+            .flatMap(AnalyticsConsentState.init(rawValue:)) ?? .undecided
+    }
+
+    func saveConsentState(_ state: AnalyticsConsentState) {
+        defaults.set(state.rawValue, forKey: Key.consent)
+    }
+
+    func clearAnalyticsIdentity() {
+        defaults.removeObject(forKey: Key.analyticsUserID)
+        defaults.removeObject(forKey: Key.screenTimeAttemptsLastSyncedAt)
     }
 
     func userSnapshot(daysActive: Int = 1) -> AnalyticsUserSnapshot {

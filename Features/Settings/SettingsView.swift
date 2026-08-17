@@ -112,6 +112,12 @@ struct SettingsView: View {
                 }
             }
         }
+        .onAppear {
+            if ProcessInfo.processInfo.arguments.contains("-MoriOpenAppAndDataForUITest"),
+               navigationPath.isEmpty {
+                navigationPath.append(.appAndData)
+            }
+        }
     }
 
     private var screenTimeStatusText: String {
@@ -471,6 +477,7 @@ private struct ReminderSettingsView: View {
                 .foregroundColor(MoriColors.botanicalMuted)
             }
             .listRowBackground(MoriColors.botanicalSurface.opacity(0.74))
+
         }
         .moriSettingsForm()
         .listStyle(.insetGrouped)
@@ -515,6 +522,10 @@ private struct AppAndDataSettingsView: View {
     let dismissSettings: () -> Void
     @State private var showingClearDayCheckinsAlert = false
     @State private var showingRestartOnboardingAlert = false
+    @State private var categoryToDelete: MoriDataCategory?
+    @State private var showingDeleteAllAlert = false
+    @State private var deletionMessage: String?
+    @State private var isDeleting = false
 
     var body: some View {
         Form {
@@ -533,15 +544,20 @@ private struct AppAndDataSettingsView: View {
                 .foregroundColor(MoriColors.botanicalClay)
                 .frame(maxWidth: .infinity, minHeight: MoriV2Layout.minimumHitTarget, alignment: .leading)
             } footer: {
-                Text(
-                    MoriL10n.display(
-                        "Restarting onboarding keeps saved data. Clearing day check-ins removes saved daily moods and pattern notes."
-                    )
-                )
+                Text(MoriL10n.string(
+                    "settings.data.restart_footer",
+                    defaultValue: "Restarting onboarding keeps saved data. Clearing day check-ins removes saved daily moods and pattern notes."
+                ))
                 .font(.footnote)
                 .foregroundColor(MoriColors.botanicalMuted)
             }
             .listRowBackground(MoriColors.botanicalSurface.opacity(0.74))
+
+            MoriDataDeletionSection(
+                categoryToDelete: $categoryToDelete,
+                showingDeleteAllAlert: $showingDeleteAllAlert,
+                isDeleting: isDeleting
+            )
         }
         .moriSettingsForm()
         .listStyle(.insetGrouped)
@@ -564,6 +580,100 @@ private struct AppAndDataSettingsView: View {
         } message: {
             Text(MoriL10n.display("You can go through onboarding again without deleting your saved data."))
         }
+        .confirmationDialog(
+            MoriL10n.display("Delete this data?"),
+            isPresented: Binding(
+                get: { categoryToDelete != nil },
+                set: { if !$0 { categoryToDelete = nil } }
+            ),
+            titleVisibility: .visible
+        ) {
+            Button(MoriL10n.display("Delete"), role: .destructive) {
+                guard let category = categoryToDelete else { return }
+                categoryToDelete = nil
+                delete(category)
+            }
+            Button(MoriL10n.display("Cancel"), role: .cancel) { categoryToDelete = nil }
+        } message: {
+            Text(MoriL10n.display("This cannot be undone."))
+        }
+        .alert(MoriL10n.display("Delete all Mori data?"), isPresented: $showingDeleteAllAlert) {
+            Button(MoriL10n.display("Cancel"), role: .cancel) {}
+            Button(MoriL10n.display("Delete All"), role: .destructive) { deleteEverything() }
+        } message: {
+            Text(MoriL10n.display("This removes all Mori data from this device and its iCloud backup, then returns to onboarding. Apple Health records are not changed."))
+        }
+        .alert(
+            MoriL10n.display("Data Deletion"),
+            isPresented: Binding(get: { deletionMessage != nil }, set: { if !$0 { deletionMessage = nil } })
+        ) {
+            Button(MoriL10n.display("OK")) { deletionMessage = nil }
+        } message: {
+            Text(deletionMessage ?? "")
+        }
+    }
+
+    private func delete(_ category: MoriDataCategory) {
+        isDeleting = true
+        Task {
+            do {
+                try await MoriDataDeletionService.shared.delete(category)
+                deletionMessage = MoriL10n.string(
+                    "settings.data.deleted",
+                    defaultValue: "Selected data was deleted."
+                )
+            } catch {
+                deletionMessage = error.localizedDescription
+            }
+            isDeleting = false
+        }
+    }
+
+    private func deleteEverything() {
+        isDeleting = true
+        Task {
+            do {
+                try await MoriDataDeletionService.shared.deleteEverything()
+                settings.hasCompletedOnboarding = false
+                dismissSettings()
+            } catch {
+                deletionMessage = error.localizedDescription
+                isDeleting = false
+            }
+        }
+    }
+}
+
+private struct MoriDataDeletionSection: View {
+    @Binding var categoryToDelete: MoriDataCategory?
+    @Binding var showingDeleteAllAlert: Bool
+    let isDeleting: Bool
+
+    var body: some View {
+        Section {
+            ForEach(MoriDataCategory.allCases) { category in
+                Button(role: .destructive) {
+                    categoryToDelete = category
+                } label: {
+                    Text(category.title)
+                }
+                .disabled(isDeleting)
+            }
+
+            Button(MoriL10n.display("Delete All Mori Data"), role: .destructive) {
+                showingDeleteAllAlert = true
+            }
+            .fontWeight(.semibold)
+            .disabled(isDeleting)
+        } header: {
+            Text(MoriL10n.display("Delete Data"))
+        } footer: {
+            Text(MoriL10n.string(
+                "settings.data.health_footer",
+                defaultValue: "Apple Health records are never deleted. Recovery removes only Mori's local summaries. iCloud deletion requires a network connection."
+            ))
+        }
+        .listRowBackground(MoriColors.botanicalSurface.opacity(0.74))
     }
 }
 
@@ -582,6 +692,13 @@ private struct AboutMoriSettingsView: View {
                         .fixedSize(horizontal: false, vertical: true)
                 }
                 .padding(.vertical, 4)
+            }
+            .listRowBackground(MoriColors.botanicalSurface.opacity(0.74))
+
+            Section {
+                Link(MoriL10n.display("Privacy Policy"), destination: URL(string: "https://mori-gray.vercel.app/privacy")!)
+                Link(MoriL10n.display("Terms of Use"), destination: URL(string: "https://mori-gray.vercel.app/terms")!)
+                Link(MoriL10n.display("Support"), destination: URL(string: "https://mori-gray.vercel.app/support")!)
             }
             .listRowBackground(MoriColors.botanicalSurface.opacity(0.74))
         }

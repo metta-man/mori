@@ -134,18 +134,10 @@ struct MoriWatchPulseEntryView: View {
         case .accessoryRectangular:
             MoriWatchPulseRectangularComplication(context: entry.context)
         case .accessoryInline:
-            Text(entry.context.hasRecoverySnapshot ? MoriL10n.string(
+            Text(MoriL10n.string(
                 "watch_widget.inline.recovery",
                 defaultValue: "Recovery %@",
                 arguments: [entry.context.recoveryScoreText]
-            ) : entry.context.isPulseFreshToday ? MoriL10n.string(
-                "watch_widget.inline.pulse_topic",
-                defaultValue: "Pulse %@",
-                arguments: [entry.context.displayPulseTopic]
-            ) : MoriL10n.string(
-                "widget.inline.bloom",
-                defaultValue: "Bloom %@",
-                arguments: [entry.context.bloomPercentText]
             ))
         default:
             MoriWatchPulseCircularComplication(context: entry.context)
@@ -164,10 +156,10 @@ struct MoriWatchPulseWidget: Widget {
         StaticConfiguration(kind: kind, provider: MoriWatchPulseProvider()) { entry in
             MoriWatchPulseEntryView(entry: entry)
                 .containerBackground(.clear, for: .widget)
-                .widgetURL(URL(string: "mori://pulse/recovery"))
+                .widgetURL(URL(string: "mori://recovery"))
         }
-        .configurationDisplayName("Pulse")
-        .description("Track Pulse, Recovery, Bloom, Seeds, and reclaimed time.")
+        .configurationDisplayName("Recovery")
+        .description("See the recovery signal shared privately from your iPhone.")
         .supportedFamilies([
             .accessoryCircular,
             .accessoryCorner,
@@ -290,19 +282,19 @@ private struct MoriWatchPulseCircularComplication: View {
     let context: MoriWidgetContextSnapshot
 
     var body: some View {
-        Gauge(value: context.hasRecoverySnapshot ? context.recoveryProgress : context.bloomProgress) {
-            MoriBitmapIconImage(icon: context.hasRecoverySnapshot ? .heart : .pulse, size: 12)
+        Gauge(value: context.hasRecoverySnapshot ? context.recoveryProgress : 0) {
+            MoriBitmapIconImage(icon: .heart, size: 12)
         } currentValueLabel: {
-            Text(context.hasRecoverySnapshot ? context.recoveryScoreText : context.bloomPercentText)
+            Text(context.hasRecoverySnapshot ? context.recoveryScoreText : "--")
                 .font(.system(size: 12, weight: .semibold, design: .rounded))
                 .lineLimit(1)
                 .minimumScaleFactor(0.55)
         }
         .gaugeStyle(.accessoryCircularCapacity)
         .accessibilityLabel(MoriL10n.string(
-            "widget.bloom.accessibility",
-            defaultValue: "Bloom %@",
-            arguments: [context.bloomPercentText]
+            "recovery.widget.score",
+            defaultValue: "Recovery %@",
+            arguments: [context.hasRecoverySnapshot ? context.recoveryScoreText : "unavailable"]
         ))
     }
 }
@@ -311,18 +303,18 @@ private struct MoriWatchPulseCornerComplication: View {
     let context: MoriWidgetContextSnapshot
 
     var body: some View {
-        Text(context.hasRecoverySnapshot ? context.recoveryScoreText : context.bloomPercentText)
+        Text(context.hasRecoverySnapshot ? context.recoveryScoreText : "--")
             .font(.system(size: 12, weight: .semibold, design: .rounded))
             .lineLimit(1)
             .minimumScaleFactor(0.72)
             .widgetCurvesContent()
             .widgetLabel {
-                ProgressView(value: context.hasRecoverySnapshot ? context.recoveryProgress : context.bloomProgress)
+                ProgressView(value: context.hasRecoverySnapshot ? context.recoveryProgress : 0)
             }
             .accessibilityLabel(MoriL10n.string(
-                "widget.bloom.accessibility",
-                defaultValue: "Bloom %@",
-                arguments: [context.bloomPercentText]
+                "recovery.widget.score",
+                defaultValue: "Recovery %@",
+                arguments: [context.hasRecoverySnapshot ? context.recoveryScoreText : "unavailable"]
             ))
     }
 }
@@ -332,21 +324,21 @@ private struct MoriWatchPulseRectangularComplication: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 8) {
-            Gauge(value: context.hasRecoverySnapshot ? context.recoveryProgress : context.bloomProgress) {
+            Gauge(value: context.hasRecoverySnapshot ? context.recoveryProgress : 0) {
                 EmptyView()
             } currentValueLabel: {
-                MoriBitmapIconImage(icon: context.hasRecoverySnapshot ? .heart : .pulse, size: 10)
+                MoriBitmapIconImage(icon: .heart, size: 10)
             }
             .gaugeStyle(.accessoryCircularCapacity)
             .frame(width: 32, height: 32)
 
             VStack(alignment: .leading, spacing: 1) {
-                Text(context.hasRecoverySnapshot ? context.displayRecoveryState : context.isPulseFreshToday ? context.displayPulseTopic : MoriL10n.display("Pulse"))
+                Text(context.hasRecoverySnapshot ? context.displayRecoveryState : MoriL10n.display("Recovery"))
                     .font(.system(size: 12, weight: .semibold, design: .rounded))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
 
-                Text(context.hasRecoverySnapshot ? context.displayRecoveryDetail : context.displayPulseHeadline)
+                Text(context.hasRecoverySnapshot ? context.displayRecoveryDetail : MoriL10n.display("No signal yet"))
                     .font(.system(size: 15, weight: .semibold, design: .rounded))
                     .lineLimit(1)
                     .minimumScaleFactor(0.62)
@@ -356,13 +348,7 @@ private struct MoriWatchPulseRectangularComplication: View {
                         "recovery.widget.score",
                         defaultValue: "Recovery %@",
                         arguments: [context.recoveryScoreText]
-                    ) : context.bloomPercentText)
-                    Text(MoriL10n.string(
-                        "practice.seed.count",
-                        defaultValue: "%d Seeds",
-                        arguments: [context.seedsToday]
-                    ))
-                    Text(context.reclaimedMinutesText)
+                    ) : MoriL10n.display("Open Mori on iPhone"))
                 }
                 .font(.system(size: 10, weight: .medium, design: .rounded))
                 .foregroundStyle(.secondary)
@@ -372,9 +358,9 @@ private struct MoriWatchPulseRectangularComplication: View {
         }
         .accessibilityElement(children: .combine)
         .accessibilityLabel(MoriL10n.string(
-            "widget.pulse.accessibility",
-            defaultValue: "Pulse. %@. Bloom %@.",
-            arguments: [context.displayPulseHeadline, context.bloomPercentText]
+            "recovery.widget.accessibility",
+            defaultValue: "Recovery. %@.",
+            arguments: [context.hasRecoverySnapshot ? context.displayRecoveryDetail : MoriL10n.display("No signal yet")]
         ))
     }
 }

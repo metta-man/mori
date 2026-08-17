@@ -48,6 +48,12 @@ final class WeekArchiveRecordStore {
     var viewContext: NSManagedObjectContext {
         persistenceController.viewContext
     }
+
+    func deleteAllRecords() throws {
+        let request: NSFetchRequest<NSFetchRequestResult> = LifeWeekEntity.fetchRequest()
+        try viewContext.execute(NSBatchDeleteRequest(fetchRequest: request))
+        viewContext.reset()
+    }
     
     // MARK: - Fetch
     

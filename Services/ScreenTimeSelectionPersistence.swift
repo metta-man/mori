@@ -65,4 +65,15 @@ struct ScreenTimeSelectionPersistence {
     func markFeatureMigrationCompleted() {
         defaults.set(true, forKey: MoriScreenTimeShared.featureMigrationKey)
     }
+
+    func clearAll() {
+        defaults.removeObject(forKey: MoriScreenTimeShared.selectionKey)
+        defaults.removeObject(forKey: MoriScreenTimeShared.defaultSelectionKey)
+        defaults.removeObject(forKey: MoriScreenTimeShared.defaultSelectionDisplayNamesKey)
+        defaults.removeObject(forKey: MoriScreenTimeShared.featureProfilesKey)
+        defaults.removeObject(forKey: MoriScreenTimeShared.featureMigrationKey)
+        for feature in MoriScreenTimeFeature.allCases {
+            defaults.removeObject(forKey: MoriScreenTimeShared.featureSelectionKeyPrefix + feature.rawValue)
+        }
+    }
 }

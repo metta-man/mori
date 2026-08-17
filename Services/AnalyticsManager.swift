@@ -27,8 +27,9 @@ final class AnalyticsManager {
     // MARK: - Configuration
     func configure() {
         guard !isConfigured else { return }
+        guard stateStore.consentState() == .optedIn else { return }
 
-        guard AnalyticsConfig.apiKey != "phc_your_posthog_key_here" else {
+        guard !AnalyticsConfig.apiKey.isEmpty else {
             #if DEBUG
             print("[Analytics] PostHog not configured - using debug mode")
             #endif
@@ -40,8 +41,12 @@ final class AnalyticsManager {
             host: AnalyticsConfig.endpoint
         )
         config.captureScreenViews = false
-        config.captureApplicationLifecycleEvents = true
+        config.captureApplicationLifecycleEvents = false
+        #if DEBUG
         config.debug = true
+        #else
+        config.debug = false
+        #endif
 
         PostHogSDK.shared.setup(config)
         postHog = PostHogSDK.shared
@@ -54,44 +59,34 @@ final class AnalyticsManager {
 
     // MARK: - Event Tracking
     func track(_ event: MoriEvent, properties: [String: Any]? = nil) {
-        guard isConfigured else {
-            #if DEBUG
-            print("[Analytics] Track: \(event.rawValue) - Properties: \(properties ?? [:])")
-            #endif
-            return
-        }
+        guard stateStore.consentState() == .optedIn else { return }
+        configure()
+        guard isConfigured else { return }
 
-        let mergedProperties = mergeDefaultProperties(event: event, custom: properties)
+        let mergedProperties = sanitize(mergeDefaultProperties(event: event, custom: properties))
         postHog?.capture(event.rawValue, properties: mergedProperties)
     }
 
     // MARK: - User Identification
     func identify(userId: String, properties: [String: Any]? = nil) {
-        guard isConfigured else {
-            #if DEBUG
-            print("[Analytics] Identify: \(userId) - Properties: \(properties ?? [:])")
-            #endif
-            return
-        }
+        guard stateStore.consentState() == .optedIn else { return }
+        configure()
+        guard isConfigured else { return }
 
-        postHog?.identify(userId, userProperties: properties)
+        postHog?.identify(userId, userProperties: sanitize(properties ?? [:]))
     }
 
     // MARK: - Loop-Level Analytics (Core Feature)
     func trackLoopEvent(_ event: String, properties: [String: Any]? = nil) {
         currentLoopStep += 1
 
-        let loopProperties: [String: Any] = [
-            AnalyticsProperties.loopStep: currentLoopStep,
-            "timestamp": Date().timeIntervalSince1970,
-            "session_day": getCurrentSessionDay()
-        ]
+        let loopProperties: [String: Any] = [AnalyticsProperties.loopStep: bucket(count: currentLoopStep)]
 
         let mergedProperties = (properties ?? [:]).merging(loopProperties) { _, new in new }
 
-        if isConfigured {
-            postHog?.capture(event, properties: mergedProperties)
-        }
+        guard stateStore.consentState() == .optedIn else { return }
+        configure()
+        postHog?.capture(event, properties: sanitize(mergedProperties))
 
         #if DEBUG
         print("[Analytics] Loop Event: \(event) - Step: \(currentLoopStep)")
@@ -104,14 +99,10 @@ final class AnalyticsManager {
         track(.appOpened)
 
         let user = stateStore.userSnapshot(daysActive: getUserActiveDays())
-        var properties: [String: Any] = [
+        let properties: [String: Any] = [
             AnalyticsProperties.hasCompletedOnboarding: user.hasCompletedOnboarding,
             AnalyticsProperties.daysActive: user.daysActive
         ]
-
-        if let archiveStartDate = user.archiveStartDate {
-            properties[AnalyticsProperties.archiveStartDate] = archiveStartDate.timeIntervalSince1970
-        }
 
         identify(userId: getStableUserID(), properties: properties)
     }
@@ -172,6 +163,85 @@ final class AnalyticsManager {
         var merged = event.defaultProperties ?? [:]
         merged.merge(custom ?? [:]) { _, new in new }
         return merged
+    }
+
+    private func sanitize(_ properties: [String: Any]) -> [String: Any] {
+        let blocked = Set([
+            "timestamp", AnalyticsProperties.archiveStartDate, AnalyticsProperties.habitName,
+            AnalyticsProperties.gratitudePrompt, "screen_name", "latest_date_key",
+            "feature_breakdown", "category_breakdown"
+        ])
+        return properties.reduce(into: [:]) { result, item in
+            guard !blocked.contains(item.key) else { return }
+            switch item.key {
+            case "character_count", AnalyticsProperties.gratitudeLength:
+                result["entry_length_bucket"] = bucket(count: item.value as? Int ?? 0)
+            case AnalyticsProperties.effectiveSelectedCount, "attempt_count", "gratitude_count":
+                result["\(item.key)_bucket"] = bucket(count: item.value as? Int ?? 0)
+            case AnalyticsProperties.timeInApp, AnalyticsProperties.featureDuration,
+                 "time_spent", "duration_seconds", "estimated_saved_minutes":
+                result["\(item.key)_bucket"] = durationBucket(item.value)
+            default:
+                if item.value is String || item.value is Bool || item.value is Int || item.value is Double {
+                    result[item.key] = item.value
+                }
+            }
+        }
+    }
+
+    private func bucket(count: Int) -> String {
+        switch count {
+        case ...0: return "0"
+        case 1: return "1"
+        case 2...5: return "2-5"
+        case 6...20: return "6-20"
+        default: return "21+"
+        }
+    }
+
+    private func durationBucket(_ value: Any) -> String {
+        let seconds = (value as? Double) ?? Double(value as? Int ?? 0)
+        switch seconds {
+        case ..<60: return "under_1m"
+        case ..<300: return "1-5m"
+        case ..<900: return "5-15m"
+        default: return "15m+"
+        }
+    }
+
+    func setConsent(_ state: AnalyticsConsentState) {
+        stateStore.saveConsentState(state)
+        if state == .optedIn {
+            configure()
+            postHog?.optIn()
+        } else {
+            postHog?.optOut()
+            postHog?.reset()
+            postHog = nil
+            isConfigured = false
+        }
+    }
+
+    func consentState() -> AnalyticsConsentState { stateStore.consentState() }
+
+    func deleteAnalyticsData() async throws {
+        if let userID = stateStore.existingUserID(),
+           let url = URL(string: "https://mori-gray.vercel.app/api/privacy/analytics-delete") {
+            var request = URLRequest(url: url)
+            request.httpMethod = "POST"
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = try JSONSerialization.data(withJSONObject: ["distinctId": userID])
+            let (_, response) = try await URLSession.shared.data(for: request)
+            guard let http = response as? HTTPURLResponse, (200..<300).contains(http.statusCode) else {
+                throw URLError(.badServerResponse)
+            }
+        }
+        postHog?.optOut()
+        postHog?.reset()
+        postHog = nil
+        isConfigured = false
+        stateStore.clearAnalyticsIdentity()
+        stateStore.saveConsentState(.optedOut)
     }
 
     private func getCurrentSessionDay() -> Int {

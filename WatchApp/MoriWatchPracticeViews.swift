@@ -9,8 +9,10 @@ private struct MoriWatchPracticeLaunch: Identifiable {
 
 struct MoriWatchResetHub: View {
     @ObservedObject var notificationCenter: MoriWatchNotificationCenter
+    @ObservedObject var routeStore: MoriWatchRouteStore
     @State private var snapshot = MoriWidgetSnapshot()
     @State private var context = MoriWidgetContextSnapshot.load()
+    @State private var navigationPath: [MoriWatchRoute] = []
     @State private var activePractice: MoriWatchPracticeLaunch?
     @AppStorage(MoriWatchBellDefaults.isActiveKey) private var bellIsActive = false
     @AppStorage(MoriWatchBellDefaults.nextFireKey) private var nextBellTimestamp: Double = 0
@@ -18,7 +20,7 @@ struct MoriWatchResetHub: View {
     private let snapshotTimer = Timer.publish(every: 60, on: .main, in: .common).autoconnect()
 
     var body: some View {
-        NavigationStack {
+        NavigationStack(path: $navigationPath) {
             ScrollView(showsIndicators: false) {
                 homeContent
             }
@@ -38,6 +40,20 @@ struct MoriWatchResetHub: View {
             .onChange(of: notificationCenter.quickBreathingRequestID) { _, requestID in
                 guard requestID != nil else { return }
                 openPractice(.breathe, autoStart: true)
+            }
+            .onChange(of: routeStore.pendingRoute) { _, _ in
+                openPendingRouteIfNeeded()
+            }
+            .onAppear {
+                openPendingRouteIfNeeded()
+            }
+            .navigationDestination(for: MoriWatchRoute.self) { route in
+                switch route {
+                case .weekArchive:
+                    MoriWatchWeekSummaryView(snapshot: snapshot)
+                case .recovery:
+                    MoriWatchRecoverySummaryView(context: context)
+                }
             }
         }
     }
@@ -188,6 +204,11 @@ struct MoriWatchResetHub: View {
 
     private func openPractice(_ practice: MoriWatchPractice, autoStart: Bool) {
         activePractice = MoriWatchPracticeLaunch(practice: practice, autoStart: autoStart)
+    }
+
+    private func openPendingRouteIfNeeded() {
+        guard let route = routeStore.consume() else { return }
+        navigationPath = [route]
     }
 
     private var bellStatusText: String {

@@ -37,6 +37,11 @@ enum GratitudePhotoStore {
         try? FileManager.default.removeItem(at: attachment.fileURL)
     }
 
+    static func deleteAllPhotos() throws {
+        guard FileManager.default.fileExists(atPath: photosDirectory.path) else { return }
+        try FileManager.default.removeItem(at: photosDirectory)
+    }
+
     static func photoData(for attachment: GratitudePhotoAttachment) -> Data? {
         try? Data(contentsOf: attachment.fileURL)
     }

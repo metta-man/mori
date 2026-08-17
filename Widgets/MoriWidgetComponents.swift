@@ -131,7 +131,7 @@ struct MoriWidgetActionLinks: View {
     var body: some View {
         HStack(spacing: 7) {
             MoriWidgetActionLink(title: "Shield", icon: .appLimit, deepLink: "mori://app-limits")
-            MoriWidgetActionLink(title: style == .compact ? "Pulse" : "Open Pulse", icon: .pulse, deepLink: "mori://pulse")
+            MoriWidgetActionLink(title: style == .compact ? "Recovery" : "Open Recovery", icon: .heart, deepLink: "mori://recovery")
             MoriWidgetActionLink(title: "Settle", icon: .breathe, deepLink: "mori://settle")
             if style == .full {
                 MoriWidgetActionLink(title: "Log", icon: .journal, deepLink: "mori://log")

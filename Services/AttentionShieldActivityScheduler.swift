@@ -66,6 +66,15 @@ struct AttentionShieldActivityScheduler {
         activityCenter.stopMonitoring([.moriActiveSession])
     }
 
+    func stopAll() {
+        activityCenter.stopMonitoring([
+            .moriMorningGate,
+            .moriDailySelectedApps,
+            .moriBeforeFeedGrace,
+            .moriActiveSession
+        ])
+    }
+
     func scheduleActiveSession(endDate: Date) throws -> Bool {
         guard let schedule = scheduleFactory.activeSessionSchedule(endDate: endDate) else {
             stopActiveSession()

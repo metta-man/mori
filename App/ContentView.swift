@@ -18,6 +18,7 @@ struct ContentView: View {
     @State private var mainTabBarHidden = false
     @State private var handledUITestLaunchRoute = false
     @State private var didOpenInitialRoutes = false
+    @State private var showingAnalyticsConsent = false
     
     var body: some View {
         Group {
@@ -93,6 +94,7 @@ struct ContentView: View {
         }
         .onAppear {
             openInitialRoutesAfterLayout()
+            showingAnalyticsConsent = AnalyticsManager.shared.consentState() == .undecided
         }
         .onReceive(routeStore.$requestID.dropFirst()) { _ in
             openPendingRoutesAfterLayout()
@@ -111,6 +113,12 @@ struct ContentView: View {
             onCompletePractice: completeGlobalPractice,
             pulseShowsDismissButton: true
         )
+        .sheet(isPresented: $showingAnalyticsConsent) {
+            MoriAnalyticsConsentView { choice in
+                AnalyticsManager.shared.setConsent(choice)
+                showingAnalyticsConsent = false
+            }
+        }
     }
 
     @ViewBuilder
@@ -135,6 +143,9 @@ struct ContentView: View {
         switch route {
         case .weekArchiveDetail:
             WeekArchiveDetailView()
+        case .recovery:
+            MoriRecoveryScreen()
+                .moriHidesMainTabBar()
         }
     }
 
@@ -223,6 +234,8 @@ struct ContentView: View {
             open(.practiceLaunch(.deepSession), source: .deepLink)
         } else if arguments.contains("-MoriOpenWeekArchiveForUITest") {
             open(.weekArchiveDetail, source: .deepLink)
+        } else if arguments.contains("-MoriOpenRecoveryForUITest") {
+            open(.recoveryDetail, source: .deepLink)
         } else if arguments.contains("-MoriOpenQuietModeForUITest") {
             open(.practiceLaunch(.quietMode), source: .deepLink)
         } else if arguments.contains("-MoriOpenPracticeVerificationForUITest") {

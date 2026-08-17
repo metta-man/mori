@@ -218,12 +218,52 @@ function Footer({ copy }: CopyProps) {
         <span>{copy.footerBrandLine}</span>
       </div>
       <nav aria-label="Footer">
-        <a href="#">{copy.privacy}</a>
-        <a href="#">{copy.terms}</a>
-        <a href="#">{copy.contact}</a>
+        <a href="/privacy">{copy.privacy}</a>
+        <a href="/terms">{copy.terms}</a>
+        <a href="/support">{copy.contact}</a>
       </nav>
       <small>{copy.copyright}</small>
     </footer>
+  )
+}
+
+function LegalPage({ kind }: { kind: 'privacy' | 'terms' | 'support' }) {
+  const content = {
+    privacy: {
+      title: 'Privacy Policy',
+      paragraphs: [
+        'Mori stores journal entries, photos, focus settings, Life Grid check-ins, and Recovery summaries for the features you choose to use. Journal and Health data are not used for advertising.',
+        'Recovery reads only the Apple Health categories you approve. Processing is performed on device for the public App Store version. Mori never deletes or modifies your Apple Health records.',
+        'Anonymous product analytics are off until you explicitly opt in. Analytics exclude journal text, photos, Health data, exact dates, and selected app names, and are retained for no more than 90 days.',
+        'You can delete individual data categories or all Mori data from Settings → App and Data. iCloud backup deletion requires an internet connection.',
+      ],
+    },
+    terms: {
+      title: 'Terms of Use',
+      paragraphs: [
+        'Mori is a wellbeing and attention tool, not medical advice or a medical device. Recovery signals are informational and should not replace professional care.',
+        'You are responsible for your device settings and for keeping a backup of anything you wish to retain before using data deletion controls.',
+        'Mori is provided as available. We may update these terms when the product changes; material changes will be reflected on this page.',
+      ],
+    },
+    support: {
+      title: 'Mori Support',
+      paragraphs: [
+        'For help with Screen Time permissions, iCloud restore, Recovery, or data deletion, email support@mettalabs.com.',
+        'Please do not include journal text, Health screenshots, or other sensitive personal information in your support message.',
+      ],
+    },
+  }[kind]
+
+  return (
+    <main className="mx-auto min-h-screen max-w-3xl px-6 py-20 font-ui text-[#243833]">
+      <a href="/" className="text-sm underline">← Mori</a>
+      <h1 className="mt-10 font-serif text-4xl">{content.title}</h1>
+      <p className="mt-3 text-sm text-[#65706b]">Effective 16 August 2026</p>
+      <div className="mt-10 space-y-6 text-lg leading-8">
+        {content.paragraphs.map((paragraph) => <p key={paragraph}>{paragraph}</p>)}
+      </div>
+    </main>
   )
 }
 
@@ -247,6 +287,9 @@ function MarketingApp() {
 }
 
 export default function App() {
+  if (window.location.pathname === '/privacy') return <LegalPage kind="privacy" />
+  if (window.location.pathname === '/terms') return <LegalPage kind="terms" />
+  if (window.location.pathname === '/support') return <LegalPage kind="support" />
   if (window.location.pathname === '/mori-v2' || window.location.pathname.startsWith('/mori-v2/')) {
     return <MoriV2Prototype />
   }

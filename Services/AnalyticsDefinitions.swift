@@ -87,6 +87,12 @@ struct AnalyticsProperties {
 }
 
 struct AnalyticsConfig {
-    static let apiKey = "phc_your_posthog_key_here"
-    static let endpoint = "https://app.posthog.com"
+    static var apiKey: String {
+        Bundle.main.object(forInfoDictionaryKey: "MORI_POSTHOG_API_KEY") as? String ?? ""
+    }
+
+    static var endpoint: String {
+        Bundle.main.object(forInfoDictionaryKey: "MORI_POSTHOG_HOST") as? String
+            ?? "https://eu.i.posthog.com"
+    }
 }

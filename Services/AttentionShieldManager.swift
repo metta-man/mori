@@ -126,6 +126,19 @@ final class AttentionShieldManager: ObservableObject {
         }
     }
 
+    func resetAllProtectionData() {
+        beforeFeedReapplyTask?.cancel()
+        beforeFeedReapplyTask = nil
+        monitoringCoordinator.stopAll()
+        clearShield()
+        activeSession = nil
+        activeSessionStore.clear()
+        selectionCoordinator.clearAll()
+        lastScheduledBeforeFeedGraceUntil = nil
+        lastErrorMessage = nil
+        refreshSelectionState()
+    }
+
     private func setDailyThresholdMinutes(_ minutes: Int) {
         dailyThresholdMinutes = minutes
     }
