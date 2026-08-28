@@ -56,6 +56,72 @@ enum ScreenTimeSettingsLockError: LocalizedError {
     }
 }
 
+protocol ScreenTimeSettingsLockKeychainStoring: AnyObject {
+    func loadData() -> Data?
+    func saveData(_ data: Data) throws
+    func deleteData() throws
+}
+
+private final class SystemScreenTimeSettingsLockKeychain: ScreenTimeSettingsLockKeychainStoring {
+    private let service: String
+    private let account: String
+
+    init(service: String, account: String) {
+        self.service = service
+        self.account = account
+    }
+
+    func loadData() -> Data? {
+        var query = baseQuery()
+        query[kSecReturnData as String] = true
+        query[kSecMatchLimit as String] = kSecMatchLimitOne
+
+        var result: AnyObject?
+        let status = SecItemCopyMatching(query as CFDictionary, &result)
+        guard status == errSecSuccess else { return nil }
+        return result as? Data
+    }
+
+    func saveData(_ data: Data) throws {
+        let query = baseQuery()
+        let updateAttributes: [String: Any] = [
+            kSecValueData as String: data
+        ]
+
+        let updateStatus = SecItemUpdate(query as CFDictionary, updateAttributes as CFDictionary)
+        if updateStatus == errSecSuccess {
+            return
+        }
+
+        guard updateStatus == errSecItemNotFound else {
+            throw ScreenTimeSettingsLockError.keychainFailure
+        }
+
+        var addQuery = query
+        addQuery[kSecValueData as String] = data
+        addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        let addStatus = SecItemAdd(addQuery as CFDictionary, nil)
+        guard addStatus == errSecSuccess else {
+            throw ScreenTimeSettingsLockError.keychainFailure
+        }
+    }
+
+    func deleteData() throws {
+        let status = SecItemDelete(baseQuery() as CFDictionary)
+        guard status == errSecSuccess || status == errSecItemNotFound else {
+            throw ScreenTimeSettingsLockError.keychainFailure
+        }
+    }
+
+    private func baseQuery() -> [String: Any] {
+        [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account
+        ]
+    }
+}
+
 @MainActor
 final class ScreenTimeSettingsLockStore: ObservableObject {
     static let shared = ScreenTimeSettingsLockStore()
@@ -66,18 +132,29 @@ final class ScreenTimeSettingsLockStore: ObservableObject {
     @Published private(set) var mode: ScreenTimeSettingsLockMode?
     @Published private(set) var cooldownUntil: Date?
 
-    private let defaults = MoriAppGroup.defaults
+    private let defaults: UserDefaults
+    private let keychain: any ScreenTimeSettingsLockKeychainStoring
     private let encoder = JSONEncoder()
     private let decoder = JSONDecoder()
 
-    private static let keychainService = "com.mettalabs.mori.screen-time-settings-lock"
-    private static let keychainAccount = "screen-time-settings-pin"
+    nonisolated private static let defaultKeychainService = "com.mettalabs.mori.screen-time-settings-lock"
+    nonisolated private static let defaultKeychainAccount = "screen-time-settings-pin"
     private static let failedAttemptsKey = "mori_screen_time_settings_lock_failed_attempts"
     private static let cooldownUntilKey = "mori_screen_time_settings_lock_cooldown_until"
     private static let maximumFailedAttempts = 5
     private static let cooldownSeconds: TimeInterval = 60
 
-    private init() {
+    init(
+        defaults: UserDefaults = MoriAppGroup.defaults,
+        keychainService: String = ScreenTimeSettingsLockStore.defaultKeychainService,
+        keychainAccount: String = ScreenTimeSettingsLockStore.defaultKeychainAccount,
+        keychain: (any ScreenTimeSettingsLockKeychainStoring)? = nil
+    ) {
+        self.defaults = defaults
+        self.keychain = keychain ?? SystemScreenTimeSettingsLockKeychain(
+            service: keychainService,
+            account: keychainAccount
+        )
         refresh()
     }
 
@@ -148,6 +225,15 @@ final class ScreenTimeSettingsLockStore: ObservableObject {
         refresh()
     }
 
+    /// Destructive data deletion has already been confirmed at the Settings
+    /// boundary, so it must not require a PIN that is itself being deleted.
+    func clearForDataDeletion() throws {
+        try deleteMetadata()
+        defaults.removeObject(forKey: Self.failedAttemptsKey)
+        defaults.removeObject(forKey: Self.cooldownUntilKey)
+        refresh()
+    }
+
     func cooldownRemainingSeconds(now: Date = Date()) -> Int {
         guard let cooldownUntil = loadCooldownUntil(),
               cooldownUntil > now
@@ -193,39 +279,16 @@ final class ScreenTimeSettingsLockStore: ObservableObject {
     }
 
     private func loadMetadata() -> LockMetadata? {
-        guard let data = Self.keychainData() else { return nil }
+        guard let data = keychain.loadData() else { return nil }
         return try? decoder.decode(LockMetadata.self, from: data)
     }
 
     private func saveMetadataData(_ data: Data) throws {
-        let query = Self.baseKeychainQuery()
-        let updateAttributes: [String: Any] = [
-            kSecValueData as String: data
-        ]
-
-        let updateStatus = SecItemUpdate(query as CFDictionary, updateAttributes as CFDictionary)
-        if updateStatus == errSecSuccess {
-            return
-        }
-
-        guard updateStatus == errSecItemNotFound else {
-            throw ScreenTimeSettingsLockError.keychainFailure
-        }
-
-        var addQuery = query
-        addQuery[kSecValueData as String] = data
-        addQuery[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
-        let addStatus = SecItemAdd(addQuery as CFDictionary, nil)
-        guard addStatus == errSecSuccess else {
-            throw ScreenTimeSettingsLockError.keychainFailure
-        }
+        try keychain.saveData(data)
     }
 
     private func deleteMetadata() throws {
-        let status = SecItemDelete(Self.baseKeychainQuery() as CFDictionary)
-        guard status == errSecSuccess || status == errSecItemNotFound else {
-            throw ScreenTimeSettingsLockError.keychainFailure
-        }
+        try keychain.deleteData()
     }
 
     private func recordFailedAttempt() {
@@ -279,25 +342,6 @@ final class ScreenTimeSettingsLockStore: ObservableObject {
             difference |= lhs[index] ^ rhs[index]
         }
         return difference == 0
-    }
-
-    private static func keychainData() -> Data? {
-        var query = baseKeychainQuery()
-        query[kSecReturnData as String] = true
-        query[kSecMatchLimit as String] = kSecMatchLimitOne
-
-        var result: AnyObject?
-        let status = SecItemCopyMatching(query as CFDictionary, &result)
-        guard status == errSecSuccess else { return nil }
-        return result as? Data
-    }
-
-    private static func baseKeychainQuery() -> [String: Any] {
-        [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: keychainService,
-            kSecAttrAccount as String: keychainAccount
-        ]
     }
 
     private struct LockMetadata: Codable {

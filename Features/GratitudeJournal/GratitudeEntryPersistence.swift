@@ -1,15 +1,25 @@
 import Foundation
 
+protocol GratitudeUbiquitousKeyValueStoring: AnyObject {
+    func data(forKey defaultName: String) -> Data?
+    func set(_ value: Any?, forKey defaultName: String)
+    func removeObject(forKey defaultName: String)
+    @discardableResult func synchronize() -> Bool
+}
+
+extension NSUbiquitousKeyValueStore: GratitudeUbiquitousKeyValueStoring {}
+
 struct GratitudeEntryStore {
     static let live = GratitudeEntryStore()
 
     private enum Key {
         static let entries = "mori_gratitude_entries"
         static let iCloudEntries = "icloud_mori_gratitude_entries"
+        static let localDeletionTombstone = "mori_gratitude_local_entries_deleted"
     }
 
     private let defaults: UserDefaults
-    private let ubiquitousStore: NSUbiquitousKeyValueStore
+    private let ubiquitousStore: any GratitudeUbiquitousKeyValueStoring
     private let notificationCenter: NotificationCenter
     private let cloudBackup: GratitudeCloudBackup
     private let encoder: JSONEncoder
@@ -17,7 +27,7 @@ struct GratitudeEntryStore {
 
     init(
         defaults: UserDefaults = .standard,
-        ubiquitousStore: NSUbiquitousKeyValueStore = .default,
+        ubiquitousStore: any GratitudeUbiquitousKeyValueStoring = NSUbiquitousKeyValueStore.default,
         notificationCenter: NotificationCenter = .default,
         cloudBackup: GratitudeCloudBackup = .shared,
         encoder: JSONEncoder = JSONEncoder(),
@@ -36,6 +46,13 @@ struct GratitudeEntryStore {
 
         guard let data = defaults.data(forKey: Key.entries),
               let decoded = try? decoder.decode([GratitudeEntry].self, from: data) else {
+            // A local deletion is intentionally different from deleting the user's
+            // separate iCloud backup. Keep the mirror intact, but do not silently
+            // rehydrate data that the user just removed from this device.
+            guard !defaults.bool(forKey: Key.localDeletionTombstone) else {
+                return []
+            }
+
             guard let iCloudData = ubiquitousStore.data(forKey: Key.iCloudEntries),
                   let iCloudDecoded = try? decoder.decode([GratitudeEntry].self, from: iCloudData) else {
                 return []
@@ -51,6 +68,7 @@ struct GratitudeEntryStore {
     func saveEntries(_ entries: [GratitudeEntry]) {
         guard let data = try? encoder.encode(entries) else { return }
 
+        defaults.removeObject(forKey: Key.localDeletionTombstone)
         defaults.set(data, forKey: Key.entries)
         ubiquitousStore.set(data, forKey: Key.iCloudEntries)
         ubiquitousStore.synchronize()
@@ -64,6 +82,7 @@ struct GratitudeEntryStore {
 
     func deleteLocalEntries() {
         defaults.removeObject(forKey: Key.entries)
+        defaults.set(true, forKey: Key.localDeletionTombstone)
         MoriDataChangeEvent.gratitude.post(notificationCenter: notificationCenter)
     }
 

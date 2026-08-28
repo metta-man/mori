@@ -2,6 +2,8 @@ import SwiftUI
 import WidgetKit
 
 struct PulseSmallWidget: View {
+    @Environment(\.widgetRenderingMode) private var renderingMode
+
     let context: MoriWidgetContextSnapshot
 
     var body: some View {
@@ -11,20 +13,20 @@ struct PulseSmallWidget: View {
 
                 Text(context.recoveryScoreText)
                     .font(.system(size: 34, weight: .light, design: .rounded))
-                    .foregroundStyle(MoriWidgetColors.ink)
+                    .foregroundStyle(MoriWidgetPalette.ink(for: renderingMode))
                     .monospacedDigit()
                     .widgetAccentable()
 
                 Text(context.displayRecoveryState)
                     .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    .foregroundStyle(MoriWidgetColors.moss)
+                    .foregroundStyle(MoriWidgetPalette.moss(for: renderingMode))
                     .lineLimit(1)
 
                 Spacer(minLength: 0)
 
                 Text(context.displayRecoveryDetail)
                     .font(.system(size: 11, weight: .medium, design: .rounded))
-                    .foregroundStyle(MoriWidgetColors.mutedInk)
+                    .foregroundStyle(MoriWidgetPalette.mutedInk(for: renderingMode))
                     .lineLimit(2)
             }
         }
@@ -37,6 +39,8 @@ struct PulseSmallWidget: View {
 }
 
 struct PulseMediumWidget: View {
+    @Environment(\.widgetRenderingMode) private var renderingMode
+
     let context: MoriWidgetContextSnapshot
 
     var body: some View {
@@ -47,13 +51,13 @@ struct PulseMediumWidget: View {
 
                     Text(context.displayRecoveryDetail)
                         .font(.system(size: 17, weight: .semibold, design: .rounded))
-                        .foregroundStyle(MoriWidgetColors.ink)
+                        .foregroundStyle(MoriWidgetPalette.ink(for: renderingMode))
                         .minimumScaleFactor(0.74)
                         .lineLimit(2)
 
                     Text(MoriL10n.display("Calculated privately on this iPhone."))
                         .font(.system(size: 10, weight: .medium, design: .rounded))
-                        .foregroundStyle(MoriWidgetColors.mutedInk)
+                        .foregroundStyle(MoriWidgetPalette.mutedInk(for: renderingMode))
                         .lineLimit(2)
                 }
                 .frame(maxWidth: .infinity, alignment: .topLeading)
@@ -61,19 +65,19 @@ struct PulseMediumWidget: View {
                 VStack(alignment: .leading, spacing: 7) {
                     Text(context.recoveryScoreText)
                         .font(.system(size: 25, weight: .semibold, design: .rounded))
-                        .foregroundStyle(MoriWidgetColors.leafAccent)
+                        .foregroundStyle(MoriWidgetPalette.accent(for: renderingMode))
                         .minimumScaleFactor(0.72)
                         .lineLimit(1)
                         .widgetAccentable()
 
                     Text(MoriL10n.display(context.displayRecoveryState))
                         .font(.system(size: 10, weight: .medium, design: .rounded))
-                        .foregroundStyle(MoriWidgetColors.mutedInk)
+                        .foregroundStyle(MoriWidgetPalette.mutedInk(for: renderingMode))
                         .lineLimit(1)
 
                     Text(MoriL10n.display(context.hasRecoverySnapshot ? "Updated from Apple Health" : "Open Mori to connect Health"))
                         .font(.system(size: 10, weight: .medium, design: .rounded))
-                        .foregroundStyle(MoriWidgetColors.mutedInk)
+                        .foregroundStyle(MoriWidgetPalette.mutedInk(for: renderingMode))
                         .lineLimit(2)
                 }
                 .frame(width: 126, alignment: .topLeading)
@@ -83,6 +87,8 @@ struct PulseMediumWidget: View {
 }
 
 struct PulseLargeWidget: View {
+    @Environment(\.widgetRenderingMode) private var renderingMode
+
     let context: MoriWidgetContextSnapshot
 
     var body: some View {
@@ -94,7 +100,7 @@ struct PulseLargeWidget: View {
 
                         Text(context.displayRecoveryState)
                             .font(.system(size: 13, weight: .semibold, design: .rounded))
-                            .foregroundStyle(MoriWidgetColors.moss)
+                            .foregroundStyle(MoriWidgetPalette.moss(for: renderingMode))
                             .lineLimit(1)
                             .widgetAccentable()
                     }
@@ -103,7 +109,7 @@ struct PulseLargeWidget: View {
 
                     Text(context.recoveryScoreText)
                         .font(.system(size: 34, weight: .light, design: .monospaced))
-                        .foregroundStyle(MoriWidgetColors.leafAccent)
+                        .foregroundStyle(MoriWidgetPalette.accent(for: renderingMode))
                         .widgetAccentable()
                         .minimumScaleFactor(0.72)
                         .lineLimit(1)
@@ -112,12 +118,12 @@ struct PulseLargeWidget: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text(context.displayRecoveryDetail)
                         .font(.system(size: 23, weight: .semibold, design: .rounded))
-                        .foregroundStyle(MoriWidgetColors.ink)
+                        .foregroundStyle(MoriWidgetPalette.ink(for: renderingMode))
                         .minimumScaleFactor(0.78)
                         .lineLimit(4)
 
                     HStack(spacing: 5) {
-                        MoriBitmapIconImage(
+                        MoriWidgetIconImage(
                             icon: context.displayRecoveryPracticeIcon,
                             size: 11,
                             opacity: 0.84
@@ -129,17 +135,17 @@ struct PulseLargeWidget: View {
                             arguments: [context.displayRecoveryPracticeTitle]
                         ))
                             .font(.system(size: 13, weight: .medium, design: .rounded))
-                            .foregroundStyle(MoriWidgetColors.mutedInk)
+                            .foregroundStyle(MoriWidgetPalette.mutedInk(for: renderingMode))
                             .lineLimit(1)
                     }
                 }
                 .padding(12)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(MoriWidgetColors.surface)
+                .background(MoriWidgetCardWash(cornerRadius: 13))
                 .clipShape(RoundedRectangle(cornerRadius: 13, style: .continuous))
                 .overlay(
                     RoundedRectangle(cornerRadius: 13, style: .continuous)
-                        .stroke(MoriWidgetColors.leafAccent.opacity(0.16), lineWidth: 1)
+                        .stroke(MoriWidgetPalette.outline(for: renderingMode), lineWidth: 1)
                 )
 
                 MoriWidgetCompactStat(title: "Privacy", value: "On device")
@@ -153,7 +159,7 @@ struct PulseAccessoryCircularWidget: View {
 
     var body: some View {
         Gauge(value: context.recoveryProgress) {
-            MoriBitmapIconImage(icon: .heart, size: 12)
+            MoriWidgetIconImage(icon: .heart, size: 12)
         } currentValueLabel: {
             Text(context.recoveryScoreText)
                 .font(.system(size: 12, weight: .semibold, design: .rounded))

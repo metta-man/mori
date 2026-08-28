@@ -19,6 +19,27 @@ struct MoriBeforeFeedIntentEvent: Codable, Equatable, Identifiable {
     let reason: MoriBeforeFeedIntentReason
     let confirmedAt: Date
     let routeSource: String?
+    let enoughChoiceID: String?
+    let openWindowSeconds: Int?
+    let returnAnchorID: String?
+
+    init(
+        id: UUID,
+        reason: MoriBeforeFeedIntentReason,
+        confirmedAt: Date,
+        routeSource: String?,
+        enoughChoiceID: String? = nil,
+        openWindowSeconds: Int? = nil,
+        returnAnchorID: String? = nil
+    ) {
+        self.id = id
+        self.reason = reason
+        self.confirmedAt = confirmedAt
+        self.routeSource = routeSource
+        self.enoughChoiceID = enoughChoiceID
+        self.openWindowSeconds = openWindowSeconds
+        self.returnAnchorID = returnAnchorID
+    }
 }
 
 struct BeforeFeedGateStore {
@@ -78,6 +99,13 @@ struct BeforeFeedGateStore {
 
     func saveGraceWindowSeconds(_ seconds: Int) {
         defaults.set(normalizedGraceWindowSeconds(seconds), forKey: MoriScreenTimeShared.beforeFeedGraceWindowSecondsKey)
+    }
+
+    /// Resolves a single Before Feed window without changing the person's
+    /// saved default. A nil override retains the legacy/global behavior.
+    func resolvedGraceWindowSeconds(override requestedSeconds: Int?) -> Int {
+        guard let requestedSeconds else { return graceWindowSeconds() }
+        return normalizedGraceWindowSeconds(requestedSeconds)
     }
 
     func graceUntil(now: Date = Date()) -> Date? {
@@ -157,6 +185,9 @@ struct BeforeFeedGateStore {
     func recordIntent(
         reason: MoriBeforeFeedIntentReason,
         routeSource: String?,
+        enoughChoiceID: String? = nil,
+        openWindowSeconds: Int? = nil,
+        returnAnchorID: String? = nil,
         eventID: UUID = UUID(),
         now: Date = Date()
     ) -> MoriBeforeFeedIntentEvent {
@@ -169,7 +200,10 @@ struct BeforeFeedGateStore {
             id: eventID,
             reason: reason,
             confirmedAt: now,
-            routeSource: routeSource
+            routeSource: routeSource,
+            enoughChoiceID: enoughChoiceID,
+            openWindowSeconds: openWindowSeconds,
+            returnAnchorID: returnAnchorID
         )
         events.append(event)
         if let encodedEvents = try? JSONEncoder().encode(events) {
@@ -253,6 +287,10 @@ struct BeforeFeedGateStore {
         _ = durationSeconds()
         _ = graceWindowSeconds()
         _ = graceUntil(now: now)
+    }
+
+    func clearIntentHistory() {
+        defaults.removeObject(forKey: Self.intentEventsKey)
     }
 
     private func normalizedDurationSeconds(_ seconds: Int) -> Int {

@@ -1,6 +1,33 @@
 import UIKit
 
+enum MoriBreathingTerminalCuePolicy {
+    static let timingEpsilon: TimeInterval = 0.05
+
+    static func shouldScheduleNextPhaseCue(
+        sessionRemaining: TimeInterval?,
+        phaseRemaining: TimeInterval,
+        epsilon: TimeInterval = timingEpsilon
+    ) -> Bool {
+        guard phaseRemaining.isFinite, phaseRemaining > 0,
+              epsilon.isFinite, epsilon >= 0
+        else {
+            return false
+        }
+
+        guard let sessionRemaining else {
+            return true
+        }
+        guard sessionRemaining.isFinite, sessionRemaining > 0 else {
+            return false
+        }
+
+        return sessionRemaining - phaseRemaining > epsilon
+    }
+}
+
 final class MoriBreathingSessionFeedbackCoordinator {
+    static let defaultCompletionTone: SettleBellTone = .singingBowlA
+
     private enum TapStyle {
         case light
         case medium
@@ -44,10 +71,17 @@ final class MoriBreathingSessionFeedbackCoordinator {
         segments: [MoriBreathingCycleSegment],
         currentPhaseIndex: Int,
         phaseRemaining: TimeInterval,
+        sessionRemaining: TimeInterval? = nil,
         canPlay: @escaping () -> Bool
     ) {
         guard canPlay(), !segments.isEmpty, segments.indices.contains(currentPhaseIndex) else { return }
         cancelSound()
+        guard MoriBreathingTerminalCuePolicy.shouldScheduleNextPhaseCue(
+            sessionRemaining: sessionRemaining,
+            phaseRemaining: phaseRemaining
+        ) else {
+            return
+        }
 
         let nextPhaseIndex = (currentPhaseIndex + 1) % segments.count
         guard segments.indices.contains(nextPhaseIndex), let nextCue = segments[nextPhaseIndex].phase.cue else { return }
@@ -77,9 +111,13 @@ final class MoriBreathingSessionFeedbackCoordinator {
         }
     }
 
-    func playCompletionFeedback(soundEnabled: Bool, hapticsEnabled: Bool) {
+    func playCompletionFeedback(
+        soundEnabled: Bool,
+        hapticsEnabled: Bool,
+        tone: SettleBellTone = MoriBreathingSessionFeedbackCoordinator.defaultCompletionTone
+    ) {
         if soundEnabled {
-            SettleBellService.shared.playEndingBell()
+            SettleBellService.shared.playEndingBell(tone)
         }
         if hapticsEnabled {
             UINotificationFeedbackGenerator().notificationOccurred(.success)

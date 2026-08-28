@@ -9,6 +9,18 @@ struct SettleView: View {
         MoriScreenTimeShared.beforeFeedDurationSecondsKey,
         store: MoriAppGroup.defaults
     ) private var beforeFeedDurationSeconds: Int = MoriScreenTimeShared.defaultBeforeFeedDurationSeconds
+    @AppStorage(
+        MoriScreenTimeShared.beforeFeedBreathingTechniqueIDKey,
+        store: MoriAppGroup.defaults
+    ) private var beforeFeedBreathingTechniqueID: String = MoriScreenTimeShared.defaultBeforeFeedBreathingTechniqueID
+    @AppStorage(
+        MoriScreenTimeShared.beforeFeedPauseStyleKey,
+        store: MoriAppGroup.defaults
+    ) private var beforeFeedPauseStyleRaw: String = MoriBeforeFeedPauseStyle.guidedBreathing.rawValue
+    @AppStorage(
+        MoriScreenTimeShared.beforeFeedGuidedCycleCountKey,
+        store: MoriAppGroup.defaults
+    ) private var beforeFeedGuidedCycleCount: Int = MoriBeforeFeedPausePreferences.defaultGuidedCycleCount
     @State private var handledLaunchRequestID: UUID?
     @State private var showsFocusSupport = false
     @StateObject private var appLimitManager = AppLimitManager.shared
@@ -139,7 +151,7 @@ struct SettleView: View {
             } label: {
                 MoriV2QuietActionRow(
                     title: "Before Feed",
-                    subtitle: "Pause \(BeforeFeedGate.formattedDuration(beforeFeedDurationSeconds)) before the next feed.",
+                    subtitle: beforeFeedPauseSummary,
                     icon: .beforeFeedReset
                 )
             }
@@ -170,6 +182,22 @@ struct SettleView: View {
 
     private func openSettings() {
         openRoute(.settings)
+    }
+
+    private var beforeFeedPauseSummary: String {
+        let style = MoriBeforeFeedPauseStyle(rawValue: beforeFeedPauseStyleRaw) ?? .guidedBreathing
+        return MoriL10n.string(
+            "before_feed.focus.summary",
+            defaultValue: "%@ · choose the feed window each time.",
+            arguments: [
+                MoriBeforeFeedPauseSettingsPresentation.summary(
+                    style: style,
+                    techniqueID: beforeFeedBreathingTechniqueID,
+                    guidedCycleCount: beforeFeedGuidedCycleCount,
+                    quietDurationSeconds: beforeFeedDurationSeconds
+                )
+            ]
+        )
     }
 
     private var essentialModeCardStatus: String {

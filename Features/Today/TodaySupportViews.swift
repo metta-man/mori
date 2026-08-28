@@ -825,8 +825,9 @@ struct TodayAppLimitPresentation {
     init(
         snapshot: AppLimitSettingsSnapshot,
         effectiveSelection: FamilyActivitySelection,
-        durationSeconds: Int,
-        graceWindowSeconds: Int,
+        pauseStyle: MoriBeforeFeedPauseStyle,
+        guidedCycleCount: Int,
+        quietDurationSeconds: Int,
         breathingTechniqueID: String
     ) {
         let summary = snapshot.profileSummaries.first { $0.feature == .beforeFeed } ?? MoriScreenTimeProfileSummary(
@@ -840,7 +841,12 @@ struct TodayAppLimitPresentation {
         )
         self.profileSummary = summary
         self.effectiveSelection = effectiveSelection
-        durationText = BeforeFeedGate.formattedDuration(durationSeconds)
+        durationText = MoriBeforeFeedPauseSettingsPresentation.summary(
+            style: pauseStyle,
+            techniqueID: breathingTechniqueID,
+            guidedCycleCount: guidedCycleCount,
+            quietDurationSeconds: quietDurationSeconds
+        )
 
         if !snapshot.isAuthorized {
             stateLabel = "Permission needed"
@@ -869,8 +875,9 @@ struct TodayAppLimitPresentation {
             buttonIcon = .lockShield
             isReady = true
             timingRows = Self.timingRows(
-                durationSeconds: durationSeconds,
-                graceWindowSeconds: graceWindowSeconds,
+                pauseStyle: pauseStyle,
+                guidedCycleCount: guidedCycleCount,
+                quietDurationSeconds: quietDurationSeconds,
                 breathingTechniqueID: breathingTechniqueID
             )
         } else {
@@ -882,8 +889,9 @@ struct TodayAppLimitPresentation {
             buttonIcon = .play
             isReady = false
             timingRows = Self.timingRows(
-                durationSeconds: durationSeconds,
-                graceWindowSeconds: graceWindowSeconds,
+                pauseStyle: pauseStyle,
+                guidedCycleCount: guidedCycleCount,
+                quietDurationSeconds: quietDurationSeconds,
                 breathingTechniqueID: breathingTechniqueID
             )
         }
@@ -980,39 +988,30 @@ struct TodayAppLimitPresentation {
     }
 
     private static func timingRows(
-        durationSeconds: Int,
-        graceWindowSeconds: Int,
+        pauseStyle: MoriBeforeFeedPauseStyle,
+        guidedCycleCount: Int,
+        quietDurationSeconds: Int,
         breathingTechniqueID: String
     ) -> [TodayAppLimitTimingRow] {
         [
             TodayAppLimitTimingRow(
-                id: "breathing",
-                icon: .breathe,
-                title: "Breathing",
-                value: breathingTitle(for: breathingTechniqueID)
-            ),
-            TodayAppLimitTimingRow(
-                id: "duration",
-                icon: .timer,
-                title: "Reset duration",
-                value: BeforeFeedGate.formattedDuration(durationSeconds)
+                id: "pause",
+                icon: pauseStyle == .guidedBreathing ? .breathe : .timer,
+                title: "Pause",
+                value: MoriBeforeFeedPauseSettingsPresentation.summary(
+                    style: pauseStyle,
+                    techniqueID: breathingTechniqueID,
+                    guidedCycleCount: guidedCycleCount,
+                    quietDurationSeconds: quietDurationSeconds
+                )
             ),
             TodayAppLimitTimingRow(
                 id: "window",
                 icon: .refresh,
-                title: "App open window",
-                value: BeforeFeedGate.formattedDuration(graceWindowSeconds)
+                title: "Feed window",
+                value: "Chosen each time"
             )
         ]
-    }
-
-    private static func breathingTitle(for techniqueID: String) -> String {
-        guard techniqueID != MoriScreenTimeShared.beforeFeedBreathingNoneID else {
-            return "None"
-        }
-
-        return MoriBreathingTechniqueRepository.getTechnique(id: techniqueID)?.name
-            ?? "Guided"
     }
 }
 

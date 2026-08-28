@@ -166,6 +166,16 @@ final class MoriClarityStore: ObservableObject {
         MoriWidgetContextPublisher.publish(clarityStore: self)
     }
 
+    func clearAllForDataDeletion() {
+        actions = []
+        selectedTopics = PulseTopic.defaultSelected
+        customTopics = []
+        customTopicSymbols = [:]
+        topicOrder = normalizedTopicOrder([])
+        latestPulse = nil
+        persistence.clearAll()
+    }
+
     @discardableResult
     func record(
         kind: MoriMindfulActionKind,

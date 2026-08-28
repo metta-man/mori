@@ -3,6 +3,7 @@ import WidgetKit
 
 struct JournalQuickStartEntryView: View {
     @Environment(\.widgetFamily) private var family
+    @Environment(\.widgetRenderingMode) private var renderingMode
     @AppStorage(MoriLocalePreference.defaultsKey, store: MoriSharedDefaults.shared) private var localePreferenceRaw = MoriLocalePreference.system.rawValue
 
     let entry: JournalQuickStartEntry
@@ -32,12 +33,12 @@ struct JournalQuickStartEntryView: View {
 
             Text(MoriL10n.display("One line worth keeping"))
                 .font(.system(size: 25, weight: .semibold, design: .rounded))
-                .foregroundStyle(MoriWidgetColors.ink)
+                .foregroundStyle(MoriWidgetPalette.ink(for: renderingMode))
                 .minimumScaleFactor(0.66)
                 .lineLimit(2)
 
             HStack(spacing: 6) {
-                MoriBitmapIconImage(icon: .journal, size: 11, opacity: 0.86)
+                MoriWidgetIconImage(icon: .journal, size: 11, opacity: 0.86)
                 Text(entry.hasReminderEnabled ? MoriL10n.string(
                     "widget.journal.reminder_compact",
                     defaultValue: "%@ reminder",
@@ -46,7 +47,7 @@ struct JournalQuickStartEntryView: View {
                     .font(.system(size: 12, weight: .medium, design: .rounded))
                     .lineLimit(1)
             }
-            .foregroundStyle(MoriWidgetColors.leafAccent)
+            .foregroundStyle(MoriWidgetPalette.accent(for: renderingMode))
             .widgetAccentable()
         }
     }
@@ -58,7 +59,7 @@ struct JournalQuickStartEntryView: View {
 
                 Text(MoriL10n.display("Capture one thing worth remembering from today."))
                     .font(.system(size: 20, weight: .semibold, design: .rounded))
-                    .foregroundStyle(MoriWidgetColors.ink)
+                    .foregroundStyle(MoriWidgetPalette.ink(for: renderingMode))
                     .minimumScaleFactor(0.82)
                     .lineLimit(3)
 
@@ -68,7 +69,7 @@ struct JournalQuickStartEntryView: View {
                     arguments: [entry.reminderTimeText]
                 ) : MoriL10n.display("No reminder set"))
                     .font(.system(size: 12, weight: .medium, design: .rounded))
-                    .foregroundStyle(MoriWidgetColors.moss)
+                    .foregroundStyle(MoriWidgetPalette.moss(for: renderingMode))
                     .lineLimit(1)
                     .widgetAccentable()
             }
@@ -76,26 +77,28 @@ struct JournalQuickStartEntryView: View {
             Spacer(minLength: 0)
 
             VStack(alignment: .center, spacing: 8) {
-                MoriBitmapIconImage(icon: .journal, size: 28, opacity: 0.90)
+                MoriWidgetIconImage(icon: .journal, size: 28, opacity: 0.90)
                     .widgetAccentable()
 
                 Text(entry.hasReminderEnabled ? entry.reminderTimeText : MoriL10n.display("Open"))
                     .font(.system(size: 13, weight: .semibold, design: .rounded))
-                    .foregroundStyle(MoriWidgetColors.mutedInk)
+                    .foregroundStyle(MoriWidgetPalette.mutedInk(for: renderingMode))
                     .lineLimit(1)
             }
             .frame(width: 82, height: 82)
-            .background(MoriWidgetColors.surfaceRaised)
+            .background(MoriWidgetCardWash(cornerRadius: 14))
             .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(MoriWidgetColors.leafAccent.opacity(0.2), lineWidth: 1)
+                    .stroke(MoriWidgetPalette.outline(for: renderingMode), lineWidth: 1)
             )
         }
     }
 }
 
 struct TodaySmallWidget: View {
+    @Environment(\.widgetRenderingMode) private var renderingMode
+
     let snapshot: MoriWidgetSnapshot
     let context: MoriWidgetContextSnapshot
 
@@ -109,21 +112,21 @@ struct TodaySmallWidget: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(context.reclaimedMinutesText)
                         .font(.system(size: 36, weight: .semibold, design: .rounded))
-                        .foregroundStyle(MoriWidgetColors.leafAccent)
+                        .foregroundStyle(MoriWidgetPalette.accent(for: renderingMode))
                         .widgetAccentable()
                         .minimumScaleFactor(0.58)
                         .lineLimit(1)
 
                     Text(MoriL10n.display("reclaimed today"))
                         .font(.system(size: 17, weight: .medium, design: .rounded))
-                        .foregroundStyle(MoriWidgetColors.ink)
+                        .foregroundStyle(MoriWidgetPalette.ink(for: renderingMode))
                         .lineLimit(1)
                         .minimumScaleFactor(0.72)
                 }
 
                 Text(MoriL10n.display("Limit one app before feeds"))
                     .font(.system(size: 12, weight: .regular, design: .rounded))
-                    .foregroundStyle(MoriWidgetColors.mutedInk)
+                    .foregroundStyle(MoriWidgetPalette.mutedInk(for: renderingMode))
                     .lineLimit(1)
 
                 MoriWidgetMiniMetric(
@@ -137,6 +140,8 @@ struct TodaySmallWidget: View {
 }
 
 struct TodayMediumWidget: View {
+    @Environment(\.widgetRenderingMode) private var renderingMode
+
     let snapshot: MoriWidgetSnapshot
     let context: MoriWidgetContextSnapshot
 
@@ -150,36 +155,36 @@ struct TodayMediumWidget: View {
 
                     Text(context.reclaimedMinutesText)
                         .font(.system(size: 38, weight: .semibold, design: .rounded))
-                        .foregroundStyle(MoriWidgetColors.leafAccent)
+                        .foregroundStyle(MoriWidgetPalette.accent(for: renderingMode))
                         .widgetAccentable()
                         .minimumScaleFactor(0.72)
                         .lineLimit(1)
 
                     Text(MoriL10n.display("reclaimed before feeds"))
                         .font(.system(size: 15, weight: .medium, design: .rounded))
-                        .foregroundStyle(MoriWidgetColors.ink)
+                        .foregroundStyle(MoriWidgetPalette.ink(for: renderingMode))
                         .lineLimit(1)
                         .minimumScaleFactor(0.72)
                 }
 
-                VStack(alignment: .leading, spacing: 10) {
-                    MiniWeekArchiveGrid(snapshot: snapshot, columns: 13, rows: 8, dotSize: 5, spacing: 3)
+                VStack(alignment: .leading, spacing: 7) {
+                    MiniWeekArchiveGrid(snapshot: snapshot, columns: 13, rows: 8, dotSize: 4.5, spacing: 2.5)
 
                     HStack(spacing: 6) {
                         MoriWidgetCompactStat(title: "Bloom", value: context.bloomPercentText)
                         MoriWidgetCompactStat(title: "Seeds", value: "\(context.seedsToday)")
                     }
 
-                    VStack(alignment: .leading, spacing: 5) {
+                    VStack(alignment: .leading, spacing: 3) {
                         ProgressView(value: snapshot.progress)
-                            .tint(MoriWidgetColors.leafAccent)
-                            .background(MoriWidgetColors.ink.opacity(0.12))
+                            .tint(MoriWidgetPalette.accent(for: renderingMode))
+                            .background(MoriWidgetPalette.track(for: renderingMode))
                             .clipShape(Capsule())
                             .widgetAccentable()
 
                         Text(snapshot.archiveWeekText)
-                            .font(.system(size: 12, weight: .medium, design: .rounded))
-                            .foregroundStyle(MoriWidgetColors.mutedInk)
+                            .font(.system(size: 11, weight: .medium, design: .rounded))
+                            .foregroundStyle(MoriWidgetPalette.mutedInk(for: renderingMode))
                             .lineLimit(1)
                     }
                 }
@@ -190,6 +195,8 @@ struct TodayMediumWidget: View {
 }
 
 struct WeekArchiveLargeWidget: View {
+    @Environment(\.widgetRenderingMode) private var renderingMode
+
     let snapshot: MoriWidgetSnapshot
     let context: MoriWidgetContextSnapshot
 
@@ -198,11 +205,11 @@ struct WeekArchiveLargeWidget: View {
             VStack(alignment: .leading, spacing: 14) {
                 HStack(alignment: .top) {
                     VStack(alignment: .leading, spacing: 4) {
-                        MoriWidgetHeader(title: "Week Archive", icon: .roots)
+                        MoriWidgetHeader(title: "Life Grid", icon: .roots)
 
                         Text(snapshot.archiveWeekText)
                             .font(.system(size: 15, weight: .medium, design: .rounded))
-                            .foregroundStyle(MoriWidgetColors.leafAccent)
+                            .foregroundStyle(MoriWidgetPalette.accent(for: renderingMode))
                             .widgetAccentable()
                     }
 
@@ -210,14 +217,16 @@ struct WeekArchiveLargeWidget: View {
 
                     Text(snapshot.archiveProgressPercentText)
                         .font(.system(size: 24, weight: .semibold, design: .rounded))
-                        .foregroundStyle(MoriWidgetColors.ink)
+                        .foregroundStyle(MoriWidgetPalette.ink(for: renderingMode))
                 }
 
                 WeekArchivePreview(snapshot: snapshot)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    .layoutPriority(1)
 
                 ProgressView(value: snapshot.progress)
-                    .tint(MoriWidgetColors.leafAccent)
-                    .background(MoriWidgetColors.ink.opacity(0.12))
+                    .tint(MoriWidgetPalette.accent(for: renderingMode))
+                    .background(MoriWidgetPalette.track(for: renderingMode))
                     .clipShape(Capsule())
                     .widgetAccentable()
 
@@ -236,7 +245,7 @@ struct AccessoryCircularWidget: View {
 
     var body: some View {
         Gauge(value: snapshot.progress) {
-            MoriBitmapIconImage(icon: .roots, size: 12)
+            MoriWidgetIconImage(icon: .roots, size: 12)
         } currentValueLabel: {
             Text(snapshot.archiveWeekCompactText)
                 .minimumScaleFactor(0.55)
@@ -260,7 +269,7 @@ struct AccessoryRectangularWidget: View {
                     .lineLimit(1)
                     .minimumScaleFactor(0.68)
 
-                Text(MoriL10n.display("archive"))
+                Text(MoriL10n.display("Life Grid"))
                     .font(.caption2.weight(.semibold))
                     .foregroundStyle(.secondary)
                     .lineLimit(1)
@@ -283,20 +292,77 @@ struct AccessoryRectangularWidget: View {
 struct MoriWidgets_Previews: PreviewProvider {
     static var previews: some View {
         Group {
-            TodaySmallWidget(
-                snapshot: MoriWidgetSnapshot(),
-                context: .widgetPreview
-            )
-            .previewContext(WidgetPreviewContext(family: .systemSmall))
+            Group {
+                TodaySmallWidget(snapshot: previewSnapshot, context: .widgetPreview)
+                    .moriWidgetPreview(family: .systemSmall, mode: .fullColor, name: "Today · Small · Full Color")
+                TodaySmallWidget(snapshot: previewSnapshot, context: .widgetPreview)
+                    .moriWidgetPreview(family: .systemSmall, mode: .accented, name: "Today · Small · Accented")
+                TodayMediumWidget(snapshot: previewSnapshot, context: .widgetPreview)
+                    .moriWidgetPreview(family: .systemMedium, mode: .fullColor, name: "Today · Medium · Full Color")
+                TodayMediumWidget(snapshot: previewSnapshot, context: .widgetPreview)
+                    .moriWidgetPreview(family: .systemMedium, mode: .accented, name: "Today · Medium · Accented")
+                WeekArchiveLargeWidget(snapshot: previewSnapshot, context: .widgetPreview)
+                    .moriWidgetPreview(family: .systemLarge, mode: .fullColor, name: "Today · Large · Full Color")
+                WeekArchiveLargeWidget(snapshot: previewSnapshot, context: .widgetPreview)
+                    .moriWidgetPreview(family: .systemLarge, mode: .accented, name: "Today · Large · Accented")
+            }
 
-            PulseMediumWidget(context: .widgetPreview)
-                .previewContext(WidgetPreviewContext(family: .systemMedium))
+            Group {
+                PulseSmallWidget(context: .widgetPreview)
+                    .moriWidgetPreview(family: .systemSmall, mode: .fullColor, name: "Recovery · Small · Full Color")
+                PulseSmallWidget(context: .widgetPreview)
+                    .moriWidgetPreview(family: .systemSmall, mode: .accented, name: "Recovery · Small · Accented")
+                PulseMediumWidget(context: .widgetPreview)
+                    .moriWidgetPreview(family: .systemMedium, mode: .fullColor, name: "Recovery · Medium · Full Color")
+                PulseMediumWidget(context: .widgetPreview)
+                    .moriWidgetPreview(family: .systemMedium, mode: .accented, name: "Recovery · Medium · Accented")
+                PulseLargeWidget(context: .widgetPreview)
+                    .moriWidgetPreview(family: .systemLarge, mode: .fullColor, name: "Recovery · Large · Full Color")
+                PulseLargeWidget(context: .widgetStalePreview)
+                    .moriWidgetPreview(family: .systemLarge, mode: .accented, name: "Recovery · Large · Accented")
+            }
 
-            PulseLargeWidget(context: .widgetStalePreview)
-                .previewContext(WidgetPreviewContext(family: .systemLarge))
-
-            PulseAccessoryRectangularWidget(context: .widgetEmptyPreview)
-                .previewContext(WidgetPreviewContext(family: .accessoryRectangular))
+            Group {
+                JournalQuickStartEntryView(entry: previewJournalEntry)
+                    .moriWidgetPreview(family: .systemSmall, mode: .fullColor, name: "Log · Small · Full Color")
+                JournalQuickStartEntryView(entry: previewJournalEntry)
+                    .moriWidgetPreview(family: .systemSmall, mode: .accented, name: "Log · Small · Accented")
+                JournalQuickStartEntryView(entry: previewJournalEntry)
+                    .moriWidgetPreview(family: .systemMedium, mode: .fullColor, name: "Log · Medium · Full Color")
+                JournalQuickStartEntryView(entry: previewJournalEntry)
+                    .moriWidgetPreview(family: .systemMedium, mode: .accented, name: "Log · Medium · Accented")
+                PulseAccessoryCircularWidget(context: .widgetPreview)
+                    .moriWidgetPreview(family: .accessoryCircular, mode: .vibrant, name: "Recovery · Circular · Vibrant")
+                PulseAccessoryRectangularWidget(context: .widgetPreview)
+                    .moriWidgetPreview(family: .accessoryRectangular, mode: .vibrant, name: "Recovery · Rectangular · Vibrant")
+            }
         }
+    }
+
+    private static let previewNow = Date(timeIntervalSince1970: 1_777_507_200)
+
+    private static let previewSnapshot = MoriWidgetSnapshot(
+        archiveStartDate: Date(timeIntervalSince1970: 830_908_800),
+        archiveSpanYears: 80,
+        now: previewNow
+    )
+
+    private static let previewJournalEntry = JournalQuickStartEntry(
+        date: previewNow,
+        hasReminderEnabled: true,
+        reminderTimeText: "9:00 PM"
+    )
+}
+
+private extension View {
+    func moriWidgetPreview(
+        family: WidgetFamily,
+        mode: WidgetRenderingMode,
+        name: String
+    ) -> some View {
+        moriWidgetContainerBackground()
+            .environment(\.widgetRenderingMode, mode)
+            .previewContext(WidgetPreviewContext(family: family))
+            .previewDisplayName(name)
     }
 }

@@ -20,6 +20,8 @@ struct AnalyticsStateStore {
         static let hasCompletedOnboarding = "hasCompletedOnboarding"
         static let screenTimeAttemptsLastSyncedAt = "analyticsScreenTimeAttemptsLastSyncedAt"
         static let consent = "analyticsConsentState"
+        static let pendingDeletionUserIDs = "analyticsPendingDeletionUserIDs"
+        static let localPurgePending = "analyticsLocalPurgePending"
     }
 
     private let defaults: UserDefaults
@@ -52,6 +54,38 @@ struct AnalyticsStateStore {
     func clearAnalyticsIdentity() {
         defaults.removeObject(forKey: Key.analyticsUserID)
         defaults.removeObject(forKey: Key.screenTimeAttemptsLastSyncedAt)
+    }
+
+    func enqueuePendingDeletionUserID(_ userID: String) {
+        var userIDs = pendingDeletionUserIDs()
+        guard !userIDs.contains(userID) else { return }
+        userIDs.append(userID)
+        defaults.set(userIDs, forKey: Key.pendingDeletionUserIDs)
+    }
+
+    func pendingDeletionUserIDs() -> [String] {
+        defaults.stringArray(forKey: Key.pendingDeletionUserIDs) ?? []
+    }
+
+    func removePendingDeletionUserID(_ userID: String) {
+        let remaining = pendingDeletionUserIDs().filter { $0 != userID }
+        if remaining.isEmpty {
+            defaults.removeObject(forKey: Key.pendingDeletionUserIDs)
+        } else {
+            defaults.set(remaining, forKey: Key.pendingDeletionUserIDs)
+        }
+    }
+
+    func markLocalPurgePending() {
+        defaults.set(true, forKey: Key.localPurgePending)
+    }
+
+    func clearLocalPurgePending() {
+        defaults.removeObject(forKey: Key.localPurgePending)
+    }
+
+    func isLocalPurgePending() -> Bool {
+        defaults.bool(forKey: Key.localPurgePending)
     }
 
     func userSnapshot(daysActive: Int = 1) -> AnalyticsUserSnapshot {

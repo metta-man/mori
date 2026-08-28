@@ -56,7 +56,10 @@ struct MoriApp: App {
         // Initialize analytics
         AnalyticsManager.shared.configure()
         MoriWatchSettingsSync.shared.activate()
+        let beforeFeedPausePreferences = MoriBeforeFeedPausePreferences()
+        beforeFeedPausePreferences.migrateLegacyPausePreferencesIfNeeded()
         BeforeFeedGate.migrateLegacyDurationIfNeeded()
+        beforeFeedPausePreferences.normalizePersistedSettings()
         BeforeFeedGate.normalizePersistedSettings()
         MorningGate.normalizePersistedSettings()
     }

@@ -7,6 +7,7 @@ final class WeekArchiveIdentityStore {
     private let defaults: UserDefaults
     private let persistenceController: PersistenceController
     private let key = "weekArchiveUserID"
+    private let legacyMigrationSuppressedKey = "weekArchiveLegacyIdentityMigrationSuppressed"
 
     init(
         defaults: UserDefaults = .standard,
@@ -22,9 +23,35 @@ final class WeekArchiveIdentityStore {
             return savedID
         }
 
-        let resolvedID = legacyUserID() ?? UUID()
+        let shouldSkipLegacyMigration = defaults.bool(forKey: legacyMigrationSuppressedKey)
+        let resolvedID = shouldSkipLegacyMigration ? UUID() : legacyUserID() ?? UUID()
         defaults.set(resolvedID.uuidString, forKey: key)
+        defaults.removeObject(forKey: legacyMigrationSuppressedKey)
         return resolvedID
+    }
+
+    func clear() {
+        defaults.removeObject(forKey: key)
+        defaults.set(true, forKey: legacyMigrationSuppressedKey)
+    }
+
+    func deleteAllIdentityData() throws {
+        clear()
+        let context = persistenceController.viewContext
+
+        // Batch deletes bypass Core Data relationship handling, including the
+        // cascade rules on UserEntity. Delete every legacy payload explicitly
+        // before removing its owning identity, then invalidate the context once.
+        let requests: [NSFetchRequest<NSFetchRequestResult>] = [
+            HabitEntryEntity.fetchRequest(),
+            GratitudeEntryEntity.fetchRequest(),
+            LifeWeekEntity.fetchRequest(),
+            UserEntity.fetchRequest()
+        ]
+        for request in requests {
+            try context.execute(NSBatchDeleteRequest(fetchRequest: request))
+        }
+        context.reset()
     }
 
     private func legacyUserID() -> UUID? {

@@ -36,29 +36,19 @@ struct MoriMorningResetSheet: View {
     }
 }
 
-private enum MoriBeforeFeedFlowStage: Equatable {
-    case reason
-    case offer
-    case pause
-    case completion
-}
-
 private struct MoriAttentionResetSheet: View {
     let context: MoriAttentionResetContext
     let durationSeconds: Int
     let routeSource: MoriAppRouteSource?
 
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var scenePhase
     @StateObject private var clarityStore = MoriClarityStore.shared
     @StateObject private var appLimitManager = AppLimitManager.shared
     @AppStorage(
         MoriScreenTimeShared.beforeFeedNativeGateEnabledKey,
         store: MoriAppGroup.defaults
     ) private var nativeGateEnabled: Bool = MoriScreenTimeShared.defaultBeforeFeedNativeGateEnabled
-    @AppStorage(
-        MoriScreenTimeShared.beforeFeedBreathingTechniqueIDKey,
-        store: MoriAppGroup.defaults
-    ) private var beforeFeedBreathingTechniqueID: String = MoriScreenTimeShared.defaultBeforeFeedBreathingTechniqueID
     @AppStorage(
         MoriScreenTimeShared.morningGateBreathingTechniqueIDKey,
         store: MoriAppGroup.defaults
@@ -78,20 +68,40 @@ private struct MoriAttentionResetSheet: View {
     @State private var appLimitWasActive = false
     @State private var currentPhaseIndex = 0
     @State private var cueCoordinator = MoriAttentionResetCueCoordinator()
-    @State private var beforeFeedStage: MoriBeforeFeedFlowStage = .reason
-    @State private var selectedBeforeFeedReason: MoriBeforeFeedIntentReason?
+    @State private var beforeFeedFlow = MoriBeforeFeedFlowState()
+    @State private var beforeFeedPauseStyle: MoriBeforeFeedPauseStyle = .guidedBreathing
+    @State private var beforeFeedGuidedCycleCount = MoriBeforeFeedPausePreferences.defaultGuidedCycleCount
+    @State private var beforeFeedTechniqueIDSnapshot = MoriScreenTimeShared.defaultBeforeFeedBreathingTechniqueID
+    @State private var beforeFeedPatternSnapshot: MoriBreathPattern?
+    @State private var beforeFeedPauseDurationSnapshot = 30
+    @State private var beforeFeedPauseTargetDurationSnapshot: TimeInterval = 30
+    @State private var forceReturnAnchorsForUITest = false
     @State private var beforeFeedIntentEventID = UUID()
     @State private var didConfirmBeforeFeedIntent = false
 
     private let beforeFeedGateStore = BeforeFeedGateStore()
+    private let beforeFeedPausePreferences = MoriBeforeFeedPausePreferences()
 
     private var totalSeconds: Int {
         switch context {
         case .beforeFeed:
-            return max(MoriScreenTimeShared.minBeforeFeedDurationSeconds, durationSeconds)
+            return max(1, beforeFeedPauseDurationSnapshot)
         case .morningGate:
             return max(5 * 60, durationSeconds)
         }
+    }
+
+    private var targetDuration: TimeInterval {
+        switch context {
+        case .beforeFeed:
+            return max(1, beforeFeedPauseTargetDurationSnapshot)
+        case .morningGate:
+            return TimeInterval(totalSeconds)
+        }
+    }
+
+    private var sessionRemaining: TimeInterval {
+        max(0, targetDuration - activeElapsed)
     }
 
     private var progress: CGFloat {
@@ -105,7 +115,7 @@ private struct MoriAttentionResetSheet: View {
     private var breathingState: MoriAttentionResetBreathingState {
         MoriAttentionResetBreathingState(
             context: context,
-            beforeFeedTechniqueID: beforeFeedBreathingTechniqueID,
+            beforeFeedTechniqueID: beforeFeedTechniqueIDSnapshot,
             morningGateTechniqueID: morningGateBreathingTechniqueID,
             customInhaleSeconds: customInhaleSeconds,
             customHoldSeconds: customHoldSeconds,
@@ -117,6 +127,30 @@ private struct MoriAttentionResetSheet: View {
         )
     }
 
+    private var activeBreathingSegments: [MoriBreathingCycleSegment] {
+        if context == .beforeFeed {
+            return beforeFeedPauseStyle == .guidedBreathing
+                ? (beforeFeedPatternSnapshot?.segments ?? [])
+                : []
+        }
+        return breathingState.segments
+    }
+
+    private var activeBreathingVisualState: MoriBreathingCycleVisualState {
+        guard isRunning, !activeBreathingSegments.isEmpty else { return .idle }
+        return MoriBreathingCycle.visualState(
+            for: activeBreathingSegments,
+            elapsedTime: elapsedTime
+        )
+    }
+
+    private var activeBreathingPhaseRemaining: TimeInterval {
+        MoriBreathingCycle.phaseRemaining(
+            for: activeBreathingSegments,
+            elapsedTime: elapsedTime
+        )
+    }
+
     private var resetDurationText: String {
         switch context {
         case .beforeFeed:
@@ -124,10 +158,6 @@ private struct MoriAttentionResetSheet: View {
         case .morningGate:
             return MorningGate.formattedDuration(totalSeconds)
         }
-    }
-
-    private var openWindowDurationText: String {
-        BeforeFeedGate.formattedDuration(BeforeFeedGate.graceWindowSeconds)
     }
 
     private var timeText: String {
@@ -157,26 +187,7 @@ private struct MoriAttentionResetSheet: View {
     private var openWindowText: String {
         switch context {
         case .beforeFeed:
-            switch routeSource {
-            case .screenTimeGate?:
-                return MoriL10n.string(
-                    "attention_reset.open_window.before_feed.screen_time_gate",
-                    defaultValue: "Complete the reset, then switch back manually if the feed still feels intentional. Window: %@.",
-                    arguments: [openWindowDurationText]
-                )
-            case .shortcut?:
-                return MoriL10n.string(
-                    "attention_reset.open_window.before_feed.shortcut",
-                    defaultValue: "Completion opens selected apps for %@; switch back manually only if you still mean to.",
-                    arguments: [openWindowDurationText]
-                )
-            default:
-                return MoriL10n.string(
-                    "attention_reset.open_window.before_feed.default",
-                    defaultValue: "Completion opens selected feed apps for %@.",
-                    arguments: [openWindowDurationText]
-                )
-            }
+            return MoriL10n.display("Choose the feed window each time you pause.")
         case .morningGate:
             return MoriL10n.display("Completion opens selected apps for today's morning window.")
         }
@@ -193,14 +204,110 @@ private struct MoriAttentionResetSheet: View {
         }
     }
 
+    private var beforeFeedEnoughChoices: [MoriBeforeFeedEnoughChoice] {
+        guard let reason = beforeFeedFlow.reason else { return [] }
+        return MoriBeforeFeedEnoughChoice.choices(for: reason)
+    }
+
+    private var shouldShowReturnAnchors: Bool {
+        guard let reason = beforeFeedFlow.reason else { return false }
+        return forceReturnAnchorsForUITest || MoriBeforeFeedAdaptivePolicy.shouldShowReturnAnchors(
+            reason: reason,
+            recentIntentEvents: beforeFeedGateStore.intentEvents()
+        )
+    }
+
+    private var beforeFeedBeginTitle: String {
+        switch beforeFeedPauseStyle {
+        case .guidedBreathing:
+            return MoriL10n.string(
+                "before_feed.plan.begin_breaths",
+                defaultValue: "Begin %d breaths",
+                arguments: [beforeFeedGuidedCycleCount]
+            )
+        case .quietPause:
+            return MoriL10n.string(
+                "before_feed.plan.begin_quiet_seconds",
+                defaultValue: "Begin %d-second pause",
+                arguments: [beforeFeedPauseDurationSnapshot]
+            )
+        }
+    }
+
+    private var beforeFeedConfiguredPauseText: String {
+        switch beforeFeedPauseStyle {
+        case .guidedBreathing:
+            let techniqueName = MoriBreathingTechniqueRepository.getTechnique(
+                id: beforeFeedTechniqueIDSnapshot
+            )?.name ?? MoriL10n.display("Guided breathing")
+            return MoriL10n.string(
+                "before_feed.pause.guided_summary",
+                defaultValue: "%@ · %d breaths",
+                arguments: [techniqueName, beforeFeedGuidedCycleCount]
+            )
+        case .quietPause:
+            return MoriL10n.string(
+                "before_feed.pause.quiet_summary",
+                defaultValue: "%d-second quiet pause",
+                arguments: [beforeFeedPauseDurationSnapshot]
+            )
+        }
+    }
+
+    private var beforeFeedGuidedProgressText: String {
+        guard beforeFeedPauseStyle == .guidedBreathing,
+              let pattern = beforeFeedPatternSnapshot,
+              pattern.totalCycleDuration > 0
+        else {
+            return MoriL10n.display("Guided breathing")
+        }
+
+        let completedCycles = Int(floor(activeElapsed / pattern.totalCycleDuration))
+        let currentCycle = min(beforeFeedGuidedCycleCount, max(1, completedCycles + 1))
+        return MoriL10n.string(
+            "before_feed.pause.round_progress",
+            defaultValue: "Round %d of %d",
+            arguments: [currentCycle, beforeFeedGuidedCycleCount]
+        )
+    }
+
+    private var beforeFeedOpenActionTitle: String {
+        let seconds = beforeFeedFlow.confirmedOpenWindowSeconds
+            ?? beforeFeedFlow.enoughChoice?.openWindowSeconds
+            ?? (5 * 60)
+        if seconds.isMultiple(of: 60) {
+            return MoriL10n.string(
+                "before_feed.completion.open_minutes",
+                defaultValue: "Open a %d-minute window",
+                arguments: [seconds / 60]
+            )
+        }
+        return MoriL10n.string(
+            "before_feed.completion.open_window",
+            defaultValue: "Open a %@ window",
+            arguments: [BeforeFeedGate.formattedDuration(seconds)]
+        )
+    }
+
+    private var beforeFeedLeaveActionTitle: String {
+        guard let anchor = beforeFeedFlow.returnAnchor else {
+            return MoriL10n.display("Leave feed closed")
+        }
+        return MoriL10n.string(
+            "before_feed.completion.return_now",
+            defaultValue: "Return to %@ now",
+            arguments: [anchor.displayTitle.lowercased()]
+        )
+    }
+
     private var beforeFeedBreathingCueText: String {
         if secondsRemaining == 0 {
             return MoriL10n.display("Pause complete")
         }
-        if isRunning, breathingState.hasTechnique {
-            return breathingState.visualState.label
+        if isRunning, !activeBreathingSegments.isEmpty {
+            return activeBreathingVisualState.label
         }
-        if beforeFeedStage == .pause, activeElapsed > 0 {
+        if beforeFeedFlow.stage == .pause, activeElapsed > 0 {
             return MoriL10n.display("Paused")
         }
         return MoriL10n.display("Breathe at your own pace")
@@ -217,7 +324,7 @@ private struct MoriAttentionResetSheet: View {
     private var backgroundVariant: MoriBotanicalScreenBackdrop.Variant {
         switch context {
         case .beforeFeed:
-            return beforeFeedStage == .pause ? .breath : .appLimit
+            return beforeFeedFlow.stage == .pause ? .breath : .appLimit
         case .morningGate:
             return (isRunning || activeElapsed > 0) && secondsRemaining > 0
                 ? .breath
@@ -254,47 +361,74 @@ private struct MoriAttentionResetSheet: View {
                 onTick: tick,
                 onSoundEnabledChange: handleSoundEnabledChange
             )
+            .moriOnChange(of: scenePhase) { newPhase in
+                guard context == .beforeFeed,
+                      beforeFeedFlow.stage == .pause,
+                      isRunning,
+                      newPhase != .active
+                else {
+                    return
+                }
+                pauseReset()
+            }
     }
 
     @ViewBuilder
     private var resetContent: some View {
         switch context {
         case .beforeFeed:
-            switch beforeFeedStage {
+            switch beforeFeedFlow.stage {
             case .reason:
                 MoriBeforeFeedReasonContent(
-                    selectedReason: selectedBeforeFeedReason,
+                    selectedReason: beforeFeedFlow.reason,
                     secondaryContext: beforeFeedSecondaryContext,
                     onSelectReason: selectBeforeFeedReason,
                     onContinue: continueFromBeforeFeedReason
                 )
-            case .offer:
-                MoriBeforeFeedPauseOfferContent(
-                    resetDurationText: resetDurationText,
-                    timeText: timeText,
-                    selectedReason: selectedBeforeFeedReason,
+            case .plan:
+                if let reason = beforeFeedFlow.reason {
+                    MoriBeforeFeedPlanContent(
+                    selectedReason: reason,
+                    enoughChoices: beforeFeedEnoughChoices,
+                    selectedEnoughChoice: beforeFeedFlow.enoughChoice,
+                    selectedReturnAnchor: beforeFeedFlow.returnAnchor,
+                    showsReturnAnchors: shouldShowReturnAnchors,
+                    beginTitle: beforeFeedBeginTitle,
                     secondaryContext: beforeFeedSecondaryContext,
+                    onSelectEnoughChoice: selectBeforeFeedEnoughChoice,
+                    onSelectReturnAnchor: selectBeforeFeedReturnAnchor,
                     onBeginPause: beginBeforeFeedPause,
-                    onContinueNow: continueBeforeFeedNow,
                     onBack: returnToBeforeFeedReasons
                 )
+                }
             case .pause:
                 MoriBeforeFeedPauseContent(
-                    showsBreathingOrb: breathingState.hasTechnique,
-                    breathingVisualState: breathingState.visualState,
+                    pauseStyle: beforeFeedPauseStyle,
+                    breathingVisualState: activeBreathingVisualState,
                     isRunning: isRunning,
                     timeText: timeText,
                     cueText: beforeFeedBreathingCueText,
+                    guidedProgressText: beforeFeedGuidedProgressText,
+                    configuredPauseText: beforeFeedConfiguredPauseText,
                     secondaryContext: beforeFeedSecondaryContext,
-                    onToggleBreathing: toggleResetRunning,
-                    onBack: returnToBeforeFeedReasons
+                    onTogglePause: toggleResetRunning,
+                    onBack: returnToBeforeFeedPlan
                 )
             case .completion:
-                MoriBeforeFeedCompletionContent(
-                    secondaryContext: beforeFeedSecondaryContext,
-                    onContinue: confirmBeforeFeedIntent,
-                    onBack: returnToBeforeFeedReasons
-                )
+                if let reason = beforeFeedFlow.reason,
+                   let enoughChoice = beforeFeedFlow.enoughChoice {
+                    MoriBeforeFeedCompletionContent(
+                        selectedReason: reason,
+                        selectedEnoughChoice: enoughChoice,
+                        selectedReturnAnchor: beforeFeedFlow.returnAnchor,
+                        openActionTitle: beforeFeedOpenActionTitle,
+                        leaveActionTitle: beforeFeedLeaveActionTitle,
+                        secondaryContext: beforeFeedSecondaryContext,
+                        onOpen: confirmBeforeFeedIntent,
+                        onLeaveClosed: leaveFeedClosed,
+                        onBack: returnToBeforeFeedPlan
+                    )
+                }
             }
         case .morningGate:
             MoriMorningResetContent(
@@ -302,7 +436,7 @@ private struct MoriAttentionResetSheet: View {
                 resetDurationText: resetDurationText,
                 headerSubtitle: breathingState.headerSubtitle,
                 showsBreathingOrb: breathingState.hasTechnique,
-                breathingVisualState: breathingState.visualState,
+                breathingVisualState: activeBreathingVisualState,
                 isRunning: isRunning,
                 hasStarted: activeElapsed > 0,
                 secondsRemaining: secondsRemaining,
@@ -317,6 +451,8 @@ private struct MoriAttentionResetSheet: View {
     }
 
     private func prepareReset() {
+        let arguments = ProcessInfo.processInfo.arguments
+        prepareBeforeFeedPauseSnapshot(arguments: arguments)
         activeElapsed = 0
         secondsRemaining = totalSeconds
         resetStartDate = nil
@@ -325,20 +461,116 @@ private struct MoriAttentionResetSheet: View {
 
         guard context == .beforeFeed else { return }
 
-        let arguments = ProcessInfo.processInfo.arguments
         if arguments.contains("-MoriShowBeforeFeedCompletionForUITest") {
-            selectedBeforeFeedReason = .habit
+            beforeFeedFlow.selectReason(.learn)
+            _ = beforeFeedFlow.proceedToPlan()
+            _ = beforeFeedFlow.selectEnoughChoice(.fiveMinutes)
+            beforeFeedFlow.selectReturnAnchor(.work)
+            _ = beforeFeedFlow.beginPause()
+            _ = beforeFeedFlow.completePause()
             activeElapsed = TimeInterval(totalSeconds)
             secondsRemaining = 0
-            beforeFeedStage = .completion
-        } else if arguments.contains("-MoriShowBeforeFeedOfferForUITest") {
-            selectedBeforeFeedReason = .habit
-            beforeFeedStage = .offer
-        } else if arguments.contains("-MoriShowHabitBreathingForUITest") {
-            selectedBeforeFeedReason = .habit
-            beforeFeedStage = .pause
+            forceReturnAnchorsForUITest = true
+        } else if arguments.contains("-MoriShowBeforeFeedPlanWithAnchorForUITest") {
+            beforeFeedFlow.selectReason(.habit)
+            _ = beforeFeedFlow.proceedToPlan()
+            _ = beforeFeedFlow.selectEnoughChoice(.fiveMinutes)
+            beforeFeedFlow.selectReturnAnchor(.work)
+            forceReturnAnchorsForUITest = true
+        } else if arguments.contains("-MoriShowBeforeFeedPlanForUITest") ||
+                    arguments.contains("-MoriShowBeforeFeedOfferForUITest") {
+            beforeFeedFlow.selectReason(.habit)
+            _ = beforeFeedFlow.proceedToPlan()
+        } else if arguments.contains("-MoriShowBeforeFeedQuietPauseForUITest") {
+            beforeFeedFlow.selectReason(.relax)
+            _ = beforeFeedFlow.proceedToPlan()
+            _ = beforeFeedFlow.selectEnoughChoice(.twoMinutes)
+            _ = beforeFeedFlow.beginPause()
+            startOrResumeReset()
+        } else if arguments.contains("-MoriShowBeforeFeedGuidedPauseForUITest") ||
+                    arguments.contains("-MoriShowHabitBreathingForUITest") {
+            beforeFeedFlow.selectReason(.habit)
+            _ = beforeFeedFlow.proceedToPlan()
+            _ = beforeFeedFlow.selectEnoughChoice(.twoMinutes)
+            _ = beforeFeedFlow.beginPause()
             startOrResumeReset()
         }
+    }
+
+    private func prepareBeforeFeedPauseSnapshot(arguments: [String]) {
+        guard context == .beforeFeed else { return }
+
+        beforeFeedPausePreferences.migrateLegacyPausePreferencesIfNeeded()
+        beforeFeedPausePreferences.normalizePersistedSettings()
+
+        let forcesQuietPause = arguments.contains("-MoriShowBeforeFeedQuietPauseForUITest")
+        let forcesGuidedPause = arguments.contains("-MoriShowBeforeFeedGuidedPauseForUITest") ||
+            arguments.contains("-MoriShowHabitBreathingForUITest")
+        let usesDefaultGuidedFixture = arguments.contains("-MoriUseDefaultBeforeFeedPauseForUITest")
+
+        beforeFeedPauseStyle = forcesQuietPause
+            ? .quietPause
+            : ((forcesGuidedPause || usesDefaultGuidedFixture)
+                ? .guidedBreathing
+                : beforeFeedPausePreferences.pauseStyle())
+        beforeFeedGuidedCycleCount = usesDefaultGuidedFixture
+            ? MoriBeforeFeedPausePreferences.defaultGuidedCycleCount
+            : beforeFeedPausePreferences.guidedCycleCount()
+        beforeFeedTechniqueIDSnapshot = usesDefaultGuidedFixture
+            ? MoriScreenTimeShared.defaultBeforeFeedBreathingTechniqueID
+            : beforeFeedPausePreferences.techniqueID()
+        beforeFeedPatternSnapshot = beforeFeedPauseStyle == .guidedBreathing
+            ? resolvedBeforeFeedPattern(techniqueID: beforeFeedTechniqueIDSnapshot)
+            : nil
+
+        if beforeFeedPauseStyle == .guidedBreathing,
+           let pattern = beforeFeedPatternSnapshot {
+            beforeFeedPauseTargetDurationSnapshot = max(
+                1,
+                pattern.totalCycleDuration * Double(beforeFeedGuidedCycleCount)
+            )
+            beforeFeedPauseDurationSnapshot = max(
+                1,
+                Int(ceil(beforeFeedPauseTargetDurationSnapshot))
+            )
+        } else {
+            beforeFeedPauseDurationSnapshot = forcesQuietPause
+                ? 20
+                : beforeFeedPausePreferences.quietDurationSeconds()
+            beforeFeedPauseTargetDurationSnapshot = TimeInterval(beforeFeedPauseDurationSnapshot)
+        }
+    }
+
+    private func resolvedBeforeFeedPattern(techniqueID: String) -> MoriBreathPattern? {
+        guard let technique = MoriBreathingTechniqueRepository.getTechnique(id: techniqueID)
+            ?? MoriBreathingTechniqueRepository.getTechnique(
+                id: MoriScreenTimeShared.defaultBeforeFeedBreathingTechniqueID
+            )
+        else {
+            return nil
+        }
+
+        guard technique.id == MoriBreathingTechniqueID.custom.rawValue else {
+            return technique.breathPattern
+        }
+
+        return MoriBreathPattern(
+            inhale: MoriBeforeFeedPausePreferences.normalizedCustomPhase(
+                customInhaleSeconds,
+                fallback: 4
+            ),
+            inhaleHold: customUsesHold
+                ? MoriBeforeFeedPausePreferences.normalizedCustomPhase(
+                    customHoldSeconds,
+                    fallback: 1
+                )
+                : nil,
+            exhale: MoriBeforeFeedPausePreferences.normalizedCustomPhase(
+                customExhaleSeconds,
+                fallback: 6
+            ),
+            exhaleHold: nil
+        )
     }
 
     private func cleanupReset() {
@@ -349,14 +581,15 @@ private struct MoriAttentionResetSheet: View {
     private func handleSoundEnabledChange(_ enabled: Bool) {
         if enabled, isRunning {
             cueCoordinator.playCurrentBreathingSound(
-                segments: breathingState.segments,
+                segments: activeBreathingSegments,
                 currentPhaseIndex: currentPhaseIndex,
                 canPlay: { soundEnabled && isRunning }
             )
             cueCoordinator.scheduleSoundForNextPhase(
-                segments: breathingState.segments,
+                segments: activeBreathingSegments,
                 currentPhaseIndex: currentPhaseIndex,
-                phaseRemaining: breathingState.phaseRemaining,
+                phaseRemaining: activeBreathingPhaseRemaining,
+                sessionRemaining: sessionRemaining,
                 canPlay: { soundEnabled && isRunning }
             )
         } else {
@@ -374,7 +607,7 @@ private struct MoriAttentionResetSheet: View {
 
         syncResetClock(now: now)
 
-        guard activeElapsed < TimeInterval(totalSeconds) else {
+        guard activeElapsed < targetDuration else {
             complete()
             return
         }
@@ -384,15 +617,19 @@ private struct MoriAttentionResetSheet: View {
 
     private func complete() {
         isRunning = false
-        activeElapsed = TimeInterval(totalSeconds)
+        activeElapsed = targetDuration
         secondsRemaining = 0
         resetStartDate = nil
         pausedAt = nil
         totalPausedDuration = 0
         cueCoordinator.stopResetCues()
-        cueCoordinator.playCompletionCues(soundEnabled: soundEnabled, hapticsEnabled: hapticsEnabled)
+        cueCoordinator.playCompletionCues(
+            context: context,
+            soundEnabled: soundEnabled,
+            hapticsEnabled: hapticsEnabled
+        )
         guard context == .morningGate else {
-            beforeFeedStage = .completion
+            _ = beforeFeedFlow.completePause()
             return
         }
 
@@ -418,17 +655,25 @@ private struct MoriAttentionResetSheet: View {
     }
 
     private func selectBeforeFeedReason(_ reason: MoriBeforeFeedIntentReason) {
-        selectedBeforeFeedReason = reason
+        beforeFeedFlow.selectReason(reason)
     }
 
     private func continueFromBeforeFeedReason() {
-        guard selectedBeforeFeedReason != nil else { return }
+        _ = beforeFeedFlow.proceedToPlan()
+    }
 
-        beforeFeedStage = .offer
+    private func selectBeforeFeedEnoughChoice(_ choice: MoriBeforeFeedEnoughChoice) {
+        _ = beforeFeedFlow.selectEnoughChoice(choice)
+    }
+
+    private func selectBeforeFeedReturnAnchor(_ anchor: MoriBeforeFeedReturnAnchor) {
+        beforeFeedFlow.selectReturnAnchor(
+            beforeFeedFlow.returnAnchor == anchor ? nil : anchor
+        )
     }
 
     private func beginBeforeFeedPause() {
-        guard selectedBeforeFeedReason != nil else { return }
+        guard beforeFeedFlow.beginPause() else { return }
 
         activeElapsed = 0
         secondsRemaining = totalSeconds
@@ -436,29 +681,41 @@ private struct MoriAttentionResetSheet: View {
         pausedAt = nil
         totalPausedDuration = 0
         currentPhaseIndex = 0
-        beforeFeedStage = .pause
         startOrResumeReset()
-    }
-
-    private func continueBeforeFeedNow() {
-        finishBeforeFeedIntent(requiresCompletedPause: false)
     }
 
     private func returnToBeforeFeedReasons() {
         reset()
-        selectedBeforeFeedReason = nil
-        beforeFeedStage = .reason
+        beforeFeedFlow.reset()
+    }
+
+    private func returnToBeforeFeedPlan() {
+        let reason = beforeFeedFlow.reason
+        let enoughChoice = beforeFeedFlow.enoughChoice
+        let returnAnchor = beforeFeedFlow.returnAnchor
+        reset()
+        beforeFeedFlow.reset()
+        guard let reason else { return }
+        beforeFeedFlow.selectReason(reason)
+        _ = beforeFeedFlow.proceedToPlan()
+        if let enoughChoice {
+            _ = beforeFeedFlow.selectEnoughChoice(enoughChoice)
+        }
+        beforeFeedFlow.selectReturnAnchor(returnAnchor)
     }
 
     private func confirmBeforeFeedIntent() {
-        finishBeforeFeedIntent(requiresCompletedPause: true)
+        finishBeforeFeedIntent()
     }
 
-    private func finishBeforeFeedIntent(requiresCompletedPause: Bool) {
+    private func finishBeforeFeedIntent() {
         guard context == .beforeFeed,
-              let selectedBeforeFeedReason,
+              let selectedBeforeFeedReason = beforeFeedFlow.reason,
+              let enoughChoice = beforeFeedFlow.enoughChoice,
+              let openWindowSeconds = beforeFeedFlow.confirmedOpenWindowSeconds,
               !didConfirmBeforeFeedIntent,
-              !requiresCompletedPause || (beforeFeedStage == .completion && secondsRemaining == 0)
+              beforeFeedFlow.canOpenFeed,
+              secondsRemaining == 0
         else {
             return
         }
@@ -466,13 +723,24 @@ private struct MoriAttentionResetSheet: View {
         didConfirmBeforeFeedIntent = true
         isRunning = false
         cueCoordinator.stopResetCues()
-        appLimitManager.perform(.completeBeforeFeedReset())
+        appLimitManager.perform(
+            .completeBeforeFeedReset(openWindowSeconds: openWindowSeconds)
+        )
         beforeFeedGateStore.recordIntent(
             reason: selectedBeforeFeedReason,
             routeSource: routeSource?.rawValue,
+            enoughChoiceID: enoughChoice.rawValue,
+            openWindowSeconds: openWindowSeconds,
+            returnAnchorID: beforeFeedFlow.returnAnchor?.rawValue,
             eventID: beforeFeedIntentEventID
         )
         appLimitWasActive = false
+        dismiss()
+    }
+
+    private func leaveFeedClosed() {
+        guard context == .beforeFeed else { return }
+        reset()
         dismiss()
     }
 
@@ -519,7 +787,7 @@ private struct MoriAttentionResetSheet: View {
         cueCoordinator.playStartCues(
             soundEnabled: soundEnabled,
             hapticsEnabled: hapticsEnabled,
-            hasBreathingTechnique: breathingState.hasTechnique
+            hasBreathingTechnique: !activeBreathingSegments.isEmpty
         )
         isRunning = true
         beginBreathingCueTiming()
@@ -530,16 +798,22 @@ private struct MoriAttentionResetSheet: View {
         isRunning = false
         pausedAt = Date()
         cueCoordinator.stopResetCues()
+
+        if context == .beforeFeed, !nativeGateEnabled, appLimitWasActive {
+            appLimitWasActive = appLimitManager.perform(
+                .startManualAppLimit(feature: .beforeFeed)
+            )
+        }
     }
 
     private func syncResetClock(now: Date = Date()) {
         guard let resetStartDate else { return }
 
         activeElapsed = min(
-            TimeInterval(totalSeconds),
+            targetDuration,
             max(0, now.timeIntervalSince(resetStartDate) - totalPausedDuration)
         )
-        secondsRemaining = max(0, Int(ceil(TimeInterval(totalSeconds) - activeElapsed)))
+        secondsRemaining = max(0, Int(ceil(targetDuration - activeElapsed)))
     }
 
     private func startAppLimitIfPossible() {
@@ -557,23 +831,25 @@ private struct MoriAttentionResetSheet: View {
     }
 
     private func beginBreathingCueTiming() {
-        guard breathingState.hasTechnique, !breathingState.segments.isEmpty else { return }
+        guard !activeBreathingSegments.isEmpty else { return }
         currentPhaseIndex = cueCoordinator.beginBreathingCueTiming(
-            segments: breathingState.segments,
+            segments: activeBreathingSegments,
             elapsedTime: elapsedTime,
-            phaseRemaining: breathingState.phaseRemaining,
+            phaseRemaining: activeBreathingPhaseRemaining,
+            sessionRemaining: sessionRemaining,
             hapticsEnabled: hapticsEnabled,
             canPlaySound: { soundEnabled && isRunning }
         )
     }
 
     private func syncBreathingCueTiming() {
-        guard breathingState.hasTechnique, !breathingState.segments.isEmpty else { return }
+        guard !activeBreathingSegments.isEmpty else { return }
         currentPhaseIndex = cueCoordinator.syncBreathingCueTiming(
-            segments: breathingState.segments,
+            segments: activeBreathingSegments,
             currentPhaseIndex: currentPhaseIndex,
             elapsedTime: elapsedTime,
-            phaseRemaining: breathingState.phaseRemaining,
+            phaseRemaining: activeBreathingPhaseRemaining,
+            sessionRemaining: sessionRemaining,
             hapticsEnabled: hapticsEnabled,
             canPlaySound: { soundEnabled && isRunning }
         )

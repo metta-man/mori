@@ -1,9 +1,22 @@
 {
+  "$schema": "https://openapi.vercel.sh/vercel.json",
   "buildCommand": "pnpm run build:app",
   "outputDirectory": "dist",
   "framework": "vite",
   "installCommand": "pnpm install --frozen-lockfile",
   "rewrites": [
+    {
+      "source": "/privacy",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/terms",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/support",
+      "destination": "/index.html"
+    },
     {
       "source": "/mori-v2/:path*",
       "destination": "/"

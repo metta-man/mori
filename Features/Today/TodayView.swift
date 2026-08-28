@@ -19,13 +19,17 @@ struct TodayView: View {
         store: MoriAppGroup.defaults
     ) private var morningGateDurationSeconds: Int = MoriScreenTimeShared.defaultMorningGateDurationSeconds
     @AppStorage(
-        MoriScreenTimeShared.beforeFeedGraceWindowSecondsKey,
-        store: MoriAppGroup.defaults
-    ) private var beforeFeedGraceWindowSeconds: Int = MoriScreenTimeShared.defaultBeforeFeedGraceWindowSeconds
-    @AppStorage(
         MoriScreenTimeShared.beforeFeedBreathingTechniqueIDKey,
         store: MoriAppGroup.defaults
     ) private var beforeFeedBreathingTechniqueID: String = MoriScreenTimeShared.defaultBeforeFeedBreathingTechniqueID
+    @AppStorage(
+        MoriScreenTimeShared.beforeFeedPauseStyleKey,
+        store: MoriAppGroup.defaults
+    ) private var beforeFeedPauseStyleRaw: String = MoriBeforeFeedPauseStyle.guidedBreathing.rawValue
+    @AppStorage(
+        MoriScreenTimeShared.beforeFeedGuidedCycleCountKey,
+        store: MoriAppGroup.defaults
+    ) private var beforeFeedGuidedCycleCount: Int = MoriBeforeFeedPausePreferences.defaultGuidedCycleCount
     @State private var todayFocus = TodayFocusDraftStore.live.load(for: Date())
     @State private var handledLaunchRequestID: UUID?
     @State private var todayIntentCount = BeforeFeedGateStore().todayIntentCount()
@@ -34,8 +38,9 @@ struct TodayView: View {
         TodayAppLimitPresentation(
             snapshot: appLimitManager.settingsSnapshot,
             effectiveSelection: effectiveBeforeFeedSelection,
-            durationSeconds: beforeFeedDurationSeconds,
-            graceWindowSeconds: beforeFeedGraceWindowSeconds,
+            pauseStyle: MoriBeforeFeedPauseStyle(rawValue: beforeFeedPauseStyleRaw) ?? .guidedBreathing,
+            guidedCycleCount: beforeFeedGuidedCycleCount,
+            quietDurationSeconds: beforeFeedDurationSeconds,
             breathingTechniqueID: beforeFeedBreathingTechniqueID
         )
     }

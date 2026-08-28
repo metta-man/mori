@@ -3,7 +3,7 @@ import Foundation
 struct TodayFocusDraftStore {
     static let live = TodayFocusDraftStore()
 
-    private let keyPrefix = "mori_life_focus_draft"
+    private static let keyPrefix = "mori_life_focus_draft"
     private let defaults: UserDefaults
 
     init(defaults: UserDefaults = .standard) {
@@ -23,7 +23,14 @@ struct TodayFocusDraftStore {
         }
     }
 
+    func clearAll() {
+        let ownedPrefix = "\(Self.keyPrefix)_"
+        for key in defaults.dictionaryRepresentation().keys where key.hasPrefix(ownedPrefix) {
+            defaults.removeObject(forKey: key)
+        }
+    }
+
     private func key(for date: Date) -> String {
-        "\(keyPrefix)_\(MoriDateKey.value(for: date))"
+        "\(Self.keyPrefix)_\(MoriDateKey.value(for: date))"
     }
 }

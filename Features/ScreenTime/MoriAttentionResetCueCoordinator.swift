@@ -1,5 +1,16 @@
 import UIKit
 
+enum MoriAttentionResetCuePolicy {
+    static func completionTone(for context: MoriAttentionResetContext) -> SettleBellTone {
+        switch context {
+        case .beforeFeed:
+            return .defaultChime
+        case .morningGate:
+            return .singingBowlA
+        }
+    }
+}
+
 final class MoriAttentionResetCueCoordinator {
     private let breathingFeedback = MoriBreathingSessionFeedbackCoordinator()
 
@@ -18,14 +29,23 @@ final class MoriAttentionResetCueCoordinator {
         }
     }
 
-    func playCompletionCues(soundEnabled: Bool, hapticsEnabled: Bool) {
-        breathingFeedback.playCompletionFeedback(soundEnabled: soundEnabled, hapticsEnabled: hapticsEnabled)
+    func playCompletionCues(
+        context: MoriAttentionResetContext,
+        soundEnabled: Bool,
+        hapticsEnabled: Bool
+    ) {
+        breathingFeedback.playCompletionFeedback(
+            soundEnabled: soundEnabled,
+            hapticsEnabled: hapticsEnabled,
+            tone: MoriAttentionResetCuePolicy.completionTone(for: context)
+        )
     }
 
     func beginBreathingCueTiming(
         segments: [MoriBreathingCycleSegment],
         elapsedTime: TimeInterval,
         phaseRemaining: TimeInterval,
+        sessionRemaining: TimeInterval,
         hapticsEnabled: Bool,
         canPlaySound: @escaping () -> Bool
     ) -> Int {
@@ -38,6 +58,7 @@ final class MoriAttentionResetCueCoordinator {
             segments: segments,
             currentPhaseIndex: phaseIndex,
             phaseRemaining: phaseRemaining,
+            sessionRemaining: sessionRemaining,
             canPlay: canPlaySound
         )
         return phaseIndex
@@ -48,6 +69,7 @@ final class MoriAttentionResetCueCoordinator {
         currentPhaseIndex: Int,
         elapsedTime: TimeInterval,
         phaseRemaining: TimeInterval,
+        sessionRemaining: TimeInterval,
         hapticsEnabled: Bool,
         canPlaySound: @escaping () -> Bool
     ) -> Int {
@@ -61,6 +83,7 @@ final class MoriAttentionResetCueCoordinator {
             segments: segments,
             currentPhaseIndex: nextPhaseIndex,
             phaseRemaining: phaseRemaining,
+            sessionRemaining: sessionRemaining,
             canPlay: canPlaySound
         )
         return nextPhaseIndex
@@ -82,12 +105,14 @@ final class MoriAttentionResetCueCoordinator {
         segments: [MoriBreathingCycleSegment],
         currentPhaseIndex: Int,
         phaseRemaining: TimeInterval,
+        sessionRemaining: TimeInterval,
         canPlay: @escaping () -> Bool
     ) {
         breathingFeedback.scheduleSoundForNextPhase(
             segments: segments,
             currentPhaseIndex: currentPhaseIndex,
             phaseRemaining: phaseRemaining,
+            sessionRemaining: sessionRemaining,
             canPlay: canPlay
         )
     }

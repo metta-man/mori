@@ -45,6 +45,14 @@ struct ScreenTimeSettingsView: View {
         store: MoriAppGroup.defaults
     ) private var beforeFeedBreathingTechniqueID: String = MoriScreenTimeShared.defaultBeforeFeedBreathingTechniqueID
     @AppStorage(
+        MoriScreenTimeShared.beforeFeedPauseStyleKey,
+        store: MoriAppGroup.defaults
+    ) private var beforeFeedPauseStyleRaw: String = MoriBeforeFeedPauseStyle.guidedBreathing.rawValue
+    @AppStorage(
+        MoriScreenTimeShared.beforeFeedGuidedCycleCountKey,
+        store: MoriAppGroup.defaults
+    ) private var beforeFeedGuidedCycleCount: Int = MoriBeforeFeedPausePreferences.defaultGuidedCycleCount
+    @AppStorage(
         MoriScreenTimeShared.morningGateEnabledKey,
         store: MoriAppGroup.defaults
     ) private var morningGateEnabled: Bool = MoriScreenTimeShared.defaultMorningGateEnabled
@@ -73,6 +81,7 @@ struct ScreenTimeSettingsView: View {
     @State private var pickerSelection = FamilyActivitySelection()
     @State private var activeSheet: ScreenTimeSettingsSheet?
     @State private var monitorHealthEvents = MoriScreenTimeMonitorHealthStore.recentEvents()
+    @State private var showsBeforeFeedDetailForUITest = false
 
     var body: some View {
         let presentation = ScreenTimeSettingsPresentation(
@@ -163,7 +172,11 @@ struct ScreenTimeSettingsView: View {
         .toolbarColorScheme(.light, for: .navigationBar)
         .onAppear {
             normalizeGateSettings()
+            prepareBeforeFeedSettingsUITestFixtureIfNeeded()
             refreshMonitorHealth()
+        }
+        .navigationDestination(isPresented: $showsBeforeFeedDetailForUITest) {
+            beforeFeedDetail(presentation: presentation)
         }
         .screenTimeGateRefreshes(
             beforeFeedNativeGateEnabled: beforeFeedNativeGateEnabled,
@@ -298,12 +311,13 @@ struct ScreenTimeSettingsView: View {
             BeforeFeedSettingsSection(
                 nativeGateEnabled: $beforeFeedNativeGateEnabled,
                 hiddenAppLockEnabled: $beforeFeedHiddenAppLockEnabled,
-                durationSeconds: $beforeFeedDurationSeconds,
-                graceWindowSeconds: $beforeFeedGraceWindowSeconds,
+                pauseStyle: beforeFeedPauseStyleBinding,
+                guidedCycleCount: $beforeFeedGuidedCycleCount,
+                quietDurationSeconds: $beforeFeedDurationSeconds,
                 breathingTechniqueID: $beforeFeedBreathingTechniqueID,
                 isScreenTimeAuthorized: presentation.isAuthorized,
                 feedAppSummary: presentation.beforeFeedSummary,
-                breathingSummary: beforeFeedBreathingSummary,
+                pauseSummary: beforeFeedPauseSummary,
                 feedAppsStatusText: presentation.beforeFeedAppsStatusText,
                 onEditFeedApps: editBeforeFeedApps,
                 onUseDefaultFeedAppsChange: { updateFeatureUsesDefaultSelection($0, for: .beforeFeed) },
@@ -397,10 +411,23 @@ struct ScreenTimeSettingsView: View {
         )
     }
 
-    private var beforeFeedBreathingSummary: String {
-        ScreenTimeSettingsBreathingSummary.text(
+    private var beforeFeedPauseStyleBinding: Binding<MoriBeforeFeedPauseStyle> {
+        Binding(
+            get: {
+                MoriBeforeFeedPauseStyle(rawValue: beforeFeedPauseStyleRaw) ?? .guidedBreathing
+            },
+            set: { newValue in
+                beforeFeedPauseStyleRaw = newValue.rawValue
+            }
+        )
+    }
+
+    private var beforeFeedPauseSummary: String {
+        MoriBeforeFeedPauseSettingsPresentation.summary(
+            style: beforeFeedPauseStyleBinding.wrappedValue,
             techniqueID: beforeFeedBreathingTechniqueID,
-            defaultTechniqueID: MoriScreenTimeShared.defaultBeforeFeedBreathingTechniqueID
+            guidedCycleCount: beforeFeedGuidedCycleCount,
+            quietDurationSeconds: beforeFeedDurationSeconds
         )
     }
 
@@ -447,15 +474,39 @@ struct ScreenTimeSettingsView: View {
     }
 
     private func normalizeGateSettings() {
+        let beforeFeedPausePreferences = MoriBeforeFeedPausePreferences()
+        beforeFeedPausePreferences.migrateLegacyPausePreferencesIfNeeded()
+        beforeFeedPausePreferences.normalizePersistedSettings()
         BeforeFeedGate.normalizePersistedSettings()
         MorningGate.normalizePersistedSettings()
         beforeFeedDurationSeconds = BeforeFeedGate.durationSeconds
         beforeFeedGraceWindowSeconds = BeforeFeedGate.graceWindowSeconds
+        beforeFeedPauseStyleRaw = beforeFeedPausePreferences.pauseStyle().rawValue
+        beforeFeedGuidedCycleCount = beforeFeedPausePreferences.guidedCycleCount()
+        beforeFeedBreathingTechniqueID = beforeFeedPausePreferences.techniqueID()
         morningGateEnabled = MorningGate.isEnabled
         morningGateHiddenAppLockEnabled = MorningGate.hiddenAppLockEnabled
         morningGateStartHour = MorningGate.startHour
         morningGateStartMinute = MorningGate.startMinute
         morningGateDurationSeconds = MorningGate.durationSeconds
+    }
+
+    private func prepareBeforeFeedSettingsUITestFixtureIfNeeded() {
+        let arguments = ProcessInfo.processInfo.arguments
+        guard arguments.contains("-MoriOpenBeforeFeedSettingsForUITest") else { return }
+
+        if arguments.contains("-MoriShowBeforeFeedQuietSettingsForUITest") {
+            beforeFeedPauseStyleRaw = MoriBeforeFeedPauseStyle.quietPause.rawValue
+            beforeFeedDurationSeconds = 20
+        } else {
+            beforeFeedPauseStyleRaw = MoriBeforeFeedPauseStyle.guidedBreathing.rawValue
+            beforeFeedGuidedCycleCount = MoriBeforeFeedPausePreferences.defaultGuidedCycleCount
+            beforeFeedBreathingTechniqueID = MoriScreenTimeShared.defaultBeforeFeedBreathingTechniqueID
+        }
+
+        DispatchQueue.main.async {
+            showsBeforeFeedDetailForUITest = true
+        }
     }
 
     private func refreshMonitorHealth() {

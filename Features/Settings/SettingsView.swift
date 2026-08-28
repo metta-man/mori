@@ -634,9 +634,12 @@ private struct AppAndDataSettingsView: View {
         Task {
             do {
                 try await MoriDataDeletionService.shared.deleteEverything()
-                settings.hasCompletedOnboarding = false
+                settings.prepareForOnboardingAfterDataDeletion()
                 dismissSettings()
             } catch {
+                // deleteEverything always completes the local reset before it
+                // reports any retryable remote iCloud/analytics failure.
+                settings.prepareForOnboardingAfterDataDeletion()
                 deletionMessage = error.localizedDescription
                 isDeleting = false
             }
@@ -655,7 +658,7 @@ private struct MoriDataDeletionSection: View {
                 Button(role: .destructive) {
                     categoryToDelete = category
                 } label: {
-                    Text(category.title)
+                    Text(MoriL10n.display(category.title))
                 }
                 .disabled(isDeleting)
             }

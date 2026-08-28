@@ -146,9 +146,11 @@ struct WeeklyIntention: Codable, Equatable, Identifiable {
 
 class UserSettings: ObservableObject {
     private let store: UserSettingsStore
+    private var isApplyingDataDeletionReset = false
 
     @Published var archiveStartDate: Date {
         didSet {
+            guard !isApplyingDataDeletionReset else { return }
             store.saveArchiveStartDate(archiveStartDate)
             syncWidgetDefaults()
             AnalyticsManager.shared.trackArchiveStartDateSet(date: archiveStartDate)
@@ -157,6 +159,7 @@ class UserSettings: ObservableObject {
 
     @Published var archiveSpanYears: Int {
         didSet {
+            guard !isApplyingDataDeletionReset else { return }
             store.saveArchiveSpanYears(archiveSpanYears)
             syncWidgetDefaults()
         }
@@ -171,12 +174,14 @@ class UserSettings: ObservableObject {
 
     @Published var hasCompletedOnboarding: Bool {
         didSet {
+            guard !isApplyingDataDeletionReset else { return }
             store.saveHasCompletedOnboarding(hasCompletedOnboarding)
         }
     }
 
     @Published private(set) var weeklyIntentions: [WeeklyIntention] {
         didSet {
+            guard !isApplyingDataDeletionReset else { return }
             persistWeeklyIntentions()
         }
     }
@@ -294,6 +299,23 @@ class UserSettings: ObservableObject {
         intention.isCompleted = false
         intention.completedAt = nil
         weeklyIntentions[index] = intention
+    }
+
+    func prepareForOnboardingAfterDataDeletion(
+        sharedDefaults: UserDefaults = MoriSharedDefaults.shared
+    ) {
+        isApplyingDataDeletionReset = true
+        archiveStartDate = Calendar.current.date(byAdding: .year, value: -30, to: Date()) ?? Date()
+        archiveSpanYears = 80
+        weeklyIntentions = []
+        hasCompletedOnboarding = false
+        isApplyingDataDeletionReset = false
+
+        // Keep the selected locale stable, but ensure the reset values above
+        // remain in-memory only until onboarding explicitly saves new choices.
+        store.clearAllUserDataPreservingLocale()
+        UserSettingsStore(defaults: sharedDefaults).clearAllUserDataPreservingLocale()
+        sharedDefaults.removeObject(forKey: MoriWidgetContextSnapshot.defaultsKey)
     }
 
     private func syncWidgetDefaults() {

@@ -4,13 +4,14 @@ import UIKit
 struct BeforeFeedSettingsSection: View {
     @Binding var nativeGateEnabled: Bool
     @Binding var hiddenAppLockEnabled: Bool
-    @Binding var durationSeconds: Int
-    @Binding var graceWindowSeconds: Int
+    @Binding var pauseStyle: MoriBeforeFeedPauseStyle
+    @Binding var guidedCycleCount: Int
+    @Binding var quietDurationSeconds: Int
     @Binding var breathingTechniqueID: String
 
     let isScreenTimeAuthorized: Bool
     let feedAppSummary: MoriScreenTimeProfileSummary
-    let breathingSummary: String
+    let pauseSummary: String
     let feedAppsStatusText: String
     let onEditFeedApps: () -> Void
     let onUseDefaultFeedAppsChange: (Bool) -> Void
@@ -45,7 +46,7 @@ struct BeforeFeedSettingsSection: View {
                 isScreenTimeAuthorized: isScreenTimeAuthorized,
                 feedAppsReady: feedAppsReady,
                 nativeGateEnabled: nativeGateEnabled,
-                openWindowText: BeforeFeedGate.formattedDuration(graceWindowSeconds)
+                pauseSummary: pauseSummary
             )
 
             Toggle(isOn: $nativeGateEnabled) {
@@ -75,26 +76,51 @@ struct BeforeFeedSettingsSection: View {
                     .foregroundColor(MoriColors.botanicalMuted)
             }
 
-            Picker(MoriL10n.display("Reset length"), selection: $durationSeconds) {
-                ForEach(MoriScreenTimeShared.beforeFeedDurationOptions) { option in
-                    Text(option.label).tag(option.seconds)
+            Picker(MoriL10n.display("Pause style"), selection: $pauseStyle) {
+                ForEach(MoriBeforeFeedPauseStyle.allCases) { style in
+                    Text(style.displayTitle).tag(style)
                 }
             }
 
-            Picker(MoriL10n.display("Open window"), selection: $graceWindowSeconds) {
-                ForEach(MoriScreenTimeShared.beforeFeedGraceWindowOptions) { option in
-                    Text(option.label).tag(option.seconds)
+            if pauseStyle == .guidedBreathing {
+                Picker(MoriL10n.display("Breathing technique"), selection: $breathingTechniqueID) {
+                    ForEach(MoriBreathingTechniqueRepository.techniques) { technique in
+                        Text(technique.name).tag(technique.id)
+                    }
+                }
+
+                Stepper(
+                    value: $guidedCycleCount,
+                    in: MoriBeforeFeedPausePreferences.minGuidedCycleCount...MoriBeforeFeedPausePreferences.maxGuidedCycleCount
+                ) {
+                    HStack {
+                        Text(MoriL10n.display("Breathing cycles"))
+                        Spacer()
+                        Text("\(guidedCycleCount)")
+                            .foregroundColor(MoriColors.botanicalMuted)
+                            .monospacedDigit()
+                    }
+                }
+                .accessibilityLabel(MoriL10n.display("Breathing cycles"))
+                .accessibilityValue("\(guidedCycleCount)")
+            } else {
+                Picker(MoriL10n.display("Quiet pause duration"), selection: $quietDurationSeconds) {
+                    ForEach(
+                        MoriBeforeFeedPauseSettingsPresentation.quietDurationOptions(
+                            current: quietDurationSeconds
+                        ),
+                        id: \.self
+                    ) { seconds in
+                        Text(BeforeFeedGate.formattedDuration(seconds)).tag(seconds)
+                    }
                 }
             }
 
-            Picker(MoriL10n.display("Breathing"), selection: $breathingTechniqueID) {
-                Text(MoriL10n.display("None")).tag(MoriScreenTimeShared.beforeFeedBreathingNoneID)
-                ForEach(MoriBreathingTechniqueRepository.techniques) { technique in
-                    Text(technique.name).tag(technique.id)
-                }
-            }
+            Text(pauseSummary)
+                .font(.footnote)
+                .foregroundColor(MoriColors.botanicalMuted)
 
-            Text(breathingSummary)
+            Text(MoriL10n.display("Choose a feed window of 2, 5, 10, or 15 minutes each time you pause."))
                 .font(.footnote)
                 .foregroundColor(MoriColors.botanicalMuted)
 
@@ -141,7 +167,7 @@ private struct BeforeFeedActivationPanel: View {
     let isScreenTimeAuthorized: Bool
     let feedAppsReady: Bool
     let nativeGateEnabled: Bool
-    let openWindowText: String
+    let pauseSummary: String
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -176,16 +202,12 @@ private struct BeforeFeedActivationPanel: View {
                 )
                 BeforeFeedReadinessRow(
                     title: "Shield handoff clear",
-                    detail: MoriL10n.string(
-                        "screen_time.before_feed.handoff_detail",
-                        defaultValue: "Open feed app -> tap Prepare reset -> finish Mori. Feed apps stay open for %@.",
-                        arguments: [openWindowText]
-                    ),
+                    detail: "Open feed app -> tap Prepare reset -> finish the configured pause in Mori.",
                     isComplete: nativeGateEnabled
                 )
                 BeforeFeedReadinessRow(
-                    title: "Window prevents repeats",
-                    detail: "Inside the open window, Mori will not launch another Before Feed reset.",
+                    title: "Pause ready",
+                    detail: pauseSummary,
                     isComplete: isReady
                 )
             }
@@ -676,5 +698,76 @@ private func screenTimeLabel(_ title: String, icon: MoriBitmapIcon) -> some View
         MoriBitmapIconImage(icon: icon, size: 16, opacity: 0.84)
 
         Text(MoriL10n.display(title))
+    }
+}
+
+extension MoriBeforeFeedPauseStyle {
+    var displayTitle: String {
+        switch self {
+        case .guidedBreathing:
+            return MoriL10n.display("Guided breathing")
+        case .quietPause:
+            return MoriL10n.display("Quiet pause")
+        }
+    }
+}
+
+enum MoriBeforeFeedPauseSettingsPresentation {
+    static func summary(
+        style: MoriBeforeFeedPauseStyle,
+        techniqueID: String,
+        guidedCycleCount: Int,
+        quietDurationSeconds: Int
+    ) -> String {
+        switch style {
+        case .guidedBreathing:
+            let technique = MoriBreathingTechniqueRepository.getTechnique(id: techniqueID)
+                ?? MoriBreathingTechniqueRepository.getTechnique(
+                    id: MoriScreenTimeShared.defaultBeforeFeedBreathingTechniqueID
+                )
+            let techniqueName = technique?.name ?? MoriL10n.display("Guided breathing")
+            let duration = estimatedGuidedDuration(
+                technique: technique,
+                guidedCycleCount: guidedCycleCount
+            )
+            return MoriL10n.string(
+                "before_feed.settings.guided_summary",
+                defaultValue: "%@ · %d cycles · about %@",
+                arguments: [
+                    techniqueName,
+                    guidedCycleCount,
+                    BeforeFeedGate.formattedDuration(duration)
+                ]
+            )
+        case .quietPause:
+            return MoriL10n.string(
+                "before_feed.settings.quiet_summary",
+                defaultValue: "Quiet pause · %@",
+                arguments: [BeforeFeedGate.formattedDuration(quietDurationSeconds)]
+            )
+        }
+    }
+
+    static func quietDurationOptions(current: Int) -> [Int] {
+        Array(Set([10, 20, 30, 60, current].filter { $0 > 0 })).sorted()
+    }
+
+    private static func estimatedGuidedDuration(
+        technique: MoriBreathingTechnique?,
+        guidedCycleCount: Int
+    ) -> Int {
+        let cycleDuration: Double
+        if technique?.id == MoriBreathingTechniqueID.custom.rawValue {
+            let defaults = UserDefaults.standard
+            let inhale = defaults.double(forKey: "mori_settle_breathing_custom_inhale")
+            let hold = defaults.double(forKey: "mori_settle_breathing_custom_hold")
+            let exhale = defaults.double(forKey: "mori_settle_breathing_custom_exhale")
+            cycleDuration = max(1, inhale > 0 ? inhale : 4)
+                + (defaults.bool(forKey: "mori_settle_breathing_custom_uses_hold") ? max(1, hold) : 0)
+                + max(1, exhale > 0 ? exhale : 6)
+        } else {
+            cycleDuration = technique?.breathPattern.totalCycleDuration ?? 10
+        }
+        return max(1, Int(ceil(cycleDuration * Double(guidedCycleCount))))
     }
 }

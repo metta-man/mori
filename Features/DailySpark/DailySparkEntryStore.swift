@@ -32,4 +32,8 @@ struct DailySparkEntryStore {
         guard let data = try? encoder.encode(entries) else { return }
         defaults.set(data, forKey: Key.entries)
     }
+
+    func clear() {
+        defaults.removeObject(forKey: Key.entries)
+    }
 }

@@ -12,20 +12,19 @@ struct MoriWidgetEntry: TimelineEntry {
 
 struct MoriWidgetProvider: TimelineProvider {
     func placeholder(in context: Context) -> MoriWidgetEntry {
-        MoriWidgetEntry(
-            date: Date(),
-            snapshot: MoriWidgetSnapshot(
-                archiveStartDate: Calendar.current.date(byAdding: .year, value: -30, to: Date()) ?? Date(),
-                archiveSpanYears: 80
-            ),
-            context: .widgetPreview
-        )
+        Self.previewEntry()
     }
 
     func getSnapshot(in context: Context, completion: @escaping (MoriWidgetEntry) -> Void) {
+        let now = Date()
+        guard !context.isPreview else {
+            completion(Self.previewEntry(now: now))
+            return
+        }
+
         completion(MoriWidgetEntry(
-            date: Date(),
-            snapshot: MoriWidgetSnapshot(),
+            date: now,
+            snapshot: MoriWidgetSnapshot(now: now),
             context: MoriWidgetContextSnapshot.load()
         ))
     }
@@ -39,6 +38,18 @@ struct MoriWidgetProvider: TimelineProvider {
         )
         let nextRefresh = Calendar.current.date(byAdding: .hour, value: 1, to: now) ?? now.addingTimeInterval(3600)
         completion(Timeline(entries: [entry], policy: .after(nextRefresh)))
+    }
+
+    private static func previewEntry(now: Date = Date()) -> MoriWidgetEntry {
+        MoriWidgetEntry(
+            date: now,
+            snapshot: MoriWidgetSnapshot(
+                archiveStartDate: Calendar.current.date(byAdding: .year, value: -30, to: now) ?? now,
+                archiveSpanYears: 80,
+                now: now
+            ),
+            context: .widgetPreview
+        )
     }
 }
 
@@ -82,7 +93,7 @@ struct MoriWidgets: Widget {
                 .widgetURL(URL(string: "mori://week/archive"))
         }
         .configurationDisplayName("Today")
-        .description("See today's attention and week archive at a glance.")
+        .description("See today's attention and Life Grid at a glance.")
         .supportedFamilies([
             .systemSmall,
             .systemMedium,
@@ -116,11 +127,16 @@ struct MoriPulseWidgetEntry: TimelineEntry {
 
 struct MoriPulseWidgetProvider: TimelineProvider {
     func placeholder(in context: Context) -> MoriPulseWidgetEntry {
-        MoriPulseWidgetEntry(date: Date(), context: .widgetPreview)
+        Self.previewEntry()
     }
 
     func getSnapshot(in context: Context, completion: @escaping (MoriPulseWidgetEntry) -> Void) {
-        completion(MoriPulseWidgetEntry(date: Date(), context: MoriWidgetContextSnapshot.load()))
+        let now = Date()
+        completion(
+            context.isPreview
+                ? Self.previewEntry(now: now)
+                : MoriPulseWidgetEntry(date: now, context: MoriWidgetContextSnapshot.load())
+        )
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<MoriPulseWidgetEntry>) -> Void) {
@@ -128,6 +144,10 @@ struct MoriPulseWidgetProvider: TimelineProvider {
         let entry = MoriPulseWidgetEntry(date: now, context: MoriWidgetContextSnapshot.load())
         let nextRefresh = Calendar.current.date(byAdding: .minute, value: 30, to: now) ?? now.addingTimeInterval(1800)
         completion(Timeline(entries: [entry], policy: .after(nextRefresh)))
+    }
+
+    private static func previewEntry(now: Date = Date()) -> MoriPulseWidgetEntry {
+        MoriPulseWidgetEntry(date: now, context: .widgetPreview)
     }
 }
 
@@ -203,31 +223,54 @@ struct MoriBeforeFeedWindowLiveActivityWidget: Widget {
                 .activitySystemActionForegroundColor(MoriWidgetColors.leafAccent)
                 .widgetURL(URL(string: "mori://before-feed?source=live-activity"))
         } dynamicIsland: { context in
-            DynamicIsland {
+            let isClosed = context.moriIsStale
+            return DynamicIsland {
                 DynamicIslandExpandedRegion(.leading) {
-                    MoriBeforeFeedLiveActivityStatus()
+                    MoriBeforeFeedLiveActivityStatus(isClosed: isClosed)
                 }
                 DynamicIslandExpandedRegion(.trailing) {
-                    MoriBeforeFeedLiveActivityCountdown(
-                        state: context.state,
-                        alignment: .trailing,
-                        titleFont: .system(size: 18, weight: .semibold, design: .rounded),
-                        labelFont: .caption2
-                    )
+                    if isClosed {
+                        MoriBeforeFeedLiveActivityClosedLabel()
+                    } else {
+                        MoriBeforeFeedLiveActivityCountdown(
+                            state: context.state,
+                            alignment: .trailing,
+                            titleFont: .system(size: 18, weight: .semibold, design: .rounded),
+                            labelFont: .caption2,
+                            titleColor: MoriWidgetColors.paper,
+                            labelColor: MoriWidgetColors.paper.opacity(0.72)
+                        )
+                    }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    MoriBeforeFeedLiveActivityProgress(state: context.state)
+                    if isClosed {
+                        Text(MoriBeforeFeedLiveActivityCopy.closedMessage)
+                            .font(.caption2)
+                            .foregroundStyle(MoriWidgetColors.paper.opacity(0.82))
+                    } else {
+                        MoriBeforeFeedLiveActivityProgress(state: context.state)
+                    }
                 }
             } compactLeading: {
-                MoriBitmapIconImage(icon: .pause, size: 14, opacity: 0.94)
+                MoriBeforeFeedLiveActivityIslandIcon(
+                    icon: isClosed ? .appLimit : .pause,
+                    iconSize: 12
+                )
             } compactTrailing: {
-                MoriBeforeFeedLiveActivityTimerText(state: context.state)
-                    .font(.caption2.monospacedDigit())
-                    .foregroundStyle(MoriWidgetColors.paper)
-                    .minimumScaleFactor(0.7)
-                    .frame(maxWidth: 42)
+                if isClosed {
+                    MoriBeforeFeedLiveActivityClosedLabel()
+                } else {
+                    MoriBeforeFeedLiveActivityTimerText(state: context.state)
+                        .font(.caption2.monospacedDigit())
+                        .foregroundStyle(MoriWidgetColors.paper)
+                        .minimumScaleFactor(0.7)
+                        .frame(maxWidth: 42)
+                }
             } minimal: {
-                MoriBitmapIconImage(icon: .pause, size: 12, opacity: 0.94)
+                MoriBeforeFeedLiveActivityIslandIcon(
+                    icon: isClosed ? .appLimit : .pause,
+                    iconSize: 11
+                )
             }
             .widgetURL(URL(string: "mori://before-feed?source=live-activity"))
             .keylineTint(MoriWidgetColors.leafAccent)
@@ -239,47 +282,73 @@ struct MoriBeforeFeedWindowLiveActivityWidget: Widget {
 private struct MoriBeforeFeedWindowLiveActivityView: View {
     let context: ActivityViewContext<MoriBeforeFeedWindowAttributes>
 
+    private var isClosed: Bool {
+        context.moriIsStale
+    }
+
     var body: some View {
         HStack(spacing: 14) {
             ZStack {
                 RoundedRectangle(cornerRadius: 14, style: .continuous)
                     .fill(MoriWidgetColors.surfaceRaised)
-                MoriBitmapIconImage(icon: .pause, size: 24, opacity: 0.94)
+                MoriBitmapIconImage(icon: isClosed ? .appLimit : .pause, size: 24, opacity: 0.94)
             }
             .frame(width: 46, height: 46)
 
             VStack(alignment: .leading, spacing: 6) {
-                Text("Open window")
+                Text(isClosed ? MoriBeforeFeedLiveActivityCopy.closedTitle : MoriL10n.display("Open window"))
                     .font(.headline.weight(.semibold))
                     .foregroundStyle(MoriWidgetColors.ink)
-                Text("Feed access closes when the timer ends.")
+                Text(isClosed ? MoriBeforeFeedLiveActivityCopy.closedMessage : MoriBeforeFeedLiveActivityCopy.activeMessage)
                     .font(.caption)
                     .foregroundStyle(MoriWidgetColors.mutedInk)
                     .lineLimit(1)
                     .minimumScaleFactor(0.82)
-                MoriBeforeFeedLiveActivityProgress(state: context.state)
+                if !isClosed {
+                    MoriBeforeFeedLiveActivityProgress(state: context.state)
+                }
             }
 
             Spacer(minLength: 8)
 
-            MoriBeforeFeedLiveActivityCountdown(
-                state: context.state,
-                alignment: .trailing,
-                titleFont: .system(size: 22, weight: .semibold, design: .rounded),
-                labelFont: .caption2
-            )
+            if !isClosed {
+                MoriBeforeFeedLiveActivityCountdown(
+                    state: context.state,
+                    alignment: .trailing,
+                    titleFont: .system(size: 22, weight: .semibold, design: .rounded),
+                    labelFont: .caption2,
+                    titleColor: MoriWidgetColors.ink,
+                    labelColor: MoriWidgetColors.mutedInk
+                )
+            }
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 14)
+        .accessibilityElement(children: .combine)
+        .accessibilityLabel(
+            isClosed
+                ? MoriBeforeFeedLiveActivityCopy.closedAccessibilityLabel
+                : MoriBeforeFeedLiveActivityCopy.activeAccessibilityLabel
+        )
+        .accessibilityValue(
+            isClosed
+                ? Text("")
+                : MoriBeforeFeedLiveActivityAccessibility.timerValue(state: context.state)
+        )
     }
 }
 
 @available(iOS 16.1, *)
 private struct MoriBeforeFeedLiveActivityStatus: View {
+    let isClosed: Bool
+
     var body: some View {
         HStack(spacing: 6) {
-            MoriBitmapIconImage(icon: .pause, size: 13, opacity: 0.94)
-            Text("Open window")
+            MoriBeforeFeedLiveActivityIslandIcon(
+                icon: isClosed ? .appLimit : .pause,
+                iconSize: 11
+            )
+            Text(isClosed ? MoriBeforeFeedLiveActivityCopy.closedTitle : MoriL10n.display("Open window"))
                 .font(.caption.weight(.semibold))
         }
         .foregroundStyle(MoriWidgetColors.paper)
@@ -292,20 +361,38 @@ private struct MoriBeforeFeedLiveActivityCountdown: View {
     let alignment: HorizontalAlignment
     let titleFont: Font
     let labelFont: Font
+    let titleColor: Color
+    let labelColor: Color
 
     var body: some View {
         VStack(alignment: alignment, spacing: 2) {
             MoriBeforeFeedLiveActivityTimerText(state: state)
                 .font(titleFont.monospacedDigit())
-                .foregroundStyle(MoriWidgetColors.ink)
+                .foregroundStyle(titleColor)
                 .lineLimit(1)
                 .minimumScaleFactor(0.72)
             Text("left")
                 .font(labelFont.weight(.medium))
-                .foregroundStyle(MoriWidgetColors.mutedInk)
+                .foregroundStyle(labelColor)
         }
         .accessibilityElement(children: .combine)
-        .accessibilityLabel("Open window time remaining")
+        .accessibilityLabel(MoriBeforeFeedLiveActivityCopy.activeAccessibilityLabel)
+        .accessibilityValue(MoriBeforeFeedLiveActivityAccessibility.timerValue(state: state))
+    }
+}
+
+@available(iOS 16.1, *)
+private struct MoriBeforeFeedLiveActivityIslandIcon: View {
+    let icon: MoriBitmapIcon
+    let iconSize: CGFloat
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(MoriWidgetColors.paper.opacity(0.96))
+            MoriBitmapIconImage(icon: icon, size: iconSize, opacity: 0.94)
+        }
+        .frame(width: iconSize + 8, height: iconSize + 8)
     }
 }
 
@@ -323,6 +410,29 @@ private struct MoriBeforeFeedLiveActivityTimerText: View {
 }
 
 @available(iOS 16.1, *)
+private enum MoriBeforeFeedLiveActivityAccessibility {
+    static func timerValue(state: MoriBeforeFeedWindowAttributes.ContentState) -> Text {
+        Text(
+            timerInterval: state.timerInterval,
+            countsDown: true,
+            showsHours: state.durationSeconds >= 60 * 60
+        )
+    }
+}
+
+@available(iOS 16.1, *)
+private struct MoriBeforeFeedLiveActivityClosedLabel: View {
+    var body: some View {
+        Text(MoriBeforeFeedLiveActivityCopy.closedShortLabel)
+            .font(.caption2.weight(.semibold))
+            .foregroundStyle(MoriWidgetColors.paper)
+            .lineLimit(1)
+            .minimumScaleFactor(0.72)
+            .accessibilityLabel(MoriBeforeFeedLiveActivityCopy.closedAccessibilityLabel)
+    }
+}
+
+@available(iOS 16.1, *)
 private struct MoriBeforeFeedLiveActivityProgress: View {
     let state: MoriBeforeFeedWindowAttributes.ContentState
 
@@ -336,6 +446,60 @@ private struct MoriBeforeFeedLiveActivityProgress: View {
             .tint(MoriWidgetColors.leafAccent)
             .background(MoriWidgetColors.ink.opacity(0.12))
             .clipShape(Capsule())
+    }
+}
+
+@available(iOS 16.1, *)
+private extension ActivityViewContext where Attributes == MoriBeforeFeedWindowAttributes {
+    var moriIsStale: Bool {
+        if #available(iOS 16.2, *) {
+            return isStale
+        }
+        return false
+    }
+}
+
+private enum MoriBeforeFeedLiveActivityCopy {
+    static var activeMessage: String {
+        MoriL10n.string(
+            "before_feed.live_activity.active_message",
+            defaultValue: "Feed access closes when the timer ends."
+        )
+    }
+
+    static var activeAccessibilityLabel: String {
+        MoriL10n.string(
+            "before_feed.live_activity.active_accessibility",
+            defaultValue: "Open window, time remaining"
+        )
+    }
+
+    static var closedTitle: String {
+        MoriL10n.string(
+            "before_feed.live_activity.closed_title",
+            defaultValue: "Window closed"
+        )
+    }
+
+    static var closedShortLabel: String {
+        MoriL10n.string(
+            "before_feed.live_activity.closed_short",
+            defaultValue: "Closed"
+        )
+    }
+
+    static var closedMessage: String {
+        MoriL10n.string(
+            "before_feed.live_activity.closed_message",
+            defaultValue: "The feed access window has ended."
+        )
+    }
+
+    static var closedAccessibilityLabel: String {
+        MoriL10n.string(
+            "before_feed.live_activity.closed_accessibility",
+            defaultValue: "Feed access window closed"
+        )
     }
 }
 #endif
@@ -363,11 +527,12 @@ struct JournalQuickStartEntry: TimelineEntry {
 
 struct JournalQuickStartProvider: TimelineProvider {
     func placeholder(in context: Context) -> JournalQuickStartEntry {
-        JournalQuickStartEntry(date: Date(), hasReminderEnabled: true, reminderTimeText: "9:00 PM")
+        Self.previewEntry()
     }
 
     func getSnapshot(in context: Context, completion: @escaping (JournalQuickStartEntry) -> Void) {
-        completion(entry())
+        let now = Date()
+        completion(context.isPreview ? Self.previewEntry(now: now) : entry(now: now))
     }
 
     func getTimeline(in context: Context, completion: @escaping (Timeline<JournalQuickStartEntry>) -> Void) {
@@ -386,9 +551,22 @@ struct JournalQuickStartProvider: TimelineProvider {
         )
     }
 
+    private static func previewEntry(now: Date = Date()) -> JournalQuickStartEntry {
+        JournalQuickStartEntry(
+            date: now,
+            hasReminderEnabled: true,
+            reminderTimeText: formattedReminderTime(hour: 21, minute: 0, now: now)
+        )
+    }
+
     private static func formattedReminderTime(defaults: UserDefaults, now: Date) -> String {
         let hour = defaults.object(forKey: "journalReminderHour") as? Int ?? 21
         let minute = defaults.object(forKey: "journalReminderMinute") as? Int ?? 0
+
+        return formattedReminderTime(hour: hour, minute: minute, now: now)
+    }
+
+    private static func formattedReminderTime(hour: Int, minute: Int, now: Date) -> String {
         var components = Calendar.current.dateComponents([.year, .month, .day], from: now)
         components.hour = hour
         components.minute = minute

@@ -52,6 +52,22 @@ struct MindfulnessBellStateStore {
         defaults.set(date?.timeIntervalSince1970 ?? 0, forKey: MindfulnessBellDefaults.nextFireKey)
     }
 
+    func clearAll() {
+        [
+            MindfulnessBellDefaults.isActiveKey,
+            MindfulnessBellDefaults.randomModeKey,
+            MindfulnessBellDefaults.intervalMinutesKey,
+            MindfulnessBellDefaults.bellsPerHourKey,
+            MindfulnessBellDefaults.startHourKey,
+            MindfulnessBellDefaults.endHourKey,
+            MindfulnessBellDefaults.nextFireKey,
+            MindfulnessBellDefaults.randomSeedKey,
+            MindfulnessBellDefaults.breathingTechniqueIDKey,
+            MindfulnessBellDefaults.breathingDurationMinutesKey,
+            MindfulnessBellDefaults.promptDismissedKey
+        ].forEach { defaults.removeObject(forKey: $0) }
+    }
+
     private var nextFireDate: Date? {
         let timestamp = defaults.double(forKey: MindfulnessBellDefaults.nextFireKey)
         guard timestamp > 0 else { return nil }

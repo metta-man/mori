@@ -20,19 +20,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!apiKey || !projectId) return res.status(503).json({ error: 'Deletion service unavailable.' })
 
   const headers = { Authorization: `Bearer ${apiKey}`, 'Content-Type': 'application/json' }
-  const lookup = await fetch(`${host}/api/projects/${projectId}/persons/?distinct_id=${encodeURIComponent(distinctId)}`, { headers })
-  if (!lookup.ok) return res.status(502).json({ error: 'Unable to locate analytics data.' })
+  const deletion = await fetch(`${host}/api/projects/${projectId}/persons/bulk_delete/`, {
+    method: 'POST',
+    headers,
+    body: JSON.stringify({
+      distinct_ids: [distinctId],
+      delete_events: true,
+      delete_recordings: true,
+      keep_person: false,
+    }),
+  })
 
-  const result = await lookup.json() as { results?: Array<{ id: string }> }
-  for (const person of result.results ?? []) {
-    const deletion = await fetch(`${host}/api/projects/${projectId}/persons/${person.id}/`, { method: 'DELETE', headers })
-    if (!deletion.ok && deletion.status !== 404) return res.status(502).json({ error: 'Unable to delete analytics data.' })
+  // PostHog processes person, event, and recording deletion asynchronously.
+  if (deletion.status !== 202) {
+    return res.status(502).json({ error: 'Unable to queue analytics data deletion.' })
   }
-  return res.status(200).json({ deleted: true })
+  return res.status(202).json({ accepted: true })
 }
 
 function parseDistinctId(body: unknown): string | undefined {
-  const parsed: unknown = typeof body === 'string' ? JSON.parse(body) : body
+  let parsed: unknown
+  try {
+    parsed = typeof body === 'string' ? JSON.parse(body) : body
+  } catch {
+    return undefined
+  }
   if (!parsed || typeof parsed !== 'object') return undefined
   const value = (parsed as { distinctId?: unknown }).distinctId
   return typeof value === 'string' ? value : undefined

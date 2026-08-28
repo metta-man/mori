@@ -244,6 +244,8 @@ struct ContentView: View {
             open(.practiceLaunch(.essentialMode), source: .deepLink)
         } else if arguments.contains("-MoriOpenSettingsForUITest") {
             open(.settings, source: .deepLink)
+        } else if arguments.contains("-MoriOpenBeforeFeedSettingsForUITest") {
+            open(.appLimits, source: .deepLink)
         }
     }
 

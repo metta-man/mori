@@ -4,6 +4,7 @@ import userEvent from '@testing-library/user-event'
 import { afterEach, describe, expect, test, vi } from 'vitest'
 import App from '../App'
 import MoriV2Prototype from '../MoriV2Prototype'
+import analyticsDeleteHandler from '../../api/privacy/analytics-delete'
 
 vi.mock('framer-motion', async () => {
   const ReactModule = await import('react')
@@ -29,7 +30,76 @@ vi.mock('framer-motion', async () => {
 afterEach(() => {
   vi.useRealTimers()
   vi.restoreAllMocks()
+  vi.unstubAllGlobals()
 })
+
+describe('Analytics deletion API', () => {
+  test('queues person, historical event, and recording deletion with PostHog', async () => {
+    const processEnvironment = (globalThis as unknown as {
+      process: { env: Record<string, string | undefined> }
+    }).process.env
+    const previousEnvironment = {
+      apiKey: processEnvironment.POSTHOG_PERSONAL_API_KEY,
+      projectID: processEnvironment.POSTHOG_PROJECT_ID,
+      host: processEnvironment.POSTHOG_HOST,
+    }
+    processEnvironment.POSTHOG_PERSONAL_API_KEY = 'personal-key'
+    processEnvironment.POSTHOG_PROJECT_ID = '42'
+    processEnvironment.POSTHOG_HOST = 'https://eu.posthog.com/'
+
+    const fetchMock = vi.fn().mockResolvedValue({ status: 202 })
+    vi.stubGlobal('fetch', fetchMock)
+
+    interface MockResponse {
+      setHeader(name: string, value: string): void
+      status(code: number): MockResponse
+      json(body: unknown): void
+    }
+    let statusCode = 0
+    let responseBody: unknown
+    const response: MockResponse = {
+      setHeader: vi.fn(),
+      status(code) {
+        statusCode = code
+        return response
+      },
+      json(body) {
+        responseBody = body
+      },
+    }
+
+    try {
+      const distinctId = 'user_12345678-1234-1234-1234-123456789ABC'
+      await analyticsDeleteHandler({ method: 'POST', body: { distinctId } }, response)
+
+      expect(fetchMock).toHaveBeenCalledOnce()
+      const [url, request] = fetchMock.mock.calls[0] as unknown as [string, RequestInit]
+      expect(url).toBe('https://eu.posthog.com/api/projects/42/persons/bulk_delete/')
+      expect(request.method).toBe('POST')
+      expect(JSON.parse(String(request.body))).toEqual({
+        distinct_ids: [distinctId],
+        delete_events: true,
+        delete_recordings: true,
+        keep_person: false,
+      })
+      expect(statusCode).toBe(202)
+      expect(responseBody).toEqual({ accepted: true })
+    } finally {
+      restoreEnvironmentVariable(processEnvironment, 'POSTHOG_PERSONAL_API_KEY', previousEnvironment.apiKey)
+      restoreEnvironmentVariable(processEnvironment, 'POSTHOG_PROJECT_ID', previousEnvironment.projectID)
+      restoreEnvironmentVariable(processEnvironment, 'POSTHOG_HOST', previousEnvironment.host)
+    }
+  })
+})
+
+function restoreEnvironmentVariable(
+  environment: Record<string, string | undefined>,
+  name: string,
+  value: string | undefined,
+) {
+  if (value === undefined) delete environment[name]
+  else environment[name] = value
+}
 
 describe('Mori v2 core flow', () => {
   test('routes every reason into the configured pause before continuing', async () => {

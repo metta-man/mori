@@ -16,4 +16,8 @@ struct MoriRecoveryPreferencesStore {
     func markAuthorizationRequested() {
         defaults.set(true, forKey: Self.authorizationRequestedKey)
     }
+
+    func clear() {
+        defaults.removeObject(forKey: Self.authorizationRequestedKey)
+    }
 }

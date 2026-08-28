@@ -29,4 +29,15 @@ struct MoriClarityPersistence {
         guard let data = userDefaults.data(forKey: key) else { return nil }
         return try? decoder.decode(type, from: data)
     }
+
+    func clearAll() {
+        [
+            Key.actions,
+            Key.selectedTopics,
+            Key.topicOrder,
+            Key.customTopics,
+            Key.customTopicSymbols,
+            Key.latestPulse
+        ].forEach { userDefaults.removeObject(forKey: $0) }
+    }
 }

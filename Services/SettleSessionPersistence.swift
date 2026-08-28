@@ -33,4 +33,8 @@ struct SettleSessionPersistence {
         guard let data = try? encoder.encode(sessions) else { return }
         defaults.set(data, forKey: Key.sessions)
     }
+
+    func clear() {
+        defaults.removeObject(forKey: Key.sessions)
+    }
 }

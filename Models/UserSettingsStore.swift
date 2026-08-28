@@ -68,6 +68,25 @@ struct UserSettingsStore {
         }
     }
 
+    /// Removes persisted user data while deliberately preserving the selected
+    /// locale. Keeping the language stable through the destructive reset avoids
+    /// returning the person to onboarding in an unexpected language.
+    func clearAllUserDataPreservingLocale() {
+        clearLifeGridData()
+        defaults.removeObject(forKey: Key.hasCompletedOnboarding)
+    }
+
+    func clearLifeGridData() {
+        [
+            Key.archiveStartDate,
+            Key.archiveStartDateLegacyKey,
+            Key.archiveSpanYears,
+            Key.legacyLifeExpectancy,
+            Key.weeklyIntentions,
+            Key.legacyWeeklyIntention
+        ].forEach { defaults.removeObject(forKey: $0) }
+    }
+
     private func positiveInteger(forKey key: String, fallback: Int) -> Int {
         let value = defaults.integer(forKey: key)
         return value > 0 ? value : fallback

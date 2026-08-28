@@ -102,13 +102,17 @@ struct FirstAppLimitSetupSurface: View {
         store: MoriAppGroup.defaults
     ) private var beforeFeedDurationSeconds: Int = MoriScreenTimeShared.defaultBeforeFeedDurationSeconds
     @AppStorage(
-        MoriScreenTimeShared.beforeFeedGraceWindowSecondsKey,
-        store: MoriAppGroup.defaults
-    ) private var beforeFeedGraceWindowSeconds: Int = MoriScreenTimeShared.defaultBeforeFeedGraceWindowSeconds
-    @AppStorage(
         MoriScreenTimeShared.beforeFeedBreathingTechniqueIDKey,
         store: MoriAppGroup.defaults
     ) private var beforeFeedBreathingTechniqueID: String = MoriScreenTimeShared.defaultBeforeFeedBreathingTechniqueID
+    @AppStorage(
+        MoriScreenTimeShared.beforeFeedPauseStyleKey,
+        store: MoriAppGroup.defaults
+    ) private var beforeFeedPauseStyleRaw: String = MoriBeforeFeedPauseStyle.guidedBreathing.rawValue
+    @AppStorage(
+        MoriScreenTimeShared.beforeFeedGuidedCycleCountKey,
+        store: MoriAppGroup.defaults
+    ) private var beforeFeedGuidedCycleCount: Int = MoriBeforeFeedPausePreferences.defaultGuidedCycleCount
 
     let copy: FirstAppLimitSetupCopy
     let routeSource: String?
@@ -193,8 +197,9 @@ struct FirstAppLimitSetupSurface: View {
 
                         if summary.hasEffectiveSelection {
                             FirstAppLimitTimingCard(
-                                durationSeconds: $beforeFeedDurationSeconds,
-                                graceWindowSeconds: $beforeFeedGraceWindowSeconds,
+                                pauseStyle: beforeFeedPauseStyleBinding,
+                                guidedCycleCount: $beforeFeedGuidedCycleCount,
+                                quietDurationSeconds: $beforeFeedDurationSeconds,
                                 breathingTechniqueID: $beforeFeedBreathingTechniqueID,
                                 isReady: isReady
                             )
@@ -310,8 +315,26 @@ struct FirstAppLimitSetupSurface: View {
     }
 
     private func prepareView() {
+        let pausePreferences = MoriBeforeFeedPausePreferences()
+        pausePreferences.migrateLegacyPausePreferencesIfNeeded()
+        pausePreferences.normalizePersistedSettings()
+        beforeFeedPauseStyleRaw = pausePreferences.pauseStyle().rawValue
+        beforeFeedGuidedCycleCount = pausePreferences.guidedCycleCount()
+        beforeFeedBreathingTechniqueID = pausePreferences.techniqueID()
+        beforeFeedDurationSeconds = pausePreferences.quietDurationSeconds()
         BeforeFeedGate.normalizePersistedSettings()
         trackViewedIfNeeded()
+    }
+
+    private var beforeFeedPauseStyleBinding: Binding<MoriBeforeFeedPauseStyle> {
+        Binding(
+            get: {
+                MoriBeforeFeedPauseStyle(rawValue: beforeFeedPauseStyleRaw) ?? .guidedBreathing
+            },
+            set: { newValue in
+                beforeFeedPauseStyleRaw = newValue.rawValue
+            }
+        )
     }
 
     private func trackViewedIfNeeded() {
@@ -467,16 +490,19 @@ private struct FirstAppLimitSetupCard: View {
 }
 
 private struct FirstAppLimitTimingCard: View {
-    @Binding var durationSeconds: Int
-    @Binding var graceWindowSeconds: Int
+    @Binding var pauseStyle: MoriBeforeFeedPauseStyle
+    @Binding var guidedCycleCount: Int
+    @Binding var quietDurationSeconds: Int
     @Binding var breathingTechniqueID: String
 
     let isReady: Bool
 
-    private var breathingSummary: String {
-        ScreenTimeSettingsBreathingSummary.text(
+    private var pauseSummary: String {
+        MoriBeforeFeedPauseSettingsPresentation.summary(
+            style: pauseStyle,
             techniqueID: breathingTechniqueID,
-            defaultTechniqueID: MoriScreenTimeShared.defaultBeforeFeedBreathingTechniqueID
+            guidedCycleCount: guidedCycleCount,
+            quietDurationSeconds: quietDurationSeconds
         )
     }
 
@@ -499,29 +525,13 @@ private struct FirstAppLimitTimingCard: View {
 
             VStack(spacing: 0) {
                 FirstAppLimitTimingPickerRow(
-                    icon: .breathe,
-                    title: "Breathing",
-                    detail: "Guided cue during the pause."
-                ) {
-                    Picker(MoriL10n.display("Breathing"), selection: $breathingTechniqueID) {
-                        Text(MoriL10n.display("None")).tag(MoriScreenTimeShared.beforeFeedBreathingNoneID)
-                        ForEach(MoriBreathingTechniqueRepository.techniques) { technique in
-                            Text(technique.name).tag(technique.id)
-                        }
-                    }
-                }
-
-                Divider()
-                    .overlay(MoriColors.sanctuaryHairline)
-
-                FirstAppLimitTimingPickerRow(
                     icon: .timer,
-                    title: "Reset duration",
-                    detail: "How long MORI holds the first open."
+                    title: "Pause style",
+                    detail: "Choose guided breathing or a quiet timer."
                 ) {
-                    Picker(MoriL10n.display("Reset duration"), selection: $durationSeconds) {
-                        ForEach(MoriScreenTimeShared.beforeFeedDurationOptions) { option in
-                            Text(option.label).tag(option.seconds)
+                    Picker(MoriL10n.display("Pause style"), selection: $pauseStyle) {
+                        ForEach(MoriBeforeFeedPauseStyle.allCases) { style in
+                            Text(style.displayTitle).tag(style)
                         }
                     }
                 }
@@ -529,20 +539,61 @@ private struct FirstAppLimitTimingCard: View {
                 Divider()
                     .overlay(MoriColors.sanctuaryHairline)
 
-                FirstAppLimitTimingPickerRow(
-                    icon: .refresh,
-                    title: "App open window",
-                    detail: "How long the app stays open after reset."
-                ) {
-                    Picker(MoriL10n.display("App open window"), selection: $graceWindowSeconds) {
-                        ForEach(MoriScreenTimeShared.beforeFeedGraceWindowOptions) { option in
-                            Text(option.label).tag(option.seconds)
+                if pauseStyle == .guidedBreathing {
+                    FirstAppLimitTimingPickerRow(
+                        icon: .breathe,
+                        title: "Breathing technique",
+                        detail: "The guided rhythm used before the feed."
+                    ) {
+                        Picker(MoriL10n.display("Breathing technique"), selection: $breathingTechniqueID) {
+                            ForEach(MoriBreathingTechniqueRepository.techniques) { technique in
+                                Text(technique.name).tag(technique.id)
+                            }
+                        }
+                    }
+
+                    Divider()
+                        .overlay(MoriColors.sanctuaryHairline)
+
+                    FirstAppLimitTimingPickerRow(
+                        icon: .refresh,
+                        title: "Breathing cycles",
+                        detail: "Choose between 1 and 10 complete cycles."
+                    ) {
+                        Stepper(
+                            value: $guidedCycleCount,
+                            in: MoriBeforeFeedPausePreferences.minGuidedCycleCount...MoriBeforeFeedPausePreferences.maxGuidedCycleCount
+                        ) {
+                            Text("\(guidedCycleCount)")
+                                .monospacedDigit()
+                        }
+                    }
+                } else {
+                    FirstAppLimitTimingPickerRow(
+                        icon: .timer,
+                        title: "Quiet pause duration",
+                        detail: "No breathing cues are shown."
+                    ) {
+                        Picker(MoriL10n.display("Quiet pause duration"), selection: $quietDurationSeconds) {
+                            ForEach(
+                                MoriBeforeFeedPauseSettingsPresentation.quietDurationOptions(
+                                    current: quietDurationSeconds
+                                ),
+                                id: \.self
+                            ) { seconds in
+                                Text(BeforeFeedGate.formattedDuration(seconds)).tag(seconds)
+                            }
                         }
                     }
                 }
             }
 
-            Text(MoriL10n.display(breathingSummary))
+            Text(pauseSummary)
+                .font(MoriTypography.caption)
+                .foregroundColor(MoriColors.sanctuaryMuted)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text(MoriL10n.display("Choose a feed window of 2, 5, 10, or 15 minutes during each Before Feed pause."))
                 .font(MoriTypography.caption)
                 .foregroundColor(MoriColors.sanctuaryMuted)
                 .fixedSize(horizontal: false, vertical: true)

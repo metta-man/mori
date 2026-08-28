@@ -107,8 +107,8 @@ final class AttentionShieldManager: ObservableObject {
         case .endShield(let feature):
             endShield(feature: feature)
             return false
-        case .completeBeforeFeedResetAt(let now):
-            completeBeforeFeedReset(now: now)
+        case .completeBeforeFeedResetAt(let now, let openWindowSeconds):
+            completeBeforeFeedReset(now: now, openWindowSeconds: openWindowSeconds)
             return false
         case .completeMorningGateResetAt(let now):
             completeMorningGateReset(now: now)
@@ -331,8 +331,14 @@ final class AttentionShieldManager: ObservableObject {
         return passiveGatePolicy.shouldApplyBeforeFeedGate
     }
 
-    private func completeBeforeFeedReset(now: Date = Date()) {
-        let until = now.addingTimeInterval(TimeInterval(beforeFeedGateStore.graceWindowSeconds()))
+    private func completeBeforeFeedReset(
+        now: Date = Date(),
+        openWindowSeconds: Int? = nil
+    ) {
+        let resolvedWindowSeconds = beforeFeedGateStore.resolvedGraceWindowSeconds(
+            override: openWindowSeconds
+        )
+        let until = now.addingTimeInterval(TimeInterval(resolvedWindowSeconds))
         let traceID = beforeFeedGateStore.beginWindowTrace()
         beforeFeedGateStore.saveGraceUntil(until)
         if activeSession?.feature == .beforeFeed {
