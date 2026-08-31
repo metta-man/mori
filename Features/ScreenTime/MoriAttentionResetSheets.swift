@@ -75,7 +75,6 @@ private struct MoriAttentionResetSheet: View {
     @State private var beforeFeedPatternSnapshot: MoriBreathPattern?
     @State private var beforeFeedPauseDurationSnapshot = 30
     @State private var beforeFeedPauseTargetDurationSnapshot: TimeInterval = 30
-    @State private var forceReturnAnchorsForUITest = false
     @State private var beforeFeedIntentEventID = UUID()
     @State private var didConfirmBeforeFeedIntent = false
 
@@ -211,10 +210,7 @@ private struct MoriAttentionResetSheet: View {
 
     private var shouldShowReturnAnchors: Bool {
         guard let reason = beforeFeedFlow.reason else { return false }
-        return forceReturnAnchorsForUITest || MoriBeforeFeedAdaptivePolicy.shouldShowReturnAnchors(
-            reason: reason,
-            recentIntentEvents: beforeFeedGateStore.intentEvents()
-        )
+        return MoriBeforeFeedReturnAnchorPolicy.shouldShow(for: reason)
     }
 
     private var beforeFeedBeginTitle: String {
@@ -470,13 +466,11 @@ private struct MoriAttentionResetSheet: View {
             _ = beforeFeedFlow.completePause()
             activeElapsed = TimeInterval(totalSeconds)
             secondsRemaining = 0
-            forceReturnAnchorsForUITest = true
         } else if arguments.contains("-MoriShowBeforeFeedPlanWithAnchorForUITest") {
             beforeFeedFlow.selectReason(.habit)
             _ = beforeFeedFlow.proceedToPlan()
             _ = beforeFeedFlow.selectEnoughChoice(.fiveMinutes)
             beforeFeedFlow.selectReturnAnchor(.work)
-            forceReturnAnchorsForUITest = true
         } else if arguments.contains("-MoriShowBeforeFeedPlanForUITest") ||
                     arguments.contains("-MoriShowBeforeFeedOfferForUITest") {
             beforeFeedFlow.selectReason(.habit)

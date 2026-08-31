@@ -124,42 +124,13 @@ final class MoriRoutingTests: XCTestCase {
         XCTAssertFalse(MoriBeforeFeedEnoughChoice.choices(for: .habit).contains(.oneReply))
     }
 
-    func testBeforeFeedAdaptiveReturnAnchorPolicyUsesHabitOrRecentIntent() {
-        let now = Date(timeIntervalSince1970: 10_000)
-        let recentEvent = MoriBeforeFeedIntentEvent(
-            id: UUID(),
-            reason: .learn,
-            confirmedAt: now.addingTimeInterval(-(10 * 60) + 1),
-            routeSource: nil
-        )
-        let staleEvent = MoriBeforeFeedIntentEvent(
-            id: UUID(),
-            reason: .relax,
-            confirmedAt: now.addingTimeInterval(-(10 * 60) - 1),
-            routeSource: nil
-        )
-
-        XCTAssertTrue(
-            MoriBeforeFeedAdaptivePolicy.shouldShowReturnAnchors(
-                reason: .habit,
-                recentIntentEvents: [],
-                now: now
+    func testBeforeFeedReturnAnchorPromptShowsForEveryReason() {
+        for reason in MoriBeforeFeedIntentReason.allCases {
+            XCTAssertTrue(
+                MoriBeforeFeedReturnAnchorPolicy.shouldShow(for: reason),
+                "Expected the post-feed return question for \(reason.rawValue)."
             )
-        )
-        XCTAssertTrue(
-            MoriBeforeFeedAdaptivePolicy.shouldShowReturnAnchors(
-                reason: .learn,
-                recentIntentEvents: [recentEvent],
-                now: now
-            )
-        )
-        XCTAssertFalse(
-            MoriBeforeFeedAdaptivePolicy.shouldShowReturnAnchors(
-                reason: .learn,
-                recentIntentEvents: [staleEvent],
-                now: now
-            )
-        )
+        }
     }
 
     func testFreshBeforeFeedPauseMigrationDefaultsToThreeLongExhaleCycles() {

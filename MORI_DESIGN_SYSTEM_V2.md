@@ -92,7 +92,8 @@ Bright blue, orange CTAs, neon, synthetic gradients, and decorative frosted glas
 
 - Ask “Why now?” with five neutral choices.
 - No choice is preselected.
-- Every choice enters the configured Before Feed pause and starts it automatically.
+- Every choice follows the same plan: choose a small feed boundary, then see the no-typing “Where do you want to return?” question before starting the configured pause.
+- Show the return question for every reason; never gate it on Habit or recent intent history. Choosing a return activity remains optional.
 - The feed remains closed until the pause completes; completion requires one final intentional Continue.
 - Closing the feed remains equally available.
 - Do not show feeds remaining, time spent, warnings, or guilt copy.

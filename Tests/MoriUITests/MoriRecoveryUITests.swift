@@ -40,6 +40,34 @@ final class MoriRecoveryUITests: XCTestCase {
         XCTAssertFalse(app.buttons["Continue now"].exists)
     }
 
+    func testOtherReasonAlsoAsksWhatComesAfterTheFeed() {
+        let app = launchBeforeFeed()
+
+        XCTAssertTrue(app.buttons["Other"].waitForExistence(timeout: 8))
+        app.buttons["Other"].tap()
+        app.buttons["Continue"].tap()
+
+        XCTAssertTrue(app.buttons["15 minutes"].waitForExistence(timeout: 3))
+        app.buttons["15 minutes"].tap()
+
+        XCTAssertTrue(app.staticTexts["After this?"].waitForExistence(timeout: 3))
+        let workButton = app.buttons["Work"]
+        XCTAssertTrue(workButton.exists)
+
+        let screenshot = XCTAttachment(screenshot: app.screenshot())
+        screenshot.name = "Before Feed - Other return question"
+        screenshot.lifetime = .keepAlways
+        add(screenshot)
+
+        workButton.tap()
+        XCTAssertEqual(workButton.value as? String, "Selected")
+
+        let selectedScreenshot = XCTAttachment(screenshot: app.screenshot())
+        selectedScreenshot.name = "Before Feed - Other return question selected"
+        selectedScreenshot.lifetime = .keepAlways
+        add(selectedScreenshot)
+    }
+
     func testForcedCompletionOffersLeaveClosedAndSpecificWindow() {
         let app = launchBeforeFeed(extraArguments: [
             "-MoriShowBeforeFeedCompletionForUITest"

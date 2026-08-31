@@ -329,7 +329,12 @@ Create a pause before opening a selected feed.
 
 The language must be non-judgmental.
 
-If `Habit` is selected, gently offer a 30-second pause before continuing.
+After any reason is selected:
+
+- ask `What would be enough?` and let the person choose a small feed boundary
+- show `After this?` / `Where do you want to return?` for every reason once a boundary is selected
+- offer Work, Study, Someone, Rest, Move, and Sleep without requiring typing
+- keep the return activity optional, then begin the configured pause from the primary action
 
 ### Visual direction
 

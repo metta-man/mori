@@ -308,21 +308,11 @@ enum MoriBeforeFeedReturnAnchor: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
-enum MoriBeforeFeedAdaptivePolicy {
-    static let recentIntentWindow: TimeInterval = 10 * 60
-
-    static func shouldShowReturnAnchors(
-        reason: MoriBeforeFeedIntentReason,
-        recentIntentEvents: [MoriBeforeFeedIntentEvent],
-        now: Date = Date()
-    ) -> Bool {
-        if reason == .habit {
+enum MoriBeforeFeedReturnAnchorPolicy {
+    static func shouldShow(for reason: MoriBeforeFeedIntentReason) -> Bool {
+        switch reason {
+        case .replyToSomeone, .learn, .relax, .habit, .other:
             return true
-        }
-
-        let earliestRelevantDate = now.addingTimeInterval(-recentIntentWindow)
-        return recentIntentEvents.contains { event in
-            event.confirmedAt >= earliestRelevantDate && event.confirmedAt <= now
         }
     }
 }
