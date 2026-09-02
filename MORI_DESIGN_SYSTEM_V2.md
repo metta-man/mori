@@ -90,7 +90,7 @@ Bright blue, orange CTAs, neon, synthetic gradients, and decorative frosted glas
 
 ### Before Feed
 
-- Begin with the configured Breath Key. Fresh installs default to one Long Exhale breath: 4 seconds in and 6 seconds out.
+- Begin with the configured Breath Key. Fresh installs default to three Long Exhale cycles: 4 seconds in and 6 seconds out per cycle.
 - `Guided breathing` lets the person choose a technique and 1 to 10 complete cycles. `Follow your own breath` offers a 10-second to 10-minute timer with no phase prompts.
 - Capture the configuration when the sheet opens. Changing Settings or a custom technique must not change a breath already in progress.
 - Follow-your-own mode starts with one long singing-bowl cue only on the first start. It does not replay on resume or late sound enable, and it has no completion sound.

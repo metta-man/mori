@@ -46,10 +46,12 @@ final class MoriRecoveryUITests: XCTestCase {
         XCTAssertFalse(deletionAlert.waitForExistence(timeout: 1))
     }
 
-    func testBeforeFeedStartsWithOneBreathBeforeIntentChoices() {
+    func testBeforeFeedStartsWithThreeBreathsBeforeIntentChoices() {
         let app = launchBeforeFeed()
 
         XCTAssertTrue(app.staticTexts["Begin with the breath"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.staticTexts["Long Exhale (4-6) · 3 cycles · about 30 seconds"].exists)
+        XCTAssertTrue(app.staticTexts["Cycle 1 of 3"].exists)
         XCTAssertTrue(app.staticTexts["Breathe in for 4. Breathe out for 6."].exists)
         XCTAssertFalse(app.staticTexts["Why now?"].exists)
         attachScreenshot(named: "before-feed-breath-key")

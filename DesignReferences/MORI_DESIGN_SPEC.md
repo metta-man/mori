@@ -324,8 +324,8 @@ Do not make analytics more visually prominent than the next action.
 
 Turn the interruption into a small passage ritual before opening a selected
 feed. The first state is one configured Breath Key. Fresh installs default to
-one Long Exhale breath: 4 seconds in, 6 seconds out. Do not stack another pause
-or timer after the Breath Key.
+three Long Exhale cycles: 4 seconds in, 6 seconds out per cycle. Do not stack
+another pause or timer after the Breath Key.
 
 Settings expose two bounded styles:
 

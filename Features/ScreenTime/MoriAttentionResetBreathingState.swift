@@ -10,7 +10,7 @@ enum MoriBeforeFeedPauseStyle: String, Codable, CaseIterable, Identifiable {
 struct MoriBeforeFeedPausePreferences {
     static let minGuidedCycleCount = 1
     static let maxGuidedCycleCount = 10
-    static let defaultGuidedCycleCount = 1
+    static let defaultGuidedCycleCount = 3
 
     private let defaults: UserDefaults
     private let legacyDefaults: UserDefaults
@@ -25,7 +25,7 @@ struct MoriBeforeFeedPausePreferences {
 
     /// Converts the former technique-plus-duration preferences into the v1
     /// pause model. This intentionally runs before the existing duration
-    /// migration so a fresh install keeps the one-cycle Long Exhale default
+    /// migration so a fresh install keeps the three-cycle Long Exhale default
     /// while an existing install can retain its former reset length or saved
     /// cycle count.
     func migrateLegacyPausePreferencesIfNeeded() {
@@ -276,8 +276,12 @@ struct MoriBeforeFeedPauseSessionSnapshot: Equatable {
         guidedCycleCount: MoriBeforeFeedPausePreferences.defaultGuidedCycleCount,
         techniqueID: MoriScreenTimeShared.defaultBeforeFeedBreathingTechniqueID,
         pattern: MoriBeforeFeedBreathKey.pattern,
-        displayedDurationSeconds: Int(ceil(MoriBeforeFeedBreathKey.duration)),
+        displayedDurationSeconds: Int(ceil(
+            MoriBeforeFeedBreathKey.duration
+                * TimeInterval(MoriBeforeFeedPausePreferences.defaultGuidedCycleCount)
+        )),
         targetDuration: MoriBeforeFeedBreathKey.duration
+            * TimeInterval(MoriBeforeFeedPausePreferences.defaultGuidedCycleCount)
     )
 
     init(

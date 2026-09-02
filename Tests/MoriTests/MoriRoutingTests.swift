@@ -148,7 +148,7 @@ final class MoriRoutingTests: XCTestCase {
         XCTAssertFalse(state.completeBreath(), "The breath transition is idempotent")
     }
 
-    func testBeforeFeedBreathKeyIsExactlyOneLongExhale() {
+    func testBeforeFeedLongExhaleCycleUsesFourInSixOut() {
         XCTAssertEqual(MoriBeforeFeedBreathKey.pattern.inhale, 4, accuracy: 0.000_001)
         XCTAssertNil(MoriBeforeFeedBreathKey.pattern.inhaleHold)
         XCTAssertEqual(MoriBeforeFeedBreathKey.pattern.exhale, 6, accuracy: 0.000_001)
@@ -179,7 +179,7 @@ final class MoriRoutingTests: XCTestCase {
         }
     }
 
-    func testFreshBeforeFeedPauseMigrationDefaultsToOneLongExhaleCycle() {
+    func testFreshBeforeFeedPauseMigrationDefaultsToThreeLongExhaleCycles() {
         withDefaults { defaults, legacyDefaults in
             let preferences = MoriBeforeFeedPausePreferences(
                 defaults: defaults,
@@ -193,11 +193,45 @@ final class MoriRoutingTests: XCTestCase {
                 preferences.techniqueID(),
                 MoriScreenTimeShared.defaultBeforeFeedBreathingTechniqueID
             )
-            XCTAssertEqual(preferences.guidedCycleCount(), 1)
-            XCTAssertEqual(preferences.resolvedDuration(), 10, accuracy: 0.000_001)
+            XCTAssertEqual(preferences.guidedCycleCount(), 3)
+            XCTAssertEqual(preferences.resolvedDuration(), 30, accuracy: 0.000_001)
             XCTAssertTrue(
                 defaults.bool(forKey: MoriScreenTimeShared.beforeFeedPausePreferencesMigrationKey)
             )
+        }
+    }
+
+    func testDefaultBeforeFeedSnapshotUsesThreeLongExhaleCycles() {
+        let snapshot = MoriBeforeFeedPauseSessionSnapshot.defaultValue
+
+        XCTAssertEqual(snapshot.style, .guidedBreathing)
+        XCTAssertEqual(snapshot.guidedCycleCount, 3)
+        XCTAssertEqual(snapshot.pattern, MoriBeforeFeedBreathKey.pattern)
+        XCTAssertEqual(snapshot.displayedDurationSeconds, 30)
+        XCTAssertEqual(snapshot.targetDuration, 30, accuracy: 0.000_001)
+    }
+
+    func testExistingOneCyclePreferenceIsPreservedAfterDefaultChange() {
+        withDefaults { defaults, legacyDefaults in
+            defaults.set(
+                MoriBeforeFeedPauseStyle.guidedBreathing.rawValue,
+                forKey: MoriScreenTimeShared.beforeFeedPauseStyleKey
+            )
+            defaults.set(
+                MoriBreathingTechniqueID.longExhale.rawValue,
+                forKey: MoriScreenTimeShared.beforeFeedBreathingTechniqueIDKey
+            )
+            defaults.set(1, forKey: MoriScreenTimeShared.beforeFeedGuidedCycleCountKey)
+            defaults.set(true, forKey: MoriScreenTimeShared.beforeFeedPausePreferencesMigrationKey)
+            let preferences = MoriBeforeFeedPausePreferences(
+                defaults: defaults,
+                legacyDefaults: legacyDefaults
+            )
+
+            preferences.migrateLegacyPausePreferencesIfNeeded()
+
+            XCTAssertEqual(preferences.guidedCycleCount(), 1)
+            XCTAssertEqual(preferences.resolvedDuration(), 10, accuracy: 0.000_001)
         }
     }
 
