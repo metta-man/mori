@@ -54,13 +54,16 @@ struct GratitudeJournalScreen: View {
     @State private var toastType: ToastType = .success
     @State private var showImporter = false
     @State private var todayHabitEntry: HabitEntry?
-    @State private var selectedTone: HabitDayTone?
+    @State private var guidedCheckIn = JournalGuidedCheckInState()
     @State private var dailyEntryNote = ""
     @State private var dailyEntryPhotos: [GratitudePhotoAttachment] = []
     @State private var persistedDailyEntryPhotos: [GratitudePhotoAttachment] = []
     @State private var selectedDailyPhotoItems: [PhotosPickerItem] = []
     @State private var activeSheet: GratitudeJournalSheet?
     @State private var lifeGridSnapshot = JournalLifeGridSnapshot.current()
+    #if DEBUG
+    @State private var hasAppliedFreshLogUITestState = false
+    #endif
 
     @ViewBuilder
     var body: some View {
@@ -82,7 +85,7 @@ struct GratitudeJournalScreen: View {
     private var screenContent: some View {
         MoriRootScrollScreen(
             title: "Log",
-            subtitle: "One small note is enough.",
+            subtitle: "One small check-in is enough.",
             spacing: 16,
             backgroundVariant: .journal,
             showsBackground: !usesAppShellNavigation,
@@ -99,7 +102,7 @@ struct GratitudeJournalScreen: View {
         ) {
             GratitudeJournalHomeContent(
                 dailySparkStore: dailySparkStore,
-                selectedTone: selectedTone,
+                guidedCheckIn: $guidedCheckIn,
                 todayHabitEntry: todayHabitEntry,
                 dailyEntryNote: $dailyEntryNote,
                 dailyEntryPhotos: $dailyEntryPhotos,
@@ -107,7 +110,6 @@ struct GratitudeJournalScreen: View {
                 recentEntries: viewModel.recentEntries,
                 lifeGridSnapshot: lifeGridSnapshot,
                 onDailySparkSaved: handleDailySparkSaved,
-                onSelectTone: selectToneFromJournal,
                 onSaveDailyEntry: saveDailyEntryFromJournal,
                 onOpenPatternLog: openPatternLog,
                 onOpenWeekArchive: openWeekArchive,
@@ -197,8 +199,7 @@ struct GratitudeJournalScreen: View {
                         thought: thought,
                         feeling: feeling,
                         responsePlan: responsePlan,
-                        photoAttachments: dailyEntryPhotos,
-                        promptForDifficultPattern: false
+                        photoAttachments: dailyEntryPhotos
                     )
                 }
             )
@@ -245,8 +246,22 @@ struct GratitudeJournalScreen: View {
     }
 
     private func loadHabitData() {
+        #if DEBUG
+        if !hasAppliedFreshLogUITestState,
+           ProcessInfo.processInfo.arguments.contains("-MoriStartFreshLogForUITest") {
+            hasAppliedFreshLogUITestState = true
+            todayHabitEntry = nil
+            guidedCheckIn = JournalGuidedCheckInState()
+            dailyEntryNote = ""
+            dailyEntryPhotos = []
+            persistedDailyEntryPhotos = []
+            refreshLifeGridSnapshot()
+            return
+        }
+        #endif
+
         todayHabitEntry = HabitDataManager.shared.getTodayEntry()
-        selectedTone = todayHabitEntry?.tone
+        guidedCheckIn = JournalGuidedCheckInState(restoring: todayHabitEntry)
         dailyEntryNote = todayHabitEntry?.note ?? ""
         loadDailyEntryPhotos()
         refreshLifeGridSnapshot()
@@ -263,20 +278,24 @@ struct GratitudeJournalScreen: View {
         refreshLifeGridSnapshot()
     }
 
-    private func selectToneFromJournal(_ tone: HabitDayTone) {
-        let generator = UIImpactFeedbackGenerator(style: .light)
-        generator.impactOccurred()
-
-        selectedTone = tone
-    }
-
     private func saveDailyEntryFromJournal() {
-        guard let tone = selectedTone ?? todayHabitEntry?.tone else { return }
+        guard guidedCheckIn.canSave,
+              let emotion = guidedCheckIn.emotion,
+              let context = guidedCheckIn.context,
+              let response = guidedCheckIn.response,
+              let legacyFields = guidedCheckIn.legacyFields(preserving: todayHabitEntry) else { return }
+
         saveToneFromJournal(
-            tone,
+            emotion.tone,
             note: dailyEntryNote,
-            photoAttachments: dailyEntryPhotos,
-            promptForDifficultPattern: true
+            trigger: legacyFields.trigger,
+            thought: legacyFields.thought,
+            feeling: legacyFields.feeling,
+            responsePlan: legacyFields.responsePlan,
+            journalEmotionID: emotion.id,
+            journalContextID: context.id,
+            journalResponseID: response.id,
+            photoAttachments: dailyEntryPhotos
         )
     }
 
@@ -287,8 +306,10 @@ struct GratitudeJournalScreen: View {
         thought: String? = nil,
         feeling: String? = nil,
         responsePlan: String? = nil,
-        photoAttachments: [GratitudePhotoAttachment]? = nil,
-        promptForDifficultPattern: Bool = false
+        journalEmotionID: String? = nil,
+        journalContextID: String? = nil,
+        journalResponseID: String? = nil,
+        photoAttachments: [GratitudePhotoAttachment]? = nil
     ) {
         let memoryNote = note ?? dailyEntryNote
         let photosToSave = photoAttachments
@@ -299,7 +320,10 @@ struct GratitudeJournalScreen: View {
             trigger: trigger,
             thought: thought,
             feeling: feeling,
-            responsePlan: responsePlan
+            responsePlan: responsePlan,
+            journalEmotionID: journalEmotionID,
+            journalContextID: journalContextID,
+            journalResponseID: journalResponseID
         )
 
         GratitudeEntryStore.live.saveDayLogEntry(
@@ -314,7 +338,7 @@ struct GratitudeJournalScreen: View {
         )
 
         todayHabitEntry = entry
-        selectedTone = tone
+        guidedCheckIn = JournalGuidedCheckInState(restoring: entry)
         dailyEntryNote = entry.note ?? ""
         if let photosToSave {
             dailyEntryPhotos = photosToSave
@@ -339,11 +363,6 @@ struct GratitudeJournalScreen: View {
             endActiveAppLimit()
         }
 
-        if promptForDifficultPattern, tone == .negative, !entry.hasPatternLog {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.35) {
-                activeSheet = .patternLog(.negative)
-            }
-        }
     }
 
     private func saveBackdatedEntry(
@@ -442,7 +461,7 @@ struct GratitudeJournalScreen: View {
     }
 
     private func openPatternLog() {
-        activeSheet = .patternLog(selectedTone ?? todayHabitEntry?.tone ?? .neutral)
+        activeSheet = .patternLog(guidedCheckIn.selectedTone ?? todayHabitEntry?.tone ?? .neutral)
     }
 
     private func startJournalAppLimitIfPossible() {

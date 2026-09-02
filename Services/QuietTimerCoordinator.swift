@@ -32,9 +32,10 @@ enum QuietTimerCoordinator {
         appLimitManager: AppLimitManager? = nil,
         now: Date = Date()
     ) -> MoriQuietTimerSession? {
+        guard var session = loadSession() else { return nil }
+
         let clarityStore = clarityStore ?? .shared
         let appLimitManager = appLimitManager ?? .shared
-        guard var session = loadSession() else { return nil }
 
         if session.isRunning && session.remainingSeconds(at: now) <= 0 {
             completeSession(session, clarityStore: clarityStore, appLimitManager: appLimitManager)

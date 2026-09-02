@@ -2,7 +2,65 @@ import AudioToolbox
 import AVFoundation
 import Foundation
 
-final class SettleBellService {
+protocol SettleBellAudioSessionManaging: AnyObject {
+    var secondaryAudioShouldBeSilencedHint: Bool { get }
+    var isOtherAudioPlaying: Bool { get }
+
+    func configureForMixedPlayback() throws
+    func activateForPlayback() throws
+    func deactivateAfterPlayback() throws
+}
+
+final class SystemSettleBellAudioSessionManager: SettleBellAudioSessionManaging {
+    private let session: AVAudioSession
+
+    init(session: AVAudioSession = .sharedInstance()) {
+        self.session = session
+    }
+
+    var secondaryAudioShouldBeSilencedHint: Bool {
+        session.secondaryAudioShouldBeSilencedHint
+    }
+
+    var isOtherAudioPlaying: Bool {
+        session.isOtherAudioPlaying
+    }
+
+    func configureForMixedPlayback() throws {
+        try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+    }
+
+    func activateForPlayback() throws {
+        try session.setActive(true)
+    }
+
+    func deactivateAfterPlayback() throws {
+        try session.setActive(false, options: [.notifyOthersOnDeactivation])
+    }
+}
+
+enum SettleBellAudioInterruptionPolicy {
+    static func shouldPlaySecondaryAudio(
+        secondaryAudioShouldBeSilenced: Bool,
+        isOtherAudioPlaying: Bool
+    ) -> Bool {
+        !secondaryAudioShouldBeSilenced && !isOtherAudioPlaying
+    }
+}
+
+private enum SettleBellPlayerPreparationOutcome {
+    case ready(AVAudioPlayer)
+    case suppressed
+    case failed
+}
+
+private enum SettleBellAudioActivationOutcome {
+    case activated
+    case suppressed
+    case failed
+}
+
+final class SettleBellService: NSObject, AVAudioPlayerDelegate {
     static let shared = SettleBellService()
 
     private var audioPlayer: AVAudioPlayer?
@@ -12,11 +70,22 @@ final class SettleBellService {
     private var inhaleFadeTimer: Timer?
     private var exhaleFadeTimer: Timer?
     private let audioSessionQueue = DispatchQueue(label: "com.mori.settleBell.audioSession", qos: .userInitiated)
+    private let audioSessionManager: SettleBellAudioSessionManaging
     private let playbackGenerationLock = NSLock()
     private var audioSessionConfigured = false
+    private var audioSessionOwned = false
+    private var pendingPlayerPreparations = 0
     private var playbackGeneration = 0
 
-    private init() {}
+    private override init() {
+        audioSessionManager = SystemSettleBellAudioSessionManager()
+        super.init()
+    }
+
+    init(audioSessionManager: SettleBellAudioSessionManaging) {
+        self.audioSessionManager = audioSessionManager
+        super.init()
+    }
 
     func playStartBell(_ tone: SettleBellTone = .singingBowlA) {
         performOnMain { [weak self] in
@@ -46,13 +115,20 @@ final class SettleBellService {
         let requestID = nextPlaybackGeneration()
 
         prepareForBreathingCue(cue)
-        preparePlayer(fileName: cue.fileName, volume: cue.volume) { [weak self] player in
-            guard let self, self.playbackGenerationIsCurrent(requestID) else { return }
-            guard let player else {
-                self.playFallbackSound()
-                return
+        preparePlayer(fileName: cue.fileName, volume: cue.volume) { [weak self] outcome in
+            guard let self else { return }
+            switch outcome {
+            case .ready(let player):
+                guard self.playbackGenerationIsCurrent(requestID) else {
+                    self.discardPreparedPlayer(player)
+                    return
+                }
+                self.playPreparedBreathingCue(cue, player: player, generation: requestID)
+            case .suppressed:
+                break
+            case .failed:
+                self.playFallbackSoundIfPermitted()
             }
-            self.playPreparedBreathingCue(cue, player: player, generation: requestID)
         }
     }
 
@@ -66,6 +142,7 @@ final class SettleBellService {
             case .hold:
                 self?.holdAudioPlayer?.stop()
                 self?.holdAudioPlayer = nil
+                self?.deactivateAudioSessionIfIdleOnMain()
             }
         }
     }
@@ -100,6 +177,7 @@ final class SettleBellService {
         inhaleAudioPlayer = nil
         exhaleAudioPlayer = nil
         holdAudioPlayer = nil
+        deactivateAudioSessionIfIdleOnMain()
     }
 
     private func play(_ tone: SettleBellTone, volume: Float = 1.0) {
@@ -109,14 +187,21 @@ final class SettleBellService {
             fileName: tone.fileName,
             fallbackFileName: SettleBellTone.defaultChime.fileName,
             volume: volume
-        ) { [weak self] player in
-            guard let self, self.playbackGenerationIsCurrent(requestID) else { return }
-            guard let player else {
-                self.playFallbackSound()
-                return
+        ) { [weak self] outcome in
+            guard let self else { return }
+            switch outcome {
+            case .ready(let player):
+                guard self.playbackGenerationIsCurrent(requestID) else {
+                    self.discardPreparedPlayer(player)
+                    return
+                }
+                self.audioPlayer = player
+                self.playPreparedPlayer(player, generation: requestID)
+            case .suppressed:
+                break
+            case .failed:
+                self.playFallbackSoundIfPermitted()
             }
-            self.audioPlayer = player
-            self.playPreparedPlayer(player, generation: requestID)
         }
     }
 
@@ -125,9 +210,11 @@ final class SettleBellService {
         case .inhale:
             fadeOutExhaleSound()
             holdAudioPlayer?.stop()
+            holdAudioPlayer = nil
         case .exhale:
             fadeOutInhaleSound()
             holdAudioPlayer?.stop()
+            holdAudioPlayer = nil
         case .hold:
             fadeOutInhaleSound()
             fadeOutExhaleSound()
@@ -150,33 +237,56 @@ final class SettleBellService {
         fileName: String,
         fallbackFileName: String? = nil,
         volume: Float,
-        completion: @escaping (AVAudioPlayer?) -> Void
+        completion: @escaping (SettleBellPlayerPreparationOutcome) -> Void
     ) {
+        pendingPlayerPreparations += 1
         audioSessionQueue.async { [weak self] in
             guard let self else { return }
 
-            self.configureAudioSessionOnQueue()
+            guard self.shouldPlaySecondaryAudio else {
+                self.deliverPreparationOutcome(.suppressed, completion: completion)
+                return
+            }
 
             guard let url = self.findAudioFile(named: fileName)
                 ?? fallbackFileName.flatMap({ self.findAudioFile(named: $0) })
             else {
-                DispatchQueue.main.async {
-                    completion(nil)
-                }
+                self.deliverPreparationOutcome(.failed, completion: completion)
                 return
             }
 
             do {
                 let player = try AVAudioPlayer(contentsOf: url)
                 player.volume = volume
+                player.delegate = self
                 player.prepareToPlay()
-                DispatchQueue.main.async {
-                    completion(player)
+                switch self.activateAudioSessionOnQueue() {
+                case .activated:
+                    self.deliverPreparationOutcome(.ready(player), completion: completion)
+                case .suppressed:
+                    self.deliverPreparationOutcome(.suppressed, completion: completion)
+                case .failed:
+                    self.deliverPreparationOutcome(.failed, completion: completion)
                 }
             } catch {
-                DispatchQueue.main.async {
-                    completion(nil)
-                }
+                self.deliverPreparationOutcome(.failed, completion: completion)
+            }
+        }
+    }
+
+    private func deliverPreparationOutcome(
+        _ outcome: SettleBellPlayerPreparationOutcome,
+        completion: @escaping (SettleBellPlayerPreparationOutcome) -> Void
+    ) {
+        DispatchQueue.main.async { [weak self] in
+            guard let self else { return }
+            self.pendingPlayerPreparations = max(0, self.pendingPlayerPreparations - 1)
+            completion(outcome)
+            switch outcome {
+            case .ready:
+                break
+            case .suppressed, .failed:
+                self.deactivateAudioSessionIfIdleOnMain()
             }
         }
     }
@@ -187,6 +297,7 @@ final class SettleBellService {
         fadeOut(player: inhaleAudioPlayer) { [weak self] in
             self?.inhaleAudioPlayer = nil
             self?.inhaleFadeTimer = nil
+            self?.deactivateAudioSessionIfIdleOnMain()
         } assignTimer: { [weak self] timer in
             self?.inhaleFadeTimer = timer
         }
@@ -198,6 +309,7 @@ final class SettleBellService {
         fadeOut(player: exhaleAudioPlayer) { [weak self] in
             self?.exhaleAudioPlayer = nil
             self?.exhaleFadeTimer = nil
+            self?.deactivateAudioSessionIfIdleOnMain()
         } assignTimer: { [weak self] timer in
             self?.exhaleFadeTimer = timer
         }
@@ -263,27 +375,103 @@ final class SettleBellService {
 
     private func playPreparedPlayer(_ player: AVAudioPlayer, generation: Int) {
         audioSessionQueue.async { [weak self, weak player] in
-            guard let self, let player, self.playbackGenerationIsCurrent(generation) else { return }
-            player.play()
+            guard let self, let player else { return }
+            guard self.playbackGenerationIsCurrent(generation) else {
+                DispatchQueue.main.async { [weak self, weak player] in
+                    guard let self, let player else { return }
+                    self.releasePlayer(player)
+                    self.deactivateAudioSessionIfIdleOnMain()
+                }
+                return
+            }
+            guard player.play() else {
+                DispatchQueue.main.async { [weak self, weak player] in
+                    guard let self, let player else { return }
+                    self.releasePlayer(player)
+                    self.deactivateAudioSessionIfIdleOnMain()
+                }
+                return
+            }
         }
     }
 
-    private func configureAudioSessionOnQueue() {
+    private var shouldPlaySecondaryAudio: Bool {
+        SettleBellAudioInterruptionPolicy.shouldPlaySecondaryAudio(
+            secondaryAudioShouldBeSilenced: audioSessionManager.secondaryAudioShouldBeSilencedHint,
+            isOtherAudioPlaying: audioSessionManager.isOtherAudioPlaying
+        )
+    }
+
+    private func activateAudioSessionOnQueue() -> SettleBellAudioActivationOutcome {
+        guard shouldPlaySecondaryAudio else { return .suppressed }
+
         do {
-            let session = AVAudioSession.sharedInstance()
             if !audioSessionConfigured {
-                try session.setCategory(.playback, mode: .default, options: [.mixWithOthers])
+                try audioSessionManager.configureForMixedPlayback()
                 audioSessionConfigured = true
             }
-            try session.setActive(true)
+            try audioSessionManager.activateForPlayback()
+            audioSessionOwned = true
+            return .activated
         } catch {
             #if DEBUG
             print("[SettleBellService] Audio session failed: \(error.localizedDescription)")
             #endif
+            return .failed
         }
     }
 
-    private func playFallbackSound() {
+    private func deactivateAudioSessionIfIdleOnMain() {
+        guard pendingPlayerPreparations == 0,
+              ![audioPlayer, inhaleAudioPlayer, exhaleAudioPlayer, holdAudioPlayer]
+                .compactMap({ $0 })
+                .contains(where: \.isPlaying)
+        else {
+            return
+        }
+
+        audioSessionQueue.async { [weak self] in
+            guard let self, self.audioSessionOwned else { return }
+            do {
+                try self.audioSessionManager.deactivateAfterPlayback()
+                self.audioSessionOwned = false
+            } catch {
+                #if DEBUG
+                print("[SettleBellService] Audio session deactivation failed: \(error.localizedDescription)")
+                #endif
+            }
+        }
+    }
+
+    private func discardPreparedPlayer(_ player: AVAudioPlayer) {
+        player.stop()
+        releasePlayer(player)
+        deactivateAudioSessionIfIdleOnMain()
+    }
+
+    private func releasePlayer(_ player: AVAudioPlayer) {
+        if audioPlayer === player { audioPlayer = nil }
+        if inhaleAudioPlayer === player { inhaleAudioPlayer = nil }
+        if exhaleAudioPlayer === player { exhaleAudioPlayer = nil }
+        if holdAudioPlayer === player { holdAudioPlayer = nil }
+    }
+
+    func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
+        performOnMain { [weak self] in
+            self?.releasePlayer(player)
+            self?.deactivateAudioSessionIfIdleOnMain()
+        }
+    }
+
+    func audioPlayerDecodeErrorDidOccur(_ player: AVAudioPlayer, error: Error?) {
+        performOnMain { [weak self] in
+            self?.releasePlayer(player)
+            self?.deactivateAudioSessionIfIdleOnMain()
+        }
+    }
+
+    private func playFallbackSoundIfPermitted() {
+        guard shouldPlaySecondaryAudio else { return }
         AudioServicesPlaySystemSound(1013)
     }
 

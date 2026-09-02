@@ -5,6 +5,7 @@ enum MoriDeepLinkTarget: String {
     case dailySpark = "daily-spark"
     case practice
     case mindfulnessBellBreathing = "mindfulness-bell-breathing"
+    case beforeFeedWindowComplete = "before-feed-window-complete"
 }
 
 enum MoriNotificationRouter {
@@ -51,6 +52,8 @@ enum MoriNotificationRouter {
             return .practiceTab
         case .mindfulnessBellBreathing:
             return .practiceLaunch(.mindfulnessBellBreathing)
+        case .beforeFeedWindowComplete:
+            return .todayTab
         }
     }
 
@@ -60,6 +63,8 @@ enum MoriNotificationRouter {
             return .dailySpark
         case quietTimerCompletionIdentifier:
             return .practice
+        case MoriScreenTimeShared.beforeFeedWindowEndNotificationIdentifier:
+            return .beforeFeedWindowComplete
         default:
             if identifier.hasPrefix(MindfulnessBellDefaults.identifierPrefix) {
                 return .mindfulnessBellBreathing

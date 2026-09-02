@@ -10,7 +10,7 @@ enum MoriBeforeFeedPauseStyle: String, Codable, CaseIterable, Identifiable {
 struct MoriBeforeFeedPausePreferences {
     static let minGuidedCycleCount = 1
     static let maxGuidedCycleCount = 10
-    static let defaultGuidedCycleCount = 3
+    static let defaultGuidedCycleCount = 1
 
     private let defaults: UserDefaults
     private let legacyDefaults: UserDefaults
@@ -25,8 +25,9 @@ struct MoriBeforeFeedPausePreferences {
 
     /// Converts the former technique-plus-duration preferences into the v1
     /// pause model. This intentionally runs before the existing duration
-    /// migration so a fresh install keeps the new three-cycle default while an
-    /// existing install can retain its former reset length.
+    /// migration so a fresh install keeps the one-cycle Long Exhale default
+    /// while an existing install can retain its former reset length or saved
+    /// cycle count.
     func migrateLegacyPausePreferencesIfNeeded() {
         guard !defaults.bool(forKey: MoriScreenTimeShared.beforeFeedPausePreferencesMigrationKey) else {
             normalizePausePreferences()
@@ -259,11 +260,95 @@ struct MoriBeforeFeedPausePreferences {
     }
 }
 
+/// An immutable copy of the Before Feed breathing choice used by one presented
+/// sheet. Settings and the global custom pattern may change while the sheet is
+/// open, but the active pause remains truthful to the choice it began with.
+struct MoriBeforeFeedPauseSessionSnapshot: Equatable {
+    let style: MoriBeforeFeedPauseStyle
+    let guidedCycleCount: Int
+    let techniqueID: String
+    let pattern: MoriBreathPattern?
+    let displayedDurationSeconds: Int
+    let targetDuration: TimeInterval
+
+    static let defaultValue = MoriBeforeFeedPauseSessionSnapshot(
+        style: .guidedBreathing,
+        guidedCycleCount: MoriBeforeFeedPausePreferences.defaultGuidedCycleCount,
+        techniqueID: MoriScreenTimeShared.defaultBeforeFeedBreathingTechniqueID,
+        pattern: MoriBeforeFeedBreathKey.pattern,
+        displayedDurationSeconds: Int(ceil(MoriBeforeFeedBreathKey.duration)),
+        targetDuration: MoriBeforeFeedBreathKey.duration
+    )
+
+    init(
+        preferences: MoriBeforeFeedPausePreferences,
+        customInhaleSeconds: Double,
+        customHoldSeconds: Double,
+        customExhaleSeconds: Double,
+        customUsesHold: Bool
+    ) {
+        let style = preferences.pauseStyle()
+        let guidedCycleCount = preferences.guidedCycleCount()
+        let techniqueID = preferences.techniqueID()
+
+        self.style = style
+        self.guidedCycleCount = guidedCycleCount
+        self.techniqueID = techniqueID
+
+        switch style {
+        case .guidedBreathing:
+            let pattern = preferences.resolvedPattern(
+                customInhaleSeconds: customInhaleSeconds,
+                customHoldSeconds: customHoldSeconds,
+                customExhaleSeconds: customExhaleSeconds,
+                customUsesHold: customUsesHold
+            ) ?? MoriBeforeFeedBreathKey.pattern
+            let targetDuration = max(
+                0.1,
+                pattern.totalCycleDuration * TimeInterval(guidedCycleCount)
+            )
+            self.pattern = pattern
+            self.targetDuration = targetDuration
+            displayedDurationSeconds = max(1, Int(ceil(targetDuration)))
+
+        case .quietPause:
+            let duration = preferences.quietDurationSeconds()
+            pattern = nil
+            targetDuration = TimeInterval(duration)
+            displayedDurationSeconds = duration
+        }
+    }
+
+    init(
+        style: MoriBeforeFeedPauseStyle,
+        guidedCycleCount: Int,
+        techniqueID: String,
+        pattern: MoriBreathPattern?,
+        displayedDurationSeconds: Int,
+        targetDuration: TimeInterval
+    ) {
+        self.style = style
+        self.guidedCycleCount = guidedCycleCount
+        self.techniqueID = techniqueID
+        self.pattern = pattern
+        self.displayedDurationSeconds = displayedDurationSeconds
+        self.targetDuration = targetDuration
+    }
+}
+
 enum MoriBeforeFeedFlowStage: Equatable {
-    case reason
-    case plan
-    case pause
-    case completion
+    case breathKey
+    case intent
+}
+
+enum MoriBeforeFeedBreathKey {
+    static let pattern = MoriBreathPattern(
+        inhale: 4,
+        inhaleHold: nil,
+        exhale: 6,
+        exhaleHold: nil
+    )
+    static let duration: TimeInterval = pattern.totalCycleDuration
 }
 
 enum MoriBeforeFeedEnoughChoice: String, Codable, CaseIterable, Identifiable {
@@ -318,13 +403,14 @@ enum MoriBeforeFeedReturnAnchorPolicy {
 }
 
 struct MoriBeforeFeedFlowState: Equatable {
-    private(set) var stage: MoriBeforeFeedFlowStage = .reason
+    private(set) var stage: MoriBeforeFeedFlowStage = .breathKey
+    private(set) var hasCompletedBreath = false
     private(set) var reason: MoriBeforeFeedIntentReason?
     private(set) var enoughChoice: MoriBeforeFeedEnoughChoice?
     private(set) var returnAnchor: MoriBeforeFeedReturnAnchor?
 
     var canOpenFeed: Bool {
-        stage == .completion && reason != nil && enoughChoice != nil
+        stage == .intent && hasCompletedBreath && reason != nil && enoughChoice != nil
     }
 
     var confirmedOpenWindowSeconds: Int? {
@@ -333,22 +419,24 @@ struct MoriBeforeFeedFlowState: Equatable {
     }
 
     mutating func selectReason(_ reason: MoriBeforeFeedIntentReason) {
+        guard stage == .intent, hasCompletedBreath else { return }
         self.reason = reason
         enoughChoice = nil
         returnAnchor = nil
-        stage = .reason
     }
 
     @discardableResult
-    mutating func proceedToPlan() -> Bool {
-        guard stage == .reason, reason != nil else { return false }
-        stage = .plan
+    mutating func completeBreath() -> Bool {
+        guard stage == .breathKey else { return false }
+        hasCompletedBreath = true
+        stage = .intent
         return true
     }
 
     @discardableResult
     mutating func selectEnoughChoice(_ choice: MoriBeforeFeedEnoughChoice) -> Bool {
-        guard stage == .plan,
+        guard stage == .intent,
+              hasCompletedBreath,
               let reason,
               choice.isAvailable(for: reason)
         else {
@@ -359,22 +447,8 @@ struct MoriBeforeFeedFlowState: Equatable {
     }
 
     mutating func selectReturnAnchor(_ anchor: MoriBeforeFeedReturnAnchor?) {
-        guard stage == .plan else { return }
+        guard stage == .intent, hasCompletedBreath else { return }
         returnAnchor = anchor
-    }
-
-    @discardableResult
-    mutating func beginPause() -> Bool {
-        guard stage == .plan, reason != nil, enoughChoice != nil else { return false }
-        stage = .pause
-        return true
-    }
-
-    @discardableResult
-    mutating func completePause() -> Bool {
-        guard stage == .pause else { return false }
-        stage = .completion
-        return true
     }
 
     mutating func reset() {

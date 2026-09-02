@@ -2,6 +2,7 @@ import Foundation
 
 extension Notification.Name {
     static let moriBeforeFeedIntentDidRecord = Notification.Name("mori.beforeFeed.intentDidRecord")
+    static let moriBeforeFeedDecisionDidRecord = Notification.Name("mori.beforeFeed.decisionDidRecord")
 }
 
 enum MoriBeforeFeedIntentReason: String, Codable, CaseIterable, Identifiable {
@@ -14,23 +15,32 @@ enum MoriBeforeFeedIntentReason: String, Codable, CaseIterable, Identifiable {
     var id: String { rawValue }
 }
 
+enum MoriBeforeFeedDecisionOutcome: String, Codable, Equatable {
+    case openWindowRequested = "open_window_requested"
+    case keptClosed = "kept_closed"
+}
+
 struct MoriBeforeFeedIntentEvent: Codable, Equatable, Identifiable {
     let id: UUID
-    let reason: MoriBeforeFeedIntentReason
+    let reason: MoriBeforeFeedIntentReason?
     let confirmedAt: Date
     let routeSource: String?
     let enoughChoiceID: String?
     let openWindowSeconds: Int?
     let returnAnchorID: String?
+    /// Optional so existing v1 history decodes without a migration. A legacy
+    /// nil outcome represents the original open-window intent event.
+    let outcome: MoriBeforeFeedDecisionOutcome?
 
     init(
         id: UUID,
-        reason: MoriBeforeFeedIntentReason,
+        reason: MoriBeforeFeedIntentReason?,
         confirmedAt: Date,
         routeSource: String?,
         enoughChoiceID: String? = nil,
         openWindowSeconds: Int? = nil,
-        returnAnchorID: String? = nil
+        returnAnchorID: String? = nil,
+        outcome: MoriBeforeFeedDecisionOutcome? = nil
     ) {
         self.id = id
         self.reason = reason
@@ -39,6 +49,11 @@ struct MoriBeforeFeedIntentEvent: Codable, Equatable, Identifiable {
         self.enoughChoiceID = enoughChoiceID
         self.openWindowSeconds = openWindowSeconds
         self.returnAnchorID = returnAnchorID
+        self.outcome = outcome
+    }
+
+    var resolvedOutcome: MoriBeforeFeedDecisionOutcome {
+        outcome ?? .openWindowRequested
     }
 }
 
@@ -72,6 +87,17 @@ struct BeforeFeedGateStore {
             return MoriScreenTimeShared.defaultBeforeFeedHiddenAppLockEnabled
         }
         return defaults.bool(forKey: MoriScreenTimeShared.beforeFeedHiddenAppLockEnabledKey)
+    }
+
+    func windowEndReminderEnabled() -> Bool {
+        guard defaults.object(forKey: MoriScreenTimeShared.beforeFeedWindowEndReminderEnabledKey) != nil else {
+            return MoriScreenTimeShared.defaultBeforeFeedWindowEndReminderEnabled
+        }
+        return defaults.bool(forKey: MoriScreenTimeShared.beforeFeedWindowEndReminderEnabledKey)
+    }
+
+    func saveWindowEndReminderEnabled(_ isEnabled: Bool) {
+        defaults.set(isEnabled, forKey: MoriScreenTimeShared.beforeFeedWindowEndReminderEnabledKey)
     }
 
     func durationSeconds() -> Int {
@@ -203,13 +229,38 @@ struct BeforeFeedGateStore {
             routeSource: routeSource,
             enoughChoiceID: enoughChoiceID,
             openWindowSeconds: openWindowSeconds,
-            returnAnchorID: returnAnchorID
+            returnAnchorID: returnAnchorID,
+            outcome: .openWindowRequested
         )
-        events.append(event)
-        if let encodedEvents = try? JSONEncoder().encode(events) {
-            defaults.set(encodedEvents, forKey: Self.intentEventsKey)
-        }
+        save(event, to: &events)
         NotificationCenter.default.post(name: .moriBeforeFeedIntentDidRecord, object: event)
+        NotificationCenter.default.post(name: .moriBeforeFeedDecisionDidRecord, object: event)
+        return event
+    }
+
+    /// Records the explicit choice to leave the protected feed closed. This is
+    /// deliberately independent of reason and window selection because the
+    /// choice is available immediately after the breath key.
+    @discardableResult
+    func recordKeptClosed(
+        routeSource: String?,
+        eventID: UUID = UUID(),
+        now: Date = Date()
+    ) -> MoriBeforeFeedIntentEvent {
+        var events = intentEvents()
+        if let existingEvent = events.first(where: { $0.id == eventID }) {
+            return existingEvent
+        }
+
+        let event = MoriBeforeFeedIntentEvent(
+            id: eventID,
+            reason: nil,
+            confirmedAt: now,
+            routeSource: routeSource,
+            outcome: .keptClosed
+        )
+        save(event, to: &events)
+        NotificationCenter.default.post(name: .moriBeforeFeedDecisionDidRecord, object: event)
         return event
     }
 
@@ -223,7 +274,27 @@ struct BeforeFeedGateStore {
         }
 
         return intentEvents().reduce(into: 0) { count, event in
-            if event.confirmedAt >= startOfToday && event.confirmedAt < startOfTomorrow {
+            if event.resolvedOutcome == .openWindowRequested,
+               event.confirmedAt >= startOfToday,
+               event.confirmedAt < startOfTomorrow {
+                count += 1
+            }
+        }
+    }
+
+    func todayKeptClosedCount(
+        now: Date = Date(),
+        calendar: Calendar = .current
+    ) -> Int {
+        let startOfToday = calendar.startOfDay(for: now)
+        guard let startOfTomorrow = calendar.date(byAdding: .day, value: 1, to: startOfToday) else {
+            return 0
+        }
+
+        return intentEvents().reduce(into: 0) { count, event in
+            if event.outcome == .keptClosed,
+               event.confirmedAt >= startOfToday,
+               event.confirmedAt < startOfTomorrow {
                 count += 1
             }
         }
@@ -291,6 +362,17 @@ struct BeforeFeedGateStore {
 
     func clearIntentHistory() {
         defaults.removeObject(forKey: Self.intentEventsKey)
+        NotificationCenter.default.post(name: .moriBeforeFeedDecisionDidRecord, object: nil)
+    }
+
+    private func save(
+        _ event: MoriBeforeFeedIntentEvent,
+        to events: inout [MoriBeforeFeedIntentEvent]
+    ) {
+        events.append(event)
+        if let encodedEvents = try? JSONEncoder().encode(events) {
+            defaults.set(encodedEvents, forKey: Self.intentEventsKey)
+        }
     }
 
     private func normalizedDurationSeconds(_ seconds: Int) -> Int {

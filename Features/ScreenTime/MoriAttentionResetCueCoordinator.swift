@@ -11,6 +11,19 @@ enum MoriAttentionResetCuePolicy {
     }
 }
 
+enum MoriBeforeFeedOwnBreathAudioPolicy {
+    static func shouldHandleOpeningCue(
+        style: MoriBeforeFeedPauseStyle,
+        hasHandledOpeningCue: Bool
+    ) -> Bool {
+        style == .quietPause && !hasHandledOpeningCue
+    }
+
+    static func shouldPlayCompletionSound(style: MoriBeforeFeedPauseStyle) -> Bool {
+        style != .quietPause
+    }
+}
+
 final class MoriAttentionResetCueCoordinator {
     private let breathingFeedback = MoriBreathingSessionFeedbackCoordinator()
 
@@ -23,6 +36,18 @@ final class MoriAttentionResetCueCoordinator {
 
         if soundEnabled {
             SettleBellService.shared.playStartBell()
+        }
+        if hapticsEnabled {
+            UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+        }
+    }
+
+    /// Follow-your-own-breath uses the long Singing Bowl A recording on the
+    /// stoppable breathing channel. The sheet owns the one-shot policy so a
+    /// suppressed or sound-off first start is never replayed later.
+    func playFollowOwnBreathOpeningCue(soundEnabled: Bool, hapticsEnabled: Bool) {
+        if soundEnabled {
+            SettleBellService.shared.playBreathingCue(.exhale)
         }
         if hapticsEnabled {
             UIImpactFeedbackGenerator(style: .medium).impactOccurred()

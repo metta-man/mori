@@ -161,6 +161,7 @@ struct MoriPersistedDataDeletion {
         MoriScreenTimeShared.beforeFeedPauseStyleKey,
         MoriScreenTimeShared.beforeFeedGuidedCycleCountKey,
         MoriScreenTimeShared.beforeFeedPausePreferencesMigrationKey,
+        MoriScreenTimeShared.beforeFeedWindowEndReminderEnabledKey,
         MoriScreenTimeShared.currentShieldFeatureKey,
         MoriScreenTimeShared.currentShieldSavedTimeSecondsKey,
         MoriScreenTimeShared.currentShieldSavedTimeCategoryKey,
@@ -213,6 +214,7 @@ final class MoriDataDeletionService {
             persistedData.deleteRecoveryHistory()
         case .focusAndReminders:
             AttentionShieldManager.shared.resetAllProtectionData()
+            BeforeFeedWindowEndNotificationScheduler.shared.cancel()
             UNUserNotificationCenter.current().removeAllPendingNotificationRequests()
             persistedData.deleteFocusAndReminders()
             try ScreenTimeSettingsLockStore.shared.clearForDataDeletion()

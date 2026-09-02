@@ -1,5 +1,6 @@
 import SwiftUI
 import FamilyControls
+import UIKit
 
 struct TodayView: View {
     @Environment(\.moriOpenRoute) private var openRoute
@@ -32,7 +33,7 @@ struct TodayView: View {
     ) private var beforeFeedGuidedCycleCount: Int = MoriBeforeFeedPausePreferences.defaultGuidedCycleCount
     @State private var todayFocus = TodayFocusDraftStore.live.load(for: Date())
     @State private var handledLaunchRequestID: UUID?
-    @State private var todayIntentCount = BeforeFeedGateStore().todayIntentCount()
+    @State private var todayKeptClosedCount = BeforeFeedGateStore().todayKeptClosedCount()
 
     private var appLimitPresentation: TodayAppLimitPresentation {
         TodayAppLimitPresentation(
@@ -84,7 +85,7 @@ struct TodayView: View {
         ) {
             TodayPrimaryResetCard(
                 appLimitPresentation: appLimitPresentation,
-                intentCount: todayIntentCount,
+                keptClosedCount: todayKeptClosedCount,
                 onStartReset: openBeforeFeedReset,
                 onOpenAppLimits: openAppLimits
             )
@@ -109,12 +110,18 @@ struct TodayView: View {
         .moriKeyboardDoneToolbar()
         .onAppear {
             todayFocus = TodayFocusDraftStore.live.load(for: Date())
-            refreshIntentCount()
+            refreshKeptClosedCount()
             AnalyticsManager.shared.trackTodayViewed()
             handleLaunchRequestIfNeeded()
         }
-        .onReceive(NotificationCenter.default.publisher(for: .moriBeforeFeedIntentDidRecord)) { _ in
-            refreshIntentCount()
+        .onReceive(NotificationCenter.default.publisher(for: .moriBeforeFeedDecisionDidRecord)) { _ in
+            refreshKeptClosedCount()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: .NSCalendarDayChanged)) { _ in
+            refreshKeptClosedCount()
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIApplication.significantTimeChangeNotification)) { _ in
+            refreshKeptClosedCount()
         }
         .moriOnChange(of: todayFocus) { newValue in
             TodayFocusDraftStore.live.save(newValue, for: Date())
@@ -128,8 +135,8 @@ struct TodayView: View {
         openRoute(.settings)
     }
 
-    private func refreshIntentCount() {
-        todayIntentCount = BeforeFeedGateStore().todayIntentCount()
+    private func refreshKeptClosedCount() {
+        todayKeptClosedCount = BeforeFeedGateStore().todayKeptClosedCount()
     }
 
     private func openAppLimits() {

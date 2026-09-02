@@ -248,13 +248,18 @@ final class MoriDataDeletionTests: XCTestCase {
             MoriScreenTimeShared.defaultSelectionKey,
             MoriScreenTimeShared.featureSelectionKeyPrefix + MoriScreenTimeFeature.beforeFeed.rawValue,
             MoriScreenTimeShared.beforeFeedDurationSecondsKey,
+            MoriScreenTimeShared.beforeFeedBreathingTechniqueIDKey,
             MoriScreenTimeShared.beforeFeedPauseStyleKey,
             MoriScreenTimeShared.beforeFeedGuidedCycleCountKey,
             MoriScreenTimeShared.beforeFeedPausePreferencesMigrationKey,
+            MoriScreenTimeShared.beforeFeedWindowEndReminderEnabledKey,
             MoriScreenTimeShared.morningGateEnabledKey,
             "journalReminderEnabled"
         ]
         sharedOwnedKeys.forEach { shared.set("seed", forKey: $0) }
+        let beforeFeedStore = BeforeFeedGateStore(defaults: shared, legacyDefaults: standard)
+        beforeFeedStore.recordKeptClosed(routeSource: "test")
+        XCTAssertEqual(beforeFeedStore.todayKeptClosedCount(), 1)
 
         standard.set(MoriLocalePreference.traditionalChinese.rawValue, forKey: MoriLocalePreference.defaultsKey)
         shared.set(MoriLocalePreference.traditionalChinese.rawValue, forKey: MoriLocalePreference.defaultsKey)
@@ -268,6 +273,7 @@ final class MoriDataDeletionTests: XCTestCase {
 
         standardOwnedKeys.forEach { XCTAssertNil(standard.object(forKey: $0), "Expected \($0) to be deleted") }
         sharedOwnedKeys.forEach { XCTAssertNil(shared.object(forKey: $0), "Expected \($0) to be deleted") }
+        XCTAssertEqual(beforeFeedStore.todayKeptClosedCount(), 0)
         XCTAssertEqual(TodayFocusDraftStore(defaults: standard).load(for: Date()), "")
         XCTAssertEqual(standard.string(forKey: MoriLocalePreference.defaultsKey), MoriLocalePreference.traditionalChinese.rawValue)
         XCTAssertEqual(shared.string(forKey: MoriLocalePreference.defaultsKey), MoriLocalePreference.traditionalChinese.rawValue)
@@ -359,14 +365,175 @@ final class MoriDataDeletionTests: XCTestCase {
     }
 }
 
+@MainActor
+final class ScreenTimeSettingsLockTransactionTests: XCTestCase {
+    func testAccountabilityDraftDoesNotPersistUntilInitialCommit() throws {
+        let suite = "MoriScreenTimeLockPendingPIN.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        let keychain = ScreenTimeSettingsLockKeychainStub()
+        let store = ScreenTimeSettingsLockStore(
+            defaults: defaults,
+            keychain: keychain
+        )
+        defer {
+            try? store.clearForDataDeletion()
+            defaults.removePersistentDomain(forName: suite)
+        }
+
+        let draft = store.makeAccountabilityPINDraft()
+
+        XCTAssertEqual(draft.pin.count, ScreenTimeSettingsLockStore.pinLength)
+        XCTAssertTrue(draft.pin.allSatisfy(\.isNumber))
+        XCTAssertFalse(store.isConfigured, "Generating a PIN must not lock App Limits before explicit confirmation.")
+        XCTAssertNil(store.mode)
+        XCTAssertNil(keychain.data, "A provisional PIN must remain in memory until the user confirms it was shared.")
+
+        let relaunchedStore = ScreenTimeSettingsLockStore(
+            defaults: defaults,
+            keychain: keychain
+        )
+        XCTAssertFalse(relaunchedStore.isConfigured, "Discarding the in-memory draft must behave like Cancel.")
+
+        try store.commitAccountabilityPIN(draft, intent: .initialSetup)
+
+        XCTAssertTrue(store.isConfigured)
+        XCTAssertEqual(store.mode, .accountabilityPIN)
+        XCTAssertNotNil(keychain.data)
+        XCTAssertTrue(try store.verify(draft.pin))
+    }
+
+    func testCancelledAccountabilityReplacementPreservesExistingLock() throws {
+        let suite = "MoriScreenTimeLockReplacement.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        let keychain = ScreenTimeSettingsLockKeychainStub()
+        let store = ScreenTimeSettingsLockStore(
+            defaults: defaults,
+            keychain: keychain
+        )
+        defer {
+            try? store.clearForDataDeletion()
+            defaults.removePersistentDomain(forName: suite)
+        }
+
+        try store.createSelfPIN("123456", confirmation: "123456")
+        let originalKeychainData = keychain.data
+        let draft = store.makeAccountabilityPINDraft()
+
+        XCTAssertEqual(store.mode, .selfPIN)
+        XCTAssertEqual(keychain.data, originalKeychainData)
+        XCTAssertTrue(try store.verify("123456"), "Cancelling must leave the existing PIN valid.")
+
+        try store.commitAccountabilityPIN(
+            draft,
+            intent: .replacing(currentPIN: "123456")
+        )
+
+        XCTAssertEqual(store.mode, .accountabilityPIN)
+        XCTAssertNotEqual(keychain.data, originalKeychainData)
+        XCTAssertTrue(try store.verify(draft.pin))
+        XCTAssertThrowsError(try store.verify("123456"))
+    }
+
+    func testWrongCurrentPINCannotReplaceExistingLock() throws {
+        let suite = "MoriScreenTimeLockWrongReplacement.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        let keychain = ScreenTimeSettingsLockKeychainStub()
+        let store = ScreenTimeSettingsLockStore(
+            defaults: defaults,
+            keychain: keychain
+        )
+        defer {
+            try? store.clearForDataDeletion()
+            defaults.removePersistentDomain(forName: suite)
+        }
+
+        try store.createSelfPIN("123456", confirmation: "123456")
+        let originalKeychainData = keychain.data
+        let draft = store.makeAccountabilityPINDraft()
+
+        XCTAssertThrowsError(
+            try store.commitAccountabilityPIN(
+                draft,
+                intent: .replacing(currentPIN: "654321")
+            )
+        )
+        XCTAssertEqual(store.mode, .selfPIN)
+        XCTAssertEqual(keychain.data, originalKeychainData)
+        XCTAssertTrue(try store.verify("123456"))
+    }
+
+    func testAccountabilityCommitFailureLeavesLockUnconfigured() {
+        let suite = "MoriScreenTimeLockFailedCommit.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        let keychain = ScreenTimeSettingsLockKeychainStub()
+        let store = ScreenTimeSettingsLockStore(
+            defaults: defaults,
+            keychain: keychain
+        )
+        defer {
+            try? store.clearForDataDeletion()
+            defaults.removePersistentDomain(forName: suite)
+        }
+
+        let draft = store.makeAccountabilityPINDraft()
+        keychain.saveError = ScreenTimeSettingsLockKeychainStubError.saveFailed
+
+        XCTAssertThrowsError(
+            try store.commitAccountabilityPIN(draft, intent: .initialSetup)
+        )
+        XCTAssertFalse(store.isConfigured)
+        XCTAssertNil(store.mode)
+        XCTAssertNil(keychain.data)
+    }
+
+    func testFailedAccountabilityReplacementPreservesExistingLock() throws {
+        let suite = "MoriScreenTimeLockFailedReplacement.\(UUID().uuidString)"
+        let defaults = UserDefaults(suiteName: suite)!
+        let keychain = ScreenTimeSettingsLockKeychainStub()
+        let store = ScreenTimeSettingsLockStore(
+            defaults: defaults,
+            keychain: keychain
+        )
+        defer {
+            try? store.clearForDataDeletion()
+            defaults.removePersistentDomain(forName: suite)
+        }
+
+        try store.createSelfPIN("123456", confirmation: "123456")
+        let originalKeychainData = keychain.data
+        let draft = store.makeAccountabilityPINDraft()
+        keychain.saveError = ScreenTimeSettingsLockKeychainStubError.saveFailed
+
+        XCTAssertThrowsError(
+            try store.commitAccountabilityPIN(
+                draft,
+                intent: .replacing(currentPIN: "123456")
+            )
+        )
+        XCTAssertEqual(store.mode, .selfPIN)
+        XCTAssertEqual(keychain.data, originalKeychainData)
+
+        keychain.saveError = nil
+        XCTAssertTrue(try store.verify("123456"))
+    }
+}
+
+private enum ScreenTimeSettingsLockKeychainStubError: Error {
+    case saveFailed
+}
+
 private final class ScreenTimeSettingsLockKeychainStub: ScreenTimeSettingsLockKeychainStoring {
     var data: Data?
+    var saveError: Error?
 
     func loadData() -> Data? {
         data
     }
 
     func saveData(_ data: Data) throws {
+        if let saveError {
+            throw saveError
+        }
         self.data = data
     }
 

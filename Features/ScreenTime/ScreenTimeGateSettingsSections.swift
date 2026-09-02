@@ -6,15 +6,18 @@ struct BeforeFeedSettingsSection: View {
     @Binding var hiddenAppLockEnabled: Bool
     @Binding var pauseStyle: MoriBeforeFeedPauseStyle
     @Binding var guidedCycleCount: Int
-    @Binding var quietDurationSeconds: Int
+    @Binding var ownBreathDurationSeconds: Int
     @Binding var breathingTechniqueID: String
+    @Binding var windowEndReminderEnabled: Bool
 
     let isScreenTimeAuthorized: Bool
     let feedAppSummary: MoriScreenTimeProfileSummary
     let pauseSummary: String
+    let windowEndReminderAuthorizationDenied: Bool
     let feedAppsStatusText: String
     let onEditFeedApps: () -> Void
     let onUseDefaultFeedAppsChange: (Bool) -> Void
+    let onWindowEndReminderChange: (Bool) -> Void
     let onShowShortcutGuide: () -> Void
 
     private var feedAppsReady: Bool {
@@ -76,11 +79,12 @@ struct BeforeFeedSettingsSection: View {
                     .foregroundColor(MoriColors.botanicalMuted)
             }
 
-            Picker(MoriL10n.display("Pause style"), selection: $pauseStyle) {
+            Picker(MoriL10n.display("Breathing style"), selection: $pauseStyle) {
                 ForEach(MoriBeforeFeedPauseStyle.allCases) { style in
                     Text(style.displayTitle).tag(style)
                 }
             }
+            .accessibilityIdentifier("before-feed-style-picker")
 
             if pauseStyle == .guidedBreathing {
                 Picker(MoriL10n.display("Breathing technique"), selection: $breathingTechniqueID) {
@@ -88,6 +92,7 @@ struct BeforeFeedSettingsSection: View {
                         Text(technique.name).tag(technique.id)
                     }
                 }
+                .accessibilityIdentifier("before-feed-technique-picker")
 
                 Stepper(
                     value: $guidedCycleCount,
@@ -101,24 +106,55 @@ struct BeforeFeedSettingsSection: View {
                             .monospacedDigit()
                     }
                 }
+                .accessibilityIdentifier("before-feed-cycle-stepper")
                 .accessibilityLabel(MoriL10n.display("Breathing cycles"))
                 .accessibilityValue("\(guidedCycleCount)")
             } else {
-                Picker(MoriL10n.display("Quiet pause duration"), selection: $quietDurationSeconds) {
+                Picker(
+                    MoriL10n.display("Own-breath duration"),
+                    selection: $ownBreathDurationSeconds
+                ) {
                     ForEach(
-                        MoriBeforeFeedPauseSettingsPresentation.quietDurationOptions(
-                            current: quietDurationSeconds
+                        MoriBeforeFeedPauseSettingsPresentation.ownBreathDurationOptions(
+                            current: ownBreathDurationSeconds
                         ),
                         id: \.self
                     ) { seconds in
                         Text(BeforeFeedGate.formattedDuration(seconds)).tag(seconds)
                     }
                 }
+                .accessibilityIdentifier("before-feed-own-duration-picker")
+
+                Text(MoriL10n.display("One long singing bowl marks the start. There is no completion sound."))
+                    .font(.footnote)
+                    .foregroundColor(MoriColors.botanicalMuted)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
             Text(pauseSummary)
                 .font(.footnote)
                 .foregroundColor(MoriColors.botanicalMuted)
+                .fixedSize(horizontal: false, vertical: true)
+
+            VStack(alignment: .leading, spacing: 6) {
+                Toggle(isOn: $windowEndReminderEnabled) {
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(MoriL10n.display("Feed window reminder"))
+                        Text(MoriL10n.display("A gentle notification when the chosen window ends."))
+                            .font(.footnote)
+                            .foregroundColor(MoriColors.botanicalMuted)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .moriOnChange(of: windowEndReminderEnabled, perform: onWindowEndReminderChange)
+
+                if windowEndReminderAuthorizationDenied {
+                    Text(MoriL10n.display("Notifications are off. Enable them in iOS Settings to use this reminder."))
+                        .font(.footnote)
+                        .foregroundColor(MoriColors.botanicalClay)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+            }
 
             Text(MoriL10n.display("Choose a feed window of 2, 5, 10, or 15 minutes each time you pause."))
                 .font(.footnote)
@@ -202,11 +238,11 @@ private struct BeforeFeedActivationPanel: View {
                 )
                 BeforeFeedReadinessRow(
                     title: "Shield handoff clear",
-                    detail: "Open feed app -> tap Prepare reset -> finish the configured pause in Mori.",
+                    detail: "Open feed app -> tap Prepare reset -> finish your configured breath in Mori.",
                     isComplete: nativeGateEnabled
                 )
                 BeforeFeedReadinessRow(
-                    title: "Pause ready",
+                    title: "Breath key ready",
                     detail: pauseSummary,
                     isComplete: isReady
                 )
@@ -707,7 +743,7 @@ extension MoriBeforeFeedPauseStyle {
         case .guidedBreathing:
             return MoriL10n.display("Guided breathing")
         case .quietPause:
-            return MoriL10n.display("Quiet pause")
+            return MoriL10n.display("Follow your own breath")
         }
     }
 }
@@ -730,26 +766,35 @@ enum MoriBeforeFeedPauseSettingsPresentation {
                 technique: technique,
                 guidedCycleCount: guidedCycleCount
             )
+            if guidedCycleCount == 1 {
+                return MoriL10n.string(
+                    "before_feed.settings.guided_summary_one",
+                    defaultValue: "%@ · 1 cycle · about %@",
+                    arguments: [techniqueName, BeforeFeedGate.formattedDuration(duration)]
+                )
+            }
             return MoriL10n.string(
                 "before_feed.settings.guided_summary",
                 defaultValue: "%@ · %d cycles · about %@",
-                arguments: [
-                    techniqueName,
-                    guidedCycleCount,
-                    BeforeFeedGate.formattedDuration(duration)
-                ]
+                arguments: [techniqueName, guidedCycleCount, BeforeFeedGate.formattedDuration(duration)]
             )
         case .quietPause:
             return MoriL10n.string(
                 "before_feed.settings.quiet_summary",
-                defaultValue: "Quiet pause · %@",
+                defaultValue: "Follow your own breath · %@",
                 arguments: [BeforeFeedGate.formattedDuration(quietDurationSeconds)]
             )
         }
     }
 
-    static func quietDurationOptions(current: Int) -> [Int] {
-        Array(Set([10, 20, 30, 60, current].filter { $0 > 0 })).sorted()
+    static func ownBreathDurationOptions(current: Int) -> [Int] {
+        let normalizedCurrent = min(
+            MoriScreenTimeShared.maxBeforeFeedDurationSeconds,
+            max(MoriScreenTimeShared.minBeforeFeedDurationSeconds, current)
+        )
+        let presets = Array(stride(from: 10, through: 60, by: 10))
+            + [90, 120, 180, 300, 600, normalizedCurrent]
+        return Array(Set(presets)).sorted()
     }
 
     private static func estimatedGuidedDuration(

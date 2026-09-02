@@ -53,6 +53,10 @@ struct ScreenTimeSettingsView: View {
         store: MoriAppGroup.defaults
     ) private var beforeFeedGuidedCycleCount: Int = MoriBeforeFeedPausePreferences.defaultGuidedCycleCount
     @AppStorage(
+        MoriScreenTimeShared.beforeFeedWindowEndReminderEnabledKey,
+        store: MoriAppGroup.defaults
+    ) private var beforeFeedWindowEndReminderEnabled: Bool = MoriScreenTimeShared.defaultBeforeFeedWindowEndReminderEnabled
+    @AppStorage(
         MoriScreenTimeShared.morningGateEnabledKey,
         store: MoriAppGroup.defaults
     ) private var morningGateEnabled: Bool = MoriScreenTimeShared.defaultMorningGateEnabled
@@ -82,6 +86,7 @@ struct ScreenTimeSettingsView: View {
     @State private var activeSheet: ScreenTimeSettingsSheet?
     @State private var monitorHealthEvents = MoriScreenTimeMonitorHealthStore.recentEvents()
     @State private var showsBeforeFeedDetailForUITest = false
+    @State private var beforeFeedWindowEndReminderAuthorizationDenied = false
 
     var body: some View {
         let presentation = ScreenTimeSettingsPresentation(
@@ -313,14 +318,17 @@ struct ScreenTimeSettingsView: View {
                 hiddenAppLockEnabled: $beforeFeedHiddenAppLockEnabled,
                 pauseStyle: beforeFeedPauseStyleBinding,
                 guidedCycleCount: $beforeFeedGuidedCycleCount,
-                quietDurationSeconds: $beforeFeedDurationSeconds,
+                ownBreathDurationSeconds: $beforeFeedDurationSeconds,
                 breathingTechniqueID: $beforeFeedBreathingTechniqueID,
+                windowEndReminderEnabled: $beforeFeedWindowEndReminderEnabled,
                 isScreenTimeAuthorized: presentation.isAuthorized,
                 feedAppSummary: presentation.beforeFeedSummary,
                 pauseSummary: beforeFeedPauseSummary,
+                windowEndReminderAuthorizationDenied: beforeFeedWindowEndReminderAuthorizationDenied,
                 feedAppsStatusText: presentation.beforeFeedAppsStatusText,
                 onEditFeedApps: editBeforeFeedApps,
                 onUseDefaultFeedAppsChange: { updateFeatureUsesDefaultSelection($0, for: .beforeFeed) },
+                onWindowEndReminderChange: updateBeforeFeedWindowEndReminder,
                 onShowShortcutGuide: showShortcutGuide
             )
         }
@@ -495,9 +503,14 @@ struct ScreenTimeSettingsView: View {
         let arguments = ProcessInfo.processInfo.arguments
         guard arguments.contains("-MoriOpenBeforeFeedSettingsForUITest") else { return }
 
-        if arguments.contains("-MoriShowBeforeFeedQuietSettingsForUITest") {
+        if arguments.contains("-MoriShowBeforeFeedQuietSettingsForUITest") ||
+            arguments.contains("-MoriShowBeforeFeedOwnBreathSettingsForUITest") {
             beforeFeedPauseStyleRaw = MoriBeforeFeedPauseStyle.quietPause.rawValue
             beforeFeedDurationSeconds = 20
+        } else if arguments.contains("-MoriShowBeforeFeedConfiguredGuidedSettingsForUITest") {
+            beforeFeedPauseStyleRaw = MoriBeforeFeedPauseStyle.guidedBreathing.rawValue
+            beforeFeedGuidedCycleCount = 3
+            beforeFeedBreathingTechniqueID = MoriBreathingTechniqueID.coherent5.rawValue
         } else {
             beforeFeedPauseStyleRaw = MoriBeforeFeedPauseStyle.guidedBreathing.rawValue
             beforeFeedGuidedCycleCount = MoriBeforeFeedPausePreferences.defaultGuidedCycleCount
@@ -512,6 +525,31 @@ struct ScreenTimeSettingsView: View {
     private func refreshMonitorHealth() {
         appLimitManager.perform(.reconcileGateAppLimit(.beforeFeed))
         monitorHealthEvents = MoriScreenTimeMonitorHealthStore.recentEvents()
+    }
+
+    private func updateBeforeFeedWindowEndReminder(_ isEnabled: Bool) {
+        let gateStore = BeforeFeedGateStore()
+        gateStore.saveWindowEndReminderEnabled(isEnabled)
+
+        guard isEnabled else {
+            BeforeFeedWindowEndNotificationScheduler.shared.cancel()
+            return
+        }
+
+        beforeFeedWindowEndReminderAuthorizationDenied = false
+        BeforeFeedWindowEndNotificationScheduler.shared.requestAuthorizationIfNeeded { granted in
+            guard granted else {
+                gateStore.saveWindowEndReminderEnabled(false)
+                beforeFeedWindowEndReminderEnabled = false
+                beforeFeedWindowEndReminderAuthorizationDenied = true
+                BeforeFeedWindowEndNotificationScheduler.shared.cancel()
+                return
+            }
+
+            if let graceUntil = gateStore.graceUntil() {
+                BeforeFeedWindowEndNotificationScheduler.shared.scheduleIfPermitted(at: graceUntil)
+            }
+        }
     }
 
     private func updateFeatureEnabled(_ isEnabled: Bool, for feature: MoriScreenTimeFeature) {

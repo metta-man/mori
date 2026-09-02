@@ -8,6 +8,45 @@ enum AttentionShieldPassiveGateAction {
     case clear
 }
 
+enum AttentionShieldForegroundReconcilePolicy {
+    static func shouldRefresh(
+        action: AttentionShieldPassiveGateAction,
+        desiredStateMatches: Bool
+    ) -> Bool {
+        switch action {
+        case .preserveActiveSession:
+            return false
+        case .apply, .clear:
+            return !desiredStateMatches
+        }
+    }
+}
+
+enum AttentionShieldStateReconcilePolicy {
+    static func applyIfNeeded(
+        desiredStateMatches: Bool,
+        apply: () -> Void
+    ) {
+        guard !desiredStateMatches else { return }
+        apply()
+    }
+}
+
+private struct AttentionShieldPassiveGatePlan {
+    let selection: FamilyActivitySelection
+    let currentFeature: MoriScreenTimeFeature
+    let displayNames: [String]
+    let beforeFeedSelection: FamilyActivitySelection?
+    let beforeFeedHasSelection: Bool?
+    let hiddenApplicationTokens: Set<ApplicationToken>
+
+    var policy: MoriScreenTimeMonitorHealthPolicy {
+        hiddenApplicationTokens.isEmpty
+            ? (currentFeature == .beforeFeed ? .shieldLock : .shieldOnly)
+            : .hiddenAppLock
+    }
+}
+
 struct AttentionShieldPassiveGateApplier {
     private let selectionStore: ScreenTimeSelectionStore
     private let shieldApplier: AttentionShieldApplier
@@ -56,39 +95,63 @@ struct AttentionShieldPassiveGateApplier {
         }
     }
 
+    func matches(_ action: AttentionShieldPassiveGateAction) -> Bool {
+        switch action {
+        case .preserveActiveSession:
+            return true
+        case .apply(let features):
+            let plan = plan(for: features)
+            return shieldApplier.matchesAppliedState(
+                selection: plan.selection,
+                currentFeature: plan.currentFeature,
+                policy: plan.policy,
+                hiddenApplicationTokens: plan.hiddenApplicationTokens
+            )
+        case .clear:
+            return shieldApplier.matchesClearedState()
+        }
+    }
+
     func apply(features: [MoriScreenTimeFeature]) {
-        let selection = selectionStore.mergedEffectiveSelection(for: features)
-        let currentFeature = AttentionShieldPassiveGatePolicy.currentFeature(for: features)
-        let beforeFeedSelection = features.contains(.beforeFeed)
-            ? selectionStore.effectiveSelection(for: .beforeFeed)
-            : nil
-        let beforeFeedHasSelection = features.contains(.beforeFeed)
-            ? selectionStore.hasEffectiveSelection(for: .beforeFeed)
-            : nil
-        let names = displayNames(currentFeature)
-        let hiddenApplicationTokens = hiddenApplicationTokens(for: features)
-        if !hiddenApplicationTokens.isEmpty {
+        let plan = plan(for: features)
+        if !plan.hiddenApplicationTokens.isEmpty {
             shieldApplier.apply(
-                selection: selection,
-                currentFeature: currentFeature,
-                displayNames: names,
-                beforeFeedHasSelection: beforeFeedHasSelection,
-                beforeFeedApplicationTokenCount: beforeFeedSelection?.applicationTokens.count,
-                beforeFeedWebDomainTokenCount: beforeFeedSelection?.webDomainTokens.count,
+                selection: plan.selection,
+                currentFeature: plan.currentFeature,
+                displayNames: plan.displayNames,
+                beforeFeedHasSelection: plan.beforeFeedHasSelection,
+                beforeFeedApplicationTokenCount: plan.beforeFeedSelection?.applicationTokens.count,
+                beforeFeedWebDomainTokenCount: plan.beforeFeedSelection?.webDomainTokens.count,
                 policy: .hiddenAppLock,
-                hiddenApplicationTokens: hiddenApplicationTokens
+                hiddenApplicationTokens: plan.hiddenApplicationTokens
             )
         } else {
             shieldApplier.apply(
-                selection: selection,
-                currentFeature: currentFeature,
-                displayNames: names,
-                beforeFeedHasSelection: beforeFeedHasSelection,
-                beforeFeedApplicationTokenCount: beforeFeedSelection?.applicationTokens.count,
-                beforeFeedWebDomainTokenCount: beforeFeedSelection?.webDomainTokens.count,
-                policy: features.contains(.beforeFeed) ? .shieldLock : .shieldOnly
+                selection: plan.selection,
+                currentFeature: plan.currentFeature,
+                displayNames: plan.displayNames,
+                beforeFeedHasSelection: plan.beforeFeedHasSelection,
+                beforeFeedApplicationTokenCount: plan.beforeFeedSelection?.applicationTokens.count,
+                beforeFeedWebDomainTokenCount: plan.beforeFeedSelection?.webDomainTokens.count,
+                policy: plan.policy
             )
         }
+    }
+
+    private func plan(for features: [MoriScreenTimeFeature]) -> AttentionShieldPassiveGatePlan {
+        let currentFeature = AttentionShieldPassiveGatePolicy.currentFeature(for: features)
+        return AttentionShieldPassiveGatePlan(
+            selection: selectionStore.mergedEffectiveSelection(for: features),
+            currentFeature: currentFeature,
+            displayNames: displayNames(currentFeature),
+            beforeFeedSelection: features.contains(.beforeFeed)
+                ? selectionStore.effectiveSelection(for: .beforeFeed)
+                : nil,
+            beforeFeedHasSelection: features.contains(.beforeFeed)
+                ? selectionStore.hasEffectiveSelection(for: .beforeFeed)
+                : nil,
+            hiddenApplicationTokens: hiddenApplicationTokens(for: features)
+        )
     }
 
     private func hiddenApplicationTokens(for features: [MoriScreenTimeFeature]) -> Set<ApplicationToken> {

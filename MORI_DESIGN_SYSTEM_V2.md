@@ -90,12 +90,19 @@ Bright blue, orange CTAs, neon, synthetic gradients, and decorative frosted glas
 
 ### Before Feed
 
-- Ask “Why now?” with five neutral choices.
-- No choice is preselected.
-- Every choice follows the same plan: choose a small feed boundary, then see the no-typing “Where do you want to return?” question before starting the configured pause.
+- Begin with the configured Breath Key. Fresh installs default to one Long Exhale breath: 4 seconds in and 6 seconds out.
+- `Guided breathing` lets the person choose a technique and 1 to 10 complete cycles. `Follow your own breath` offers a 10-second to 10-minute timer with no phase prompts.
+- Capture the configuration when the sheet opens. Changing Settings or a custom technique must not change a breath already in progress.
+- Follow-your-own mode starts with one long singing-bowl cue only on the first start. It does not replay on resume or late sound enable, and it has no completion sound.
+- Keep the configured method in supporting copy. Use the restrained common title `Begin with the breath` so the breathing form, phase, and countdown remain the visual focus.
+- Breath completion reveals one compact intent surface; it does not open the feed.
+- Ask “Why now?” with five neutral choices and no preselection.
+- Every choice follows the same plan: choose a small 2, 5, 10, or 15 minute feed boundary, then see the no-typing “Where do you want to return?” question.
 - Show the return question for every reason; never gate it on Habit or recent intent history. Choosing a return activity remains optional.
-- The feed remains closed until the pause completes; completion requires one final intentional Continue.
-- Closing the feed remains equally available.
+- `Open for …` is enabled only after the breath, reason, and boundary are complete. The feed never opens automatically.
+- `Keep feed closed` remains immediately available after the breath, without requiring any intent choices.
+- A kept-closed outcome is counted as an explicit choice, never converted into invented saved minutes or an opened-window intent.
+- An optional window-end notification may describe the expected expiry, but Screen Time grace expiry remains the enforcement source of truth.
 - Do not show feeds remaining, time spent, warnings, or guilt copy.
 
 ### Focus
@@ -115,12 +122,19 @@ If the person intentionally ends early, report only the truthful elapsed whole m
 
 ### Log
 
-- Mood.
-- One sentence.
-- One optional photo.
-- Done.
+- Pause: one closest feeling or state, with no preselection.
+- Notice: one broad context, without requiring typing.
+- Choose: one gentle response, always including `Just record it`.
+- One optional sentence, disclosed only when requested.
+- One optional photo affordance.
+- Save check-in.
 
-History, export, prompts, analytics, and archive tools stay outside the first viewport. The Log never resembles a document editor.
+Only one guided question is active at a time on the same paper surface. Earlier
+answers collapse into compact editable summaries. The flow never uses a timer,
+completion percentage, therapy label, forced reframing, or praise.
+
+History, export, analytics, and archive tools stay outside the first viewport.
+The Log never resembles a document editor or a dense prompt feed.
 
 ## Apple HIG Gate
 
@@ -143,16 +157,16 @@ Required checks:
 | Screen | Slower-breath test | Apple HIG check | Mori check | Result |
 |---|---|---|---|---|
 | Today | Large negative space and one card settle attention immediately. | One primary action; 44pt controls; three-tab hierarchy. | No dashboard, chart, streak, or competing widget. | Pass |
-| Before Feed | A neutral question leads into the configured pause before the feed opens. | Semantic radio group, full-row targets, explicit Close and final Continue. | No preselection, guilt, or scarcity. | Pass |
-| Before Feed pause | Watercolor breath image moves slowly while the configured timer remains truthful. | Reduce Motion is respected; Pause, Resume, Back, and Close remain available. | Completion asks for one final intentional choice instead of opening the feed automatically. | Pass |
+| Before Feed | The configured Breath Key leads into a compact intent surface before the feed opens. | Semantic controls, 44pt targets, explicit Close, Open, and Keep closed. | No preselection, guilt, scarcity, or automatic opening. | Pass |
+| Before Feed breath key | Guided breathing follows the selected rhythm; follow-your-own holds a static bloom around a truthful timer. | Reduce Motion uses static art and text; Pause, Resume, and Close remain available. | Completion reveals choices instead of opening the feed. | Pass |
 | Deep Session | Plain timer and misty forest replace the productivity ring. | Readable hierarchy in an immersive, self-contained session; primary tabs return after completion. | No Pomodoro language, edit cluster, or forest-growth mechanic. | Pass |
 | Paused | Additional end action appears only when relevant. | Clear state text and labeled controls. | “Nothing is lost” removes performance pressure. | Pass |
 | Complete | Quiet acknowledgment replaces reward language. | Two clearly labeled actions with readable contrast. | No earned time, praise, growth, or confetti. | Pass |
-| Log | Only the requested mood, sentence, photo, and Done controls lead. | Semantic form, readable fields, clear disabled/enabled state. | No editor chrome, prompt feed, or gamified completion. | Pass |
+| Log | One calm question leads at a time; prior choices collapse before the next appears. | Semantic selectable controls, 44pt targets, editable summaries, and a clear save state. | No blank editor until requested, forced reframing, clinical labels, prompt feed, or gamified completion. | Pass |
 | Settings | A short opaque sheet keeps secondary choices out of navigation. | Modal label, dismissal, switches, and background isolation. | Only quiet, relevant preferences appear. | Pass |
 
 ## Data Integrity Notes for Native Implementation
 
-- Intent Count requires a dedicated intent event, not a proxy based on shield-button attempts.
+- Open-window intent and kept-closed mastery counts require explicit, distinct outcomes, not proxies based on shield-button attempts.
 - A truthful lifetime Quiet Minutes value requires durable daily/lifetime buckets; the current retained action history is not sufficient for a true life total.
 - “You’re opening Instagram” and “Open Instagram” should be shown only when the triggering/configured app can be identified and opened reliably. Generic production fallback copy is “You’re opening a feed” and “Continue.”

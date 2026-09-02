@@ -1,6 +1,25 @@
 import Foundation
 import FamilyControls
 
+enum BeforeFeedDedicatedSelectionMigrationPolicy {
+    static func shouldPreferDedicatedSelection(
+        usesDefaultSelection: Bool,
+        dedicatedSelectedCount: Int,
+        hiddenAppLockEnabled: Bool,
+        migrationCompleted: Bool
+    ) -> Bool {
+        !migrationCompleted
+            && hiddenAppLockEnabled
+            && usesDefaultSelection
+            && dedicatedSelectedCount > 0
+    }
+}
+
+struct BeforeFeedDedicatedSelectionMigrationInputs {
+    let dedicatedSelectedCount: Int
+    let hiddenAppLockEnabled: Bool
+}
+
 struct MoriScreenTimeFeatureProfile: Codable, Equatable {
     var isEnabled: Bool
     var usesDefaultSelection: Bool
@@ -74,10 +93,16 @@ struct MoriScreenTimeProfileSummary: Identifiable, Equatable {
 
 struct ScreenTimeSelectionStore {
     private let persistence: ScreenTimeSelectionPersistence
+    private let beforeFeedMigrationInputs: BeforeFeedDedicatedSelectionMigrationInputs?
 
-    init(persistence: ScreenTimeSelectionPersistence = ScreenTimeSelectionPersistence()) {
+    init(
+        persistence: ScreenTimeSelectionPersistence = ScreenTimeSelectionPersistence(),
+        beforeFeedMigrationInputs: BeforeFeedDedicatedSelectionMigrationInputs? = nil
+    ) {
         self.persistence = persistence
+        self.beforeFeedMigrationInputs = beforeFeedMigrationInputs
         migrateLegacySelectionIfNeeded()
+        migrateBeforeFeedToDedicatedSelectionIfNeeded()
     }
 
     func loadDefaultSelection() -> FamilyActivitySelection {
@@ -258,5 +283,33 @@ struct ScreenTimeSelectionStore {
         }
         saveProfiles(profiles)
         persistence.markFeatureMigrationCompleted()
+    }
+
+    private func migrateBeforeFeedToDedicatedSelectionIfNeeded() {
+        // Hidden App Lock is the strictest policy. When a person already chose
+        // a dedicated feed list, do not inherit a broader shared block list.
+        let migrationCompleted = persistence.hasCompletedBeforeFeedDedicatedSelectionMigration()
+        defer {
+            if !migrationCompleted {
+                persistence.markBeforeFeedDedicatedSelectionMigrationCompleted()
+            }
+        }
+
+        let inputs = beforeFeedMigrationInputs ?? BeforeFeedDedicatedSelectionMigrationInputs(
+            dedicatedSelectedCount: selectedCount(loadSelection(for: .beforeFeed)),
+            hiddenAppLockEnabled: BeforeFeedGateStore().hiddenAppLockEnabled()
+        )
+        var beforeFeedProfile = profile(for: .beforeFeed)
+        guard BeforeFeedDedicatedSelectionMigrationPolicy.shouldPreferDedicatedSelection(
+            usesDefaultSelection: beforeFeedProfile.usesDefaultSelection,
+            dedicatedSelectedCount: inputs.dedicatedSelectedCount,
+            hiddenAppLockEnabled: inputs.hiddenAppLockEnabled,
+            migrationCompleted: migrationCompleted
+        ) else {
+            return
+        }
+
+        beforeFeedProfile.usesDefaultSelection = false
+        saveProfile(beforeFeedProfile, for: .beforeFeed)
     }
 }

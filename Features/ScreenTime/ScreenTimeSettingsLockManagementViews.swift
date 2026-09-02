@@ -24,7 +24,7 @@ struct ScreenTimeSettingsLockManagementView: View {
     @State private var newPIN = ""
     @State private var confirmation = ""
     @State private var errorMessage: String?
-    @State private var sharePayload: ScreenTimeSettingsPINSharePayload?
+    @State private var accountabilityDraft: ScreenTimeSettingsAccountabilityPINDraft?
 
     private var title: String {
         switch mode {
@@ -36,41 +36,51 @@ struct ScreenTimeSettingsLockManagementView: View {
 
     var body: some View {
         NavigationStack {
-            Form {
+            if let accountabilityDraft {
+                ScreenTimeSettingsAccountabilityPINConfirmationView(
+                    draft: accountabilityDraft,
+                    commitIntent: .replacing(currentPIN: currentPIN),
+                    onCancel: { self.accountabilityDraft = nil },
+                    onCommitted: { dismiss() }
+                )
+            } else {
+                managementForm
+            }
+        }
+    }
+
+    private var managementForm: some View {
+        Form {
+            Section {
+                SecureField(MoriL10n.display("Current PIN"), text: $currentPIN)
+                    .screenTimePINInput($currentPIN)
+            }
+
+            switch mode {
+            case .changeSelfPIN:
+                selfPINFields
+            case .accountabilityPIN:
+                accountabilityFields
+            case .removeLock:
+                removeFields
+            }
+
+            if let errorMessage {
                 Section {
-                    SecureField(MoriL10n.display("Current PIN"), text: $currentPIN)
-                        .screenTimePINInput($currentPIN)
-                }
-
-                switch mode {
-                case .changeSelfPIN:
-                    selfPINFields
-                case .accountabilityPIN:
-                    accountabilityFields
-                case .removeLock:
-                    removeFields
-                }
-
-                if let errorMessage {
-                    Section {
-                        Text(errorMessage)
-                            .font(.footnote)
-                            .foregroundColor(MoriColors.botanicalClay)
-                    }
+                    Text(errorMessage)
+                        .font(.footnote)
+                        .foregroundColor(MoriColors.botanicalClay)
                 }
             }
-            .moriSettingsForm()
-            .navigationTitle(title)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button(MoriL10n.display("Cancel")) {
-                        dismiss()
-                    }
+        }
+        .moriSettingsForm()
+        .navigationTitle(title)
+        .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button(MoriL10n.display("Cancel")) {
+                    dismiss()
                 }
-            }
-            .sheet(item: $sharePayload, onDismiss: { dismiss() }) { payload in
-                ScreenTimeSettingsPINShareSheet(activityItems: [payload.message])
             }
         }
     }
@@ -103,7 +113,7 @@ struct ScreenTimeSettingsLockManagementView: View {
                 .foregroundColor(MoriColors.botanicalMuted)
 
             Button {
-                changeToAccountabilityPIN()
+                prepareAccountabilityPIN()
             } label: {
                 screenTimeLockManagementLabel("Generate and Share New PIN", icon: .lockShield)
             }
@@ -139,11 +149,11 @@ struct ScreenTimeSettingsLockManagementView: View {
         }
     }
 
-    private func changeToAccountabilityPIN() {
+    private func prepareAccountabilityPIN() {
         do {
-            let generatedPIN = try lockStore.changeToAccountabilityPIN(currentPIN: currentPIN)
+            _ = try lockStore.verify(currentPIN)
             errorMessage = nil
-            sharePayload = ScreenTimeSettingsPINSharePayload(pin: generatedPIN)
+            accountabilityDraft = lockStore.makeAccountabilityPINDraft()
         } catch {
             errorMessage = error.localizedDescription
         }

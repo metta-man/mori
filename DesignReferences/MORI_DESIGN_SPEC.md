@@ -44,7 +44,7 @@ Preserve:
 - ManagedSettings shielding
 - Before Feed Reset
 - intent selection
-- 30-second pause and breathing states
+- configurable Before Feed breath key and intentional open-window choice
 - Deep Session
 - Quiet Mode
 - Offline Reset
@@ -91,6 +91,11 @@ This image is the primary visual source of truth for:
 - navigation treatment
 - interaction density
 - visual tone
+
+For Log, the guided-check-in contract in section 7.8 supersedes the exact input
+controls shown in the reference image. The reference remains authoritative for
+the paper surface, editorial hierarchy, card proportions, navigation, and Life
+Grid relationship.
 
 Do not interpret the reference loosely. A UI task involving the screens shown in the reference is a **reference-matching task**, not an opportunity to invent a different design.
 
@@ -313,50 +318,75 @@ Do not make analytics more visually prominent than the next action.
 
 ---
 
-## 7.2 Before Feed: intent choice
+## 7.2 Before Feed: breath key and intent choice
 
 ### Purpose
 
-Create a pause before opening a selected feed.
+Turn the interruption into a small passage ritual before opening a selected
+feed. The first state is one configured Breath Key. Fresh installs default to
+one Long Exhale breath: 4 seconds in, 6 seconds out. Do not stack another pause
+or timer after the Breath Key.
+
+Settings expose two bounded styles:
+
+- `Guided breathing`: choose a technique and 1 to 10 complete cycles.
+- `Follow your own breath`: choose 10 seconds to 10 minutes, with no inhale,
+  hold, or exhale phase prompts.
+
+Capture an immutable configuration snapshot when the sheet opens so live
+Settings or custom-technique changes cannot alter an active session. Guided
+duration is the exact selected pattern duration multiplied by its cycle count;
+round only the displayed countdown upward.
 
 ### Suggested options
 
 - Reply to someone
 - Learn
 - Relax / entertainment
-- Habit
+- Just checking
 - Other
 
 The language must be non-judgmental.
 
-After any reason is selected:
+After the breath completes, reveal one compact intent surface. No choice is
+preselected. After any reason is selected:
 
 - ask `What would be enough?` and let the person choose a small feed boundary
 - show `After this?` / `Where do you want to return?` for every reason once a boundary is selected
 - offer Work, Study, Someone, Rest, Move, and Sleep without requiring typing
-- keep the return activity optional, then begin the configured pause from the primary action
+- keep the return activity optional
+- keep `Keep feed closed` available without requiring a reason, boundary, or return activity
+- enable `Open for …` only after both a reason and boundary are selected
+
+The feed never opens automatically. Opening creates only the selected 2, 5, 10,
+or 15 minute window; the existing Screen Time grace expiry remains responsible
+for reapplying the shield.
 
 ### Visual direction
 
 - Editorial title
-- Spacious choice rows
+- Compact 44pt choice chips or rows on one paper surface
 - One selected state
-- Continue action only when appropriate
+- One explicit `Open for …` action only when appropriate
+- One quiet `Keep feed closed` action
 - Close remains available but secondary
 
 ---
 
-## 7.3 Before Feed: 30-second pause
+## 7.3 Before Feed: configurable breath key
 
 ### Required composition
 
 - compact sheet header
-- title such as `Stay with the pause`
+- one restrained common title, `Begin with the breath`; keep the configured
+  style, technique, cycles, and duration in the supporting summary rather than
+  turning the mode name into the headline
 - short supporting sentence
-- breathing form and countdown as one central composition
-- inhale / exhale instruction close to the form
+- breathing form and truthful countdown as one central composition
+- guided technique, phase, and cycle progress close to the form
+- for follow-your-own, a static breathing form and timer without phase prompts
 - secondary close control
-- lightweight pause control
+- lightweight Pause / Resume control once the timer starts
 
 ### Avoid
 
@@ -364,8 +394,15 @@ After any reason is selected:
 - excessive empty vertical space
 - timer floating separately from the breathing visual
 - oversized bottom CTA
+- a mode-name headline that competes with the breathing form
 
-The watercolor form should subtly expand and contract with the breathing phase.
+In guided mode, the watercolor form should subtly expand and contract with the
+breathing phase. Under Reduce Motion, use static art, phase text, and the
+countdown instead of repeated scaling. Follow-your-own mode keeps the form
+static and uses one long singing-bowl A cue only on its first start. The cue
+must not replay on resume or after sound is enabled late; stopping, pausing, or
+closing stops it. Follow-your-own has no completion sound. Breath completion
+reveals the intent controls; it never opens the feed by itself.
 
 ---
 
@@ -466,12 +503,29 @@ Enable a meaningful daily record with minimal effort.
 ### Required hierarchy
 
 1. `Log`
-2. `One small note is enough.`
-3. compact Mood section
-4. one-sentence field
-5. optional photo row
-6. Save entry
-7. visible Life Grid preview
+2. `One small check-in is enough.`
+3. one active guided question inside a single paper card
+4. `Pause`: choose the closest feeling or state
+5. `Notice`: choose the broad life context
+6. `Choose`: choose a gentle response, including `Just record it`
+7. compact editable summaries of completed choices
+8. optional one-sentence disclosure
+9. optional photo row
+10. Save check-in
+11. visible Life Grid preview
+
+The three questions reveal progressively on the same paper surface. Do not show
+all choices as a dense tag wall or split the flow into onboarding-style pages.
+No option is preselected. `Just record it` must remain available so the person
+can complete the check-in without reframing or solving the feeling.
+
+Specific feelings map to the existing Good, Neutral, and Difficult Life Grid
+tones. The finer feeling, context, and response selections remain editable when
+the person returns to today's entry.
+
+The sentence editor stays hidden until requested unless an existing sentence is
+being edited. Do not show a timer, progress percentage, clinical method label,
+forced-positive copy, or celebratory completion treatment.
 
 Do not replace Life Grid preview with `More from your Log`.
 

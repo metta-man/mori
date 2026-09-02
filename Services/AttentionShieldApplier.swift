@@ -2,6 +2,22 @@ import Foundation
 import FamilyControls
 import ManagedSettings
 
+enum AttentionShieldClearedStateMatchPolicy {
+    static func matches(
+        currentFeature: MoriScreenTimeFeature?,
+        hasBlockedApplications: Bool,
+        hasShieldApplications: Bool,
+        hasShieldApplicationCategories: Bool,
+        hasShieldWebDomains: Bool
+    ) -> Bool {
+        currentFeature == nil
+            && !hasBlockedApplications
+            && !hasShieldApplications
+            && !hasShieldApplicationCategories
+            && !hasShieldWebDomains
+    }
+}
+
 struct AttentionShieldApplier {
     private let managedStore: ManagedSettingsStore
     private let stateStore: AttentionShieldStateStore
@@ -68,6 +84,50 @@ struct AttentionShieldApplier {
                 displayNameCount: displayNames.count,
                 displayNames: displayNames
             )
+        )
+    }
+
+    func matchesAppliedState(
+        selection: FamilyActivitySelection,
+        currentFeature: MoriScreenTimeFeature,
+        policy: MoriScreenTimeMonitorHealthPolicy? = nil,
+        hiddenApplicationTokens: Set<ApplicationToken>? = nil,
+        restrictionPolicy: MoriScreenTimeRestrictionPolicy = .blockSelected
+    ) -> Bool {
+        // Read the actual ManagedSettings store, not only Mori's saved feature
+        // marker, so a changed selection or an OS-cleared restriction is repaired.
+        let effectivePolicy = policy ?? (currentFeature == .beforeFeed ? .shieldLock : .shieldOnly)
+        guard stateStore.loadCurrentFeature() == currentFeature else { return false }
+
+        if effectivePolicy == .hiddenAppLock {
+            let tokens = hiddenApplicationTokens ?? selection.applicationTokens
+            let desiredApplications = tokens.isEmpty
+                ? nil
+                : Set(tokens.map(Application.init(token:)))
+            guard managedStore.application.blockedApplications == desiredApplications else { return false }
+        } else {
+            guard managedStore.application.blockedApplications == nil else { return false }
+        }
+
+        switch restrictionPolicy {
+        case .blockSelected:
+            return managedStore.shield.applications == (selection.applicationTokens.isEmpty ? nil : selection.applicationTokens)
+                && managedStore.shield.applicationCategories == nil
+                && managedStore.shield.webDomains == (selection.webDomainTokens.isEmpty ? nil : selection.webDomainTokens)
+        case .allowSelected:
+            return managedStore.shield.applications == nil
+                && managedStore.shield.applicationCategories == .all(except: selection.applicationTokens)
+                && managedStore.shield.webDomains == nil
+        }
+    }
+
+    func matchesClearedState() -> Bool {
+        AttentionShieldClearedStateMatchPolicy.matches(
+            currentFeature: stateStore.loadCurrentFeature(),
+            hasBlockedApplications: managedStore.application.blockedApplications != nil,
+            hasShieldApplications: managedStore.shield.applications != nil,
+            hasShieldApplicationCategories: managedStore.shield.applicationCategories != nil,
+            hasShieldWebDomains: managedStore.shield.webDomains != nil
         )
     }
 

@@ -209,7 +209,7 @@ struct GratitudeJournalDismissButton: View {
 
 struct GratitudeJournalHomeContent: View {
     @ObservedObject var dailySparkStore: DailySparkStore
-    let selectedTone: HabitDayTone?
+    @Binding var guidedCheckIn: JournalGuidedCheckInState
     let todayHabitEntry: HabitEntry?
     @Binding var dailyEntryNote: String
     @Binding var dailyEntryPhotos: [GratitudePhotoAttachment]
@@ -217,7 +217,6 @@ struct GratitudeJournalHomeContent: View {
     let recentEntries: [GratitudeEntry]
     let lifeGridSnapshot: JournalLifeGridSnapshot
     let onDailySparkSaved: (DailySparkEntry) -> Void
-    let onSelectTone: (HabitDayTone) -> Void
     let onSaveDailyEntry: () -> Void
     let onOpenPatternLog: () -> Void
     let onOpenWeekArchive: () -> Void
@@ -229,18 +228,17 @@ struct GratitudeJournalHomeContent: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 21) {
             JournalTodayPanel(
-                selectedTone: selectedTone ?? todayHabitEntry?.tone,
+                guidedCheckIn: $guidedCheckIn,
                 note: $dailyEntryNote,
                 attachedPhotos: $dailyEntryPhotos,
                 selectedPhotoItems: $selectedDailyPhotoItems,
-                onSelect: onSelectTone,
                 onSave: onSaveDailyEntry,
                 onRemovePhoto: onRemoveDailyPhoto
             )
 
             JournalLifeGridSection(
                 dailySparkStore: dailySparkStore,
-                selectedTone: selectedTone ?? todayHabitEntry?.tone,
+                selectedTone: guidedCheckIn.selectedTone ?? todayHabitEntry?.tone,
                 recentEntries: recentEntries,
                 lifeGridSnapshot: lifeGridSnapshot,
                 onDailySparkSaved: onDailySparkSaved,
@@ -255,17 +253,15 @@ struct GratitudeJournalHomeContent: View {
 }
 
 struct JournalTodayPanel: View {
-    let selectedTone: HabitDayTone?
+    @Binding var guidedCheckIn: JournalGuidedCheckInState
     @Binding var note: String
     @Binding var attachedPhotos: [GratitudePhotoAttachment]
     @Binding var selectedPhotoItems: [PhotosPickerItem]
-    let onSelect: (HabitDayTone) -> Void
     let onSave: () -> Void
     let onRemovePhoto: (GratitudePhotoAttachment) -> Void
 
-    private var canSave: Bool {
-        selectedTone != nil
-    }
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @State private var isNoteExpanded = false
 
     private var canAddPhotos: Bool {
         attachedPhotos.count < 6
@@ -282,150 +278,28 @@ struct JournalTodayPanel: View {
         }
     }
 
-    private var toneSelection: Binding<HabitDayTone?> {
-        Binding(
-            get: { selectedTone },
-            set: { tone in
-                guard let tone else { return }
-                onSelect(tone)
-            }
-        )
-    }
-
-    private var moodOptions: [MoriMoodOption<HabitDayTone>] {
-        [
-            MoriMoodOption(id: .positive, title: "Good", tone: .good),
-            MoriMoodOption(id: .neutral, title: "Neutral", tone: .neutral),
-            MoriMoodOption(id: .negative, title: "Difficult", tone: .difficult)
-        ]
+    private var compactChoiceColumns: [GridItem] {
+        dynamicTypeSize.isAccessibilitySize
+            ? [GridItem(.flexible(), spacing: 10)]
+            : [GridItem(.flexible(), spacing: 10), GridItem(.flexible(), spacing: 10)]
     }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(MoriL10n.display("Mood"))
-                    .font(MoriTypography.sanctuarySection)
-                    .foregroundColor(MoriColors.sanctuaryInk)
-
-                Text(MoriL10n.display("Notice how today feels."))
-                    .font(MoriTypography.callout)
-                    .foregroundColor(MoriColors.botanicalMuted)
+            if guidedCheckIn.currentStep != .emotion {
+                guidedSummary
             }
 
-            MoriMoodSelector(
-                options: moodOptions,
-                selection: toneSelection,
-                optionSpacing: 12,
-                optionMinimumHeight: 97
-            )
-
-            VStack(alignment: .leading, spacing: 11) {
-                Text(MoriL10n.display("One sentence"))
-                    .font(MoriTypography.callout.weight(.semibold))
-                    .foregroundColor(MoriColors.botanicalInk)
-
-                ZStack(alignment: .topLeading) {
-                    if note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                        Text(MoriL10n.display("One thing worth keeping..."))
-                            .font(MoriTypography.body)
-                            .foregroundColor(MoriColors.botanicalMuted.opacity(0.76))
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 13)
-                            .allowsHitTesting(false)
-                    }
-
-                    TextEditor(text: $note)
-                        .font(MoriTypography.body)
-                        .foregroundColor(MoriColors.botanicalInk)
-                        .scrollContentBackground(.hidden)
-                        .background(Color.clear)
-                        .frame(minHeight: 72)
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 8)
-                }
-                .background(MoriColors.botanicalPaperDeep.opacity(0.58))
-                .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 12, style: .continuous)
-                        .stroke(MoriColors.botanicalLine.opacity(0.55), lineWidth: 1)
+            guidedStepContent
+                .id(guidedCheckIn.currentStep)
+                .transition(.opacity)
+                .moriReduceMotionAnimation(
+                    MoriTheme.Animation.disclosure,
+                    value: guidedCheckIn.currentStep
                 )
-            }
-            .padding(.top, 5)
-
-            PhotosPicker(
-                selection: $selectedPhotoItems,
-                maxSelectionCount: max(1, 6 - attachedPhotos.count),
-                matching: .images
-            ) {
-                HStack(spacing: 10) {
-                    Image(systemName: "photo")
-                        .font(.system(size: 16, weight: .light))
-                        .foregroundColor(
-                            canAddPhotos
-                                ? MoriColors.botanicalMuted
-                                : MoriColors.botanicalMuted.opacity(0.42)
-                        )
-                        .frame(width: 22, height: 22)
-
-                    HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(MoriL10n.display(canAddPhotos ? "Add a photo" : "Photo limit reached"))
-                            .font(MoriTypography.callout.weight(.semibold))
-                            .foregroundColor(canAddPhotos ? MoriColors.botanicalInk : MoriColors.botanicalMuted)
-
-                        Text(photoCountText)
-                            .font(MoriTypography.caption)
-                            .foregroundColor(MoriColors.botanicalMuted)
-                    }
-
-                    Spacer(minLength: 0)
-
-                    Image(systemName: "plus")
-                        .font(.system(size: 15, weight: .regular))
-                        .foregroundColor(
-                            MoriColors.botanicalMuted.opacity(canAddPhotos ? 0.52 : 0.28)
-                        )
-                }
-                .padding(.horizontal, 12)
-                .frame(minHeight: 50)
-                .background(MoriColors.botanicalPaperDeep.opacity(0.44))
-                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 14, style: .continuous)
-                        .stroke(MoriColors.botanicalLine.opacity(0.50), lineWidth: 1)
-                )
-            }
-            .buttonStyle(.plain)
-            .disabled(!canAddPhotos)
-            .accessibilityLabel(MoriL10n.display("Add photos to daily log"))
-            .padding(.top, 4)
-
-            if !attachedPhotos.isEmpty {
-                DailyLogPhotoStrip(
-                    attachments: attachedPhotos,
-                    onRemove: onRemovePhoto
-                )
-            }
-
-            Button(action: onSave) {
-                Text(MoriL10n.display("Save entry"))
-                    .font(MoriTypography.callout.weight(.semibold))
-                    .foregroundColor(canSave ? MoriColors.botanicalSurface : MoriColors.botanicalMuted)
-                    .frame(maxWidth: .infinity)
-                    .frame(minHeight: 50)
-                    .background(
-                        canSave
-                            ? MoriColors.botanicalInk
-                            : MoriTheme.Colors.sage.opacity(0.18)
-                    )
-                    .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-            }
-            .buttonStyle(.plain)
-            .disabled(!canSave)
-            .accessibilityLabel(MoriL10n.display("Save today's log"))
-            .padding(.top, 5)
         }
         .padding(.horizontal, 19)
-        .padding(.top, 16)
+        .padding(.top, 18)
         .padding(.bottom, 24)
         .background(
             MoriSanctuaryBoxBackground(
@@ -439,6 +313,359 @@ struct JournalTodayPanel: View {
             x: 0,
             y: 5
         )
+        .onAppear {
+            if !note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                isNoteExpanded = true
+            }
+        }
+        .moriOnChange(of: note) { newValue in
+            if !newValue.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                isNoteExpanded = true
+            }
+        }
+    }
+
+    @ViewBuilder
+    private var guidedStepContent: some View {
+        switch guidedCheckIn.currentStep {
+        case .emotion:
+            questionHeader(
+                title: "How are you right now?",
+                subtitle: "Choose what feels closest."
+            )
+
+            LazyVGrid(columns: compactChoiceColumns, spacing: 10) {
+                ForEach(JournalGuidedEmotion.allCases) { emotion in
+                    optionButton(
+                        title: emotion.title,
+                        isSelected: guidedCheckIn.emotion == emotion,
+                        accessibilityIdentifier: "journal-guided-emotion-\(emotion.id)"
+                    ) {
+                        selectEmotion(emotion)
+                    }
+                }
+            }
+
+        case .context:
+            questionHeader(
+                title: "What is this connected to?",
+                subtitle: "A broad answer is enough."
+            )
+
+            LazyVGrid(columns: compactChoiceColumns, spacing: 10) {
+                ForEach(JournalGuidedContext.allCases) { context in
+                    optionButton(
+                        title: context.title,
+                        isSelected: guidedCheckIn.context == context,
+                        accessibilityIdentifier: "journal-guided-context-\(context.id)"
+                    ) {
+                        selectContext(context)
+                    }
+                }
+            }
+
+        case .response:
+            questionHeader(
+                title: "What would help next?",
+                subtitle: "Choose a gentle way forward."
+            )
+
+            VStack(spacing: 9) {
+                ForEach(guidedCheckIn.availableResponses) { response in
+                    optionButton(
+                        title: response.title,
+                        isSelected: guidedCheckIn.response == response,
+                        accessibilityIdentifier: "journal-guided-response-\(response.id)"
+                    ) {
+                        selectResponse(response)
+                    }
+                }
+            }
+
+        case .details:
+            detailsContent
+        }
+    }
+
+    private func questionHeader(title: String, subtitle: String) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(MoriL10n.display(title))
+                .font(MoriTypography.sanctuarySection)
+                .foregroundColor(MoriColors.sanctuaryInk)
+
+            Text(MoriL10n.display(subtitle))
+                .font(MoriTypography.callout)
+                .foregroundColor(MoriColors.botanicalMuted)
+        }
+        .padding(.bottom, 2)
+    }
+
+    @ViewBuilder
+    private var guidedSummary: some View {
+        VStack(spacing: 0) {
+            if let emotion = guidedCheckIn.emotion {
+                summaryRow(label: "Feeling", value: emotion.title, step: .emotion)
+            }
+
+            if guidedCheckIn.currentStep.rawValue > JournalGuidedStep.context.rawValue,
+               let context = guidedCheckIn.context {
+                summaryDivider
+                summaryRow(label: "Connected to", value: context.title, step: .context)
+            }
+
+            if guidedCheckIn.currentStep == .details,
+               let response = guidedCheckIn.response {
+                summaryDivider
+                summaryRow(label: "Next", value: response.title, step: .response)
+            }
+        }
+        .background(MoriColors.botanicalPaperDeep.opacity(0.38))
+        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                .stroke(MoriColors.botanicalLine.opacity(0.42), lineWidth: 1)
+        )
+    }
+
+    private func summaryRow(
+        label: String,
+        value: String,
+        step: JournalGuidedStep
+    ) -> some View {
+        Button {
+            guidedCheckIn.edit(step)
+        } label: {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(MoriL10n.display(label))
+                        .font(MoriTypography.caption)
+                        .foregroundColor(MoriColors.botanicalMuted)
+
+                    Text(MoriL10n.display(value))
+                        .font(MoriTypography.callout.weight(.semibold))
+                        .foregroundColor(MoriColors.botanicalInk)
+                        .multilineTextAlignment(.leading)
+                }
+
+                Spacer(minLength: 8)
+                MoriBitmapIconImage(icon: .chevron, size: 13, opacity: 0.55)
+            }
+            .padding(.horizontal, 13)
+            .frame(minHeight: 50)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("journal-guided-summary-\(step.rawValue)")
+        .accessibilityLabel(
+            MoriL10n.string(
+                "journal.guided.edit_summary",
+                defaultValue: "Edit %@: %@",
+                arguments: [MoriL10n.display(label), MoriL10n.display(value)]
+            )
+        )
+    }
+
+    private var summaryDivider: some View {
+        Rectangle()
+            .fill(MoriColors.botanicalLine.opacity(0.34))
+            .frame(height: 1)
+            .padding(.leading, 13)
+    }
+
+    @ViewBuilder
+    private var detailsContent: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            Button {
+                isNoteExpanded.toggle()
+            } label: {
+                HStack(spacing: 10) {
+                    MoriBitmapIconImage(icon: .journal, size: 17, opacity: 0.75)
+                        .frame(width: 24, height: 24)
+
+                    Text(MoriL10n.display("Add a sentence"))
+                        .font(MoriTypography.callout.weight(.semibold))
+                        .foregroundColor(MoriColors.botanicalInk)
+
+                    Spacer(minLength: 0)
+
+                    MoriBitmapIconImage(icon: .chevron, size: 13, opacity: 0.48)
+                        .rotationEffect(.degrees(isNoteExpanded ? -90 : 90))
+                }
+                .padding(.horizontal, 12)
+                .frame(minHeight: 50)
+                .background(MoriColors.botanicalPaperDeep.opacity(0.36))
+                .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 14, style: .continuous)
+                        .stroke(MoriColors.botanicalLine.opacity(0.46), lineWidth: 1)
+                )
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("journal-guided-add-sentence")
+            .accessibilityValue(MoriL10n.display(isNoteExpanded ? "Expanded" : "Collapsed"))
+
+            if isNoteExpanded {
+                noteEditor
+                    .transition(.opacity)
+            }
+
+            photoPicker
+
+            if !attachedPhotos.isEmpty {
+                DailyLogPhotoStrip(
+                    attachments: attachedPhotos,
+                    onRemove: onRemovePhoto
+                )
+            }
+
+            MoriPrimaryButton(
+                title: "Save check-in",
+                icon: .leaf,
+                isEnabled: guidedCheckIn.canSave,
+                action: onSave
+            )
+            .accessibilityIdentifier("journal-guided-save")
+        }
+    }
+
+    private var noteEditor: some View {
+        ZStack(alignment: .topLeading) {
+            if note.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                Text(MoriL10n.display("One thing worth keeping..."))
+                    .font(MoriTypography.body)
+                    .foregroundColor(MoriColors.botanicalMuted.opacity(0.76))
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 13)
+                    .allowsHitTesting(false)
+            }
+
+            TextEditor(text: $note)
+                .font(MoriTypography.body)
+                .foregroundColor(MoriColors.botanicalInk)
+                .scrollContentBackground(.hidden)
+                .background(Color.clear)
+                .frame(minHeight: 72)
+                .padding(.horizontal, 10)
+                .padding(.vertical, 8)
+                .accessibilityIdentifier("journal-guided-note")
+        }
+        .background(MoriColors.botanicalPaperDeep.opacity(0.58))
+        .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12, style: .continuous)
+                .stroke(MoriColors.botanicalLine.opacity(0.55), lineWidth: 1)
+        )
+    }
+
+    private var photoPicker: some View {
+        PhotosPicker(
+            selection: $selectedPhotoItems,
+            maxSelectionCount: max(1, 6 - attachedPhotos.count),
+            matching: .images
+        ) {
+            HStack(spacing: 10) {
+                Image(systemName: "photo")
+                    .font(.system(size: 16, weight: .light))
+                    .foregroundColor(
+                        canAddPhotos
+                            ? MoriColors.botanicalMuted
+                            : MoriColors.botanicalMuted.opacity(0.42)
+                    )
+                    .frame(width: 22, height: 22)
+
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text(MoriL10n.display(canAddPhotos ? "Add a photo" : "Photo limit reached"))
+                        .font(MoriTypography.callout.weight(.semibold))
+                        .foregroundColor(canAddPhotos ? MoriColors.botanicalInk : MoriColors.botanicalMuted)
+
+                    Text(photoCountText)
+                        .font(MoriTypography.caption)
+                        .foregroundColor(MoriColors.botanicalMuted)
+                }
+
+                Spacer(minLength: 0)
+
+                MoriBitmapIconImage(
+                    icon: .plus,
+                    size: 15,
+                    opacity: canAddPhotos ? 0.52 : 0.28
+                )
+            }
+            .padding(.horizontal, 12)
+            .frame(minHeight: 50)
+            .background(MoriColors.botanicalPaperDeep.opacity(0.44))
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(MoriColors.botanicalLine.opacity(0.50), lineWidth: 1)
+            )
+        }
+        .buttonStyle(.plain)
+        .disabled(!canAddPhotos)
+        .accessibilityLabel(MoriL10n.display("Add photos to daily log"))
+        .accessibilityIdentifier("journal-guided-add-photo")
+    }
+
+    private func optionButton(
+        title: String,
+        isSelected: Bool,
+        accessibilityIdentifier: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 10) {
+                Text(MoriL10n.display(title))
+                    .font(MoriTypography.callout.weight(.medium))
+                    .foregroundColor(MoriColors.botanicalInk)
+                    .multilineTextAlignment(.leading)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                Spacer(minLength: 4)
+
+                if isSelected {
+                    MoriBitmapIconImage(icon: .leaf, size: 13, opacity: 0.82)
+                }
+            }
+            .padding(.horizontal, 13)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .frame(minHeight: 50)
+            .background(
+                isSelected
+                    ? MoriColors.botanicalMoss.opacity(0.14)
+                    : MoriColors.sanctuarySurface.opacity(0.72)
+            )
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(
+                        isSelected
+                            ? MoriColors.botanicalMoss.opacity(0.66)
+                            : MoriColors.botanicalLine.opacity(0.48),
+                        lineWidth: isSelected ? 1.5 : 1
+                    )
+            )
+            .contentShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(MoriL10n.display(title))
+        .accessibilityValue(MoriL10n.display(isSelected ? "Selected" : "Not selected"))
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityIdentifier(accessibilityIdentifier)
+    }
+
+    private func selectEmotion(_ emotion: JournalGuidedEmotion) {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        guidedCheckIn.selectEmotion(emotion)
+    }
+
+    private func selectContext(_ context: JournalGuidedContext) {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        guidedCheckIn.selectContext(context)
+    }
+
+    private func selectResponse(_ response: JournalGuidedResponse) {
+        UIImpactFeedbackGenerator(style: .light).impactOccurred()
+        guidedCheckIn.selectResponse(response)
     }
 }
 

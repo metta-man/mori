@@ -580,21 +580,22 @@ private struct AppAndDataSettingsView: View {
         } message: {
             Text(MoriL10n.display("You can go through onboarding again without deleting your saved data."))
         }
-        .confirmationDialog(
+        .alert(
             MoriL10n.display("Delete this data?"),
             isPresented: Binding(
                 get: { categoryToDelete != nil },
                 set: { if !$0 { categoryToDelete = nil } }
             ),
-            titleVisibility: .visible
-        ) {
+            presenting: categoryToDelete
+        ) { category in
+            Button(MoriL10n.display("Cancel"), role: .cancel) {
+                categoryToDelete = nil
+            }
             Button(MoriL10n.display("Delete"), role: .destructive) {
-                guard let category = categoryToDelete else { return }
                 categoryToDelete = nil
                 delete(category)
             }
-            Button(MoriL10n.display("Cancel"), role: .cancel) { categoryToDelete = nil }
-        } message: {
+        } message: { _ in
             Text(MoriL10n.display("This cannot be undone."))
         }
         .alert(MoriL10n.display("Delete all Mori data?"), isPresented: $showingDeleteAllAlert) {

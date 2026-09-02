@@ -258,7 +258,7 @@ struct TodayPrimaryResetCard: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     let appLimitPresentation: TodayAppLimitPresentation
-    let intentCount: Int
+    let keptClosedCount: Int
     let onStartReset: () -> Void
     let onOpenAppLimits: () -> Void
 
@@ -310,13 +310,13 @@ struct TodayPrimaryResetCard: View {
                 startButton
                     .padding(.top, appLimitPresentation.isReady ? 20 : 22)
 
-                Text(MoriL10n.display("You can continue\nwhenever you choose."))
+                Text(masteryFeedbackText)
                     .font(.system(.footnote, design: .default, weight: .regular))
                     .foregroundColor(MoriV2Palette.stone)
                     .lineSpacing(2)
                     .fixedSize(horizontal: false, vertical: true)
                     .padding(.top, 10)
-                    .accessibilityLabel(MoriL10n.display("You can continue whenever you choose."))
+                    .accessibilityLabel(masteryFeedbackAccessibilityText)
             }
             .frame(maxWidth: dynamicTypeSize.isAccessibilitySize ? .infinity : 226, alignment: .leading)
             .padding(.horizontal, 22)
@@ -332,7 +332,7 @@ struct TodayPrimaryResetCard: View {
         )
         .shadow(color: MoriV2Palette.forestInk.opacity(0.07), radius: 10, x: 0, y: 4)
         .accessibilityElement(children: .contain)
-        .accessibilityValue(intentAccessibilityValue)
+        .accessibilityValue(masteryFeedbackAccessibilityText)
     }
 
     private var appLimitKicker: some View {
@@ -434,12 +434,28 @@ struct TodayPrimaryResetCard: View {
         .accessibilityHint(MoriL10n.display("Opens Before Feed Reset"))
     }
 
-    private var intentAccessibilityValue: String {
-        MoriL10n.string(
-            "today.intent_count.accessibility",
-            defaultValue: "%d intentions today",
-            arguments: [intentCount]
-        )
+    private var masteryFeedbackText: String {
+        guard keptClosedCount > 0 else {
+            return MoriL10n.display("You can continue\nwhenever you choose.")
+        }
+        return masteryFeedbackAccessibilityText
+    }
+
+    private var masteryFeedbackAccessibilityText: String {
+        if keptClosedCount == 1 {
+            return MoriL10n.string(
+                "today.before_feed.kept_closed_once",
+                defaultValue: "Kept closed once today"
+            )
+        }
+        if keptClosedCount > 1 {
+            return MoriL10n.string(
+                "today.before_feed.kept_closed_count",
+                defaultValue: "Kept closed %d times today",
+                arguments: [keptClosedCount]
+            )
+        }
+        return MoriL10n.display("You can continue whenever you choose.")
     }
 }
 
@@ -874,12 +890,7 @@ struct TodayAppLimitPresentation {
             badgeIcon = .leaf
             buttonIcon = .lockShield
             isReady = true
-            timingRows = Self.timingRows(
-                pauseStyle: pauseStyle,
-                guidedCycleCount: guidedCycleCount,
-                quietDurationSeconds: quietDurationSeconds,
-                breathingTechniqueID: breathingTechniqueID
-            )
+            timingRows = Self.timingRows(summary: durationText)
         } else {
             stateLabel = "Selection ready"
             title = "Set timing and turn on"
@@ -888,12 +899,7 @@ struct TodayAppLimitPresentation {
             badgeIcon = .timer
             buttonIcon = .play
             isReady = false
-            timingRows = Self.timingRows(
-                pauseStyle: pauseStyle,
-                guidedCycleCount: guidedCycleCount,
-                quietDurationSeconds: quietDurationSeconds,
-                breathingTechniqueID: breathingTechniqueID
-            )
+            timingRows = Self.timingRows(summary: durationText)
         }
     }
 
@@ -987,23 +993,13 @@ struct TodayAppLimitPresentation {
         return "\(summary.selectionStatusText) \(MoriL10n.display("selected. Turn on App Limit before feeds."))"
     }
 
-    private static func timingRows(
-        pauseStyle: MoriBeforeFeedPauseStyle,
-        guidedCycleCount: Int,
-        quietDurationSeconds: Int,
-        breathingTechniqueID: String
-    ) -> [TodayAppLimitTimingRow] {
+    private static func timingRows(summary: String) -> [TodayAppLimitTimingRow] {
         [
             TodayAppLimitTimingRow(
                 id: "pause",
-                icon: pauseStyle == .guidedBreathing ? .breathe : .timer,
-                title: "Pause",
-                value: MoriBeforeFeedPauseSettingsPresentation.summary(
-                    style: pauseStyle,
-                    techniqueID: breathingTechniqueID,
-                    guidedCycleCount: guidedCycleCount,
-                    quietDurationSeconds: quietDurationSeconds
-                )
+                icon: .breathe,
+                title: "Breath key",
+                value: summary
             ),
             TodayAppLimitTimingRow(
                 id: "window",

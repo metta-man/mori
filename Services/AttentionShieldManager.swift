@@ -32,6 +32,7 @@ final class AttentionShieldManager: ObservableObject {
     private let thresholdStore = AttentionShieldThresholdStore()
     private let shieldApplier = AttentionShieldApplier()
     private let beforeFeedGateStore = BeforeFeedGateStore()
+    private let beforeFeedWindowEndNotificationScheduler = BeforeFeedWindowEndNotificationScheduler.shared
     private var cancellable: AnyCancellable?
     private var beforeFeedReapplyTask: Task<Void, Never>?
     private var lastScheduledBeforeFeedGraceUntil: Date?
@@ -129,6 +130,7 @@ final class AttentionShieldManager: ObservableObject {
     func resetAllProtectionData() {
         beforeFeedReapplyTask?.cancel()
         beforeFeedReapplyTask = nil
+        beforeFeedWindowEndNotificationScheduler.cancel()
         monitoringCoordinator.stopAll()
         clearShield()
         activeSession = nil
@@ -300,7 +302,9 @@ final class AttentionShieldManager: ObservableObject {
 
     private func restoreActiveShieldIfNeeded() {
         guard let session = activeSessionStore.loadUnexpiredSession() else {
-            clearShieldAndActiveSession(clearStoredSession: false)
+            activeSession = nil
+            stopActiveSessionMonitoring()
+            reconcilePassiveGatesOnForeground()
             return
         }
 
@@ -319,8 +323,33 @@ final class AttentionShieldManager: ObservableObject {
         refreshPassiveGateShield()
     }
 
+    private func reconcilePassiveGatesOnForeground() {
+        scheduleBeforeFeedGateReapplyIfNeeded()
+        scheduleMorningGateMonitoring()
+
+        let action = passiveGatePolicy.refreshAction
+        let desiredStateMatches = selectionCoordinator.passiveGateActionMatchesCurrentState(
+            action,
+            shieldApplier: shieldApplier,
+            authorizationStatus: authorizationStatus
+        )
+        guard AttentionShieldForegroundReconcilePolicy.shouldRefresh(
+            action: action,
+            desiredStateMatches: desiredStateMatches
+        ) else {
+            return
+        }
+
+        selectionCoordinator.applyPassiveGateAction(
+            action,
+            shieldApplier: shieldApplier,
+            authorizationStatus: authorizationStatus
+        )
+    }
+
     @discardableResult
     private func beginBeforeFeedResetProtection(now: Date = Date()) -> Bool {
+        beforeFeedWindowEndNotificationScheduler.cancel()
         beforeFeedGateStore.clearGraceUntil()
         MoriBeforeFeedWindowLiveActivityController.endAll()
         refreshBeforeFeedGateShield()
@@ -341,6 +370,7 @@ final class AttentionShieldManager: ObservableObject {
         let until = now.addingTimeInterval(TimeInterval(resolvedWindowSeconds))
         let traceID = beforeFeedGateStore.beginWindowTrace()
         beforeFeedGateStore.saveGraceUntil(until)
+        let authoritativeUntil = beforeFeedGateStore.graceUntil(now: now) ?? until
         if activeSession?.feature == .beforeFeed {
             clearActiveShieldSession()
         } else {
@@ -350,10 +380,14 @@ final class AttentionShieldManager: ObservableObject {
             kind: .beforeFeedGraceSaved,
             action: "completeBeforeFeedReset",
             traceID: traceID,
-            graceUntil: until,
+            graceUntil: authoritativeUntil,
             policy: .clear
         )
-        MoriBeforeFeedWindowLiveActivityController.start(until: until, now: now)
+        MoriBeforeFeedWindowLiveActivityController.start(until: authoritativeUntil, now: now)
+        beforeFeedWindowEndNotificationScheduler.scheduleIfPermitted(
+            at: authoritativeUntil,
+            now: now
+        )
     }
 
     @discardableResult
@@ -428,12 +462,21 @@ final class AttentionShieldManager: ObservableObject {
             for: feature,
             authorizationStatus: authorizationStatus
         )
-        shieldApplier.apply(
+        let desiredStateMatches = shieldApplier.matchesAppliedState(
             selection: payload.selection,
             currentFeature: feature,
-            displayNames: payload.displayNames,
             restrictionPolicy: payload.restrictionPolicy
         )
+        AttentionShieldStateReconcilePolicy.applyIfNeeded(
+            desiredStateMatches: desiredStateMatches
+        ) {
+            shieldApplier.apply(
+                selection: payload.selection,
+                currentFeature: feature,
+                displayNames: payload.displayNames,
+                restrictionPolicy: payload.restrictionPolicy
+            )
+        }
     }
 
     private var passiveGatePolicy: AttentionShieldPassiveGatePolicy {

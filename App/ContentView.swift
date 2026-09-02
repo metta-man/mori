@@ -94,7 +94,8 @@ struct ContentView: View {
         }
         .onAppear {
             openInitialRoutesAfterLayout()
-            showingAnalyticsConsent = AnalyticsManager.shared.consentState() == .undecided
+            showingAnalyticsConsent = !skipsAnalyticsConsentForUITest
+                && AnalyticsManager.shared.consentState() == .undecided
         }
         .onReceive(routeStore.$requestID.dropFirst()) { _ in
             openPendingRoutesAfterLayout()
@@ -226,7 +227,9 @@ struct ContentView: View {
         handledUITestLaunchRoute = true
 
         let arguments = ProcessInfo.processInfo.arguments
-        if arguments.contains("-MoriOpenFocusForUITest") {
+        if arguments.contains("-MoriOpenLogForUITest") {
+            open(.journalTab, source: .deepLink)
+        } else if arguments.contains("-MoriOpenFocusForUITest") {
             open(.practiceTab, source: .deepLink)
         } else if arguments.contains("-MoriOpenBeforeFeedForUITest") {
             open(.beforeFeedReset, source: .screenTimeGate)
@@ -247,6 +250,14 @@ struct ContentView: View {
         } else if arguments.contains("-MoriOpenBeforeFeedSettingsForUITest") {
             open(.appLimits, source: .deepLink)
         }
+    }
+
+    private var skipsAnalyticsConsentForUITest: Bool {
+        #if DEBUG
+        ProcessInfo.processInfo.arguments.contains("-MoriSkipAnalyticsConsentForUITest")
+        #else
+        false
+        #endif
     }
 
     private func startGlobalPractice(_ practice: MoriPractice) {

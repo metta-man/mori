@@ -120,6 +120,26 @@ struct AttentionShieldSelectionCoordinator {
         .apply(action)
     }
 
+    func passiveGateActionMatchesCurrentState(
+        _ action: AttentionShieldPassiveGateAction,
+        shieldApplier: AttentionShieldApplier,
+        authorizationStatus: AuthorizationStatus
+    ) -> Bool {
+        let canDisplaySelectionNames = AttentionShieldAuthorizationPolicy.canDisplaySelectionNames(
+            for: authorizationStatus
+        )
+        let selectionStore = selectionStore
+        return AttentionShieldPassiveGateApplier(
+            selectionStore: selectionStore,
+            shieldApplier: shieldApplier,
+            displayNames: { feature in
+                guard canDisplaySelectionNames else { return [] }
+                return selectionStore.summary(for: feature).displayNames
+            }
+        )
+        .matches(action)
+    }
+
     func refreshDisplayNames(
         for target: AttentionShieldSelectionTarget,
         authorizationStatus: AuthorizationStatus

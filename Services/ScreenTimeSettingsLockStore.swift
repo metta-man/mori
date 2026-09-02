@@ -39,6 +39,7 @@ enum ScreenTimeSettingsLockError: LocalizedError {
     case incorrectPIN
     case cooldownActive(Int)
     case keychainFailure
+    case configurationChanged
 
     var errorDescription: String? {
         switch self {
@@ -52,8 +53,19 @@ enum ScreenTimeSettingsLockError: LocalizedError {
             return MoriL10n.string("screen_time.lock.too_many_attempts", defaultValue: "Too many incorrect attempts. Try again in %ds.", arguments: [seconds])
         case .keychainFailure:
             return MoriL10n.display("Could not save the PIN securely.")
+        case .configurationChanged:
+            return MoriL10n.display("The App Limits lock changed. Cancel and try again.")
         }
     }
+}
+
+struct ScreenTimeSettingsAccountabilityPINDraft: Equatable {
+    let pin: String
+}
+
+enum ScreenTimeSettingsAccountabilityPINCommitIntent: Equatable {
+    case initialSetup
+    case replacing(currentPIN: String)
 }
 
 protocol ScreenTimeSettingsLockKeychainStoring: AnyObject {
@@ -172,12 +184,33 @@ final class ScreenTimeSettingsLockStore: ObservableObject {
         refresh()
     }
 
-    func createAccountabilityPIN() throws -> String {
-        let pin = Self.generatedPIN()
-        try save(pin: pin, mode: .accountabilityPIN)
+    func makeAccountabilityPINDraft() -> ScreenTimeSettingsAccountabilityPINDraft {
+        ScreenTimeSettingsAccountabilityPINDraft(pin: Self.generatedPIN())
+    }
+
+    func commitAccountabilityPIN(
+        _ draft: ScreenTimeSettingsAccountabilityPINDraft,
+        intent: ScreenTimeSettingsAccountabilityPINCommitIntent
+    ) throws {
+        guard Self.isValidPIN(draft.pin) else {
+            throw ScreenTimeSettingsLockError.invalidPIN
+        }
+
+        switch intent {
+        case .initialSetup:
+            guard loadMetadata() == nil else {
+                throw ScreenTimeSettingsLockError.configurationChanged
+            }
+        case .replacing(let currentPIN):
+            guard let metadata = loadMetadata() else {
+                throw ScreenTimeSettingsLockError.configurationChanged
+            }
+            try verify(currentPIN, against: metadata)
+        }
+
+        try save(pin: draft.pin, mode: .accountabilityPIN)
         resetFailedAttempts()
         refresh()
-        return pin
     }
 
     func verify(_ pin: String) throws -> Bool {
@@ -211,13 +244,6 @@ final class ScreenTimeSettingsLockStore: ObservableObject {
         refresh()
     }
 
-    func changeToAccountabilityPIN(currentPIN: String) throws -> String {
-        _ = try verify(currentPIN)
-        let pin = try createAccountabilityPIN()
-        refresh()
-        return pin
-    }
-
     func clearAfterVerification(currentPIN: String) throws {
         _ = try verify(currentPIN)
         try deleteMetadata()
@@ -249,6 +275,21 @@ final class ScreenTimeSettingsLockStore: ObservableObject {
         }
         guard pin == confirmation else {
             throw ScreenTimeSettingsLockError.confirmationMismatch
+        }
+    }
+
+    private func verify(_ pin: String, against metadata: LockMetadata) throws {
+        guard cooldownRemainingSeconds() == 0 else {
+            throw ScreenTimeSettingsLockError.cooldownActive(cooldownRemainingSeconds())
+        }
+        guard Self.isValidPIN(pin) else {
+            throw ScreenTimeSettingsLockError.invalidPIN
+        }
+
+        let digest = Self.hash(pin: pin, salt: metadata.salt)
+        guard Self.constantTimeEquals(digest, metadata.hash) else {
+            recordFailedAttempt()
+            throw ScreenTimeSettingsLockError.incorrectPIN
         }
     }
 

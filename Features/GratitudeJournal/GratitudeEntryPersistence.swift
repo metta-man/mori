@@ -73,11 +73,21 @@ struct GratitudeEntryStore {
         ubiquitousStore.set(data, forKey: Key.iCloudEntries)
         ubiquitousStore.synchronize()
 
-        let cloudBackup = cloudBackup
-        Task {
-            try? await cloudBackup.save(entries: entries)
+        if !skipsCloudBackupForUITest {
+            let cloudBackup = cloudBackup
+            Task {
+                try? await cloudBackup.save(entries: entries)
+            }
         }
         MoriDataChangeEvent.gratitude.post(notificationCenter: notificationCenter)
+    }
+
+    private var skipsCloudBackupForUITest: Bool {
+        #if DEBUG
+        ProcessInfo.processInfo.arguments.contains("-MoriSkipCloudBackupForUITest")
+        #else
+        false
+        #endif
     }
 
     func deleteLocalEntries() {

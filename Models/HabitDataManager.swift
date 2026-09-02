@@ -12,6 +12,9 @@ struct HabitEntry: Identifiable, Codable {
     var thought: String?
     var feeling: String?
     var responsePlan: String?
+    var journalEmotionID: String?
+    var journalContextID: String?
+    var journalResponseID: String?
 
     var isPositive: Bool {
         tone == .positive
@@ -33,7 +36,10 @@ struct HabitEntry: Identifiable, Codable {
         trigger: String? = nil,
         thought: String? = nil,
         feeling: String? = nil,
-        responsePlan: String? = nil
+        responsePlan: String? = nil,
+        journalEmotionID: String? = nil,
+        journalContextID: String? = nil,
+        journalResponseID: String? = nil
     ) {
         self.habitName = habitName
         self.id = id
@@ -45,6 +51,9 @@ struct HabitEntry: Identifiable, Codable {
         self.thought = thought
         self.feeling = feeling
         self.responsePlan = responsePlan
+        self.journalEmotionID = journalEmotionID
+        self.journalContextID = journalContextID
+        self.journalResponseID = journalResponseID
     }
 
     init(
@@ -57,7 +66,10 @@ struct HabitEntry: Identifiable, Codable {
         trigger: String? = nil,
         thought: String? = nil,
         feeling: String? = nil,
-        responsePlan: String? = nil
+        responsePlan: String? = nil,
+        journalEmotionID: String? = nil,
+        journalContextID: String? = nil,
+        journalResponseID: String? = nil
     ) {
         self.init(
             habitName: habitName,
@@ -69,7 +81,10 @@ struct HabitEntry: Identifiable, Codable {
             trigger: trigger,
             thought: thought,
             feeling: feeling,
-            responsePlan: responsePlan
+            responsePlan: responsePlan,
+            journalEmotionID: journalEmotionID,
+            journalContextID: journalContextID,
+            journalResponseID: journalResponseID
         )
     }
 
@@ -85,6 +100,9 @@ struct HabitEntry: Identifiable, Codable {
         case thought
         case feeling
         case responsePlan
+        case journalEmotionID
+        case journalContextID
+        case journalResponseID
     }
 
     init(from decoder: Decoder) throws {
@@ -98,6 +116,9 @@ struct HabitEntry: Identifiable, Codable {
         thought = try container.decodeIfPresent(String.self, forKey: .thought)
         feeling = try container.decodeIfPresent(String.self, forKey: .feeling)
         responsePlan = try container.decodeIfPresent(String.self, forKey: .responsePlan)
+        journalEmotionID = try container.decodeIfPresent(String.self, forKey: .journalEmotionID)
+        journalContextID = try container.decodeIfPresent(String.self, forKey: .journalContextID)
+        journalResponseID = try container.decodeIfPresent(String.self, forKey: .journalResponseID)
 
         if let decodedTone = try container.decodeIfPresent(HabitDayTone.self, forKey: .tone) {
             tone = decodedTone
@@ -120,6 +141,9 @@ struct HabitEntry: Identifiable, Codable {
         try container.encodeIfPresent(thought, forKey: .thought)
         try container.encodeIfPresent(feeling, forKey: .feeling)
         try container.encodeIfPresent(responsePlan, forKey: .responsePlan)
+        try container.encodeIfPresent(journalEmotionID, forKey: .journalEmotionID)
+        try container.encodeIfPresent(journalContextID, forKey: .journalContextID)
+        try container.encodeIfPresent(journalResponseID, forKey: .journalResponseID)
     }
 }
 
@@ -129,6 +153,241 @@ enum HabitDayTone: String, CaseIterable, Codable, Identifiable {
     case negative
 
     var id: String { rawValue }
+}
+
+enum JournalGuidedStep: Int, CaseIterable, Equatable {
+    case emotion
+    case context
+    case response
+    case details
+}
+
+enum JournalGuidedEmotion: String, CaseIterable, Codable, Identifiable {
+    case calm
+    case hopeful
+    case anxious
+    case tired
+    case hurt
+    case frustrated
+    case unsure
+    case unclear
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .calm: return "Calm"
+        case .hopeful: return "Hopeful"
+        case .anxious: return "Anxious"
+        case .tired: return "Tired"
+        case .hurt: return "Hurt"
+        case .frustrated: return "Frustrated"
+        case .unsure: return "Unsure"
+        case .unclear: return "Unclear"
+        }
+    }
+
+    var tone: HabitDayTone {
+        switch self {
+        case .calm, .hopeful:
+            return .positive
+        case .tired, .unsure, .unclear:
+            return .neutral
+        case .anxious, .hurt, .frustrated:
+            return .negative
+        }
+    }
+}
+
+enum JournalGuidedContext: String, CaseIterable, Codable, Identifiable {
+    case workOrStudy = "work-or-study"
+    case relationships
+    case money
+    case myBody = "my-body"
+    case howISeeMyself = "how-i-see-myself"
+    case notSure = "not-sure"
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .workOrStudy: return "Work or study"
+        case .relationships: return "Relationships"
+        case .money: return "Money"
+        case .myBody: return "My body"
+        case .howISeeMyself: return "How I see myself"
+        case .notSure: return "I'm not sure"
+        }
+    }
+}
+
+enum JournalGuidedResponse: String, CaseIterable, Codable, Identifiable {
+    case keepThisMoment = "keep-this-moment"
+    case thankSomeone = "thank-someone"
+    case continueThisDirection = "continue-this-direction"
+    case makeRoomToRest = "make-room-to-rest"
+    case takeOneSmallStep = "take-one-small-step"
+    case askForSupport = "ask-for-support"
+    case separateFactsFromGuesses = "separate-facts-from-guesses"
+    case speakToMyselfLikeAFriend = "speak-to-myself-like-a-friend"
+    case justRecordIt = "just-record-it"
+
+    var id: String { rawValue }
+
+    var title: String {
+        switch self {
+        case .keepThisMoment: return "Keep this moment"
+        case .thankSomeone: return "Thank someone"
+        case .continueThisDirection: return "Continue this direction"
+        case .makeRoomToRest: return "Make room to rest"
+        case .takeOneSmallStep: return "Take one small step"
+        case .askForSupport: return "Ask for support"
+        case .separateFactsFromGuesses: return "Separate facts from guesses"
+        case .speakToMyselfLikeAFriend: return "Speak to myself like a friend"
+        case .justRecordIt: return "Just record it"
+        }
+    }
+
+    static func options(for tone: HabitDayTone) -> [JournalGuidedResponse] {
+        switch tone {
+        case .positive:
+            return [.keepThisMoment, .thankSomeone, .continueThisDirection, .justRecordIt]
+        case .neutral:
+            return [.makeRoomToRest, .takeOneSmallStep, .askForSupport, .justRecordIt]
+        case .negative:
+            return [
+                .separateFactsFromGuesses,
+                .speakToMyselfLikeAFriend,
+                .takeOneSmallStep,
+                .justRecordIt
+            ]
+        }
+    }
+}
+
+struct JournalGuidedLegacyFields: Equatable {
+    let trigger: String?
+    let thought: String?
+    let feeling: String?
+    let responsePlan: String?
+}
+
+struct JournalGuidedCheckInState: Equatable {
+    private(set) var emotion: JournalGuidedEmotion?
+    private(set) var context: JournalGuidedContext?
+    private(set) var response: JournalGuidedResponse?
+    private(set) var currentStep: JournalGuidedStep
+
+    init(
+        emotion: JournalGuidedEmotion? = nil,
+        context: JournalGuidedContext? = nil,
+        response: JournalGuidedResponse? = nil,
+        currentStep: JournalGuidedStep = .emotion
+    ) {
+        self.emotion = emotion
+        self.context = context
+        self.response = response
+        self.currentStep = currentStep
+        normalizeSelections()
+    }
+
+    init(restoring entry: HabitEntry?) {
+        emotion = entry?.journalEmotionID.flatMap(JournalGuidedEmotion.init(rawValue:))
+        context = entry?.journalContextID.flatMap(JournalGuidedContext.init(rawValue:))
+        response = entry?.journalResponseID.flatMap(JournalGuidedResponse.init(rawValue:))
+        currentStep = .emotion
+        if let entry, emotion?.tone != entry.tone {
+            emotion = nil
+            context = nil
+            response = nil
+        }
+        normalizeSelections()
+        currentStep = firstIncompleteStep
+    }
+
+    var selectedTone: HabitDayTone? {
+        emotion?.tone
+    }
+
+    var availableResponses: [JournalGuidedResponse] {
+        guard let selectedTone else { return [] }
+        return JournalGuidedResponse.options(for: selectedTone)
+    }
+
+    var canSave: Bool {
+        emotion != nil && context != nil && response != nil
+    }
+
+    mutating func selectEmotion(_ emotion: JournalGuidedEmotion) {
+        self.emotion = emotion
+        if let response, !availableResponses.contains(response) {
+            self.response = nil
+        }
+        currentStep = .context
+    }
+
+    mutating func selectContext(_ context: JournalGuidedContext) {
+        self.context = context
+        currentStep = .response
+    }
+
+    @discardableResult
+    mutating func selectResponse(_ response: JournalGuidedResponse) -> Bool {
+        guard availableResponses.contains(response) else { return false }
+        self.response = response
+        currentStep = .details
+        return true
+    }
+
+    mutating func edit(_ step: JournalGuidedStep) {
+        guard step != .details else { return }
+        currentStep = step
+    }
+
+    func legacyFields(preserving existingEntry: HabitEntry?) -> JournalGuidedLegacyFields? {
+        guard let emotion, let context, let response else { return nil }
+
+        let trigger = existingEntry?.journalContextID == context.id
+            ? existingEntry?.trigger ?? context.title
+            : context.title
+        let feeling = existingEntry?.journalEmotionID == emotion.id
+            ? existingEntry?.feeling ?? emotion.title
+            : emotion.title
+        let responsePlan = existingEntry?.journalResponseID == response.id
+            ? existingEntry?.responsePlan ?? response.title
+            : response.title
+
+        return JournalGuidedLegacyFields(
+            trigger: trigger,
+            thought: existingEntry?.thought,
+            feeling: feeling,
+            responsePlan: responsePlan
+        )
+    }
+
+    private var firstIncompleteStep: JournalGuidedStep {
+        if emotion == nil { return .emotion }
+        if context == nil { return .context }
+        if response == nil { return .response }
+        return .details
+    }
+
+    private mutating func normalizeSelections() {
+        guard emotion != nil else {
+            context = nil
+            response = nil
+            return
+        }
+
+        guard context != nil else {
+            response = nil
+            return
+        }
+
+        if let response, !availableResponses.contains(response) {
+            self.response = nil
+        }
+    }
 }
 
 // MARK: - Habit Streak
@@ -184,7 +443,7 @@ class HabitDataManager {
     private let store: HabitEntryStore
     private let statisticsCalculator: HabitStatisticsCalculator
 
-    private init(
+    init(
         store: HabitEntryStore = HabitEntryStore(),
         statisticsCalculator: HabitStatisticsCalculator = HabitStatisticsCalculator()
     ) {
@@ -201,10 +460,28 @@ class HabitDataManager {
         trigger: String? = nil,
         thought: String? = nil,
         feeling: String? = nil,
-        responsePlan: String? = nil
+        responsePlan: String? = nil,
+        journalEmotionID: String? = nil,
+        journalContextID: String? = nil,
+        journalResponseID: String? = nil
     ) -> HabitEntry {
         let calendar = Calendar.current
         let entryDate = calendar.startOfDay(for: date)
+        var entries = getAllEntries()
+        let existingEntry = entries.first { calendar.isDate($0.date, inSameDayAs: entryDate) }
+        let normalizedEmotionID = Self.normalizedOptionalText(journalEmotionID)
+        let normalizedContextID = Self.normalizedOptionalText(journalContextID)
+        let normalizedResponseID = Self.normalizedOptionalText(journalResponseID)
+        let hasIncomingGuidedSelection = [
+            normalizedEmotionID,
+            normalizedContextID,
+            normalizedResponseID
+        ].contains { $0 != nil }
+        let existingEmotionMatchesTone = existingEntry?.journalEmotionID
+            .flatMap(JournalGuidedEmotion.init(rawValue:))?.tone == tone
+        let preservedEntry = !hasIncomingGuidedSelection && existingEmotionMatchesTone
+            ? existingEntry
+            : nil
         let entry = HabitEntry(
             habitName: habitName,
             id: UUID(),
@@ -215,10 +492,11 @@ class HabitDataManager {
             trigger: Self.normalizedOptionalText(trigger),
             thought: Self.normalizedOptionalText(thought),
             feeling: Self.normalizedOptionalText(feeling),
-            responsePlan: Self.normalizedOptionalText(responsePlan)
+            responsePlan: Self.normalizedOptionalText(responsePlan),
+            journalEmotionID: normalizedEmotionID ?? preservedEntry?.journalEmotionID,
+            journalContextID: normalizedContextID ?? preservedEntry?.journalContextID,
+            journalResponseID: normalizedResponseID ?? preservedEntry?.journalResponseID
         )
-
-        var entries = getAllEntries()
 
         // Remove existing entry for the selected day if it exists.
         entries.removeAll { calendar.isDate($0.date, inSameDayAs: entryDate) }

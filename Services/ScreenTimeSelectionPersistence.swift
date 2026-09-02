@@ -66,12 +66,21 @@ struct ScreenTimeSelectionPersistence {
         defaults.set(true, forKey: MoriScreenTimeShared.featureMigrationKey)
     }
 
+    func hasCompletedBeforeFeedDedicatedSelectionMigration() -> Bool {
+        defaults.bool(forKey: MoriScreenTimeShared.beforeFeedDedicatedSelectionMigrationKey)
+    }
+
+    func markBeforeFeedDedicatedSelectionMigrationCompleted() {
+        defaults.set(true, forKey: MoriScreenTimeShared.beforeFeedDedicatedSelectionMigrationKey)
+    }
+
     func clearAll() {
         defaults.removeObject(forKey: MoriScreenTimeShared.selectionKey)
         defaults.removeObject(forKey: MoriScreenTimeShared.defaultSelectionKey)
         defaults.removeObject(forKey: MoriScreenTimeShared.defaultSelectionDisplayNamesKey)
         defaults.removeObject(forKey: MoriScreenTimeShared.featureProfilesKey)
         defaults.removeObject(forKey: MoriScreenTimeShared.featureMigrationKey)
+        defaults.removeObject(forKey: MoriScreenTimeShared.beforeFeedDedicatedSelectionMigrationKey)
         for feature in MoriScreenTimeFeature.allCases {
             defaults.removeObject(forKey: MoriScreenTimeShared.featureSelectionKeyPrefix + feature.rawValue)
         }

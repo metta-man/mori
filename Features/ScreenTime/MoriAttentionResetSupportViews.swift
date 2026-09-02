@@ -118,129 +118,170 @@ extension MoriBeforeFeedIntentReason {
         case .relax:
             return MoriL10n.display("Relax")
         case .habit:
-            return MoriL10n.display("Habit")
+            return MoriL10n.display("Just checking")
         case .other:
             return MoriL10n.display("Other")
         }
     }
 }
 
-struct MoriBeforeFeedReasonContent: View {
-    let selectedReason: MoriBeforeFeedIntentReason?
+struct MoriBeforeFeedBreathKeyContent: View {
+    let pauseStyle: MoriBeforeFeedPauseStyle
+    let title: String
+    let configuredPauseText: String
+    let guidanceText: String
+    let breathingVisualState: MoriBreathingCycleVisualState
+    let isRunning: Bool
+    let hasStarted: Bool
+    let timeText: String
+    let cueText: String
+    let guidedProgressText: String?
     let secondaryContext: String?
-    let onSelectReason: (MoriBeforeFeedIntentReason) -> Void
-    let onContinue: () -> Void
+    let onTogglePause: () -> Void
+
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    private var isPaused: Bool {
+        hasStarted && !isRunning
+    }
 
     var body: some View {
-        ScrollView(showsIndicators: false) {
-            VStack(spacing: 0) {
-                VStack(spacing: 6) {
-                    Text(MoriL10n.display("Why now?"))
-                        .font(MoriTypography.sanctuaryDisplay)
-                        .foregroundColor(MoriColors.sanctuaryInk)
-                        .multilineTextAlignment(.center)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.82)
+        GeometryReader { proxy in
+            ScrollView(showsIndicators: false) {
+                VStack(spacing: 0) {
+                    VStack(spacing: 8) {
+                        Text(MoriL10n.display("THE BREATH KEY"))
+                            .font(.system(size: 11, weight: .semibold))
+                            .tracking(1.3)
+                            .foregroundColor(MoriColors.sanctuarySage)
 
-                    Text(MoriL10n.display("Pause. Notice. Choose."))
-                        .font(MoriTheme.Typography.supporting)
-                        .foregroundColor(MoriColors.sanctuaryMuted)
-                        .multilineTextAlignment(.center)
-                }
-                .frame(maxWidth: .infinity)
+                        Text(title)
+                            .font(MoriTheme.Typography.detailTitle)
+                            .foregroundColor(MoriColors.sanctuaryInk)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
 
-                VStack(spacing: 10) {
-                    ForEach(MoriBeforeFeedIntentReason.allCases) { reason in
-                        reasonButton(reason)
+                        Text(configuredPauseText)
+                            .font(MoriTheme.Typography.supporting)
+                            .foregroundColor(MoriColors.sanctuaryMuted)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+
+                        Text(guidanceText)
+                            .font(MoriTypography.caption)
+                            .foregroundColor(MoriColors.sanctuaryMuted)
+                            .multilineTextAlignment(.center)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                    .frame(maxWidth: 340)
+                    .padding(.top, dynamicTypeSize.isAccessibilitySize ? 12 : 26)
+
+                    MoriBeforeFeedBreathKeyVisual(
+                        pauseStyle: pauseStyle,
+                        breathingVisualState: breathingVisualState,
+                        isRunning: isRunning,
+                        timeText: timeText,
+                        cueText: cueText,
+                        guidedProgressText: guidedProgressText
+                    )
+                    .frame(height: dynamicTypeSize.isAccessibilitySize ? 276 : 326)
+
+                    if isRunning || isPaused {
+                        MoriResetCompactButton(
+                            title: MoriL10n.display(isRunning ? "Pause" : "Resume"),
+                            icon: isRunning ? .pause : .play,
+                            action: onTogglePause
+                        )
+                        .accessibilityHint(
+                            MoriL10n.display(
+                                isRunning
+                                    ? "Pauses this Before Feed breath timer."
+                                    : "Continues this Before Feed breath timer from where it paused."
+                            )
+                        )
+                    }
+
+                    if let secondaryContext {
+                        Text(secondaryContext)
+                            .font(MoriTypography.caption)
+                            .foregroundColor(MoriColors.sanctuaryMuted)
+                            .multilineTextAlignment(.center)
+                            .frame(maxWidth: 330)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.top, isPaused ? 18 : 4)
+                            .accessibilityHint(MoriL10n.display("This is context about how the pause opened."))
                     }
                 }
-                .padding(.top, 28)
+                .frame(maxWidth: .infinity, alignment: .top)
+                .frame(minHeight: proxy.size.height, alignment: .top)
+                .padding(.horizontal, 26)
+                .padding(.bottom, 32)
+            }
+        }
+    }
+}
 
-                if let secondaryContext {
-                    Text(secondaryContext)
+private struct MoriBeforeFeedBreathKeyVisual: View {
+    let pauseStyle: MoriBeforeFeedPauseStyle
+    let breathingVisualState: MoriBreathingCycleVisualState
+    let isRunning: Bool
+    let timeText: String
+    let cueText: String
+    let guidedProgressText: String?
+
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+
+    var body: some View {
+        ZStack {
+            MoriBreathingInkBloomView(
+                visualState: breathingVisualState,
+                isSessionActive: isRunning && pauseStyle == .guidedBreathing,
+                animationEnabled: isRunning && pauseStyle == .guidedBreathing
+            )
+            .frame(
+                width: dynamicTypeSize.isAccessibilitySize ? 248 : 320,
+                height: dynamicTypeSize.isAccessibilitySize ? 248 : 320
+            )
+
+            VStack(spacing: 8) {
+                Text(cueText)
+                    .font(.system(size: 16, weight: .medium, design: .rounded))
+                    .foregroundColor(MoriColors.sanctuaryInkSoft.opacity(0.88))
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+
+                Text(timeText)
+                    .font(.system(size: 42, weight: .light, design: .serif))
+                    .foregroundColor(MoriColors.sanctuaryInk)
+                    .monospacedDigit()
+
+                if let guidedProgressText {
+                    Text(guidedProgressText)
                         .font(MoriTypography.caption)
                         .foregroundColor(MoriColors.sanctuaryMuted)
                         .multilineTextAlignment(.center)
-                        .frame(maxWidth: 320)
-                        .padding(.top, 18)
-                        .accessibilityHint(MoriL10n.display("This is context about how the pause opened."))
                 }
-
-                MoriResetPrimaryButton(
-                    title: MoriL10n.display("Continue"),
-                    isEnabled: selectedReason != nil,
-                    action: onContinue
-                )
-                .padding(.top, 20)
-                .accessibilityHint(
-                    selectedReason == nil
-                        ? MoriL10n.display("Choose a reason first.")
-                        : MoriL10n.display("Continues with the selected reason.")
-                )
             }
-            .frame(maxWidth: .infinity, alignment: .top)
-            .padding(.horizontal, 26)
-            .padding(.top, 24)
-            .padding(.bottom, 36)
+            .padding(.horizontal, 30)
         }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityDescription)
     }
 
-    private func reasonButton(_ reason: MoriBeforeFeedIntentReason) -> some View {
-        let isSelected = selectedReason == reason
-
-        return Button {
-            onSelectReason(reason)
-        } label: {
-            HStack(spacing: 14) {
-                Text(reason.displayTitle)
-                    .font(MoriTheme.Typography.control)
-                    .foregroundColor(MoriColors.sanctuaryInk)
-                    .multilineTextAlignment(.leading)
-
-                Spacer(minLength: 12)
-
-                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 23, weight: .regular))
-                    .foregroundColor(
-                        isSelected
-                            ? MoriColors.sanctuaryInkSoft
-                            : MoriColors.sanctuaryMuted.opacity(0.42)
-                    )
-                    .frame(width: 28, height: 28)
-                .accessibilityHidden(true)
-            }
-            .padding(.horizontal, 17)
-            .frame(maxWidth: .infinity)
-            .frame(minHeight: 56)
-            .background(
-                isSelected
-                    ? MoriColors.sanctuarySage.opacity(0.19)
-                    : MoriColors.sanctuarySurface.opacity(0.68)
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-            .overlay {
-                RoundedRectangle(cornerRadius: 18, style: .continuous)
-                    .stroke(
-                        isSelected
-                            ? MoriColors.sanctuaryInk.opacity(0.30)
-                            : MoriColors.sanctuaryLine.opacity(0.62),
-                        lineWidth: 0.8
-                    )
-            }
-            .shadow(
-                color: MoriColors.sanctuaryShadow.opacity(isSelected ? 0.20 : 0.10),
-                radius: 10,
-                x: 0,
-                y: 5
+    private var accessibilityDescription: String {
+        if let guidedProgressText {
+            return MoriL10n.string(
+                "before_feed.breath_key.guided_accessibility",
+                defaultValue: "%@. %@. %@ remaining.",
+                arguments: [guidedProgressText, cueText, timeText]
             )
         }
-        .buttonStyle(.plain)
-        .accessibilityLabel(reason.displayTitle)
-        .accessibilityValue(
-            isSelected ? MoriL10n.display("Selected") : MoriL10n.display("Not selected")
+        return MoriL10n.string(
+            "before_feed.breath_key.own_accessibility",
+            defaultValue: "Follow your own breath. %@. %@ remaining.",
+            arguments: [cueText, timeText]
         )
-        .accessibilityAddTraits(isSelected ? .isSelected : [])
-        .accessibilityHint(MoriL10n.display("Selects this reason for opening the feed."))
     }
 }
 
@@ -274,74 +315,98 @@ extension MoriBeforeFeedReturnAnchor {
     }
 }
 
-struct MoriBeforeFeedPlanContent: View {
-    let selectedReason: MoriBeforeFeedIntentReason
+struct MoriBeforeFeedIntentContent: View {
+    let selectedReason: MoriBeforeFeedIntentReason?
     let enoughChoices: [MoriBeforeFeedEnoughChoice]
     let selectedEnoughChoice: MoriBeforeFeedEnoughChoice?
     let selectedReturnAnchor: MoriBeforeFeedReturnAnchor?
     let showsReturnAnchors: Bool
-    let beginTitle: String
+    let openActionTitle: String
     let secondaryContext: String?
+    let onSelectReason: (MoriBeforeFeedIntentReason) -> Void
     let onSelectEnoughChoice: (MoriBeforeFeedEnoughChoice) -> Void
     let onSelectReturnAnchor: (MoriBeforeFeedReturnAnchor) -> Void
-    let onBeginPause: () -> Void
-    let onBack: () -> Void
+    let onOpen: () -> Void
+    let onLeaveClosed: () -> Void
 
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private let reasonColumns = [
+        GridItem(.adaptive(minimum: 96), spacing: 9, alignment: .leading)
+    ]
+    private let enoughColumns = [
+        GridItem(.adaptive(minimum: 82), spacing: 9, alignment: .leading)
+    ]
     private let anchorColumns = [
         GridItem(.adaptive(minimum: 92), spacing: 9, alignment: .leading)
     ]
 
+    private var canOpen: Bool {
+        selectedReason != nil && selectedEnoughChoice != nil
+    }
+
     var body: some View {
-        GeometryReader { proxy in
+        VStack(spacing: 0) {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
-                    MoriBeforeFeedBackAction(action: onBack)
-
-                    VStack(spacing: 7) {
-                        Text(selectedReason.displayTitle.uppercased())
+                    VStack(spacing: 8) {
+                        Text(MoriL10n.display("BREATH COMPLETE"))
                             .font(.system(size: 11, weight: .semibold))
-                            .tracking(1.1)
+                            .tracking(1.3)
                             .foregroundColor(MoriColors.sanctuarySage)
 
-                        Text(MoriL10n.display("What would be enough?"))
-                            .font(MoriTypography.sanctuaryDisplay)
-                            .foregroundColor(MoriColors.sanctuaryInk)
-                            .multilineTextAlignment(.center)
-                            .fixedSize(horizontal: false, vertical: true)
+                        if selectedReason == nil {
+                            Text(MoriL10n.display("Choose with intention"))
+                                .font(.system(size: 31, weight: .regular, design: .serif))
+                                .foregroundColor(MoriColors.sanctuaryInk)
+                                .multilineTextAlignment(.center)
+                                .fixedSize(horizontal: false, vertical: true)
 
-                        Text(MoriL10n.display("Choose a small boundary for this opening."))
-                            .font(MoriTheme.Typography.supporting)
-                            .foregroundColor(MoriColors.sanctuaryMuted)
-                            .multilineTextAlignment(.center)
-                            .fixedSize(horizontal: false, vertical: true)
-                    }
-                    .padding(.top, 5)
-
-                    VStack(spacing: 9) {
-                        ForEach(enoughChoices) { choice in
-                            choiceButton(choice)
+                            Text(MoriL10n.display("Name the pull, then set a small boundary."))
+                                .font(MoriTheme.Typography.supporting)
+                                .foregroundColor(MoriColors.sanctuaryMuted)
+                                .multilineTextAlignment(.center)
+                                .fixedSize(horizontal: false, vertical: true)
                         }
                     }
-                    .padding(.top, 23)
+                    .padding(.top, 10)
 
-                    if selectedEnoughChoice != nil, showsReturnAnchors {
-                        returnAnchorContent
-                            .padding(.top, 24)
-                            .transition(.opacity)
+                    VStack(alignment: .leading, spacing: 12) {
+                        Text(MoriL10n.display("Why now?"))
+                            .font(.system(size: 18, weight: .semibold, design: .serif))
+                            .foregroundColor(MoriColors.sanctuaryInk)
+
+                        LazyVGrid(columns: reasonColumns, alignment: .leading, spacing: 9) {
+                            ForEach(MoriBeforeFeedIntentReason.allCases) { reason in
+                                reasonButton(reason)
+                            }
+                        }
                     }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.top, 25)
 
-                    MoriResetPrimaryButton(
-                        title: beginTitle,
-                        icon: .play,
-                        isEnabled: selectedEnoughChoice != nil,
-                        action: onBeginPause
-                    )
-                    .padding(.top, 26)
-                    .accessibilityHint(
-                        selectedEnoughChoice == nil
-                            ? MoriL10n.display("Choose what would be enough first.")
-                            : MoriL10n.display("Begins the configured pause. Feed access remains closed until it is complete.")
-                    )
+                    if selectedReason != nil {
+                        VStack(alignment: .leading, spacing: 12) {
+                            Text(MoriL10n.display("What would be enough?"))
+                                .font(.system(size: 18, weight: .semibold, design: .serif))
+                                .foregroundColor(MoriColors.sanctuaryInk)
+
+                            LazyVGrid(columns: enoughColumns, alignment: .leading, spacing: 9) {
+                                ForEach(enoughChoices) { choice in
+                                    choiceButton(choice)
+                                }
+                            }
+                        }
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.top, 24)
+                        .transition(.opacity.combined(with: .move(edge: .top)))
+
+                        if selectedEnoughChoice != nil, showsReturnAnchors {
+                            returnAnchorContent
+                                .padding(.top, 24)
+                                .transition(.opacity.combined(with: .move(edge: .top)))
+                        }
+                    }
 
                     if let secondaryContext {
                         Text(secondaryContext)
@@ -349,15 +414,103 @@ struct MoriBeforeFeedPlanContent: View {
                             .foregroundColor(MoriColors.sanctuaryMuted)
                             .multilineTextAlignment(.center)
                             .frame(maxWidth: 330)
-                            .padding(.top, 16)
+                            .fixedSize(horizontal: false, vertical: true)
+                            .padding(.top, 22)
                     }
                 }
                 .frame(maxWidth: .infinity, alignment: .top)
-                .frame(minHeight: proxy.size.height, alignment: .top)
                 .padding(.horizontal, 26)
-                .padding(.bottom, 34)
+                .padding(.bottom, 24)
             }
+
+            actionFooter
         }
+        .animation(reduceMotion ? nil : MoriV2Motion.disclosure, value: selectedReason)
+        .animation(reduceMotion ? nil : MoriV2Motion.disclosure, value: selectedEnoughChoice)
+    }
+
+    private var actionFooter: some View {
+        VStack(spacing: 4) {
+            if canOpen {
+                MoriResetPrimaryButton(
+                    title: openActionTitle,
+                    action: onOpen
+                )
+                .accessibilityHint(
+                    MoriL10n.display("Opens the selected feed apps for the chosen window. Switch back yourself.")
+                )
+                .transition(.opacity.combined(with: .move(edge: .bottom)))
+            }
+
+            Button(action: onLeaveClosed) {
+                Text(MoriL10n.display("Keep feed closed"))
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundColor(MoriColors.sanctuaryMuted)
+                    .frame(maxWidth: 320, minHeight: 44)
+            }
+            .buttonStyle(.plain)
+            .accessibilityHint(MoriL10n.display("Closes Before Feed without opening a feed window."))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.horizontal, 16)
+        .padding(.top, canOpen ? 15 : 6)
+        .padding(.bottom, canOpen ? 11 : 6)
+        .background(
+            MoriColors.sanctuarySurface.opacity(0.91)
+        )
+        .clipShape(RoundedRectangle(cornerRadius: 25, style: .continuous))
+        .overlay {
+            RoundedRectangle(cornerRadius: 25, style: .continuous)
+                .stroke(MoriColors.sanctuaryHairline, lineWidth: 0.8)
+        }
+        .shadow(color: MoriColors.sanctuaryShadow.opacity(0.22), radius: 16, x: 0, y: 8)
+        .padding(.horizontal, 14)
+        .padding(.bottom, 10)
+    }
+
+    private func reasonButton(_ reason: MoriBeforeFeedIntentReason) -> some View {
+        let isSelected = selectedReason == reason
+
+        return Button {
+            onSelectReason(reason)
+        } label: {
+            HStack(spacing: 5) {
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 10, weight: .bold))
+                        .accessibilityHidden(true)
+                }
+
+                Text(reason.displayTitle)
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.82)
+            }
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(MoriColors.sanctuaryInkSoft)
+                .padding(.horizontal, 9)
+                .frame(maxWidth: .infinity, minHeight: 46)
+                .background(
+                    isSelected
+                        ? MoriColors.sanctuarySage.opacity(0.22)
+                        : MoriColors.sanctuarySurface.opacity(0.68)
+                )
+                .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
+                .overlay {
+                    RoundedRectangle(cornerRadius: 15, style: .continuous)
+                        .stroke(
+                            isSelected
+                                ? MoriColors.sanctuaryInk.opacity(0.32)
+                                : MoriColors.sanctuaryHairline,
+                            lineWidth: 0.8
+                        )
+                }
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(reason.displayTitle)
+        .accessibilityValue(isSelected ? MoriL10n.display("Selected") : MoriL10n.display("Not selected"))
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .accessibilityHint(MoriL10n.display("Selects this reason for opening the feed."))
     }
 
     private func choiceButton(_ choice: MoriBeforeFeedEnoughChoice) -> some View {
@@ -366,35 +519,31 @@ struct MoriBeforeFeedPlanContent: View {
         return Button {
             onSelectEnoughChoice(choice)
         } label: {
-            HStack(spacing: 14) {
+            HStack(spacing: 5) {
+                if isSelected {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 10, weight: .bold))
+                        .accessibilityHidden(true)
+                }
+
                 Text(choice.displayTitle)
-                    .font(MoriTheme.Typography.control)
-                    .foregroundColor(MoriColors.sanctuaryInk)
-                    .multilineTextAlignment(.leading)
-
-                Spacer(minLength: 12)
-
-                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.system(size: 22, weight: .regular))
-                    .foregroundColor(
-                        isSelected
-                            ? MoriColors.sanctuaryInkSoft
-                            : MoriColors.sanctuaryMuted.opacity(0.42)
-                    )
-                    .frame(width: 28, height: 28)
-                    .accessibilityHidden(true)
+                    .font(.system(size: 14, weight: .semibold))
+                    .multilineTextAlignment(.center)
+                    .lineLimit(2)
+                    .minimumScaleFactor(0.72)
             }
-            .padding(.horizontal, 17)
+            .foregroundColor(MoriColors.sanctuaryInkSoft)
+            .padding(.horizontal, 8)
             .frame(maxWidth: .infinity)
-            .frame(minHeight: 54)
+            .frame(minHeight: 50)
             .background(
                 isSelected
                     ? MoriColors.sanctuarySage.opacity(0.19)
                     : MoriColors.sanctuarySurface.opacity(0.68)
             )
-            .clipShape(RoundedRectangle(cornerRadius: 17, style: .continuous))
+            .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
             .overlay {
-                RoundedRectangle(cornerRadius: 17, style: .continuous)
+                RoundedRectangle(cornerRadius: 15, style: .continuous)
                     .stroke(
                         isSelected
                             ? MoriColors.sanctuaryInk.opacity(0.30)
@@ -479,6 +628,7 @@ struct MoriBeforeFeedPlanContent: View {
     }
 }
 
+@available(*, deprecated, message: "Before Feed now uses the one-breath key before its intent surface.")
 struct MoriBeforeFeedPauseContent: View {
     let pauseStyle: MoriBeforeFeedPauseStyle
     let breathingVisualState: MoriBreathingCycleVisualState
@@ -550,6 +700,7 @@ struct MoriBeforeFeedPauseContent: View {
     }
 }
 
+@available(*, deprecated, message: "Before Feed actions now live on the single intent surface.")
 struct MoriBeforeFeedCompletionContent: View {
     let selectedReason: MoriBeforeFeedIntentReason
     let selectedEnoughChoice: MoriBeforeFeedEnoughChoice

@@ -253,6 +253,7 @@ enum MoriScreenTimeShared {
     static let featureSelectionKeyPrefix = "mori_screen_time_feature_selection_"
     static let featureProfilesKey = "mori_screen_time_feature_profiles"
     static let featureMigrationKey = "mori_screen_time_feature_profiles_migrated_v1"
+    static let beforeFeedDedicatedSelectionMigrationKey = "mori_before_feed_dedicated_selection_migrated_v1"
     static let signalsKey = "mori_screen_time_signals"
     static let monitorHealthEventsKey = "mori_screen_time_monitor_health_events"
     static let attemptsKey = "mori_screen_time_attempts"
@@ -281,6 +282,9 @@ enum MoriScreenTimeShared {
     static let beforeFeedPauseStyleKey = "mori_before_feed_pause_style_v1"
     static let beforeFeedGuidedCycleCountKey = "mori_before_feed_guided_cycle_count"
     static let beforeFeedPausePreferencesMigrationKey = "mori_before_feed_pause_preferences_migrated_v1"
+    static let beforeFeedWindowEndReminderEnabledKey = "mori_before_feed_window_end_reminder_enabled"
+    static let defaultBeforeFeedWindowEndReminderEnabled = false
+    static let beforeFeedWindowEndNotificationIdentifier = "mori_before_feed_window_complete"
     static let beforeFeedBreathingNoneID = "none"
     static let defaultBeforeFeedBreathingTechniqueID = "Long Exhale (4-6)"
     static let currentShieldFeatureKey = "mori_screen_time_current_shield_feature"
