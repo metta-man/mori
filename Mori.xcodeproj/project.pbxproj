@@ -20,6 +20,7 @@
 		075372543AD00FFF1D041842 /* PomodoroPracticeModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11C584EACE357103B8C1B6CE /* PomodoroPracticeModels.swift */; };
 		08A445A6FF273FECA607E5A2 /* MoriLLMProviders.swift in Sources */ = {isa = PBXBuildFile; fileRef = B442430C6042F6E1012A47B6 /* MoriLLMProviders.swift */; };
 		09373174022FE7D995DC6145 /* MoriRecoveryPreferencesStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = F5C67CDF6F27A81D612E98F1 /* MoriRecoveryPreferencesStore.swift */; };
+		09F8152ABA5D0429A151A3E9 /* MoriLandscapeMotionTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 58D92871BF988C20D0842BAC /* MoriLandscapeMotionTests.swift */; };
 		09FAA8B86A4730AB8B7920AA /* Singing Bowl A.wav in Resources */ = {isa = PBXBuildFile; fileRef = CB794F0FE48862A503A7A370 /* Singing Bowl A.wav */; };
 		0A428FFC8DFF9F6AA4236EB3 /* MoriWidgetSnapshot.swift in Sources */ = {isa = PBXBuildFile; fileRef = 09CE9366BEF6089FBC6E4DFB /* MoriWidgetSnapshot.swift */; };
 		0A689AE69C244EEFB2DCA659 /* BotanicalBackdropJournal.png in Resources */ = {isa = PBXBuildFile; fileRef = 97351BA1BFB7520F21A8A0E9 /* BotanicalBackdropJournal.png */; };
@@ -43,6 +44,7 @@
 		1826245D26D373493C61A1E7 /* MoriPhotoPickerImportModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 31D45323BCA23B5B538B3827 /* MoriPhotoPickerImportModifier.swift */; };
 		18C83F1D398BDC44CC51A29E /* MoriScreenTimeStores.swift in Sources */ = {isa = PBXBuildFile; fileRef = A93377C0D556E5B4AADB8674 /* MoriScreenTimeStores.swift */; };
 		1A6EFE03758615FBB3C26407 /* MoriWidgets.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 1994BC59159554AB67F72B49 /* MoriWidgets.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		1C2D0B9A6C530A4BD8516FD7 /* MoriLivingLandscape.swift in Sources */ = {isa = PBXBuildFile; fileRef = B7BB08E7FF1F2D3CBEC65285 /* MoriLivingLandscape.swift */; };
 		1C3A25DAD81DF24095363A5E /* MoriPracticeVerificationSheet.swift in Sources */ = {isa = PBXBuildFile; fileRef = A14BA8766DC746AAD1B4B1DF /* MoriPracticeVerificationSheet.swift */; };
 		1D4D5720934B25B2BFCD2364 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 6F0478B91867768A095A6A75 /* Localizable.strings */; };
 		1DBB84687A6EDC1E12C9B543 /* MoriPulseCardModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 86EA413BB560A55C35460F48 /* MoriPulseCardModels.swift */; };
@@ -148,6 +150,7 @@
 		53842815A8EFF0C8C3EB0011 /* SettleTimerFeedbackCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A2AC733D7FD00004F28DE11 /* SettleTimerFeedbackCoordinator.swift */; };
 		538CFD410CD7167FECFC18AD /* MindfulnessBellScheduler.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8CC94B7F6D6816FEF0C30E67 /* MindfulnessBellScheduler.swift */; };
 		544C7450E3B9B053DE4CE47D /* ClarityPulseView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 365CFE74803AEE14BD132D53 /* ClarityPulseView.swift */; };
+		5464E4E1346EE47A3404D4C2 /* MoriLandscapeUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = A53DC1ABD1FECBE25DA84372 /* MoriLandscapeUITests.swift */; };
 		5494AD2FD954FC3A0DAB4AB9 /* SettleTimerSupportViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0DBADF42B57F8638B96363C3 /* SettleTimerSupportViews.swift */; };
 		54FC3C5DCDC2230CB542989F /* MoriRecoveryPulseCard.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24C6B0621278D3160925294C /* MoriRecoveryPulseCard.swift */; };
 		5560E735FCD386719B541DA9 /* MoriRoutingTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9B4DCD41E981E9C7E30536F7 /* MoriRoutingTests.swift */; };
@@ -592,6 +595,7 @@
 		552B91BF3C033DFBF9B831A4 /* MoriBreathingSessionLifecycleModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriBreathingSessionLifecycleModifier.swift; sourceTree = "<group>"; };
 		55DA59D2C36E5038BE94BF38 /* Default.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = Default.mp3; sourceTree = "<group>"; };
 		588692147DFCF28293C335F8 /* MoriAppSheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriAppSheets.swift; sourceTree = "<group>"; };
+		58D92871BF988C20D0842BAC /* MoriLandscapeMotionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriLandscapeMotionTests.swift; sourceTree = "<group>"; };
 		593DC159334A4C2C1CFB1F0B /* MoriBreathingSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriBreathingSessionView.swift; sourceTree = "<group>"; };
 		5ABE3A14D846C166E453F219 /* MoriNotificationRouteStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriNotificationRouteStore.swift; sourceTree = "<group>"; };
 		5C0D60400F1A70BDB633FDDF /* MoriGeneratedArt.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriGeneratedArt.swift; sourceTree = "<group>"; };
@@ -677,6 +681,7 @@
 		A14BA8766DC746AAD1B4B1DF /* MoriPracticeVerificationSheet.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriPracticeVerificationSheet.swift; sourceTree = "<group>"; };
 		A38E22818BF223B8B7698B28 /* Singing Bowl E_2.wav */ = {isa = PBXFileReference; lastKnownFileType = audio.wav; path = "Singing Bowl E_2.wav"; sourceTree = "<group>"; };
 		A446A429BAB946056F53AD01 /* zh-Hant */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = "zh-Hant"; path = "zh-Hant.lproj/InfoPlist.strings"; sourceTree = "<group>"; };
+		A53DC1ABD1FECBE25DA84372 /* MoriLandscapeUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriLandscapeUITests.swift; sourceTree = "<group>"; };
 		A59851F79E01EF9F8A3C5C70 /* WeekArchiveDetailViews.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WeekArchiveDetailViews.swift; sourceTree = "<group>"; };
 		A747E4E19C4CF1EEF9A299C3 /* BeforeFeedGate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeforeFeedGate.swift; sourceTree = "<group>"; };
 		A751A7DA92618148E21D59DF /* MoriShieldActionExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriShieldActionExtension.swift; sourceTree = "<group>"; };
@@ -704,6 +709,7 @@
 		B52F275CDC73EF58846EA0EC /* HabitDataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HabitDataManager.swift; sourceTree = "<group>"; };
 		B60CA46B944982651BC758FA /* MoriWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriWatchApp.swift; sourceTree = "<group>"; };
 		B6BC814A7037F3D171B02B1E /* BeforeFeedGateStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeforeFeedGateStore.swift; sourceTree = "<group>"; };
+		B7BB08E7FF1F2D3CBEC65285 /* MoriLivingLandscape.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriLivingLandscape.swift; sourceTree = "<group>"; };
 		B84B60403050DBD08D10DFDF /* ScreenTimeSelectionStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenTimeSelectionStore.swift; sourceTree = "<group>"; };
 		B967F722CF198D1692AD3BEC /* PomodoroPracticeCompletionCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PomodoroPracticeCompletionCoordinator.swift; sourceTree = "<group>"; };
 		BA4541636A7F09917BE7C68A /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
@@ -944,6 +950,7 @@
 				A06513FD2CCA024E086FBD85 /* MoriBotanicalBackdrops.swift */,
 				3DC26513C06171D04EAF7994 /* MoriComponents.swift */,
 				F2A439F1A1AD419A6D10525B /* MoriDesignTokens.swift */,
+				B7BB08E7FF1F2D3CBEC65285 /* MoriLivingLandscape.swift */,
 				7A72EF27DC4F875A149EA80E /* MoriPaperBackground.swift */,
 				7F772F61156362DB81571F9D /* MoriSanctuaryBoxBackground.swift */,
 				18D75EAC6E3AD403504A630E /* MoriSanctuaryComponents.swift */,
@@ -1115,6 +1122,7 @@
 				2985994DB849C362B812A57A /* AnalyticsConsentTests.swift */,
 				DB7DE4E397F716B5938C6D53 /* BeforeFeedWindowEndNotificationTests.swift */,
 				E298FD12C5D93D1847A6D9EA /* MoriCallContinuityTests.swift */,
+				58D92871BF988C20D0842BAC /* MoriLandscapeMotionTests.swift */,
 				9B4DCD41E981E9C7E30536F7 /* MoriRoutingTests.swift */,
 			);
 			name = MoriTests;
@@ -1182,6 +1190,7 @@
 		A7A07F8541E62281BD4B794D /* MoriUITests */ = {
 			isa = PBXGroup;
 			children = (
+				A53DC1ABD1FECBE25DA84372 /* MoriLandscapeUITests.swift */,
 				F50A5C6833F5961BA832B90E /* MoriRecoveryUITests.swift */,
 			);
 			name = MoriUITests;
@@ -1751,6 +1760,7 @@
 				4234A98FF5CFE79571E3F580 /* AnalyticsConsentTests.swift in Sources */,
 				4634DE7FFB23DCF4299AB60C /* BeforeFeedWindowEndNotificationTests.swift in Sources */,
 				3369E9E2A7AF4D61179AD361 /* MoriCallContinuityTests.swift in Sources */,
+				09F8152ABA5D0429A151A3E9 /* MoriLandscapeMotionTests.swift in Sources */,
 				5560E735FCD386719B541DA9 /* MoriRoutingTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1759,6 +1769,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				5464E4E1346EE47A3404D4C2 /* MoriLandscapeUITests.swift in Sources */,
 				8C07F03E29C7F07E31CF2EE6 /* MoriRecoveryUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1872,6 +1883,7 @@
 				256A58571C79102CA07F2E86 /* MoriIdleTimerController.swift in Sources */,
 				08A445A6FF273FECA607E5A2 /* MoriLLMProviders.swift in Sources */,
 				B98FD7C7A5251B834D077C1D /* MoriLLMService.swift in Sources */,
+				1C2D0B9A6C530A4BD8516FD7 /* MoriLivingLandscape.swift in Sources */,
 				41DCB61E039768D58673425E /* MoriLocalization.swift in Sources */,
 				C3AADFE75EEE616AC0638C22 /* MoriMorningGate.swift in Sources */,
 				3137131AE0C9E7CC88E50AAF /* MoriNotificationRouteStore.swift in Sources */,

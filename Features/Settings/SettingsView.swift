@@ -45,7 +45,7 @@ struct SettingsView: View {
                 SettingsLinkSection(title: "Your Mori") {
                     NavigationLink(value: SettingsRoute.archive) {
                         SettingsCompactLink(
-                            title: "Week Archive",
+                            title: "Life Grid",
                             subtitle: "Start date and archive range.",
                             icon: .roots
                         )

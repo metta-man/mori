@@ -855,25 +855,6 @@ private struct MoriAttentionResetSheetBackground: View {
     let variant: MoriBotanicalScreenBackdrop.Variant
 
     var body: some View {
-        GeometryReader { proxy in
-            ZStack(alignment: .bottom) {
-                MoriPaperBackground(variant: variant) {
-                    Color.clear
-                }
-
-                MoriGeneratedArtImage(art: .breathLandscapeWash, contentMode: .fill)
-                    .frame(
-                        width: proxy.size.width,
-                        height: max(420, proxy.size.height * 0.58),
-                        alignment: .bottom
-                    )
-                    .clipped()
-                    .opacity(0.50)
-                    .blendMode(.multiply)
-            }
-            .frame(width: proxy.size.width, height: proxy.size.height)
-        }
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
+        MoriLivingPageBackground(mood: .reading, motionEnabled: false)
     }
 }

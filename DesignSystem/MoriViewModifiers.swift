@@ -10,10 +10,10 @@ struct MoriMainTabBarHiddenPreferenceKey: PreferenceKey {
 }
 
 enum MoriMainTabBarMetrics {
-    static let barHeight: CGFloat = 74
+    static let barHeight: CGFloat = 60
     static let maximumBarWidth: CGFloat = 520
     static let horizontalMargin: CGFloat = 18
-    static let cornerRadius: CGFloat = 32
+    static let cornerRadius: CGFloat = 22
     static let floatingBottomSpacing: CGFloat = 16
     static let topClearance: CGFloat = 14
     static let reservedBottomInset: CGFloat = barHeight + floatingBottomSpacing + topClearance

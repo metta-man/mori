@@ -73,7 +73,7 @@ Bright blue, orange CTAs, neon, synthetic gradients, and decorative frosted glas
 
 - Screens enter with a slow opacity change and no bounce.
 - Buttons expand by roughly 1–2% while pressed.
-- Ambient watercolor may drift by no more than a few points over 20+ seconds.
+- The living landscape uses a fixed camera and trunk, with tiny independent leaf, grass and water movement. No whole-image drift. Environmental motion stops in Low Power Mode, inactive scenes, covered roots and offscreen artwork. Reading and utility surfaces remain still.
 - The breathing image changes scale slowly and continuously.
 - Motion never delays an action and never carries essential meaning.
 - Reduce Motion removes parallax, repeated scaling, camera movement, and ambient drift; static art and short fades remain.
@@ -85,6 +85,8 @@ Bright blue, orange CTAs, neon, synthetic gradients, and decorative frosted glas
 - One dominant next action.
 - One primary CTA.
 - App Limit may appear only as a quiet status line.
+- Keep breathing configuration behind the App Limits link. Quiet Minutes is a
+  compact disclosure, with Longest Quiet inside rather than a second large metric.
 - Intent Count and Quiet Minutes do not compete with the next action.
 - No grid, ring, chart, quick-action cluster, or recommendation carousel.
 
@@ -123,6 +125,8 @@ If the person intentionally ends early, report only the truthful elapsed whole m
 ### Log
 
 - Pause: one closest feeling or state, with no preselection.
+- Start with four feelings and a named Other feelings disclosure. Preserve all
+  existing emotion values and surface a saved additional feeling while editing.
 - Notice: one broad context, without requiring typing.
 - Choose: one gentle response, always including `Just record it`.
 - One optional sentence, disclosed only when requested.

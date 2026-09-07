@@ -7,6 +7,54 @@
 
 ---
 
+## Quiet hierarchy refinement — 2026-09-07
+
+The founder approved the follow-up simplicity review. Keep the living meadow
+and all existing routes, but reduce the decisions visible on the three roots:
+
+- Today keeps one reset action and one App Limits status link; detailed breathing
+  parameters remain in App Limits. Quiet Minutes is a compact disclosure with
+  Longest Quiet inside. Explicit kept-closed feedback remains truthful.
+- Focus entry labels describe intent: Focus on one thing, Sit quietly, and Only
+  essential apps. They open the existing Deep Session, Quiet Mode and Essential
+  Mode flows; mode identifiers, timers and quick-start semantics are unchanged.
+- Today, Focus and Log share the plain 46pt settings control. The three-tab dock
+  has less height, smaller icons and a softer shadow, retaining labels and hit areas.
+- Log initially presents Calm, Anxious, Tired and Hard to name. Other feelings
+  reveals Hopeful, Hurt, Frustrated and Unsure. Hard to name displays the existing
+  `unclear` value; no persisted value or mood mapping changes. Existing additional
+  selections remain visible when editing.
+
+See `docs/quality/QUIET_HIERARCHY_REFINEMENT.md` for verification.
+
+## Living landscape redesign — 2026-09-05
+
+The founder approved the implementation plan for a living watercolor meadow,
+with a fixed tree-and-pond viewpoint and the existing Today / Focus / Log tabs.
+For the iPhone core flows in this task, that plan supersedes the older exact
+card composition and static forest backgrounds below. The original reference
+remains the source for typography, paper surfaces, restraint, and existing flows.
+
+- New art reference: `mori-living-landscape-reference.png` (generated implementation
+  reference; final founder visual review is still separate from engineering QA).
+- Today: a visible landscape above one reset action, then a quiet App Limits
+  summary, truthful minutes and named secondary destinations.
+- Focus: three existing modes, with an illustrated primary mode and quieter
+  secondary modes. Preserve all Focus support destinations.
+- Active sessions: plain timer, local natural movement, pause/resume/end and
+  protection summary. Options open on demand; no progress ring.
+- Log and Life Grid: paper-led reading surfaces, still botanical edges, guided
+  check-in and all historical data intact.
+- Settings and recovery/lock flows: still paper surfaces with existing controls.
+- Motion is local to leaf clusters, grass and pond, never the camera or trunk.
+  Stop it for Reduce Motion, Low Power Mode, inactive scenes, covered roots and
+  offscreen illustrations. Do not animate text or derive session timing from art.
+- Onboarding, widgets, watchOS and web are outside this redesign.
+
+See `docs/quality/LIVING_LANDSCAPE_REDESIGN.md` for scope and validation evidence.
+
+---
+
 ## 1. Product Definition
 
 Mori is a calm digital-wellbeing app that helps users interrupt automatic phone use, protect focused time, and keep a light record of their days.

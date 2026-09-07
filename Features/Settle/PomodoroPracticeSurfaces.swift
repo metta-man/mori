@@ -30,29 +30,7 @@ struct PomodoroPracticeSetupSurface: View {
 
     var body: some View {
         ZStack {
-            MoriColors.sanctuaryPaper
-                .ignoresSafeArea()
-
-            MoriBotanicalScreenBackdrop(variant: .focus)
-                .opacity(0.20)
-                .ignoresSafeArea()
-
-            Image("MoriActiveDeepSessionValley")
-                .resizable()
-                .scaledToFill()
-                .ignoresSafeArea()
-                .opacity(0.44)
-
-            LinearGradient(
-                colors: [
-                    MoriColors.sanctuaryPaper.opacity(0.96),
-                    MoriColors.sanctuaryPaper.opacity(0.42),
-                    MoriColors.sanctuaryPaper.opacity(0.78)
-                ],
-                startPoint: .top,
-                endPoint: .bottom
-            )
-            .ignoresSafeArea()
+            MoriLivingPageBackground().ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 18) {
@@ -238,13 +216,7 @@ struct MoriDeepSessionCompletionSurface: View {
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            MoriColors.sanctuaryPaper
-                .ignoresSafeArea()
-
-            MoriBotanicalScreenBackdrop(variant: .focus)
-                .opacity(0.52)
-                .ignoresSafeArea()
-                .accessibilityHidden(true)
+            MoriLivingPageBackground(mood: .meadow).ignoresSafeArea()
 
             VStack(spacing: 18) {
                 Spacer(minLength: 80)

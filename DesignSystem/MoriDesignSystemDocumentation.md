@@ -226,3 +226,27 @@ bash scripts/check_redesign_release_readiness.sh
 ```
 
 Use the focused audit commands in `MORI_REDESIGN_RELEASE_AUDIT.md` for the surfaces changed.
+
+## Living landscape (iPhone core flows)
+
+`MoriLivingLandscape(mood:motionEnabled:)` renders the registered 3:2 meadow
+layers with local crown/grass/water animation. Use `.meadow` for Today and Deep
+Session, `.waterside` for Quiet Mode, `.reading` for still surfaces. It fills and
+clips without changing the art's aspect ratio. Decorative art has no hit targets
+or accessibility content. Keep readable content outside the timeline.
+
+`MoriLivingPageBackground` places a still version at the lower paper edge.
+`MoriPaperBackground` uses it for core flows, retaining the old onboarding and
+no-art variants. `moriLandscapeMotionAllowed` suppresses root animations when a
+sheet or pushed destination covers them. Reduce Motion, low power, scene phase
+and viewport visibility apply independently of the caller's preference.
+
+The generated assets are app-only under `DesignSystem/MoriBackgrounds.xcassets`;
+no watch/widget targets gain these decoded textures.
+
+### Quiet hierarchy refinement (2026-09-07)
+
+`MoriModeCard.titleWidth` optionally bounds a longer intent title within the
+artwork's text clearance. It yields to full width at accessibility text sizes.
+Root screens use `MoriV2SettingsButton(style: .plain)` consistently.
+`MoriMainTabBarMetrics` now reserves the reduced 60pt dock and its spacing.

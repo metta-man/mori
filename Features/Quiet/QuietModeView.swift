@@ -31,12 +31,7 @@ struct QuietModeView: View {
 
     var body: some View {
         ZStack {
-            MoriColors.sanctuaryPaper
-                .ignoresSafeArea()
-
-            MoriBotanicalScreenBackdrop(variant: .practice)
-                .opacity(0.28)
-                .ignoresSafeArea()
+            MoriLivingPageBackground(showsLandscape: false).ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 22) {
@@ -491,12 +486,7 @@ struct EssentialModeView: View {
 
     var body: some View {
         ZStack {
-            MoriColors.sanctuaryPaper
-                .ignoresSafeArea()
-
-            MoriBotanicalScreenBackdrop(variant: .focus)
-                .opacity(activeSession == nil ? 0.20 : 0.42)
-                .ignoresSafeArea()
+            MoriLivingPageBackground(showsLandscape: didComplete).ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 22) {
@@ -617,13 +607,8 @@ struct EssentialModeView: View {
 
     private var essentialLandscape: some View {
         ZStack(alignment: .bottomLeading) {
-            Image("MoriActiveDeepSessionValley")
-                .resizable()
-                .scaledToFill()
+            MoriLivingLandscape(mood: .reading, motionEnabled: false)
                 .frame(height: 205)
-                .clipped()
-                .saturation(0.72)
-                .brightness(0.06)
 
             LinearGradient(
                 colors: [MoriV2Palette.raisedPaper.opacity(0.10), MoriV2Palette.raisedPaper.opacity(0.78)],
@@ -769,13 +754,8 @@ struct EssentialModeView: View {
             .multilineTextAlignment(.center)
 
             ZStack(alignment: .bottom) {
-                Image("MoriActiveDeepSessionValley")
-                    .resizable()
-                    .scaledToFill()
+                MoriLivingLandscape(mood: .meadow)
                     .frame(height: 390)
-                    .clipped()
-                    .saturation(0.70)
-                    .brightness(0.04)
 
                 LinearGradient(
                     colors: [.clear, MoriColors.sanctuaryPaper.opacity(0.88)],

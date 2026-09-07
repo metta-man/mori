@@ -25,39 +25,11 @@ struct QuietTimerCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             ZStack {
-                Image("MoriDeepSessionForest")
-                    .resizable()
-                    .scaledToFill()
-                    .frame(height: 315)
-                    .clipped()
-                    .scaleEffect(1.16)
-                    .offset(y: -34)
-                    .saturation(0.66)
-                    .brightness(0.09)
-                    .opacity(0.82)
-
-                LinearGradient(
-                    colors: [
-                        MoriV2Palette.raisedPaper.opacity(0.20),
-                        MoriV2Palette.raisedPaper.opacity(0.56),
-                        MoriV2Palette.raisedPaper.opacity(0.86)
-                    ],
-                    startPoint: .top,
-                    endPoint: .bottom
-                )
-
-                Circle()
-                    .stroke(MoriV2Palette.forestInk.opacity(0.12), lineWidth: 3)
-                    .frame(width: 190, height: 190)
-
-                Circle()
-                    .trim(from: 0, to: max(0.018, timerProgress))
-                    .stroke(
-                        MoriV2Palette.primaryForest,
-                        style: StrokeStyle(lineWidth: 3, lineCap: .round)
-                    )
-                    .frame(width: 190, height: 190)
-                    .rotationEffect(.degrees(-90))
+                MoriLivingLandscape(mood: .waterside, motionEnabled: isRunning)
+                    .aspectRatio(1.5, contentMode: .fit)
+                    .frame(maxHeight: .infinity, alignment: .bottom)
+                LinearGradient(colors: [MoriV2Palette.paper, MoriV2Palette.paper.opacity(0.92), .clear],
+                               startPoint: .top, endPoint: .bottom)
 
                 VStack(spacing: 10) {
                     Text(MoriL10n.display("Quiet Session"))
@@ -75,6 +47,8 @@ struct QuietTimerCard: View {
                         .foregroundColor(MoriV2Palette.mutedStone)
                         .multilineTextAlignment(.center)
                 }
+                .padding(.top, 28)
+                .frame(maxHeight: .infinity, alignment: .top)
             }
             .frame(maxWidth: .infinity)
             .frame(height: 315)

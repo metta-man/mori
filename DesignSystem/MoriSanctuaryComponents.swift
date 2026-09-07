@@ -41,18 +41,12 @@ enum MoriV2Motion {
 }
 
 struct MoriV2PaperScene<Content: View>: View {
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    @State private var isDrifting = false
-
     let variant: MoriBotanicalScreenBackdrop.Variant
     var artOpacity: Double = 0.62
     private let content: Content
 
-    init(
-        variant: MoriBotanicalScreenBackdrop.Variant,
-        artOpacity: Double = 0.62,
-        @ViewBuilder content: () -> Content
-    ) {
+    init(variant: MoriBotanicalScreenBackdrop.Variant, artOpacity: Double = 0.62,
+         @ViewBuilder content: () -> Content) {
         self.variant = variant
         self.artOpacity = artOpacity
         self.content = content()
@@ -60,85 +54,16 @@ struct MoriV2PaperScene<Content: View>: View {
 
     var body: some View {
         ZStack {
-            MoriV2Palette.paper
-                .ignoresSafeArea()
-
-            MoriBotanicalScreenBackdrop(variant: variant)
-                .opacity(artOpacity)
-                .scaleEffect(reduceMotion ? 1 : (isDrifting ? 1.012 : 1))
-                .offset(y: reduceMotion ? 0 : (isDrifting ? -3 : 1))
-                .animation(reduceMotion ? nil : MoriV2Motion.ambient, value: isDrifting)
-                .ignoresSafeArea()
-
+            MoriLivingPageBackground().ignoresSafeArea()
             content
-        }
-        .onAppear {
-            guard !reduceMotion else { return }
-            isDrifting = true
-        }
-        .moriOnChange(of: reduceMotion) { shouldReduceMotion in
-            isDrifting = !shouldReduceMotion
         }
     }
 }
 
-/// The one continuous watercolor canvas shared by the app's three root tabs.
-/// Root page content stays transparent so the status and home-indicator areas
-/// always resolve to this same artwork during tab transitions.
+/// One continuous paper surface behind all three tabs, including safe areas.
 struct MoriRootShellBackground: View {
     var body: some View {
-        GeometryReader { proxy in
-            ZStack(alignment: .bottom) {
-                MoriV2Palette.paper
-
-                MoriGeneratedArtImage(art: .paperWash, contentMode: .fill)
-                    .frame(width: proxy.size.width, height: proxy.size.height)
-                    .clipped()
-                    .opacity(0.30)
-                    .blendMode(.multiply)
-
-                Image("BotanicalBackdropToday")
-                    .resizable()
-                    .interpolation(.high)
-                    .scaledToFill()
-                    .frame(
-                        width: proxy.size.width,
-                        height: max(330, proxy.size.height * 0.44),
-                        alignment: .topLeading
-                    )
-                    .clipped()
-                    .opacity(0.62)
-                    .frame(maxHeight: .infinity, alignment: .top)
-
-                Image("MoriDeepSessionForest")
-                    .resizable()
-                    .interpolation(.high)
-                    .scaledToFill()
-                    .frame(
-                        width: proxy.size.width,
-                        height: max(400, proxy.size.height * 0.46),
-                        alignment: .bottom
-                    )
-                    .clipped()
-                    .opacity(0.66)
-                    .mask(
-                        LinearGradient(
-                            stops: [
-                                .init(color: .clear, location: 0),
-                                .init(color: .white.opacity(0.28), location: 0.20),
-                                .init(color: .white, location: 0.48),
-                                .init(color: .white, location: 1)
-                            ],
-                            startPoint: .top,
-                            endPoint: .bottom
-                        )
-                    )
-            }
-            .frame(width: proxy.size.width, height: proxy.size.height)
-            .clipped()
-        }
-        .allowsHitTesting(false)
-        .accessibilityHidden(true)
+        MoriLivingPageBackground(showsLandscape: false)
     }
 }
 

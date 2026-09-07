@@ -40,6 +40,8 @@ struct ContentView: View {
                             .ignoresSafeArea()
 
                         selectedTabContent
+                            .environment(\.moriLandscapeMotionAllowed,
+                                         presentation.activeSheet == nil && rootNavigationPath.isEmpty)
                     }
                     .frame(width: proxy.size.width, height: proxy.size.height)
                     .allowsHitTesting(presentation.activeSheet == nil)

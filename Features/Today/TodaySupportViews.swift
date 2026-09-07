@@ -101,7 +101,7 @@ struct TodayRootScrollScreen<Content: View>: View {
                         content
                     }
                     .padding(.top, dynamicTypeSize.isAccessibilitySize ? 20 : 22)
-                    .padding(.horizontal, 32)
+                    .padding(.horizontal, 22)
                 }
                 .padding(.bottom, MoriMainTabBarMetrics.scrollBottomInset + MoriTheme.Spacing.xLarge)
             }
@@ -134,24 +134,7 @@ private struct TodaySettingsButton: View {
     let action: () -> Void
 
     var body: some View {
-        Button(action: action) {
-            Image(systemName: "leaf")
-                .font(.system(size: 16, weight: .regular))
-                .foregroundColor(MoriV2Palette.forestInk.opacity(0.86))
-                .frame(width: 40, height: 40)
-                .background(MoriV2Palette.raisedPaper.opacity(0.92))
-                .clipShape(Circle())
-                .overlay(
-                    Circle()
-                        .stroke(MoriV2Palette.hairline, lineWidth: 1)
-                )
-                .shadow(color: MoriV2Palette.forestInk.opacity(0.07), radius: 8, x: 0, y: 3)
-                .frame(width: MoriV2Layout.minimumHitTarget, height: MoriV2Layout.minimumHitTarget)
-                .contentShape(Circle())
-        }
-        .buttonStyle(MoriV2PressButtonStyle())
-        .accessibilityLabel(MoriL10n.display("Settings"))
-        .accessibilityHint(MoriL10n.display("Opens settings"))
+        MoriV2SettingsButton(style: .plain, action: action)
     }
 }
 
@@ -263,142 +246,62 @@ struct TodayPrimaryResetCard: View {
     let onOpenAppLimits: () -> Void
 
     var body: some View {
-        ZStack(alignment: .topLeading) {
-            MoriV2Palette.raisedPaper
+        VStack(alignment: .leading, spacing: 0) {
+            MoriLivingLandscape()
+                .aspectRatio(dynamicTypeSize.isAccessibilitySize ? 3.2 : 1.5, contentMode: .fit)
+                .mask(LinearGradient(stops: [
+                    .init(color: .clear, location: 0),
+                    .init(color: .white, location: 0.10),
+                    .init(color: .white, location: 0.84),
+                    .init(color: .clear, location: 1)
+                ], startPoint: .top, endPoint: .bottom))
+                .padding(.horizontal, -22)
 
-            GeometryReader { proxy in
-                Image("MoriTodayBeforeFeedForest")
-                    .resizable()
-                    .interpolation(.high)
-                    .scaledToFill()
-                    .frame(width: proxy.size.width, height: proxy.size.height, alignment: .trailing)
-                    .clipped()
-                    .opacity(dynamicTypeSize.isAccessibilitySize ? 0.50 : 0.92)
-
-                LinearGradient(
-                    stops: [
-                        .init(color: MoriV2Palette.raisedPaper.opacity(0.99), location: 0),
-                        .init(color: MoriV2Palette.raisedPaper.opacity(0.96), location: 0.40),
-                        .init(color: MoriV2Palette.raisedPaper.opacity(0.46), location: 0.64),
-                        .init(color: .clear, location: 0.84)
-                    ],
-                    startPoint: .leading,
-                    endPoint: .trailing
-                )
-            }
-            .accessibilityHidden(true)
-
-            VStack(alignment: .leading, spacing: 0) {
-                appLimitKicker
-
+            VStack(alignment: .leading, spacing: 12) {
                 Text(MoriL10n.display("Before Feed Reset"))
-                    .font(.system(.title3, design: .serif, weight: .regular))
+                    .font(.system(.title2, design: .serif, weight: .regular))
                     .foregroundColor(MoriV2Palette.forestInk)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, 15)
-
                 Text(MoriL10n.display(appLimitPresentation.resetSubtitle))
-                    .font(.system(.subheadline, design: .default, weight: .regular))
+                    .font(MoriV2Type.body)
                     .foregroundColor(MoriV2Palette.stone)
-                    .lineSpacing(2)
                     .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, appLimitPresentation.isReady ? 15 : 4)
-
-                protectedSelectionRow
-                    .padding(.top, appLimitPresentation.isReady ? 16 : 6)
-
                 startButton
-                    .padding(.top, appLimitPresentation.isReady ? 20 : 22)
-
-                Text(masteryFeedbackText)
-                    .font(.system(.footnote, design: .default, weight: .regular))
-                    .foregroundColor(MoriV2Palette.stone)
-                    .lineSpacing(2)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, 10)
-                    .accessibilityLabel(masteryFeedbackAccessibilityText)
+                protectionStatus
+                if keptClosedCount > 0 {
+                    Text(masteryFeedbackAccessibilityText)
+                        .font(MoriV2Type.caption)
+                        .foregroundColor(MoriV2Palette.stone)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
-            .frame(maxWidth: dynamicTypeSize.isAccessibilitySize ? .infinity : 226, alignment: .leading)
-            .padding(.horizontal, 22)
-            .padding(.top, dynamicTypeSize.isAccessibilitySize ? 22 : 31)
-            .padding(.bottom, 18)
+            .padding(.top, 8)
+            .padding(.bottom, 20)
         }
-        .frame(height: dynamicTypeSize.isAccessibilitySize ? nil : 318)
-        .frame(minHeight: dynamicTypeSize.isAccessibilitySize ? 470 : nil)
-        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 20, style: .continuous)
-                .stroke(MoriV2Palette.hairline, lineWidth: 1)
-        )
-        .shadow(color: MoriV2Palette.forestInk.opacity(0.07), radius: 10, x: 0, y: 4)
         .accessibilityElement(children: .contain)
         .accessibilityValue(masteryFeedbackAccessibilityText)
     }
 
-    private var appLimitKicker: some View {
-        HStack(spacing: 7) {
-            Image(systemName: "lock")
-                .font(.system(size: 12, weight: .medium))
-                .frame(width: 16, height: 16)
-
-            Text(MoriL10n.display(appLimitPresentation.statusKicker).uppercased())
-                .font(.system(.caption, design: .default, weight: .semibold))
-                .fontWidth(.condensed)
-                .tracking(0.65)
-                .lineLimit(1)
-                .minimumScaleFactor(0.86)
-                .fixedSize(horizontal: false, vertical: true)
-        }
-        .foregroundColor(MoriV2Palette.sage)
-    }
-
-    private var protectedSelectionRow: some View {
+    private var protectionStatus: some View {
         Button(action: onOpenAppLimits) {
-            protectedSelectionContent
-            .frame(maxWidth: .infinity, minHeight: MoriV2Layout.minimumHitTarget, alignment: .leading)
+            HStack(spacing: 8) {
+                Image(systemName: "lock.shield")
+                    .accessibilityHidden(true)
+                Text(MoriL10n.display("App Limits") + " · " + MoriL10n.display(appLimitPresentation.stateLabel))
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 4)
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 11, weight: .medium))
+                    .accessibilityHidden(true)
+            }
+            .font(MoriV2Type.caption)
+            .foregroundColor(MoriV2Palette.stone)
+            .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
             .contentShape(Rectangle())
         }
         .buttonStyle(MoriV2PressButtonStyle())
+        .accessibilityIdentifier("today-app-limits-status")
         .accessibilityHint(MoriL10n.display("Opens App Limits settings"))
-    }
-
-    @ViewBuilder
-    private var protectedSelectionContent: some View {
-        if let token = appLimitPresentation.soleApplicationToken {
-            Label(token)
-                .labelStyle(TodayProtectedTokenLabelStyle(detail: appLimitPresentation.protectedSelectionDetail))
-        } else if let token = appLimitPresentation.soleWebDomainToken {
-            Label(token)
-                .labelStyle(TodayProtectedTokenLabelStyle(detail: appLimitPresentation.protectedSelectionDetail))
-        } else {
-            HStack(spacing: 8) {
-                Image(systemName: appLimitPresentation.hasEffectiveSelection ? "square.stack.3d.up" : "lock.shield")
-                    .font(.system(size: 14, weight: .medium))
-                    .foregroundColor(MoriV2Palette.sage)
-                    .frame(width: 30, height: 30)
-                    .background(MoriV2Palette.sage.opacity(0.12))
-                    .clipShape(RoundedRectangle(cornerRadius: 9, style: .continuous))
-                    .accessibilityHidden(true)
-
-                protectedSelectionText
-            }
-        }
-    }
-
-    private var protectedSelectionText: some View {
-        VStack(alignment: .leading, spacing: 2) {
-            Text(MoriL10n.display(appLimitPresentation.protectedSelectionTitle))
-                .font(.system(.subheadline, design: .default, weight: .semibold))
-                .foregroundColor(MoriV2Palette.forestInk)
-                .lineLimit(1)
-                .minimumScaleFactor(0.82)
-
-            Text(MoriL10n.display(appLimitPresentation.protectedSelectionDetail))
-                .font(.system(.footnote, design: .default, weight: .regular))
-                .foregroundColor(MoriV2Palette.stone)
-                .lineLimit(2)
-        }
-        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var startButton: some View {
@@ -412,19 +315,17 @@ struct TodayPrimaryResetCard: View {
                     .clipShape(Circle())
 
                 Text(MoriL10n.display("Begin quiet pause"))
-                    .font(.system(size: 15, weight: .semibold))
-                    .fontWidth(.condensed)
+                    .font(.system(.body, design: .default, weight: .semibold))
                     .lineLimit(dynamicTypeSize.isAccessibilitySize ? 2 : 1)
                     .minimumScaleFactor(0.84)
             }
             .foregroundColor(MoriTheme.Colors.onPrimary)
-            .padding(.horizontal, 10)
+            .padding(.horizontal, 18)
             .frame(
                 maxWidth: dynamicTypeSize.isAccessibilitySize ? .infinity : nil,
                 minHeight: 51,
                 alignment: .center
             )
-            .frame(width: dynamicTypeSize.isAccessibilitySize ? nil : 176)
             .background(MoriV2Palette.primaryForest)
             .clipShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
             .contentShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
@@ -432,13 +333,6 @@ struct TodayPrimaryResetCard: View {
         .buttonStyle(MoriV2PressButtonStyle())
         .accessibilityLabel(MoriL10n.display("Begin quiet pause"))
         .accessibilityHint(MoriL10n.display("Opens Before Feed Reset"))
-    }
-
-    private var masteryFeedbackText: String {
-        guard keptClosedCount > 0 else {
-            return MoriL10n.display("You can continue\nwhenever you choose.")
-        }
-        return masteryFeedbackAccessibilityText
     }
 
     private var masteryFeedbackAccessibilityText: String {
@@ -459,131 +353,44 @@ struct TodayPrimaryResetCard: View {
     }
 }
 
-private struct TodayProtectedTokenLabelStyle: LabelStyle {
-    let detail: String
-
-    func makeBody(configuration: Configuration) -> some View {
-        HStack(spacing: 8) {
-            configuration.icon
-                .frame(width: 30, height: 30)
-
-            VStack(alignment: .leading, spacing: 2) {
-                configuration.title
-                    .font(.system(.subheadline, design: .default, weight: .semibold))
-                    .foregroundColor(MoriV2Palette.forestInk)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.82)
-
-                Text(MoriL10n.display(detail))
-                    .font(.system(.footnote, design: .default, weight: .regular))
-                    .foregroundColor(MoriV2Palette.stone)
-                    .lineLimit(2)
-            }
-            .frame(maxWidth: .infinity, alignment: .leading)
-        }
-    }
-}
-
 struct TodayQuietMetricsCard: View {
-    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
-
     let quietMinutes: Int
     let longestQuietMinutes: Int
+    @State private var showsDetails = false
 
     var body: some View {
-        Group {
-            if dynamicTypeSize.isAccessibilitySize {
-                VStack(spacing: 0) {
-                    quietMinutesMetric
-                    TodayHairlineDivider()
-                    longestQuietMetric
-                }
-            } else {
-                HStack(spacing: 0) {
-                    quietMinutesMetric
-
-                    Rectangle()
-                        .fill(MoriV2Palette.hairline)
-                        .frame(width: 1, height: 48)
-                        .accessibilityHidden(true)
-
-                    longestQuietMetric
-                }
-            }
-        }
-        .padding(.horizontal, 12)
-        .padding(.vertical, 6)
-        .frame(maxWidth: .infinity, minHeight: 80)
-        .background(MoriV2Palette.raisedPaper.opacity(0.86))
-        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(
-            RoundedRectangle(cornerRadius: 18, style: .continuous)
-                .stroke(MoriV2Palette.hairline, lineWidth: 1)
-        )
-        .shadow(color: MoriV2Palette.forestInk.opacity(0.035), radius: 7, x: 0, y: 3)
-    }
-
-    private var quietMinutesMetric: some View {
-        TodayQuietMetric(
-            title: "Quiet minutes today",
-            minutes: quietMinutes,
-            systemImage: "leaf"
-        )
-    }
-
-    private var longestQuietMetric: some View {
-        TodayQuietMetric(
-            title: "Longest quiet",
-            minutes: longestQuietMinutes,
-            systemImage: "wind"
-        )
-    }
-}
-
-private struct TodayQuietMetric: View {
-    let title: String
-    let minutes: Int
-    let systemImage: String
-
-    var body: some View {
-        HStack(spacing: 8) {
-            Image(systemName: systemImage)
-                .font(.system(size: 15, weight: .regular))
-                .foregroundColor(MoriV2Palette.sage)
-                .frame(width: 32, height: 32)
-                .background(MoriV2Palette.sage.opacity(0.13))
-                .clipShape(Circle())
-                .accessibilityHidden(true)
-
-            VStack(alignment: .leading, spacing: 1) {
-                Text(MoriL10n.display(title))
-                    .font(.system(size: 11, weight: .regular))
-                    .fontWidth(.condensed)
-                    .foregroundColor(MoriV2Palette.stone)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.86)
-
-                HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text("\(minutes)")
-                        .font(.system(.title, design: .serif, weight: .regular))
-                        .foregroundColor(MoriV2Palette.forestInk)
+        VStack(alignment: .leading, spacing: 6) {
+            Button { showsDetails.toggle() } label: {
+                HStack(spacing: 8) {
+                    Text(MoriL10n.display("Quiet minutes today"))
+                    Spacer(minLength: 8)
+                    Text("\(quietMinutes) " + MoriL10n.display("min"))
                         .monospacedDigit()
-
-                    Text(MoriL10n.display("min"))
-                        .font(.system(.caption, design: .default, weight: .medium))
-                        .foregroundColor(MoriV2Palette.stone)
+                    Image(systemName: showsDetails ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 11, weight: .medium))
+                        .accessibilityHidden(true)
                 }
+                .font(MoriV2Type.supporting)
+                .foregroundColor(MoriV2Palette.stone)
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
+            .buttonStyle(MoriV2PressButtonStyle())
+            .accessibilityIdentifier("today-quiet-minutes")
+            .accessibilityValue(MoriL10n.display(showsDetails ? "Expanded" : "Collapsed"))
+
+            if showsDetails {
+                HStack {
+                    Text(MoriL10n.display("Longest quiet"))
+                    Spacer()
+                    Text("\(longestQuietMinutes) " + MoriL10n.display("min"))
+                }
+                .font(MoriV2Type.caption)
+                .foregroundColor(MoriV2Palette.stone)
+                .padding(.bottom, 8)
+            }
         }
-        .padding(.horizontal, 6)
-        .frame(maxWidth: .infinity, minHeight: 58, alignment: .leading)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(MoriL10n.string(
-            "today.metric.minutes.accessibility",
-            defaultValue: "%@, %d minutes",
-            arguments: [MoriL10n.display(title), minutes]
-        ))
+        .moriReduceMotionAnimation(MoriV2Motion.disclosure, value: showsDetails)
     }
 }
 

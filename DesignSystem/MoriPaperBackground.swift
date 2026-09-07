@@ -14,7 +14,13 @@ struct MoriPaperBackground<Content: View>: View {
 
     var body: some View {
         ZStack {
-            MoriWatercolorPaperBackground(variant: variant)
+            Group {
+                if variant == .onboarding || variant == .none {
+                    MoriWatercolorPaperBackground(variant: variant)
+                } else {
+                    MoriLivingPageBackground().ignoresSafeArea()
+                }
+            }
             content
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

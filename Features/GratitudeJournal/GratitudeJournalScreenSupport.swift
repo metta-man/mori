@@ -137,11 +137,7 @@ struct GratitudeJournalHeaderActions: View {
             .foregroundColor(MoriColors.sanctuaryInk)
             .accessibility(label: Text(MoriL10n.display("Log actions")))
 
-            Button(action: openSettings) {
-                floatingHeaderSymbol("gearshape")
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(MoriL10n.display("Settings"))
+            MoriV2SettingsButton(style: .plain, action: openSettings)
         }
         .padding(.trailing, 8)
     }
@@ -227,6 +223,17 @@ struct GratitudeJournalHomeContent: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 21) {
+            MoriLivingLandscape(mood: .reading, motionEnabled: false)
+                .aspectRatio(2.8, contentMode: .fit)
+                .mask(LinearGradient(stops: [
+                    .init(color: .clear, location: 0),
+                    .init(color: .white, location: 0.20),
+                    .init(color: .white, location: 0.60),
+                    .init(color: .clear, location: 1)
+                ], startPoint: .top, endPoint: .bottom))
+                .padding(.horizontal, -20)
+                .padding(.bottom, -22)
+
             JournalTodayPanel(
                 guidedCheckIn: $guidedCheckIn,
                 note: $dailyEntryNote,
@@ -262,6 +269,7 @@ struct JournalTodayPanel: View {
 
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var isNoteExpanded = false
+    @State private var showsOtherFeelings = false
 
     private var canAddPhotos: Bool {
         attachedPhotos.count < 6
@@ -276,6 +284,18 @@ struct JournalTodayPanel: View {
         default:
             return MoriL10n.display("(\(attachedPhotos.count) photos attached)")
         }
+    }
+
+    private var visibleFeelings: [JournalGuidedEmotion] {
+        let primary: [JournalGuidedEmotion] = [.calm, .anxious, .tired, .unclear]
+        let additional = JournalGuidedEmotion.allCases.filter { !primary.contains($0) }
+        // Keep an existing selection visible when revisiting a saved check-in.
+        return showsOtherFeelings ? primary + additional
+            : primary + additional.filter { $0 == guidedCheckIn.emotion }
+    }
+
+    private func feelingTitle(_ emotion: JournalGuidedEmotion) -> String {
+        emotion == .unclear ? "Hard to name" : emotion.title
     }
 
     private var compactChoiceColumns: [GridItem] {
@@ -335,9 +355,9 @@ struct JournalTodayPanel: View {
             )
 
             LazyVGrid(columns: compactChoiceColumns, spacing: 10) {
-                ForEach(JournalGuidedEmotion.allCases) { emotion in
+                ForEach(visibleFeelings) { emotion in
                     optionButton(
-                        title: emotion.title,
+                        title: feelingTitle(emotion),
                         isSelected: guidedCheckIn.emotion == emotion,
                         accessibilityIdentifier: "journal-guided-emotion-\(emotion.id)"
                     ) {
@@ -345,6 +365,24 @@ struct JournalTodayPanel: View {
                     }
                 }
             }
+
+            Button {
+                showsOtherFeelings.toggle()
+            } label: {
+                HStack {
+                    Text(MoriL10n.display(showsOtherFeelings ? "Fewer feelings" : "Other feelings"))
+                    Spacer()
+                    Image(systemName: showsOtherFeelings ? "chevron.up" : "chevron.down")
+                        .accessibilityHidden(true)
+                }
+                .font(MoriV2Type.supporting)
+                .foregroundColor(MoriV2Palette.stone)
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(MoriV2PressButtonStyle())
+            .accessibilityIdentifier("journal-other-feelings")
+            .accessibilityValue(MoriL10n.display(showsOtherFeelings ? "Expanded" : "Collapsed"))
 
         case .context:
             questionHeader(
@@ -404,7 +442,7 @@ struct JournalTodayPanel: View {
     private var guidedSummary: some View {
         VStack(spacing: 0) {
             if let emotion = guidedCheckIn.emotion {
-                summaryRow(label: "Feeling", value: emotion.title, step: .emotion)
+                summaryRow(label: "Feeling", value: feelingTitle(emotion), step: .emotion)
             }
 
             if guidedCheckIn.currentStep.rawValue > JournalGuidedStep.context.rawValue,

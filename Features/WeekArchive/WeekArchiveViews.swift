@@ -280,7 +280,7 @@ private struct LifeGridMonthLandscape: View {
         VStack(spacing: 0) {
             Spacer(minLength: 0)
 
-            Image("MoriDeepSessionForest")
+            Image("MoriMeadowReference")
                 .resizable()
                 .interpolation(.high)
                 .scaledToFit()
@@ -290,8 +290,8 @@ private struct LifeGridMonthLandscape: View {
                     LinearGradient(
                         stops: [
                             .init(color: .clear, location: 0),
-                            .init(color: .clear, location: 0.64),
-                            .init(color: .white.opacity(0.34), location: 0.75),
+                            .init(color: .clear, location: 0.30),
+                            .init(color: .white.opacity(0.34), location: 0.55),
                             .init(color: .white.opacity(0.90), location: 0.88),
                             .init(color: .white, location: 1)
                         ],

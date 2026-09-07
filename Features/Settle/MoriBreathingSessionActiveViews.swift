@@ -57,22 +57,9 @@ struct MoriBreathingSessionActiveSurface: View {
     private var normalActiveSurface: some View {
         GeometryReader { proxy in
             let visualHeight = max(286, min(420, proxy.size.height * 0.47))
-            let landscapeHeight = max(300, min(460, proxy.size.height * 0.48))
 
             ZStack {
-                MoriPaperBackground(variant: .breath) {
-                    Color.clear
-                }
-
-                MoriGeneratedArtImage(art: .breathLandscapeWash, contentMode: .fill)
-                    .frame(width: proxy.size.width, height: landscapeHeight)
-                    .clipped()
-                    .opacity(0.72)
-                    .blendMode(.multiply)
-                    .position(
-                        x: proxy.size.width / 2,
-                        y: proxy.size.height - (landscapeHeight / 2)
-                    )
+                MoriLivingPageBackground().ignoresSafeArea()
 
                 VStack(spacing: 0) {
                     Color.clear
@@ -231,22 +218,9 @@ struct MoriBreathingSessionCompletionSurface: View {
 
     var body: some View {
         GeometryReader { proxy in
-            let landscapeHeight = max(300, min(460, proxy.size.height * 0.48))
 
             ZStack {
-                MoriPaperBackground(variant: .breath) {
-                    Color.clear
-                }
-
-                MoriGeneratedArtImage(art: .breathLandscapeWash, contentMode: .fill)
-                    .frame(width: proxy.size.width, height: landscapeHeight)
-                    .clipped()
-                    .opacity(0.72)
-                    .blendMode(.multiply)
-                    .position(
-                        x: proxy.size.width / 2,
-                        y: proxy.size.height - (landscapeHeight / 2)
-                    )
+                MoriLivingPageBackground().ignoresSafeArea()
 
                 VStack(spacing: 0) {
                     Color.clear

@@ -60,42 +60,77 @@ struct SettleView: View {
     private var primaryModeCards: some View {
         VStack(spacing: 12) {
             MoriModeCard(
-                title: "Deep Session",
+                title: "Focus on one thing",
                 description: "Work, study, or create\nwith apps blocked.",
                 duration: "25 min",
                 scene: .deepSession,
-                artwork: .asset("MoriTodayBeforeFeedForest"),
+                artwork: .living(.meadow),
                 emphasis: .primary,
-                height: 215,
+                height: 240,
                 cornerRadius: 18,
+                titleWidth: 192,
                 action: { openSettleRoute(.focusCycle) }
             )
 
-            MoriModeCard(
-                title: "Quiet Mode",
-                description: "Read, rest, meditate,\nor sit quietly.",
-                duration: "10 min",
-                scene: .quietMode,
-                artwork: .asset("MoriDeepSessionForest"),
-                height: 208,
-                cornerRadius: 18,
+            secondaryMode(
+                title: "Sit quietly", description: "Read, rest, meditate, or sit quietly.",
+                duration: "10 min", icon: .breathe,
                 action: { openSettleRoute(.quietMode) }
             )
-
-            MoriModeCard(
-                title: "Essential Mode",
-                description: "Keep only calls, maps,\nand the apps you choose.",
-                duration: essentialModeCardStatus,
-                scene: .offlineReset,
-                artwork: .asset("MoriDeepSessionForest"),
-                height: 208,
-                cornerRadius: 18,
+            secondaryMode(
+                title: "Only essential apps", description: "Keep only calls, maps, and the apps you choose.",
+                duration: essentialModeCardStatus, icon: .roots,
                 quickAction: quickStartEssentialMode,
                 action: { openSettleRoute(.essentialMode) }
             )
         }
         .padding(.leading, 3)
         .padding(.top, 3)
+    }
+
+    private func secondaryMode(
+        title: String, description: String, duration: String, icon: MoriBitmapIcon,
+        quickAction: (() -> Void)? = nil, action: @escaping () -> Void
+    ) -> some View {
+        HStack(alignment: .center, spacing: 16) {
+            Button(action: action) {
+                HStack(alignment: .top, spacing: 14) {
+                    MoriBitmapIconImage(icon: icon, size: 36)
+                        .accessibilityHidden(true)
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text(MoriL10n.display(title))
+                            .font(MoriV2Type.sectionTitle)
+                            .foregroundColor(MoriV2Palette.forestInk)
+                        Text(MoriL10n.display(description))
+                            .font(MoriV2Type.supporting)
+                            .foregroundColor(MoriV2Palette.stone)
+                            .fixedSize(horizontal: false, vertical: true)
+                        Text(MoriL10n.display(duration))
+                            .font(MoriV2Type.caption)
+                            .foregroundColor(MoriV2Palette.stone)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                }
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(MoriV2PressButtonStyle())
+            .accessibilityLabel(MoriL10n.display(title))
+            .accessibilityValue(MoriL10n.display(duration))
+            .accessibilityHint(MoriL10n.display(description))
+            Button(action: quickAction ?? action) {
+                Image(systemName: "play.fill")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(MoriV2Palette.primaryForest)
+                    .frame(width: 44, height: 44)
+                    .background(MoriV2Palette.sage.opacity(0.10), in: Circle())
+            }
+            .buttonStyle(MoriV2PressButtonStyle())
+            .accessibilityLabel(MoriL10n.string("focus.mode.quick_start", defaultValue: "Start %@",
+                                              arguments: [MoriL10n.display(title)]))
+        }
+        .padding(.vertical, 18)
+        .overlay(alignment: .bottom) { Rectangle().fill(MoriV2Palette.hairline).frame(height: 0.5) }
     }
 
     private var focusSupportDisclosure: some View {

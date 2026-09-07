@@ -31,6 +31,7 @@ When two documents disagree:
 | Concern | Source |
 | --- | --- |
 | UI visual direction | `DesignReferences/MORI_DESIGN_SPEC.md` |
+| Living landscape iPhone redesign | `DesignReferences/MORI_DESIGN_SPEC.md` living-landscape amendment; `DesignReferences/mori-living-landscape-reference.png` |
 | Primary visual reference | `DesignReferences/mori-approved-reference.jpeg` |
 | Detailed Today reference | `DesignReferences/mori-today-view-reference.jpg` |
 | Screen-flow reference | `DesignReferences/mori-screen-flow-reference.jpg` |

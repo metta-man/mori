@@ -1892,3 +1892,36 @@
 "today.before_feed.kept_closed_count" = "Kept closed %d times today";
 "notification.before_feed_window_complete.title" = "Feed window complete";
 "notification.before_feed_window_complete.body" = "Time’s up. Returning to your life.";
+
+"Read, rest, meditate, or sit quietly." = "Read, rest, meditate, or sit quietly.";
+
+"Keep only calls, maps, and the apps you choose." = "Keep only calls, maps, and the apps you choose.";
+
+"You can continue whenever you choose." = "You can continue whenever you choose.";
+
+/* Quiet hierarchy refinement */
+"Focus on one thing" = "Focus on one thing";
+"Sit quietly" = "Sit quietly";
+"Only essential apps" = "Only essential apps";
+"Other feelings" = "Other feelings";
+"Fewer feelings" = "Fewer feelings";
+"Hard to name" = "Hard to name";
+
+/* Root copy shown alongside the quiet hierarchy */
+"Protect your attention.\nChoose how you want to show up." = "Protect your attention.\nChoose how you want to show up.";
+"Work, study, or create\nwith apps blocked." = "Work, study, or create\nwith apps blocked.";
+"Focus support" = "Focus support";
+"Hide focus support" = "Hide focus support";
+"Breathing, timers, bells, and app limits." = "Breathing, timers, bells, and app limits.";
+"Return to the three focus modes." = "Return to the three focus modes.";
+"Set up" = "Set up";
+"25 min" = "25 min";
+"10 min" = "10 min";
+"One mindful choice at a time." = "One mindful choice at a time.";
+"Pause before the next feed opens." = "Pause before the next feed opens.";
+"Pause before a protected app opens." = "Pause before a protected app opens.";
+"Pause before your protected apps open." = "Pause before your protected apps open.";
+"Quiet minutes today" = "Quiet minutes today";
+"Longest quiet" = "Longest quiet";
+"Today's intention" = "Today's intention";
+"Set a gentle intention for today." = "Set a gentle intention for today.";

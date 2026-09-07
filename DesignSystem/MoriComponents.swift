@@ -480,6 +480,7 @@ struct MoriModeCard: View {
     enum Artwork {
         case asset(String)
         case generated(MoriGeneratedArt)
+        case living(MoriLivingLandscape.Mood)
     }
 
     enum Emphasis {
@@ -513,6 +514,7 @@ struct MoriModeCard: View {
     var emphasis: Emphasis = .standard
     var height: CGFloat = MoriTheme.IllustrationSpacing.modeCardHeight
     var cornerRadius: CGFloat = MoriTheme.CornerRadius.card
+    var titleWidth: CGFloat? = nil
     var isEnabled = true
     var quickAction: (() -> Void)? = nil
     let action: () -> Void
@@ -539,6 +541,9 @@ struct MoriModeCard: View {
                     Text(MoriL10n.display(title))
                         .font(.system(size: titlePointSize, weight: .regular, design: .serif))
                         .foregroundColor(MoriTheme.Colors.ink)
+                        .frame(maxWidth: dynamicTypeSize.isAccessibilitySize ? .infinity : titleWidth,
+                               alignment: .leading)
+                        .fixedSize(horizontal: false, vertical: true)
 
                     Text(MoriL10n.display(description))
                         .font(MoriTheme.Typography.supporting)
@@ -652,6 +657,21 @@ struct MoriModeCard: View {
                 MoriTheme.Colors.raisedPaper
 
                 switch artwork {
+                case .living(let mood):
+                    MoriLivingLandscape(mood: mood, motionEnabled: emphasis == .primary && !dynamicTypeSize.isAccessibilitySize)
+                        .overlay(LinearGradient(stops: [
+                            .init(color: MoriV2Palette.paper.opacity(0.96), location: 0),
+                            .init(color: MoriV2Palette.paper.opacity(0.80), location: 0.39),
+                            .init(color: .clear, location: 0.72)
+                        ], startPoint: .leading, endPoint: .trailing))
+                        .overlay {
+                            if dynamicTypeSize.isAccessibilitySize {
+                                MoriV2Palette.paper.opacity(0.94)
+                            }
+                        }
+                        .frame(width: proxy.size.width, height: proxy.size.height)
+                        .clipped()
+
                 case .asset(let name):
                     Image(name)
                         .resizable()

@@ -1892,3 +1892,36 @@
 "today.before_feed.kept_closed_count" = "今天保持关闭 %d 次";
 "notification.before_feed_window_complete.title" = "信息流窗口已结束";
 "notification.before_feed_window_complete.body" = "时间到了。回到你的生活。";
+
+"Read, rest, meditate, or sit quietly." = "阅读、休息、冥想，或安静坐一会。";
+
+"Keep only calls, maps, and the apps you choose." = "只保留通话、地图，以及你选择的 App。";
+
+"You can continue whenever you choose." = "你可以在准备好时继续。";
+
+/* Quiet hierarchy refinement */
+"Focus on one thing" = "专心做一件事";
+"Sit quietly" = "静一会儿";
+"Only essential apps" = "只留必要 App";
+"Other feelings" = "其他感受";
+"Fewer feelings" = "收起其他感受";
+"Hard to name" = "说不清感受";
+
+/* Root copy shown alongside the quiet hierarchy */
+"Protect your attention.\nChoose how you want to show up." = "留一点空间给自己。\n选择此刻想做的事。";
+"Work, study, or create\nwith apps blocked." = "暂停其他 App，\n专心工作、学习或创作。";
+"Focus support" = "专注工具";
+"Hide focus support" = "收起专注工具";
+"Breathing, timers, bells, and app limits." = "呼吸、计时、钟声与 App 限制。";
+"Return to the three focus modes." = "返回三种专注选择。";
+"Set up" = "设置";
+"25 min" = "25 分钟";
+"10 min" = "10 分钟";
+"One mindful choice at a time." = "一次，做一个有意识的选择。";
+"Pause before the next feed opens." = "打开下一个信息流之前，先停一停。";
+"Pause before a protected app opens." = "打开受保护的 App 前，先停一停。";
+"Pause before your protected apps open." = "打开受保护的 App 前，先停一停。";
+"Quiet minutes today" = "今天的静心时间";
+"Longest quiet" = "最长静心时段";
+"Today's intention" = "今天的心意";
+"Set a gentle intention for today." = "为今天留下一个小小的心意。";

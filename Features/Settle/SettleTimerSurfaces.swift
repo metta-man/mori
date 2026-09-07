@@ -88,19 +88,20 @@ struct SettleTimerNormalActiveSurface: View {
     let onResume: () -> Void
     let onEnd: () -> Void
 
+    @State private var showsOptions = false
+
     var body: some View {
         GeometryReader { proxy in
             ZStack {
-                MoriPaperBackground(variant: .practice) {
-                    Color.clear
-                }
+                MoriLivingPageBackground(showsLandscape: false).ignoresSafeArea()
 
+                ScrollView(showsIndicators: false) {
                 VStack(spacing: 20) {
                     Spacer(minLength: 16)
 
                     VStack(spacing: 8) {
                         Text(timeText)
-                            .font(.system(size: 68, weight: .semibold, design: .rounded))
+                            .font(.system(size: 68, weight: .regular, design: .serif))
                             .foregroundColor(MoriColors.botanicalInk)
                             .monospacedDigit()
                             .minimumScaleFactor(0.65)
@@ -114,20 +115,30 @@ struct SettleTimerNormalActiveSurface: View {
                         .foregroundColor(MoriColors.botanicalMuted)
                     }
 
-                    if animationEnabled {
-                        SettleLeafPulse(isActive: timerState == .running)
-                            .frame(height: 132)
-                    } else {
-                        MoriBitmapIconImage(icon: .leaf, size: 54, opacity: 0.54)
-                            .frame(height: 132)
-                    }
+                    MoriLivingLandscape(mood: .waterside,
+                                        motionEnabled: animationEnabled && timerState == .running)
+                        .aspectRatio(1.5, contentMode: .fit)
+                        .mask(LinearGradient(stops: [
+                            .init(color: .clear, location: 0),
+                            .init(color: .white, location: 0.15),
+                            .init(color: .white, location: 0.80),
+                            .init(color: .clear, location: 1)
+                        ], startPoint: .top, endPoint: .bottom))
 
-                    SettleTimerToggleRow(
-                        soundEnabled: $soundEnabled,
-                        hapticsEnabled: $hapticsEnabled,
-                        animationEnabled: $animationEnabledBinding,
-                        darkRoomEnabled: $darkRoomEnabled
+                    MoriV2QuietDisclosureRow(
+                        title: showsOptions ? "Hide session options" : "Session options",
+                        subtitle: "Adjust only when needed",
+                        isExpanded: showsOptions,
+                        action: { showsOptions.toggle() }
                     )
+                    if showsOptions {
+                        SettleTimerToggleRow(
+                            soundEnabled: $soundEnabled,
+                            hapticsEnabled: $hapticsEnabled,
+                            animationEnabled: $animationEnabledBinding,
+                            darkRoomEnabled: $darkRoomEnabled
+                        )
+                    }
 
                     SettleTimerControlRow(
                         timerState: timerState,
@@ -141,6 +152,7 @@ struct SettleTimerNormalActiveSurface: View {
                 }
                 .padding(.horizontal, 24)
                 .padding(.bottom, max(proxy.safeAreaInsets.bottom + 12, 22))
+                }
             }
         }
     }

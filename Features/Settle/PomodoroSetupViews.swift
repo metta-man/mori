@@ -7,19 +7,6 @@ struct PomodoroSetupHeroVisual: View {
 
     var body: some View {
         ZStack {
-            Circle()
-                .stroke(MoriV2Palette.forestInk.opacity(0.13), lineWidth: 4)
-                .frame(width: 242, height: 242)
-
-            Circle()
-                .trim(from: 0, to: max(0.018, progress))
-                .stroke(
-                    MoriV2Palette.primaryForest,
-                    style: StrokeStyle(lineWidth: 4, lineCap: .round)
-                )
-                .frame(width: 242, height: 242)
-                .rotationEffect(.degrees(-90))
-
             VStack(spacing: 8) {
                 Text(timeText)
                     .font(.system(size: 62, weight: .regular, design: .serif))
@@ -35,7 +22,7 @@ struct PomodoroSetupHeroVisual: View {
             }
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 270)
+        .frame(height: 180)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(MoriL10n.string(
             "deep_session.timer.accessibility",

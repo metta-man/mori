@@ -46,27 +46,8 @@ private struct MoriSanctuaryBottomTabBar: View {
                     cornerRadius: MoriMainTabBarMetrics.cornerRadius,
                     style: .continuous
                 )
-                .fill(.ultraThinMaterial)
-                .overlay {
-                    RoundedRectangle(
-                        cornerRadius: MoriMainTabBarMetrics.cornerRadius,
-                        style: .continuous
-                    )
-                    .fill(Color.white.opacity(0.28))
-                }
-                .overlay {
-                    RoundedRectangle(
-                        cornerRadius: MoriMainTabBarMetrics.cornerRadius,
-                        style: .continuous
-                    )
-                    .stroke(Color.white.opacity(0.52), lineWidth: 0.8)
-                }
-                .shadow(
-                    color: MoriV2Palette.forestInk.opacity(0.08),
-                    radius: 30,
-                    x: 0,
-                    y: 12
-                )
+                .fill(MoriV2Palette.raisedPaper)
+                .shadow(color: MoriV2Palette.forestInk.opacity(0.035), radius: 10, x: 0, y: 3)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .bottom)
         }
@@ -84,21 +65,21 @@ private struct MoriTabBarItem: View {
             VStack(spacing: 4) {
                 MoriBitmapIconImage(
                     icon: tab.bitmapIcon,
-                    size: isSelected ? 27 : 25,
-                    opacity: isSelected ? 1 : 0.46
+                    size: 23,
+                    opacity: isSelected ? 1 : 0.72
                 )
-                .frame(width: 34, height: 29)
+                .frame(width: 30, height: 25)
 
                 Text(tab.title)
                     .font(.system(size: 11.5, weight: isSelected ? .semibold : .medium))
                     .foregroundColor(MoriV2Palette.forestInk)
-                    .opacity(isSelected ? 1 : 0.46)
+                    .opacity(isSelected ? 1 : 0.72)
                     .lineLimit(1)
                     .minimumScaleFactor(0.72)
                     .frame(height: 15)
             }
             .frame(maxWidth: .infinity)
-            .frame(height: 58)
+            .frame(height: 52)
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
