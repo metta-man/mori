@@ -64,8 +64,10 @@ private struct PomodoroPracticeLifecycleModifier: ViewModifier {
     let onCleanup: () -> Void
     let onEndAndLeave: () -> Void
 
-    private let ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-    private let breathingTicker = Timer.publish(every: 0.25, on: .main, in: .common).autoconnect()
+    // Keep publisher identity across view updates. Breathing refreshes every 0.25s;
+    // recreating the one-second timer on each refresh prevents it from firing.
+    @State private var ticker = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    @State private var breathingTicker = Timer.publish(every: 0.25, on: .main, in: .common).autoconnect()
 
     func body(content: Content) -> some View {
         content

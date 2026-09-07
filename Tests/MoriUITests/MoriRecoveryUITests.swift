@@ -1,6 +1,55 @@
 import XCTest
 
 final class MoriRecoveryUITests: XCTestCase {
+    func testDeepSessionCountsDownAndRespectsPauseWithBreathing() {
+        verifyDeepSessionCountdown(breathing: "box")
+    }
+
+    func testDeepSessionCountsDownAndRespectsPauseWithoutBreathing() {
+        verifyDeepSessionCountdown(breathing: "none")
+    }
+
+    private func verifyDeepSessionCountdown(breathing: String) {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-MoriSkipOnboardingForUITest", "-MoriSkipAnalyticsConsentForUITest",
+            "-MoriSkipCloudBackupForUITest", "-MoriDisableAIPulse",
+            "-MoriOpenDeepSessionForUITest", "-MoriAutoStartDeepSessionForUITest",
+            "-mori_settle_pomodoro_focus_breathing", breathing,
+            "-mori_settle_sound_enabled", "NO",
+            "-mori_timer_dark_room_enabled", "NO",
+            "-AppleLanguages", "(en)", "-AppleLocale", "en_US"
+        ]
+        app.launch()
+        XCTAssertTrue(app.buttons["Pause"].waitForExistence(timeout: 10))
+        let timer = app.descendants(matching: .any).matching(
+            NSPredicate(format: "label MATCHES %@", ".*, [0-9]+:[0-9]{2} remaining")
+        ).firstMatch
+        XCTAssertTrue(timer.waitForExistence(timeout: 5))
+        func remaining() -> String {
+            timer.label.components(separatedBy: ", ").last ?? ""
+        }
+        let initial = remaining()
+        let advances = XCTNSPredicateExpectation(
+            predicate: NSPredicate { _, _ in remaining() != initial }, object: nil
+        )
+        XCTAssertEqual(XCTWaiter.wait(for: [advances], timeout: 6), .completed,
+                       "Deep Session must count down while breathing refreshes the view")
+        app.buttons["Pause"].tap()
+        XCTAssertTrue(app.buttons["Resume"].waitForExistence(timeout: 3))
+        let paused = remaining()
+        let staysPaused = XCTNSPredicateExpectation(
+            predicate: NSPredicate { _, _ in remaining() != paused }, object: nil
+        )
+        staysPaused.isInverted = true
+        XCTAssertEqual(XCTWaiter.wait(for: [staysPaused], timeout: 3), .completed)
+        app.buttons["Resume"].tap()
+        let resumes = XCTNSPredicateExpectation(
+            predicate: NSPredicate { _, _ in remaining() != paused }, object: nil
+        )
+        XCTAssertEqual(XCTWaiter.wait(for: [resumes], timeout: 6), .completed)
+    }
+
     func testRecoveryCanOpenFromToday() {
         let app = XCUIApplication()
         app.launchArguments += [
