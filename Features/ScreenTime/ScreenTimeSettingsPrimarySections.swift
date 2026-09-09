@@ -51,12 +51,16 @@ struct AppLimitsReadinessCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
+            if !isReady {
+                Text(MoriL10n.display("Allow Screen Time → Choose apps → Turn on limits"))
+                    .font(.subheadline)
+                    .foregroundColor(MoriColors.botanicalMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
             HStack(alignment: .top, spacing: 13) {
-                MoriProductSymbolView(
-                    symbol: isReady ? .focusPoint : .appLimit,
-                    size: 23,
-                    tint: MoriColors.botanicalInk,
-                    opacity: 0.95
+                MoriInterfaceIcon(
+                    icon: isReady ? .focus : .appLimit,
+                    size: 23
                 )
                 .frame(width: 44, height: 44)
                 .background(MoriColors.botanicalInk.opacity(0.09))
@@ -84,7 +88,7 @@ struct AppLimitsReadinessCard: View {
                 .frame(minHeight: 50)
             } else {
                 HStack(spacing: 8) {
-                    MoriBitmapIconImage(icon: .beforeFeedReset, size: 15, opacity: 0.88)
+                    MoriInterfaceIcon(icon: .beforeFeedReset, size: 15, opacity: 0.88)
                         .accessibilityHidden(true)
                     Text(MoriL10n.display("Before Feed is active"))
                         .font(.system(size: 14, weight: .semibold))
@@ -119,14 +123,14 @@ struct AppLimitsProtectedAppsCard: View {
     var body: some View {
         Button(action: onEdit) {
             HStack(spacing: 13) {
-                MoriBitmapIconImage(icon: .appLimit, size: 18, opacity: 0.86)
+                MoriInterfaceIcon(icon: .appLimit, size: 22, opacity: 1)
                     .frame(width: 36, height: 36)
                     .background(MoriColors.botanicalInk.opacity(0.07))
                     .clipShape(Circle())
                     .accessibilityHidden(true)
 
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(MoriL10n.display("Protected Apps"))
+                    Text(MoriL10n.display("Apps to limit"))
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundColor(MoriColors.botanicalInk)
 
@@ -165,7 +169,7 @@ struct AppLimitsModeRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            MoriBitmapIconImage(icon: icon, size: 17, opacity: 0.82)
+            MoriInterfaceIcon(icon: icon, size: 22, opacity: 1)
                 .frame(width: 34, height: 34)
                 .background(MoriColors.botanicalInk.opacity(0.065))
                 .clipShape(Circle())
@@ -188,7 +192,7 @@ struct AppLimitsModeRow: View {
                 .font(.system(size: 12, weight: .semibold))
                 .foregroundColor(isActive ? MoriColors.botanicalMoss : MoriColors.botanicalMuted)
 
-            MoriBitmapIconImage(icon: .chevron, size: 12, opacity: 0.46)
+            MoriInterfaceIcon(icon: .chevron, size: 12, opacity: 0.46)
                 .accessibilityHidden(true)
         }
         .padding(.horizontal, 14)
@@ -213,7 +217,7 @@ struct AppLimitsPINOfferCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 13) {
             HStack(alignment: .top, spacing: 11) {
-                MoriBitmapIconImage(icon: .lockShield, size: 17, opacity: 0.84)
+                MoriInterfaceIcon(icon: .lockShield, size: 17, opacity: 0.84)
                     .frame(width: 34, height: 34)
                     .background(MoriColors.botanicalInk.opacity(0.07))
                     .clipShape(Circle())
@@ -254,7 +258,7 @@ struct AppLimitsAdvancedLink: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            MoriBitmapIconImage(icon: .settings, size: 17, opacity: 0.76)
+            MoriInterfaceIcon(icon: .settings, size: 22, opacity: 1)
                 .frame(width: 34, height: 34)
                 .background(MoriColors.botanicalInk.opacity(0.06))
                 .clipShape(Circle())
@@ -273,7 +277,7 @@ struct AppLimitsAdvancedLink: View {
 
             Spacer(minLength: 8)
 
-            MoriBitmapIconImage(icon: .chevron, size: 12, opacity: 0.48)
+            MoriInterfaceIcon(icon: .chevron, size: 12, opacity: 0.48)
                 .accessibilityHidden(true)
         }
         .padding(.horizontal, 14)
@@ -315,7 +319,7 @@ struct ScreenTimeSettingsOverviewSection: View {
             )
 
             HStack(spacing: 10) {
-                MoriBitmapIconImage(icon: .settings, size: 15, opacity: 0.58)
+                MoriInterfaceIcon(icon: .settings, size: 15, opacity: 0.58)
                     .frame(width: 22)
 
                 Text(MoriL10n.display(state.enabledFeaturesText))
@@ -339,7 +343,7 @@ private struct ScreenTimeSettingsOverviewRow: View {
 
     var body: some View {
         HStack(alignment: .center, spacing: 10) {
-            MoriBitmapIconImage(icon: icon, size: 15, opacity: 0.72)
+            MoriInterfaceIcon(icon: icon, size: 15, opacity: 0.72)
                 .frame(width: 22)
 
             Text(MoriL10n.display(title))
@@ -453,7 +457,7 @@ private struct ScreenTimeSetupStatusRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            MoriBitmapIconImage(icon: icon, size: 17, opacity: 0.82)
+            MoriInterfaceIcon(icon: icon, size: 22, opacity: 1)
                 .frame(width: 28)
 
             VStack(alignment: .leading, spacing: 3) {
@@ -469,7 +473,7 @@ private struct ScreenTimeSetupStatusRow: View {
 
 private func screenTimeSettingsLabel(_ title: String, icon: MoriBitmapIcon) -> some View {
     HStack(spacing: 8) {
-        MoriBitmapIconImage(icon: icon, size: 16, opacity: 0.84)
+        MoriInterfaceIcon(icon: icon, size: 16, opacity: 0.84)
 
         Text(MoriL10n.display(title))
     }

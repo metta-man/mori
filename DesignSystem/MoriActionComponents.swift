@@ -323,3 +323,31 @@ struct MoriSanctuaryPrimaryButton: View {
         .disabled(!isEnabled)
     }
 }
+
+/// Clear, monochrome controls for the settings and root-navigation refinement.
+/// Botanical bitmap artwork remains available for illustrated feature surfaces.
+struct MoriInterfaceIcon: View {
+    let icon: MoriBitmapIcon
+    var size: CGFloat = 22
+    var opacity: Double = 1
+
+    private var systemName: String {
+        switch icon {
+        case .focus: return "scope"
+        case .roots: return "calendar"
+        case .pattern: return "square.stack"
+        case .appLimit, .lockShield: return "lock.shield"
+        case .leaf: return "leaf"
+        case .beforeFeedReset: return "pause.circle"
+        default: return icon.legacySystemName
+        }
+    }
+
+    var body: some View {
+        Image(systemName: systemName)
+            .font(.system(size: size, weight: .regular))
+            .foregroundStyle(MoriColors.botanicalInk)
+            .opacity(opacity)
+            .accessibilityHidden(true)
+    }
+}

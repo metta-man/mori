@@ -57,7 +57,7 @@
 "Listening for signal..." = "正在等待信號...";
 
 "Week Archive" = "週歸檔";
-"Life Grid" = "生命格";
+"Life Grid" = "Life Grid";
 "Your life, at a glance" = "溫柔收好你度過的週";
 "View Week Archive" = "查看週歸檔";
 "This square is this week." = "這個方格就是這一週。";
@@ -171,7 +171,7 @@
 "Open" = "開啟";
 "None" = "無";
 "Default Apps" = "預設 App";
-"Morning Gate" = "晨間門檻";
+"Morning Gate" = "早晨暫停使用";
 "Morning Reset" = "晨間重置";
 "Before Feed Reset" = "資訊流前重置";
 "App Limit" = "App 限制";
@@ -620,7 +620,7 @@
 "Current week is outlined" = "目前週已描邊";
 "Customize" = "自訂";
 "Customize bell" = "自訂鈴聲";
-"Daily Signal" = "每日信號";
+"Daily Signal" = "每日使用訊號";
 "Default App List" = "預設 App 清單";
 "Delete" = "刪除";
 "Dismiss keyboard" = "收起鍵盤";
@@ -745,7 +745,7 @@
 "The connection is unstable" = "連線不穩定";
 "The partial Settle session will be saved as ended early." = "未完成的安定練習會儲存為提前結束。";
 "This is just an estimate — update it anytime" = "這只是估計值——你可以隨時更新";
-"This remains a usage signal for the default app list. It does not create an all-day hard App Limit." = "這仍然只是預設 App 清單的使用信號，不會建立全天強制 App 限制。";
+"This remains a usage signal for the default app list. It does not create an all-day hard App Limit." = "記錄預設 App 清單的使用門檻。達到門檻不會自動封鎖 App。";
 "Tiny actions" = "微小行動";
 "Open window" = "開啟視窗";
 "before_feed.live_activity.active_message" = "倒數結束時，資訊流開放視窗會關閉。";
@@ -926,7 +926,7 @@
 "screen_time.feature.settle.title" = "安定";
 "screen_time.feature.breathing.title" = "呼吸";
 "screen_time.feature.before_feed.title" = "資訊流前";
-"screen_time.feature.morning_gate.title" = "晨間門檻";
+"screen_time.feature.morning_gate.title" = "早晨暫停使用";
 "screen_time.feature.walk_offline_reset.title" = "步行 / 離線重置";
 "screen_time.feature.journal.title" = "記錄";
 "screen_time.feature.daily_check_in.title" = "每日簽到";
@@ -1793,7 +1793,7 @@
 "Mori creates one quiet moment before a feed opens." = "Mori 在資訊流打開前，為你留下一個安靜片刻。";
 "Onboarding and saved check-ins." = "引導流程與已儲存的每日記錄。";
 "Open Life Grid" = "打開生命格";
-"Optional, gentle nudges." = "可選的溫和提醒。";
+"Optional, gentle nudges." = "選擇提醒時間。";
 "Preferences" = "偏好設定";
 "Setup" = "設定";
 "Start date and archive range." = "起始日期與歸檔範圍。";
@@ -1825,7 +1825,7 @@
 "Prevent Changes" = "防止修改";
 "Advanced" = "進階";
 "screen_time.advanced.summary_locked" = "%d 個時段限制 · PIN 保護";
-"screen_time.advanced.summary" = "%d 個時段限制 · 每日信號與診斷";
+"screen_time.advanced.summary" = "%d 個時段限制 · 使用訊號與診斷";
 "Help improve Mori?" = "幫助改善 Mori？";
 "Share anonymous, coarse usage analytics so we can improve reliability. Journal text, photos, Health data, exact dates, and selected app names are never included. Analytics are kept for no more than 90 days." = "分享匿名、概略的使用分析，協助我們改善穩定性。日誌文字、相片、健康資料、確實日期及所選 App 名稱絕不會包括在內。分析資料最多保留 90 日。";
 "Share Anonymous Analytics" = "分享匿名分析資料";
@@ -1925,3 +1925,43 @@
 "Longest quiet" = "最長靜心時段";
 "Today's intention" = "今天的心意";
 "Set a gentle intention for today." = "為今天留下一個小小的心意。";
+
+/* Reusable block lists */
+"Block Lists" = "封鎖清單";
+"Saved apps for work, study, and your own routines." = "為工作、讀書和日常活動儲存 apps 清單。";
+"Keep a different app list for work, study, or time for yourself." = "為工作、讀書或私人時間，準備不同的 apps 清單。";
+"A little space for each part of your day." = "為一天的不同時刻，留一點空間。";
+"Name a list, then choose the apps and websites you want to set aside." = "為清單命名，再選擇想暫時放下的 apps 和網站。";
+"Add Block List" = "新增封鎖清單";
+"Load a saved list when choosing apps for App Limits or a focus session. Changes here do not change lists already in use." = "儲存清單不會開啟限制。請在 App 限制或專注時段選擇 App 時套用。修改清單不會更新正在使用的清單。";
+"Could not read your block lists. Your saved data has been kept." = "未能讀取封鎖清單，已保留你的資料。";
+"For example, Work or Study" = "例如：返工、讀書";
+"List name" = "清單名稱";
+"Choose individual apps and websites inside categories. You can also save an empty list and add apps later." = "請在類別內選擇個別 apps 和網站。也可以先儲存空白清單，稍後再加 apps。";
+"Choose individual apps and websites inside categories." = "請在類別內選擇個別 apps 和網站。";
+"Delete Block List" = "刪除封鎖清單";
+"New Block List" = "新增封鎖清單";
+"Edit Block List" = "編輯封鎖清單";
+"Delete this block list?" = "刪除此封鎖清單？";
+"Lists already in use will stay unchanged." = "已套用的清單會保持不變。";
+"Could not save your block lists. Please try again." = "未能儲存封鎖清單，請再試一次。";
+"A block list already has this name. Choose another name." = "已有同名的封鎖清單，請選擇另一個名稱。";
+"Load Block List" = "載入封鎖清單";
+"Review the apps below, then tap Done to apply." = "檢查下方的 apps，再按「完成」套用。";
+"Choose Apps" = "選擇 App";
+"No apps selected" = "未選擇 App";
+"Try again" = "再試一次";
+
+"App limits, preferences, and your data." = "App 限制、個人偏好與資料。";
+
+"App use" = "App 使用設定";
+
+"Personal preferences" = "個人偏好";
+
+"Data and about" = "資料與關於";
+
+"Save app groups to apply later." = "儲存常用 App 組合，稍後套用。";
+
+"Allow Screen Time → Choose apps → Turn on limits" = "允許螢幕使用時間 → 選擇 App → 開啟限制";
+
+"Other resets" = "其他靜心方式";

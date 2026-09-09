@@ -2,6 +2,7 @@ import SwiftUI
 
 private enum SettingsRoute: Hashable {
     case appLimits
+    case blockLists
     case archive
     case reminders
     case language
@@ -19,8 +20,8 @@ struct SettingsView: View {
         NavigationStack(path: $navigationPath) {
             MoriRootScrollScreen(
                 title: "Settings",
-                subtitle: "Keep Mori quiet, personal, and yours.",
-                spacing: 22,
+                subtitle: "App limits, preferences, and your data.",
+                spacing: 20,
                 bottomPadding: 42,
                 backgroundVariant: .settings,
                 minimumTopInset: 18,
@@ -37,12 +38,26 @@ struct SettingsView: View {
                     .clipShape(Capsule())
                 }
             ) {
-                NavigationLink(value: SettingsRoute.appLimits) {
-                    SettingsAppLimitsCard(statusText: screenTimeStatusText)
+                SettingsLinkSection(title: "App use") {
+                    NavigationLink(value: SettingsRoute.appLimits) {
+                        SettingsCompactLink(
+                            title: "App Limits",
+                            subtitle: screenTimeStatusText,
+                            icon: .appLimit
+                        )
+                    }
+                    SettingsLinkDivider()
+                    NavigationLink(value: SettingsRoute.blockLists) {
+                        SettingsCompactLink(
+                            title: "Block Lists",
+                            subtitle: "Save app groups to apply later.",
+                            icon: .pattern
+                        )
+                    }
+                    .accessibilityIdentifier("settings-block-lists")
                 }
-                .buttonStyle(.plain)
 
-                SettingsLinkSection(title: "Your Mori") {
+                SettingsLinkSection(title: "Personal preferences") {
                     NavigationLink(value: SettingsRoute.archive) {
                         SettingsCompactLink(
                             title: "Life Grid",
@@ -72,7 +87,7 @@ struct SettingsView: View {
                     }
                 }
 
-                SettingsLinkSection(title: "Mori") {
+                SettingsLinkSection(title: "Data and about") {
                     NavigationLink(value: SettingsRoute.appAndData) {
                         SettingsCompactLink(
                             title: "App and Data",
@@ -99,6 +114,8 @@ struct SettingsView: View {
                 switch route {
                 case .appLimits:
                     LockedScreenTimeSettingsView()
+                case .blockLists:
+                    LockedScreenTimeSettingsView(showsBlockLists: true)
                 case .archive:
                     ArchiveSettingsView()
                 case .reminders:
@@ -122,56 +139,6 @@ struct SettingsView: View {
 
     private var screenTimeStatusText: String {
         ScreenTimeSettingsLinkPresentation(appLimitManager: appLimitManager).statusText
-    }
-}
-
-private struct SettingsAppLimitsCard: View {
-    let statusText: String
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack(alignment: .top, spacing: 13) {
-                MoriProductSymbolView(
-                    symbol: .appLimit,
-                    size: 22,
-                    tint: MoriColors.botanicalInk,
-                    opacity: 0.94
-                )
-                .frame(width: 42, height: 42)
-                .background(MoriColors.botanicalInk.opacity(0.09))
-                .clipShape(Circle())
-                .accessibilityHidden(true)
-
-                VStack(alignment: .leading, spacing: 5) {
-                    Text(MoriL10n.display("Protect your attention"))
-                        .font(.system(size: 20, weight: .medium, design: .serif))
-                        .foregroundColor(MoriColors.botanicalInk)
-
-                    Text(MoriL10n.display(statusText))
-                        .font(MoriTypography.caption)
-                        .foregroundColor(MoriColors.botanicalMuted)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-            }
-
-            HStack(spacing: 8) {
-                Text(MoriL10n.display("Open App Limits"))
-                    .font(.system(size: 14, weight: .semibold))
-
-                Spacer()
-
-                MoriBitmapIconImage(icon: .chevron, size: 13, opacity: 0.72)
-                    .accessibilityHidden(true)
-            }
-            .foregroundColor(MoriColors.botanicalInk)
-            .frame(minHeight: MoriV2Layout.minimumHitTarget)
-            .padding(.horizontal, 14)
-            .background(MoriColors.botanicalInk.opacity(0.075))
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-        }
-        .moriSanctuaryBox(cornerRadius: 22, padding: 16, tone: .paper, castsShadow: true)
-        .accessibilityElement(children: .combine)
-        .accessibilityAddTraits(.isButton)
     }
 }
 
@@ -207,7 +174,7 @@ private struct SettingsCompactLink: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            MoriBitmapIconImage(icon: icon, size: 17, opacity: 0.74)
+            MoriInterfaceIcon(icon: icon, size: 22)
                 .frame(width: 30, height: 30)
                 .background(MoriColors.botanicalInk.opacity(0.055))
                 .clipShape(Circle())
@@ -215,14 +182,14 @@ private struct SettingsCompactLink: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(MoriL10n.display(title))
-                    .font(.system(size: 15, weight: .medium))
+                    .font(.body.weight(.medium))
                     .foregroundColor(MoriColors.botanicalInk)
 
                 if let subtitle {
                     Text(MoriL10n.display(subtitle))
-                        .font(.system(size: 12, weight: .regular))
+                        .font(.subheadline)
                         .foregroundColor(MoriColors.botanicalMuted)
-                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
             }
 
@@ -230,16 +197,18 @@ private struct SettingsCompactLink: View {
 
             if let value {
                 Text(value)
-                    .font(.system(size: 13, weight: .regular))
+                    .font(.subheadline)
                     .foregroundColor(MoriColors.botanicalMuted)
-                    .lineLimit(1)
+                    .fixedSize(horizontal: false, vertical: true)
             }
 
-            MoriBitmapIconImage(icon: .chevron, size: 12, opacity: 0.48)
+            MoriInterfaceIcon(icon: .chevron, size: 13, opacity: 0.7)
                 .accessibilityHidden(true)
         }
         .padding(.horizontal, 14)
+        .padding(.vertical, 12)
         .frame(maxWidth: .infinity, minHeight: 66, alignment: .leading)
+        .multilineTextAlignment(.leading)
         .contentShape(Rectangle())
         .accessibilityElement(children: .combine)
     }

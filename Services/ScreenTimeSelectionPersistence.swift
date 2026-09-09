@@ -75,6 +75,7 @@ struct ScreenTimeSelectionPersistence {
     }
 
     func clearAll() {
+        defaults.removeObject(forKey: "mori_saved_block_lists_v1")
         defaults.removeObject(forKey: MoriScreenTimeShared.selectionKey)
         defaults.removeObject(forKey: MoriScreenTimeShared.defaultSelectionKey)
         defaults.removeObject(forKey: MoriScreenTimeShared.defaultSelectionDisplayNamesKey)

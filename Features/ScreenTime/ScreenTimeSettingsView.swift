@@ -206,7 +206,8 @@ struct ScreenTimeSettingsView: View {
             ScreenTimeSettingsPickerSheet(
                 title: target.settingsTitle,
                 selection: $pickerSelection,
-                onDone: { finishPicker(target) }
+                onDone: { finishPicker(target) },
+                allowsSavedBlockLists: target != .feature(.walkOfflineReset)
             )
         case .shortcutGuide:
             MoriBeforeFeedShortcutGuideSheet()

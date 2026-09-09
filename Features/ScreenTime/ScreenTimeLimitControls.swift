@@ -60,7 +60,8 @@ struct ScreenTimeLimitControls: View {
             ScreenTimeSettingsPickerSheet(
                 title: target.inlineTitle,
                 selection: $pickerSelection,
-                onDone: { finishPicker(target) }
+                onDone: { finishPicker(target) },
+                allowsSavedBlockLists: target != .feature(.walkOfflineReset)
             )
         }
     }

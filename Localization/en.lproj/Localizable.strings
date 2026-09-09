@@ -171,7 +171,7 @@
 "Open" = "Open";
 "None" = "None";
 "Default Apps" = "Default Apps";
-"Morning Gate" = "Morning Gate";
+"Morning Gate" = "Morning pause";
 "Morning Reset" = "Morning Reset";
 "Before Feed Reset" = "Before Feed Reset";
 "App Limit" = "App Limit";
@@ -619,7 +619,7 @@
 "Current week is outlined" = "Current week is outlined";
 "Customize" = "Customize";
 "Customize bell" = "Customize bell";
-"Daily Signal" = "Daily Signal";
+"Daily Signal" = "Daily usage signal";
 "Default App List" = "Default App List";
 "Delete" = "Delete";
 "Dismiss keyboard" = "Dismiss keyboard";
@@ -743,7 +743,7 @@
 "The connection is unstable" = "The connection is unstable";
 "The partial Settle session will be saved as ended early." = "The partial Settle session will be saved as ended early.";
 "This is just an estimate — update it anytime" = "This is just an estimate — update it anytime";
-"This remains a usage signal for the default app list. It does not create an all-day hard App Limit." = "This remains a usage signal for the default app list. It does not create an all-day hard App Limit.";
+"This remains a usage signal for the default app list. It does not create an all-day hard App Limit." = "Tracks a usage threshold for the default app list. Reaching it does not automatically block apps.";
 "Tiny actions" = "Tiny actions";
 "Open window" = "Open window";
 "before_feed.live_activity.active_message" = "Feed access closes when the timer ends.";
@@ -924,7 +924,7 @@
 "screen_time.feature.settle.title" = "Settle";
 "screen_time.feature.breathing.title" = "Breathing";
 "screen_time.feature.before_feed.title" = "Before Feed";
-"screen_time.feature.morning_gate.title" = "Morning Gate";
+"screen_time.feature.morning_gate.title" = "Morning pause";
 "screen_time.feature.walk_offline_reset.title" = "Walk / Offline Reset";
 "screen_time.feature.journal.title" = "Log";
 "screen_time.feature.daily_check_in.title" = "Daily Check-In";
@@ -1793,7 +1793,7 @@
 "Mori creates one quiet moment before a feed opens." = "Mori creates one quiet moment before a feed opens.";
 "Onboarding and saved check-ins." = "Onboarding and saved check-ins.";
 "Open Life Grid" = "Open Life Grid";
-"Optional, gentle nudges." = "Optional, gentle nudges.";
+"Optional, gentle nudges." = "Choose when to be reminded.";
 "Preferences" = "Preferences";
 "Setup" = "Setup";
 "Start date and archive range." = "Start date and archive range.";
@@ -1825,7 +1825,7 @@
 "Prevent Changes" = "Prevent Changes";
 "Advanced" = "Advanced";
 "screen_time.advanced.summary_locked" = "%d session limits · PIN protected";
-"screen_time.advanced.summary" = "%d session limits · Daily signal and diagnostics";
+"screen_time.advanced.summary" = "%d session limits · Usage signal and diagnostics";
 "Help improve Mori?" = "Help improve Mori?";
 "Share anonymous, coarse usage analytics so we can improve reliability. Journal text, photos, Health data, exact dates, and selected app names are never included. Analytics are kept for no more than 90 days." = "Share anonymous, coarse usage analytics so we can improve reliability. Journal text, photos, Health data, exact dates, and selected app names are never included. Analytics are kept for no more than 90 days.";
 "Share Anonymous Analytics" = "Share Anonymous Analytics";
@@ -1925,3 +1925,43 @@
 "Longest quiet" = "Longest quiet";
 "Today's intention" = "Today's intention";
 "Set a gentle intention for today." = "Set a gentle intention for today.";
+
+/* Reusable block lists */
+"Block Lists" = "Block Lists";
+"Saved apps for work, study, and your own routines." = "Saved apps for work, study, and your own routines.";
+"Keep a different app list for work, study, or time for yourself." = "Keep a different app list for work, study, or time for yourself.";
+"A little space for each part of your day." = "A little space for each part of your day.";
+"Name a list, then choose the apps and websites you want to set aside." = "Name a list, then choose the apps and websites you want to set aside.";
+"Add Block List" = "Add Block List";
+"Load a saved list when choosing apps for App Limits or a focus session. Changes here do not change lists already in use." = "Saving a list does not turn on limits. Apply it when choosing apps for App Limits or a focus session. Editing it does not update lists already in use.";
+"Could not read your block lists. Your saved data has been kept." = "Could not read your block lists. Your saved data has been kept.";
+"For example, Work or Study" = "For example, Work or Study";
+"List name" = "List name";
+"Choose individual apps and websites inside categories. You can also save an empty list and add apps later." = "Choose individual apps and websites inside categories. You can also save an empty list and add apps later.";
+"Choose individual apps and websites inside categories." = "Choose individual apps and websites inside categories.";
+"Delete Block List" = "Delete Block List";
+"New Block List" = "New Block List";
+"Edit Block List" = "Edit Block List";
+"Delete this block list?" = "Delete this block list?";
+"Lists already in use will stay unchanged." = "Lists already in use will stay unchanged.";
+"Could not save your block lists. Please try again." = "Could not save your block lists. Please try again.";
+"A block list already has this name. Choose another name." = "A block list already has this name. Choose another name.";
+"Load Block List" = "Load Block List";
+"Review the apps below, then tap Done to apply." = "Review the apps below, then tap Done to apply.";
+"Choose Apps" = "Choose Apps";
+"No apps selected" = "No apps selected";
+"Try again" = "Try again";
+
+"App limits, preferences, and your data." = "App limits, preferences, and your data.";
+
+"App use" = "App use";
+
+"Personal preferences" = "Personal preferences";
+
+"Data and about" = "Data and about";
+
+"Save app groups to apply later." = "Save app groups to apply later.";
+
+"Allow Screen Time → Choose apps → Turn on limits" = "Allow Screen Time → Choose apps → Turn on limits";
+
+"Other resets" = "Other resets";

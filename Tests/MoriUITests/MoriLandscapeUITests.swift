@@ -7,7 +7,8 @@ final class MoriLandscapeUITests: XCTestCase {
         app.launchArguments = [
             "-MoriSkipOnboardingForUITest", "-MoriSkipAnalyticsConsentForUITest",
             "-MoriSkipCloudBackupForUITest", "-MoriDisableAIPulse",
-            "-AppleLanguages", "(en)", "-AppleLocale", "en_US"
+            "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
+            "-mori_locale_preference", "en"
         ] + arguments
         app.launch()
         return app

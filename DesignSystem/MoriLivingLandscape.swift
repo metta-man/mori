@@ -27,6 +27,7 @@ struct MoriLivingLandscape: View {
 
     var mood: Mood = .meadow
     var motionEnabled = true
+    var artworkAlignment: Alignment = .center
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @Environment(\.scenePhase) private var scenePhase
     @Environment(\.moriLandscapeMotionAllowed) private var motionAllowed
@@ -55,7 +56,7 @@ struct MoriLivingLandscape: View {
             }
             .frame(width: canvas.width, height: canvas.height)
             .saturation(mood == .waterside ? 0.78 : 0.88)
-            .frame(width: proxy.size.width, height: proxy.size.height)
+            .frame(width: proxy.size.width, height: proxy.size.height, alignment: artworkAlignment)
             .clipped()
         }
         .allowsHitTesting(false)

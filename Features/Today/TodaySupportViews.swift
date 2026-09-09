@@ -247,8 +247,8 @@ struct TodayPrimaryResetCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
-            MoriLivingLandscape()
-                .aspectRatio(dynamicTypeSize.isAccessibilitySize ? 3.2 : 1.5, contentMode: .fit)
+            MoriLivingLandscape(artworkAlignment: .top)
+                .aspectRatio(dynamicTypeSize.isAccessibilitySize ? 3.2 : 1.8, contentMode: .fit)
                 .mask(LinearGradient(stops: [
                     .init(color: .clear, location: 0),
                     .init(color: .white, location: 0.10),

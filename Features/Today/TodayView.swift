@@ -94,7 +94,7 @@ struct TodayView: View {
                 quietMinutes: quietMinutesToday,
                 longestQuietMinutes: longestQuietToday
             )
-            .padding(.top, 18)
+            .padding(.top, 8)
 
             TodaySecondaryContextCard(
                 focus: $todayFocus,

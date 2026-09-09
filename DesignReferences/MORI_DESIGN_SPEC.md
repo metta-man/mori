@@ -746,3 +746,12 @@ A Mori visual task is complete only when:
 - root-screen watercolor continues behind the status bar with no visible navigation-bar background, divider, or seam
 - screenshots have been reviewed after implementation
 - at least two visual-refinement passes have been completed
+
+## Settings clarity and functional icons — 2026-09-08
+
+The founder approved compact Settings grouped by App use, Personal preferences,
+and Data and about; clear functional icon shapes; and a roughly 15–20% reduction
+in Today's landscape height. Keep the watercolor, paper, forest palette and all
+working routes. Typed monochrome SF Symbols may replace decorative bitmap icons
+on settings and root navigation; illustrated feature artwork remains unchanged.
+See `docs/quality/SETTINGS_ICON_TODAY_REFINEMENT.md` and its Figma comparison.

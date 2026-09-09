@@ -7,10 +7,41 @@ struct ScreenTimeSettingsPickerSheet: View {
     let title: String
     @Binding var selection: FamilyActivitySelection
     let onDone: () -> Void
+    var allowsSavedBlockLists = false
+    @State private var savedLists: [MoriBlockList] = []
+    @State private var loadedListName: String?
 
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
+                if allowsSavedBlockLists, !savedLists.isEmpty {
+                    Menu {
+                        ForEach(savedLists) { list in
+                            Button(list.name) {
+                                selection = list.selection
+                                loadedListName = list.name
+                            }
+                            .disabled(list.selectedCount == 0)
+                        }
+                    } label: {
+                        HStack {
+                            Text(MoriL10n.display("Load Block List"))
+                            Spacer()
+                            Text(loadedListName ?? MoriL10n.display("Choose"))
+                                .lineLimit(1)
+                        }
+                        .font(.body)
+                        .frame(minHeight: 44)
+                        .padding(.horizontal, 16)
+                    }
+                    if loadedListName != nil {
+                        Text(MoriL10n.display("Review the apps below, then tap Done to apply."))
+                            .font(.subheadline)
+                            .foregroundColor(MoriColors.botanicalMuted)
+                            .padding(.horizontal, 16)
+                            .padding(.bottom, 8)
+                    }
+                }
                 selectionContext
 
                 Divider()
@@ -41,6 +72,9 @@ struct ScreenTimeSettingsPickerSheet: View {
             .toolbarBackground(.visible, for: .navigationBar)
         }
         .tint(MoriColors.botanicalInk)
+        .onAppear {
+            if allowsSavedBlockLists { savedLists = (try? MoriBlockListStore().load()) ?? [] }
+        }
     }
 
     private var selectionContext: some View {

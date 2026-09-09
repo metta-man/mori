@@ -63,7 +63,7 @@ private struct MoriTabBarItem: View {
     var body: some View {
         Button(action: onSelect) {
             VStack(spacing: 4) {
-                MoriBitmapIconImage(
+                MoriInterfaceIcon(
                     icon: tab.bitmapIcon,
                     size: 23,
                     opacity: isSelected ? 1 : 0.72

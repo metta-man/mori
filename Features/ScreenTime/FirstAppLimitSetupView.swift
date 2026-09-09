@@ -242,7 +242,8 @@ struct FirstAppLimitSetupSurface: View {
             ScreenTimeSettingsPickerSheet(
                 title: MoriL10n.display("Apps to limit"),
                 selection: $pickerSelection,
-                onDone: { finishPicker(target) }
+                onDone: { finishPicker(target) },
+                allowsSavedBlockLists: target != .feature(.walkOfflineReset)
             )
         }
     }
