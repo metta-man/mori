@@ -121,7 +121,7 @@ struct MoriV2RootScrollScreen<Content: View>: View {
                 ScrollView(showsIndicators: false) {
                     VStack(alignment: .leading, spacing: MoriV2Layout.sectionGap) {
                         header
-                            .padding(.top, topInset(for: proxy.safeAreaInsets.top))
+                            .padding(.top, topInset(for: proxy.safeAreaInsets.top) - proxy.safeAreaInsets.top - 12)
 
                         content
                     }
@@ -136,9 +136,10 @@ struct MoriV2RootScrollScreen<Content: View>: View {
                         value: isVisible
                     )
                 }
+                .clipped()
+                .padding(.top, 12)
             }
         }
-        .ignoresSafeArea(edges: .top)
         .onAppear {
             isVisible = true
         }

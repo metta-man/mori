@@ -156,12 +156,6 @@ struct GratitudeJournalHeaderActions: View {
             .foregroundColor(MoriColors.sanctuaryInk)
             .opacity(0.84)
             .frame(width: 44, height: 44)
-            .background(MoriColors.sanctuarySurface.opacity(0.82))
-            .clipShape(Circle())
-            .overlay(
-                Circle()
-                    .stroke(Color.white.opacity(0.72), lineWidth: 1)
-            )
             .contentShape(Circle())
     }
 
@@ -223,12 +217,12 @@ struct GratitudeJournalHomeContent: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 21) {
-            MoriLivingLandscape(mood: .reading, motionEnabled: false)
-                .aspectRatio(2.8, contentMode: .fit)
+            MoriLivingLandscape(mood: .reading, motionEnabled: false, artworkAlignment: .bottom)
+                .aspectRatio(4.5, contentMode: .fit)
                 .mask(LinearGradient(stops: [
                     .init(color: .clear, location: 0),
-                    .init(color: .white, location: 0.20),
-                    .init(color: .white, location: 0.60),
+                    .init(color: .white.opacity(0.55), location: 0.35),
+                    .init(color: .white.opacity(0.70), location: 0.60),
                     .init(color: .clear, location: 1)
                 ], startPoint: .top, endPoint: .bottom))
                 .padding(.horizontal, -20)
@@ -788,7 +782,7 @@ private struct JournalLogUtilitiesCard: View {
             }
 
             utilityButton(
-                title: "Week Archive",
+                title: "Life Grid",
                 subtitle: "Return to recorded weeks when you choose.",
                 icon: .roots,
                 action: onOpenWeekArchive
@@ -875,7 +869,7 @@ private struct JournalTopRowsCard: View {
 
             Button(action: onOpenWeekArchive) {
                 JournalTopRow(
-                    title: "Week Archive",
+                    title: "Life Grid",
                     subtitle: "Weeks, logs, quiet minutes.",
                     icon: .roots,
                     productSymbol: .weekArchive,
@@ -1025,7 +1019,7 @@ struct JournalWeekArchiveCard: View {
     var body: some View {
         Button(action: action) {
             MoriFeatureBox(
-                title: "Week Archive",
+                title: "Life Grid",
                 subtitle: "Review recorded weeks, daily logs, quiet minutes, and reset history.",
                 icon: .roots,
                 detail: "Weeks",

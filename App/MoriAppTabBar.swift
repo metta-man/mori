@@ -12,6 +12,19 @@ struct MoriBottomTabBarOverlay: View {
         .padding(.bottom, MoriMainTabBarMetrics.floatingBottomSpacing)
         .frame(maxWidth: .infinity)
         .frame(height: MoriMainTabBarMetrics.overlayHeight, alignment: .bottom)
+        .background {
+            LinearGradient(
+                stops: [
+                    .init(color: .clear, location: 0),
+                    .init(color: MoriV2Palette.paper.opacity(0.96), location: 0.35),
+                    .init(color: MoriV2Palette.paper, location: 1)
+                ],
+                startPoint: .top,
+                endPoint: .bottom
+            )
+            .padding(.top, -MoriMainTabBarMetrics.topClearance)
+            .allowsHitTesting(false)
+        }
         .ignoresSafeArea(edges: .bottom)
     }
 }

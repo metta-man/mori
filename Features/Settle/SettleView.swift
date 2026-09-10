@@ -39,7 +39,7 @@ struct SettleView: View {
             backgroundVariant: .focus,
             minimumTopInset: 66,
             headerTextSpacing: 5,
-            headerTextLeadingInset: 8,
+            headerTextLeadingInset: 0,
             settingsButtonStyle: .plain,
             showsBackground: false,
             animatesEntrance: false,

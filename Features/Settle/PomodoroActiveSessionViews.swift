@@ -167,12 +167,12 @@ struct PomodoroActiveSessionSurface<ControlRow: View>: View {
                         }
                     }
                     .padding(.horizontal, 22)
-                    .padding(.top, max(56, proxy.safeAreaInsets.top))
+                    .padding(.top, 0)
                     .padding(.bottom, max(30, proxy.safeAreaInsets.bottom))
                 }
+                .clipped()
             }
         }
-        .ignoresSafeArea()
     }
 
     private var activeHeader: some View {

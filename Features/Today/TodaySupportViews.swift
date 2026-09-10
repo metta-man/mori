@@ -90,12 +90,7 @@ struct TodayRootScrollScreen<Content: View>: View {
             ScrollView(showsIndicators: false) {
                 VStack(alignment: .leading, spacing: 0) {
                     header
-                        .padding(
-                            .top,
-                            dynamicTypeSize.isAccessibilitySize ? 24 : 45
-                        )
-                        .padding(.leading, dynamicTypeSize.isAccessibilitySize ? 32 : 45)
-                        .padding(.trailing, dynamicTypeSize.isAccessibilitySize ? 32 : 30)
+                        .padding(.horizontal, 22)
 
                     VStack(alignment: .leading, spacing: 0) {
                         content
@@ -105,20 +100,21 @@ struct TodayRootScrollScreen<Content: View>: View {
                 }
                 .padding(.bottom, MoriMainTabBarMetrics.scrollBottomInset + MoriTheme.Spacing.xLarge)
             }
+            .clipped()
+            .padding(.top, 12)
         }
     }
 
     private var header: some View {
         HStack(alignment: .top, spacing: 16) {
-            VStack(alignment: .leading, spacing: 13) {
+            VStack(alignment: .leading, spacing: 8) {
                 Text(MoriL10n.display(title))
-                    .font(.system(.title, design: .serif, weight: .regular))
+                    .font(MoriV2Type.rootTitle)
                     .foregroundColor(MoriV2Palette.forestInk)
                     .fixedSize(horizontal: false, vertical: true)
 
                 Text(MoriL10n.display(subtitle))
-                    .font(.system(.footnote, design: .default, weight: .regular))
-                    .fontWidth(.condensed)
+                    .font(MoriV2Type.supporting)
                     .foregroundColor(MoriV2Palette.stone)
                     .lineSpacing(1)
                     .fixedSize(horizontal: false, vertical: true)
@@ -276,7 +272,7 @@ struct TodayPrimaryResetCard: View {
                 }
             }
             .padding(.top, 8)
-            .padding(.bottom, 20)
+            .padding(.bottom, 8)
         }
         .accessibilityElement(children: .contain)
         .accessibilityValue(masteryFeedbackAccessibilityText)

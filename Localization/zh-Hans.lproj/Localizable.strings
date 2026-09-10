@@ -1973,3 +1973,36 @@
 "Keep screen on" = "保持屏幕开启";
 
 "Your session continues when the screen is off." = "屏幕关闭后，练习仍会继续。";
+
+/* Core screen aesthetic review: complete localized presentation. */
+"Deep Session" = "深度专注";
+"Protect one quiet block." = "留一段安静的时间。";
+"Stay in the forest" = "让心留在这片宁静";
+"Blocked apps" = "已选屏蔽 App";
+"Start Deep Session" = "开始深度专注";
+"Session options" = "专注选项";
+"Show session options" = "显示专注选项";
+"Hide session options" = "收起专注选项";
+"See the shape of your days." = "看看日子留下的色彩。";
+"No entry" = "未记录";
+"Long pause" = "长休息";
+"Session complete" = "专注已完成";
+"deep_session.blocked_count" = "%d 个 App";
+"deep_session.options.summary" = "%d 分钟 · %d 次循环";
+"deep_session.settings.focus_minutes" = "%d 分钟静心时间";
+
+"Pattern details" = "情绪模式详情";
+
+"Notice a trigger, thought, or response." = "留意触发点、想法或回应。";
+
+"Return to recorded weeks when you choose." = "随时回顾记录过的日子。";
+
+"Random memory" = "随机回忆";
+
+"Revisit one past entry." = "重读一段过去的记录。";
+
+"See all saved entries." = "查看所有已保存的记录。";
+
+"Optional planner. Open it only when one check-in is not enough." = "需要多一点规划时，再打开它。";
+
+"Open Daily Spark" = "打开 Daily Spark";

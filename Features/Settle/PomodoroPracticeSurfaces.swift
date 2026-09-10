@@ -37,7 +37,7 @@ struct PomodoroPracticeSetupSurface: View {
                 VStack(alignment: .leading, spacing: 18) {
                     VStack(spacing: 6) {
                         Text(MoriL10n.display("Deep Session"))
-                            .font(.system(size: 32, weight: .regular, design: .serif))
+                            .font(MoriTheme.Typography.pageTitle)
                             .foregroundColor(MoriV2Palette.forestInk)
 
                         Text(MoriL10n.display("Protect one quiet block."))
@@ -48,11 +48,26 @@ struct PomodoroPracticeSetupSurface: View {
                     .multilineTextAlignment(.center)
                     .padding(.bottom, 2)
 
-                    PomodoroSetupHeroVisual(
-                        phase: phase,
-                        progress: max(0.035, progress),
-                        timeText: timeText
-                    )
+                    VStack(spacing: 4) {
+                        Text(MoriL10n.display("Duration"))
+                            .font(MoriV2Type.supporting)
+                            .foregroundColor(MoriV2Palette.stone)
+
+                        PomodoroSetupHeroVisual(
+                            phase: phase,
+                            progress: max(0.035, progress),
+                            timeText: timeText
+                        )
+
+                        Stepper(MoriL10n.display("Duration"), value: durationBinding,
+                                in: durationRange, step: phase == .shortBreak ? 1 : 5)
+                            .labelsHidden()
+                            .fixedSize()
+                            .disabled(!timerState.canChangeDuration)
+                            .accessibilityValue(timeText)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
 
                     blockedAppsPanel
 
@@ -64,15 +79,31 @@ struct PomodoroPracticeSetupSurface: View {
                     sessionOptionsDisclosure
                 }
                 .padding(.horizontal, 20)
-                .padding(.top, 72)
+                .padding(.top, 24)
                 .padding(.bottom, MoriMainTabBarMetrics.scrollBottomInset)
             }
         }
     }
 
+    private var durationBinding: Binding<Int> {
+        switch phase {
+        case .focus, .completed: return $focusMinutes
+        case .shortBreak: return $shortBreakMinutes
+        case .longBreak: return $longBreakMinutes
+        }
+    }
+
+    private var durationRange: ClosedRange<Int> {
+        switch phase {
+        case .focus, .completed: return 5...90
+        case .shortBreak: return 1...30
+        case .longBreak: return 5...45
+        }
+    }
+
     private var blockedAppsPanel: some View {
         HStack(spacing: 12) {
-            MoriBitmapIconImage(icon: .lockShield, size: 17, opacity: 0.86)
+            MoriInterfaceIcon(icon: .appLimit, size: 24, opacity: 0.86)
                 .frame(width: 40, height: 40)
                 .background(MoriV2Palette.sage.opacity(0.12))
                 .clipShape(Circle())

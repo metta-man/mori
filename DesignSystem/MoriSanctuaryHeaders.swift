@@ -244,20 +244,21 @@ struct MoriRootScrollScreen<HeaderTrailing: View, Content: View>: View {
                                 topAnchorID: topAnchorID,
                                 trailing: { headerTrailing }
                             )
+                            .padding(.top, -proxy.safeAreaInsets.top - 12)
 
                             content
                         }
                         .padding(.horizontal, horizontalPadding)
                         .padding(.bottom, bottomPadding)
                     }
-                    .padding(.top, MoriRootScreenMetrics.visibleScrollTopOffset)
+                    .clipped()
+                    .padding(.top, MoriRootScreenMetrics.visibleScrollTopOffset + 12)
                     .onAppear {
                         onScrollAppear?(scrollProxy)
                     }
                 }
             }
         }
-        .ignoresSafeArea(edges: .top)
     }
 }
 

@@ -8,7 +8,8 @@ final class MoriLandscapeUITests: XCTestCase {
             "-MoriSkipOnboardingForUITest", "-MoriSkipAnalyticsConsentForUITest",
             "-MoriSkipCloudBackupForUITest", "-MoriDisableAIPulse",
             "-AppleLanguages", "(en)", "-AppleLocale", "en_US",
-            "-mori_locale_preference", "en"
+            "-mori_locale_preference", "en",
+            "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryL"
         ] + arguments
         app.launch()
         return app
@@ -65,6 +66,95 @@ final class MoriLandscapeUITests: XCTestCase {
         capture("Log")
         app.buttons["Today"].tap()
         XCTAssertTrue(app.staticTexts["Before Feed Reset"].waitForExistence(timeout: 5))
+    }
+
+    func testSetupDurationUpdatesTimerAndStartsChosenLength() {
+        let app = launch([
+            "-MoriOpenDeepSessionForUITest",
+            "-mori_settle_pomodoro_focus_breathing", "none",
+            "-mori_timer_dark_room_enabled", "NO"
+        ])
+        let duration = app.steppers.firstMatch
+        XCTAssertTrue(duration.waitForExistence(timeout: 10))
+        // Do not seed this editable preference via a launch argument: the
+        // UserDefaults argument domain overrides subsequent preference writes.
+        let initialMinutes = Int((duration.value as? String ?? "").split(separator: ":").first ?? "")
+        guard let initialMinutes else { return XCTFail("Missing duration value") }
+        let chosenMinutes = initialMinutes >= 90 ? initialMinutes - 5 : initialMinutes + 5
+        duration.buttons[initialMinutes >= 90 ? "Decrement" : "Increment"].tap()
+        let chosenDuration = XCTNSPredicateExpectation(
+            predicate: NSPredicate(format: "value == %@", String(format: "%02d:00", chosenMinutes)), object: duration
+        )
+        XCTAssertEqual(XCTWaiter.wait(for: [chosenDuration], timeout: 5), .completed)
+        capture("Chosen duration setup")
+        let start = app.buttons["Start Deep Session"]
+        for _ in 0..<4 where !start.isHittable { app.swipeUp() }
+        start.tap()
+        XCTAssertTrue(app.buttons["Pause"].waitForExistence(timeout: 10))
+        let timer = app.descendants(matching: .any).matching(
+            NSPredicate(format: "label MATCHES %@", String(format: ".*, (%02d:00|%02d:[0-9]{2}) remaining", chosenMinutes, chosenMinutes - 1))
+        ).firstMatch
+        XCTAssertTrue(timer.waitForExistence(timeout: 5))
+        capture("Chosen duration running")
+    }
+
+    func testLargeChineseCoreScreensRemainScrollable() {
+        verifyChineseCoreScreens(category: "UICTContentSizeCategoryAccessibilityXL", prefix: "Large zh")
+    }
+
+    func testCompactChineseCoreScreensRemainScrollable() {
+        verifyChineseCoreScreens(category: "UICTContentSizeCategoryL", prefix: "Compact zh")
+    }
+
+    func testRootScrollClearanceChinese() {
+        let roots: Set<String> = ["Today", "Focus", "Log"]
+        verifyChineseCoreScreens(category: "UICTContentSizeCategoryL", prefix: "Compact zh", screens: roots)
+        verifyChineseCoreScreens(category: "UICTContentSizeCategoryAccessibilityXL", prefix: "Large zh", screens: roots)
+    }
+
+    private func verifyChineseCoreScreens(category: String, prefix: String, screens: Set<String>? = nil) {
+        for (route, name) in [
+            ("", "Today"), ("-MoriOpenFocusForUITest", "Focus"),
+            ("-MoriOpenLogForUITest", "Log"), ("-MoriOpenSettingsForUITest", "Settings"),
+            ("-MoriOpenDeepSessionForUITest", "Setup"),
+            ("-MoriOpenDeepSessionForUITest", "Active"),
+            ("-MoriOpenWeekArchiveForUITest", "Life Grid")
+        ] {
+            if let screens, !screens.contains(name) { continue }
+            let app = XCUIApplication()
+            app.launchArguments = [
+                "-MoriSkipOnboardingForUITest", "-MoriSkipAnalyticsConsentForUITest",
+                "-MoriSkipCloudBackupForUITest", "-MoriDisableAIPulse",
+                "-AppleLanguages", "(zh-Hant)", "-AppleLocale", "zh_HK",
+                "-mori_locale_preference", "zh-Hant",
+                "-UIPreferredContentSizeCategoryName", category
+            ] + (route.isEmpty ? [] : [route])
+              + (name == "Active" ? ["-MoriAutoStartDeepSessionForUITest", "-mori_timer_dark_room_enabled", "NO"] : [])
+              + (name == "Log" ? ["-MoriStartFreshLogForUITest"] : [])
+            app.launch()
+            let destination: XCUIElement
+            switch name {
+            case "Today": destination = app.staticTexts["資訊流前重置"]
+            case "Focus": destination = app.buttons["專心做一件事"]
+            case "Log": destination = app.staticTexts["你現在感覺如何？"]
+            case "Settings": destination = app.buttons["完成"]
+            case "Setup": destination = app.steppers.firstMatch
+            case "Active": destination = app.buttons["暫停"]
+            default: destination = app.buttons["月"]
+            }
+            XCTAssertTrue(destination.waitForExistence(timeout: 30), name)
+            XCTAssertTrue(app.scrollViews.firstMatch.waitForExistence(timeout: 30), name)
+            capture("\(prefix) \(name) top")
+            app.swipeUp()
+            app.swipeUp()
+            capture("\(prefix) \(name) scrolled")
+            if name == "Focus" {
+                let support = app.buttons.matching(NSPredicate(format: "label CONTAINS %@", "專注工具")).firstMatch
+                XCTAssertTrue(support.isHittable)
+            }
+            if name == "Settings" { XCTAssertTrue(app.buttons["完成"].exists) }
+            app.terminate()
+        }
     }
 
     func testImmersiveFocusCanPauseResumeAndEnd() {

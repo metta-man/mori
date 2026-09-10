@@ -741,8 +741,8 @@ struct MoriModeCard: View {
         switch scene {
         case .deepSession:
             return [
-                MoriTheme.Colors.raisedPaper.opacity(0.68),
-                MoriTheme.Colors.raisedPaper.opacity(0.17),
+                MoriTheme.Colors.raisedPaper.opacity(0.96),
+                MoriTheme.Colors.raisedPaper.opacity(0.72),
                 .clear
             ]
         case .quietMode:

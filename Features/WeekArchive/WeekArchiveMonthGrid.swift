@@ -59,6 +59,17 @@ struct WeekArchiveMonthGrid: View {
             .padding(.top, 14)
 
             WeekArchiveMonthLegend()
+                .padding(.vertical, 12)
+                .background {
+                    MoriTheme.Colors.paper
+                        .mask(LinearGradient(stops: [
+                            .init(color: .clear, location: 0),
+                            .init(color: .white, location: 0.25),
+                            .init(color: .white, location: 0.75),
+                            .init(color: .clear, location: 1)
+                        ], startPoint: .top, endPoint: .bottom))
+                        .padding(.horizontal, -20)
+                }
                 .padding(.horizontal, 20)
                 .padding(.top, 51)
         }

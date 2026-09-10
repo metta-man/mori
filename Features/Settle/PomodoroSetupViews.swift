@@ -10,19 +10,21 @@ struct PomodoroSetupHeroVisual: View {
             VStack(spacing: 8) {
                 Text(timeText)
                     .font(.system(size: 62, weight: .regular, design: .serif))
-                    .foregroundColor(MoriV2Palette.forestInk)
+                    .moriQuietTimerStyle()
                     .monospacedDigit()
                     .lineLimit(1)
                     .minimumScaleFactor(0.72)
 
-                Text(MoriL10n.display(quietPhaseTitle))
-                    .font(MoriV2Type.supporting)
-                    .foregroundColor(MoriV2Palette.stone)
-                    .lineLimit(1)
+                if phase != .focus {
+                    Text(MoriL10n.display(quietPhaseTitle))
+                        .font(MoriV2Type.supporting)
+                        .foregroundColor(MoriV2Palette.stone)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
         }
         .frame(maxWidth: .infinity)
-        .frame(height: 180)
+        .frame(minHeight: phase == .focus ? 100 : 140)
         .accessibilityElement(children: .combine)
         .accessibilityLabel(MoriL10n.string(
             "deep_session.timer.accessibility",
