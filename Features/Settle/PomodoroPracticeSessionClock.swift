@@ -11,11 +11,6 @@ struct PomodoroPracticeDurations: Equatable {
     var longBreakSeconds: Int { longBreakMinutes * 60 }
 }
 
-struct PomodoroPracticeClockTick: Equatable {
-    let advancedElapsed: Bool
-    let finishedPhase: Bool
-}
-
 enum PomodoroPracticePhaseTransition: Equatable {
     case none
     case completed
@@ -30,6 +25,8 @@ struct PomodoroPracticeSessionClock: Equatable {
     private(set) var completedCycles = 0
     private(set) var focusSecondsCompleted = 0
     private(set) var breakSecondsCompleted = 0
+    private var lastAccountedAt: Date?
+    private var fractionalElapsed: TimeInterval = 0
 
     init(focusMinutes: Int = 25) {
         secondsRemaining = focusMinutes * 60
@@ -53,23 +50,30 @@ struct PomodoroPracticeSessionClock: Equatable {
         return true
     }
 
-    mutating func start(durations: PomodoroPracticeDurations) {
+    mutating func start(durations: PomodoroPracticeDurations, now: Date = Date()) {
         reset(durations: durations)
         timerState = .running
+        lastAccountedAt = now
     }
 
     mutating func pause() {
+        guard timerState == .running else { return }
         timerState = .paused
+        lastAccountedAt = nil
     }
 
-    mutating func resume() {
+    mutating func resume(now: Date = Date()) {
+        guard timerState == .paused else { return }
         timerState = .running
+        lastAccountedAt = now
     }
 
     mutating func complete() {
         timerState = .completed
         phase = .completed
         secondsRemaining = 0
+        lastAccountedAt = nil
+        fractionalElapsed = 0
     }
 
     mutating func reset(durations: PomodoroPracticeDurations) {
@@ -79,28 +83,34 @@ struct PomodoroPracticeSessionClock: Equatable {
         completedCycles = 0
         focusSecondsCompleted = 0
         breakSecondsCompleted = 0
+        lastAccountedAt = nil
+        fractionalElapsed = 0
     }
 
-    mutating func tick() -> PomodoroPracticeClockTick {
-        guard timerState == .running else {
-            return PomodoroPracticeClockTick(advancedElapsed: false, finishedPhase: false)
-        }
-
-        var advancedElapsed = false
-        if secondsRemaining > 0 {
-            secondsRemaining -= 1
-            advancedElapsed = phase == .focus || phase.isBreak
-            if phase == .focus {
-                focusSecondsCompleted += 1
-            } else if phase.isBreak {
-                breakSecondsCompleted += 1
+    /// Foreground ticks only refresh the display. A missing tick (lock screen,
+    /// background suspension) does not remove elapsed time from the session.
+    mutating func update(to now: Date, durations: PomodoroPracticeDurations) -> PomodoroPracticePhaseTransition {
+        guard timerState == .running, let anchor = lastAccountedAt, now >= anchor else { return .none }
+        let elapsed = now.timeIntervalSince(anchor) + fractionalElapsed
+        guard elapsed.isFinite else { return .none }
+        // Bound catch-up by the configured session, avoiding Int overflow for a bad date.
+        let maximum = Double(max(1, durations.cycles)) * Double(max(1, durations.focusSeconds) + max(1, durations.shortBreakSeconds) + max(1, durations.longBreakSeconds))
+        var seconds = Int(min(floor(elapsed), maximum))
+        fractionalElapsed = elapsed - floor(elapsed)
+        lastAccountedAt = now
+        var transition: PomodoroPracticePhaseTransition = .none
+        while seconds > 0 && timerState == .running {
+            let consumed = min(seconds, max(0, secondsRemaining))
+            secondsRemaining -= consumed
+            seconds -= consumed
+            if phase == .focus { focusSecondsCompleted += consumed }
+            else if phase.isBreak { breakSecondsCompleted += consumed }
+            if secondsRemaining == 0 {
+                transition = advancePhase(durations: durations)
+                if transition == .completed { complete() }
             }
         }
-
-        return PomodoroPracticeClockTick(
-            advancedElapsed: advancedElapsed,
-            finishedPhase: secondsRemaining == 0
-        )
+        return transition
     }
 
     mutating func advancePhase(durations: PomodoroPracticeDurations) -> PomodoroPracticePhaseTransition {

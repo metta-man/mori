@@ -87,7 +87,7 @@ struct MoriBreathingSessionActiveSurface: View {
 
                         Text("\(phaseSeconds)")
                             .font(.system(size: countdownSize, weight: .ultraLight, design: .rounded))
-                            .foregroundColor(MoriColors.sanctuaryInk.opacity(0.90))
+                            .moriQuietTimerStyle(supporting: true)
                             .monospacedDigit()
                             .minimumScaleFactor(0.64)
                             .accessibilityHidden(true)
@@ -106,7 +106,7 @@ struct MoriBreathingSessionActiveSurface: View {
 
                     Text(sessionRemainingText)
                         .font(.system(size: 15, weight: .regular, design: .rounded))
-                        .foregroundColor(MoriColors.sanctuaryInkSoft.opacity(0.86))
+                        .moriQuietTimerStyle(supporting: true)
                         .monospacedDigit()
                         .lineLimit(1)
                         .minimumScaleFactor(0.74)

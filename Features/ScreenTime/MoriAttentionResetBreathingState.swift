@@ -558,3 +558,14 @@ struct MoriAttentionResetBreathingState {
         return technique.breathPattern
     }
 }
+
+/// Counts complete guided rounds, including the current unfinished round.
+/// This is pacing progress, not a measurement of the person's respiration.
+enum MoriBeforeFeedBreathProgress {
+    static func remainingCycles(elapsed: TimeInterval, cycleDuration: TimeInterval, totalCycles: Int) -> Int {
+        guard totalCycles > 0, cycleDuration.isFinite, cycleDuration > 0 else { return 0 }
+        guard elapsed.isFinite else { return totalCycles }
+        let completed = floor(max(0, elapsed) / cycleDuration)
+        return totalCycles - Int(min(Double(totalCycles), completed))
+    }
+}

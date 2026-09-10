@@ -150,7 +150,7 @@ struct SettleTimerCard<CompletionPrompt: View>: View {
             VStack(spacing: 6) {
                 Text(timeText)
                     .font(.system(size: 48, weight: .semibold, design: .rounded))
-                    .foregroundColor(MoriColors.botanicalInk)
+                    .moriQuietTimerStyle()
                     .monospacedDigit()
                     .minimumScaleFactor(0.75)
 

@@ -1,6 +1,97 @@
 import XCTest
 
 final class MoriRecoveryUITests: XCTestCase {
+    func testDeepSessionContinuesInBackgroundAndManualPauseStaysPaused() {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-MoriSkipOnboardingForUITest", "-MoriSkipAnalyticsConsentForUITest",
+            "-MoriSkipCloudBackupForUITest", "-MoriDisableAIPulse",
+            "-MoriOpenDeepSessionForUITest", "-MoriAutoStartDeepSessionForUITest",
+            "-mori_settle_pomodoro_focus_breathing", "none",
+            "-mori_timer_dark_room_enabled", "NO",
+            "-AppleLanguages", "(en)", "-mori_locale_preference", "en"
+        ]
+        app.launch()
+        XCTAssertTrue(app.buttons["Pause"].waitForExistence(timeout: 10))
+        let timer = app.descendants(matching: .any).matching(
+            NSPredicate(format: "label MATCHES %@", ".*, [0-9]+:[0-9]{2} remaining")
+        ).firstMatch
+        XCTAssertTrue(timer.waitForExistence(timeout: 5))
+        func remaining() -> Int {
+            let value = timer.label.components(separatedBy: ", ").last ?? ""
+            let parts = value.replacingOccurrences(of: " remaining", with: "").split(separator: ":")
+            guard parts.count == 2, let minutes = Int(parts[0]), let seconds = Int(parts[1]) else {
+                XCTFail("Missing timer value: \(value)"); return -1
+            }
+            return minutes * 60 + seconds
+        }
+        let before = remaining()
+        XCUIDevice.shared.press(.home)
+        Thread.sleep(forTimeInterval: 8)
+        app.activate()
+        XCTAssertTrue(app.buttons["Pause"].waitForExistence(timeout: 5))
+        XCTAssertLessThanOrEqual(remaining(), before - 8)
+        app.buttons["Pause"].tap()
+        XCTAssertTrue(app.buttons["Resume"].waitForExistence(timeout: 3))
+        let paused = remaining()
+        XCUIDevice.shared.press(.home)
+        Thread.sleep(forTimeInterval: 5)
+        app.activate()
+        XCTAssertTrue(app.buttons["Resume"].waitForExistence(timeout: 5))
+        XCTAssertEqual(remaining(), paused)
+        attachScreenshot(named: "deep-session-background-paused")
+    }
+
+    func testDeepSessionKeepScreenSettingIsAvailableDuringSession() {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-MoriSkipOnboardingForUITest", "-MoriSkipAnalyticsConsentForUITest",
+            "-MoriDisableAIPulse", "-MoriOpenDeepSessionForUITest",
+            "-MoriAutoStartDeepSessionForUITest", "-mori_timer_dark_room_enabled", "NO",
+            "-AppleLanguages", "(en)", "-mori_locale_preference", "en"
+        ]
+        app.launch()
+        XCTAssertTrue(app.buttons["Show session options"].waitForExistence(timeout: 8))
+        app.buttons["Show session options"].tap()
+        let toggle = app.switches["deep-session-keep-screen-on"]
+        for _ in 0..<4 where !toggle.isHittable { app.swipeUp() }
+        XCTAssertTrue(toggle.exists)
+        let old = toggle.value as? String
+        toggle.tap()
+        XCTAssertNotEqual(toggle.value as? String, old)
+        attachScreenshot(named: "deep-session-screen-options")
+        let saved = toggle.value as? String
+        app.terminate()
+        app.launchArguments.removeAll { $0 == "-MoriAutoStartDeepSessionForUITest" }
+        app.launch()
+        let options = app.buttons["Show session options"]
+        XCTAssertTrue(options.waitForExistence(timeout: 8))
+        for _ in 0..<4 where !options.isHittable { app.swipeUp() }
+        options.tap()
+        for _ in 0..<6 where !toggle.isHittable { app.swipeUp() }
+        XCTAssertTrue(toggle.exists)
+        XCTAssertEqual(toggle.value as? String, saved)
+        attachScreenshot(named: "deep-session-setup-screen-options")
+        toggle.tap()
+        XCTAssertEqual(toggle.value as? String, old)
+    }
+
+    func testDeepSessionKeepScreenSettingInDarkRoom() {
+        let app = XCUIApplication()
+        app.launchArguments = [
+            "-MoriSkipOnboardingForUITest", "-MoriSkipAnalyticsConsentForUITest",
+            "-MoriDisableAIPulse", "-MoriOpenDeepSessionForUITest",
+            "-MoriAutoStartDeepSessionForUITest", "-mori_timer_dark_room_enabled", "YES",
+            "-AppleLanguages", "(en)", "-mori_locale_preference", "en"
+        ]
+        app.launch()
+        XCTAssertTrue(app.staticTexts["Tap to wake"].waitForExistence(timeout: 8))
+        app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.4)).tap()
+        let toggle = app.switches["deep-session-keep-screen-on"]
+        XCTAssertTrue(toggle.waitForExistence(timeout: 2))
+        attachScreenshot(named: "deep-session-dark-screen-options")
+    }
+
     func testDeepSessionCountsDownAndRespectsPauseWithBreathing() {
         verifyDeepSessionCountdown(breathing: "box")
     }
@@ -100,13 +191,31 @@ final class MoriRecoveryUITests: XCTestCase {
 
         XCTAssertTrue(app.staticTexts["Begin with the breath"].waitForExistence(timeout: 8))
         XCTAssertTrue(app.staticTexts["Long Exhale (4-6) · 3 cycles · about 30 seconds"].exists)
-        XCTAssertTrue(app.staticTexts["Cycle 1 of 3"].exists)
+        XCTAssertTrue(app.staticTexts["3 breaths remaining"].exists)
         XCTAssertTrue(app.staticTexts["Breathe in for 4. Breathe out for 6."].exists)
         XCTAssertFalse(app.staticTexts["Why now?"].exists)
         attachScreenshot(named: "before-feed-breath-key")
     }
 
-    func testBeforeFeedConfiguredGuidedFixtureShowsTechniqueCyclesAndExactTimer() {
+    func testBeforeFeedRemainingBreathsPauseAndFinishBeforeIntent() {
+        let app = launchBeforeFeed()
+        XCTAssertTrue(app.staticTexts["3 breaths remaining"].waitForExistence(timeout: 5))
+        app.buttons["Pause"].tap()
+        XCTAssertTrue(app.buttons["Resume"].waitForExistence(timeout: 3))
+        let changesWhilePaused = XCTNSPredicateExpectation(
+            predicate: NSPredicate { _, _ in !app.staticTexts["3 breaths remaining"].exists }, object: nil
+        )
+        changesWhilePaused.isInverted = true
+        XCTAssertEqual(XCTWaiter.wait(for: [changesWhilePaused], timeout: 11), .completed)
+        app.buttons["Resume"].tap()
+        XCTAssertTrue(app.staticTexts["2 breaths remaining"].waitForExistence(timeout: 12))
+        XCTAssertTrue(app.staticTexts["1 breath remaining"].waitForExistence(timeout: 12))
+        XCTAssertFalse(app.staticTexts["Why now?"].exists)
+        XCTAssertTrue(app.staticTexts["Why now?"].waitForExistence(timeout: 12))
+        XCTAssertTrue(app.buttons["Keep feed closed"].exists)
+    }
+
+    func testBeforeFeedConfiguredGuidedFixtureShowsRemainingBreathsWithoutCountdown() {
         let app = launchBeforeFeed(extraArguments: [
             "-MoriUseConfiguredGuidedBeforeFeedPauseForUITest",
             "-MoriFreezeBeforeFeedTimerForUITest"
@@ -114,8 +223,8 @@ final class MoriRecoveryUITests: XCTestCase {
 
         XCTAssertTrue(app.staticTexts["Begin with the breath"].waitForExistence(timeout: 8))
         XCTAssertTrue(app.staticTexts["Coherent Breathing (5-5) · 3 cycles · about 30 seconds"].exists)
-        XCTAssertTrue(app.staticTexts["Cycle 1 of 3"].exists)
-        XCTAssertTrue(app.staticTexts["00:30"].exists)
+        XCTAssertTrue(app.staticTexts["3 breaths remaining"].exists)
+        XCTAssertFalse(app.staticTexts["00:30"].exists)
         attachScreenshot(named: "before-feed-configured-guided")
     }
 

@@ -245,21 +245,22 @@ private struct MoriBeforeFeedBreathKeyVisual: View {
 
             VStack(spacing: 8) {
                 Text(cueText)
-                    .font(.system(size: 16, weight: .medium, design: .rounded))
+                    .font(.system(size: 22, weight: .regular, design: .rounded))
                     .foregroundColor(MoriColors.sanctuaryInkSoft.opacity(0.88))
                     .lineLimit(1)
                     .minimumScaleFactor(0.75)
 
-                Text(timeText)
-                    .font(.system(size: 42, weight: .light, design: .serif))
-                    .foregroundColor(MoriColors.sanctuaryInk)
-                    .monospacedDigit()
-
                 if let guidedProgressText {
                     Text(guidedProgressText)
-                        .font(MoriTypography.caption)
-                        .foregroundColor(MoriColors.sanctuaryMuted)
+                        .font(MoriTheme.Typography.supporting)
+                        .foregroundColor(MoriV2Palette.stone)
                         .multilineTextAlignment(.center)
+                        .fixedSize(horizontal: false, vertical: true)
+                } else {
+                    Text(timeText)
+                        .font(.system(size: 42, weight: .light, design: .serif))
+                        .moriQuietTimerStyle(supporting: true)
+                        .monospacedDigit()
                 }
             }
             .padding(.horizontal, 30)
@@ -272,9 +273,9 @@ private struct MoriBeforeFeedBreathKeyVisual: View {
     private var accessibilityDescription: String {
         if let guidedProgressText {
             return MoriL10n.string(
-                "before_feed.breath_key.guided_accessibility",
-                defaultValue: "%@. %@. %@ remaining.",
-                arguments: [guidedProgressText, cueText, timeText]
+                "before_feed.breath_key.guided_count_accessibility",
+                defaultValue: "%@. %@.",
+                arguments: [cueText, guidedProgressText]
             )
         }
         return MoriL10n.string(
@@ -875,7 +876,7 @@ private struct MoriBeforeFeedPauseVisual: View {
 
                     Text(timeText)
                         .font(.system(size: 58, weight: .light, design: .serif))
-                        .foregroundColor(MoriColors.sanctuaryInk)
+                        .moriQuietTimerStyle(supporting: true)
                         .monospacedDigit()
                 }
             }
@@ -929,7 +930,7 @@ private struct MoriResetBreathingComposition: View {
 
                 Text(timeText)
                     .font(.system(size: 58, weight: .light, design: .serif))
-                    .foregroundColor(MoriColors.sanctuaryInk)
+                    .moriQuietTimerStyle(supporting: true)
                     .monospacedDigit()
                     .lineLimit(1)
                     .minimumScaleFactor(0.68)

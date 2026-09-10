@@ -102,7 +102,7 @@ struct SettleTimerNormalActiveSurface: View {
                     VStack(spacing: 8) {
                         Text(timeText)
                             .font(.system(size: 68, weight: .regular, design: .serif))
-                            .foregroundColor(MoriColors.botanicalInk)
+                            .moriQuietTimerStyle()
                             .monospacedDigit()
                             .minimumScaleFactor(0.65)
 

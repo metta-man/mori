@@ -2,7 +2,9 @@ import SwiftUI
 
 struct PomodoroPracticeDetailView: View {
     @Environment(\.dismiss) private var dismiss
+    @Environment(\.scenePhase) private var scenePhase
 
+    @AppStorage("mori_deep_session_keep_screen_on") private var keepScreenOn = false
     @AppStorage("mori_settle_sound_enabled") private var soundEnabled: Bool = true
     @AppStorage("mori_settle_pomodoro_haptics_enabled") private var hapticsEnabled: Bool = true
     @AppStorage("mori_settle_pomodoro_animation_enabled") private var animationEnabled: Bool = true
@@ -101,6 +103,8 @@ struct PomodoroPracticeDetailView: View {
                 setupPomodoroSurface
             }
         }
+        .moriOnChange(of: scenePhase, perform: handleScenePhase)
+        .moriOnChange(of: keepScreenOn) { _ in applyScreenPolicy() }
         .pomodoroPracticeChrome(
             isDarkRoomActive: darkRoomEnabled && pomodoroState.isActive,
             hidesNavigationChrome: deepSessionCompletion != nil || pomodoroState.isActive,
@@ -119,7 +123,7 @@ struct PomodoroPracticeDetailView: View {
             onDurationSettingsChange: resetPomodoroClockIfEditable,
             onFocusBreathingChange: handlePomodoroFocusBreathingChange,
             onBreakBreathingChange: handlePomodoroBreakBreathingChange,
-            onTick: tickPomodoro,
+            onTick: { if scenePhase == .active { tickPomodoro() } },
             onBreathingTick: syncPomodoroBreakBreathingState,
             onDarkRoomEnabledChange: handleDarkRoomEnabledChange,
             onCleanup: cleanupPomodoroSession,
@@ -137,6 +141,7 @@ struct PomodoroPracticeDetailView: View {
             hapticsEnabled: $hapticsEnabled,
             animationEnabled: $animationEnabled,
             darkRoomEnabled: $darkRoomEnabled,
+            keepScreenOn: $keepScreenOn,
             phase: pomodoroPhase,
             timerState: pomodoroState,
             progress: pomodoroPresentation.progress,
@@ -159,6 +164,7 @@ struct PomodoroPracticeDetailView: View {
         PomodoroActiveSessionSurface(
             darkRoomEnabled: darkRoomEnabled,
             darkRoomDim: $darkRoomDim,
+            keepScreenOn: $keepScreenOn,
             darkRoomOffScreen: darkRoomCoordinator.offScreen,
             darkRoomControlsVisible: darkRoomCoordinator.controlsVisible,
             timeText: pomodoroPresentation.timeText,
@@ -258,8 +264,31 @@ struct PomodoroPracticeDetailView: View {
 
     private func cleanupPomodoroSession() {
         resetPomodoroBreakBreathingGuidance(stopAudio: true)
-        clearDarkRoomTransientState()
-        completionCoordinator.cancelSessionAppLimit()
+        darkRoomCoordinator.resetIdleTimer()
+        if scenePhase == .active { completionCoordinator.cancelSessionAppLimit() }
+    }
+
+    private func applyScreenPolicy() {
+        darkRoomCoordinator.applyIdleTimerPolicy(
+            keepScreenOn: keepScreenOn && scenePhase == .active,
+            isRunning: pomodoroState == .running && deepSessionCompletion == nil,
+            offScreenOverride: false
+        )
+    }
+
+    private func handleScenePhase(_ phase: ScenePhase) {
+        if phase == .active {
+            tickPomodoro()
+            if pomodoroState == .running {
+                syncPomodoroBreakBreathingElapsedToClock()
+                startPomodoroBreakBreathingGuidance()
+            }
+            applyScreenPolicy()
+        } else {
+            tickPomodoro()
+            resetPomodoroBreakBreathingGuidance(stopAudio: true, resetElapsed: false)
+            darkRoomCoordinator.resetIdleTimer()
+        }
     }
 
     private func endPomodoroAndLeave() {
@@ -310,18 +339,26 @@ struct PomodoroPracticeDetailView: View {
     }
 
     private func pausePomodoro() {
+        tickPomodoro()
+        guard pomodoroState == .running else { return }
         pomodoroClock.pause()
+        applyScreenPolicy()
         resetPomodoroBreakBreathingGuidance(stopAudio: true, resetElapsed: false)
     }
 
     private func resumePomodoro() {
         pomodoroClock.resume()
+        applyScreenPolicy()
+        // Restore the timed protection deadline after a manual pause.
+        startPomodoroAppLimitIfPossible()
         if pomodoroPhase == .focus || pomodoroPhase.isBreak {
             startPomodoroBreakBreathingGuidance()
         }
     }
 
     private func endIncompletePomodoro() {
+        tickPomodoro()
+        guard deepSessionCompletion == nil else { return }
         endPomodoro(recordCompletion: false)
     }
 
@@ -335,6 +372,7 @@ struct PomodoroPracticeDetailView: View {
         startPomodoroAppLimitIfPossible()
         startPomodoroBreakBreathingGuidance(resetElapsed: true)
 
+        applyScreenPolicy()
         feedbackCoordinator.playStartBellIfNeeded(pomodoroPresentation.shouldPlayCurrentBell)
     }
 
@@ -345,14 +383,17 @@ struct PomodoroPracticeDetailView: View {
     }
 
     private func tickPomodoro() {
-        let tick = pomodoroClock.tick()
-        if tick.advancedElapsed {
-            syncPomodoroBreakBreathingElapsedToClock()
+        guard pomodoroState == .running else { return }
+        let previouslyCountedFocus = pomodoroClock.focusSecondsCompleted
+        let scheduledFocusRemaining = pomodoroPhase == .focus ? pomodoroSecondsRemaining : 0
+        let transition = pomodoroClock.update(to: Date(), durations: pomodoroDurations)
+        if pomodoroClock.focusSecondsCompleted > previouslyCountedFocus + scheduledFocusRemaining {
+            completionCoordinator.invalidatePastAppLimitCoverage()
         }
-
-        if tick.finishedPhase {
-            handlePomodoroPhaseTransition(pomodoroClock.advancePhase(durations: pomodoroDurations))
+        if transition != .none {
+            handlePomodoroPhaseTransition(transition)
         }
+        syncPomodoroBreakBreathingElapsedToClock()
     }
 
     private func handlePomodoroPhaseTransition(_ transition: PomodoroPracticePhaseTransition) {
@@ -376,6 +417,7 @@ struct PomodoroPracticeDetailView: View {
     }
 
     private func playPomodoroTransitionBell(for phase: MoriPomodoroPhase) {
+        guard scenePhase == .active else { return }
         feedbackCoordinator.playTransitionFeedback(
             shouldPlayBell: pomodoroPresentation.shouldPlayBell(for: phase),
             hapticsEnabled: hapticsEnabled
@@ -387,9 +429,8 @@ struct PomodoroPracticeDetailView: View {
         let completedCycles = pomodoroCompletedCycles
         let protectedFocusSeconds = pomodoroFocusSecondsCompleted
 
-        if recordCompletion {
-            pomodoroClock.complete()
-        }
+        pomodoroClock.complete()
+        darkRoomCoordinator.resetIdleTimer()
         completionCoordinator.endAppLimit()
         feedbackCoordinator.stopSessionSounds()
         resetPomodoroBreakBreathingGuidance(stopAudio: true)
@@ -446,6 +487,7 @@ struct PomodoroPracticeDetailView: View {
     }
 
     private func playPomodoroCompletionFeedback() {
+        guard scenePhase == .active else { return }
         feedbackCoordinator.playCompletionFeedback(soundEnabled: soundEnabled, hapticsEnabled: hapticsEnabled)
     }
 
@@ -458,6 +500,7 @@ struct PomodoroPracticeDetailView: View {
     }
 
     private func startPomodoroBreakBreathingGuidance(resetElapsed: Bool = false) {
+        guard scenePhase == .active else { return }
         pomodoroBreathingRuntime.start(
             context: pomodoroPresentation.guidedBreathingContext,
             resetElapsed: resetElapsed,
@@ -466,6 +509,7 @@ struct PomodoroPracticeDetailView: View {
     }
 
     private func syncPomodoroBreakBreathingState() {
+        guard scenePhase == .active else { return }
         pomodoroBreathingRuntime.sync(
             context: pomodoroPresentation.guidedBreathingContext,
             feedbackCoordinator: feedbackCoordinator
@@ -539,14 +583,15 @@ struct PomodoroPracticeDetailView: View {
     }
 
     private func enterDarkRoomOffScreen() {
-        darkRoomCoordinator.enterOffScreen(keepScreenOn: false, isRunning: pomodoroState == .running)
+        darkRoomCoordinator.enterOffScreen(keepScreenOn: keepScreenOn, isRunning: pomodoroState == .running)
+        applyScreenPolicy()
     }
 
     private func exitDarkRoomOffScreen() {
-        darkRoomCoordinator.exitOffScreen(keepScreenOn: false, isRunning: pomodoroState == .running)
+        darkRoomCoordinator.exitOffScreen(keepScreenOn: keepScreenOn, isRunning: pomodoroState == .running)
     }
 
     private func clearDarkRoomTransientState() {
-        darkRoomCoordinator.clearTransientState(keepScreenOn: false, isRunning: pomodoroState == .running)
+        darkRoomCoordinator.clearTransientState(keepScreenOn: keepScreenOn, isRunning: pomodoroState == .running)
     }
 }

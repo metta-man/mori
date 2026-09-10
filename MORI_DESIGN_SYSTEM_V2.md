@@ -96,7 +96,7 @@ Bright blue, orange CTAs, neon, synthetic gradients, and decorative frosted glas
 - `Guided breathing` lets the person choose a technique and 1 to 10 complete cycles. `Follow your own breath` offers a 10-second to 10-minute timer with no phase prompts.
 - Capture the configuration when the sheet opens. Changing Settings or a custom technique must not change a breath already in progress.
 - Follow-your-own mode starts with one long singing-bowl cue only on the first start. It does not replay on resume or late sound enable, and it has no completion sound.
-- Keep the configured method in supporting copy. Use the restrained common title `Begin with the breath` so the breathing form, phase, and countdown remain the visual focus.
+- Keep the configured method in supporting copy. Use the restrained common title `Begin with the breath` so the breathing form and phase remain the visual focus. Guided mode shows remaining complete breaths as supporting copy without a seconds countdown; follow-your-own retains a softened timer.
 - Breath completion reveals one compact intent surface; it does not open the feed.
 - Ask “Why now?” with five neutral choices and no preselection.
 - Every choice follows the same plan: choose a small 2, 5, 10, or 15 minute feed boundary, then see the no-typing “Where do you want to return?” question.
@@ -112,6 +112,7 @@ Bright blue, orange CTAs, neon, synthetic gradients, and decorative frosted glas
 - Show only the Deep Session title, large timer, forest atmosphere, blocked-app summary, and Pause.
 - Do not show a circular progress meter, score, forest-growth instruction, edit controls, or colorful app-icon strip.
 - End Session appears only after pausing.
+- Deep Session keeps time while the screen is off. Session options include Keep screen on (default off), saved across launches and available during a session. Pause, finish and exit restore automatic locking.
 
 ### Session Complete
 

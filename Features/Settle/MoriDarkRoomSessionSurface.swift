@@ -19,6 +19,8 @@ struct MoriDarkRoomCueStatus: Equatable {
 }
 
 struct MoriDarkRoomSessionSurface<Controls: View>: View {
+    @Environment(\.colorSchemeContrast) private var contrast
+
     let timeText: String
     let sessionLabel: String
     let cueText: String
@@ -62,8 +64,8 @@ struct MoriDarkRoomSessionSurface<Controls: View>: View {
             if !isFullBlack {
                 VStack(spacing: 0) {
                     Text(timeText)
-                        .font(.system(size: 52, weight: .semibold, design: .rounded))
-                        .foregroundColor(.white.opacity(dimmedOpacity(0.92)))
+                        .font(.system(size: 52, weight: .regular, design: .rounded))
+                        .foregroundColor(.white.opacity(dimmedOpacity(contrast == .increased ? 0.92 : 0.72)))
                         .monospacedDigit()
                         .minimumScaleFactor(0.62)
                         .lineLimit(1)

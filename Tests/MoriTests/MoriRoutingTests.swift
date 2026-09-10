@@ -2,6 +2,84 @@ import XCTest
 @testable import Mori
 
 final class MoriRoutingTests: XCTestCase {
+    func testDeepSessionCatchesUpThroughFourthCycleLongBreak() {
+        let start = Date(timeIntervalSince1970: 1_000)
+        let durations = PomodoroPracticeDurations(focusMinutes: 1, shortBreakMinutes: 1, longBreakMinutes: 2, cycles: 5)
+        var clock = PomodoroPracticeSessionClock(focusMinutes: 1)
+        clock.start(durations: durations, now: start)
+        XCTAssertEqual(clock.update(to: start.addingTimeInterval(420), durations: durations), .breakStarted(.longBreak))
+        XCTAssertEqual(clock.secondsRemaining, 120)
+        XCTAssertEqual(clock.update(to: start.addingTimeInterval(540), durations: durations), .focusStarted)
+        XCTAssertEqual(clock.secondsRemaining, 60)
+        XCTAssertEqual(clock.update(to: start.addingTimeInterval(600), durations: durations), .completed)
+        XCTAssertEqual(clock.focusSecondsCompleted, 300)
+        XCTAssertEqual(clock.breakSecondsCompleted, 300)
+    }
+
+    func testDeepSessionClockCatchesUpAcrossSuspensionAndPhaseBoundaries() {
+        let start = Date(timeIntervalSince1970: 1_000)
+        let durations = PomodoroPracticeDurations(focusMinutes: 1, shortBreakMinutes: 1, longBreakMinutes: 2, cycles: 3)
+        var clock = PomodoroPracticeSessionClock(focusMinutes: 1)
+        clock.start(durations: durations, now: start)
+        XCTAssertEqual(clock.update(to: start.addingTimeInterval(30), durations: durations), .none)
+        XCTAssertEqual(clock.secondsRemaining, 30)
+        XCTAssertEqual(clock.update(to: start.addingTimeInterval(150), durations: durations), .focusStarted)
+        XCTAssertEqual(clock.secondsRemaining, 30)
+        XCTAssertEqual(clock.focusSecondsCompleted, 90)
+        XCTAssertEqual(clock.breakSecondsCompleted, 60)
+        XCTAssertEqual(clock.update(to: start.addingTimeInterval(900), durations: durations), .completed)
+        XCTAssertEqual(clock.focusSecondsCompleted, 180)
+        XCTAssertEqual(clock.breakSecondsCompleted, 120)
+        XCTAssertEqual(clock.completedCycles, 3)
+        XCTAssertEqual(clock.update(to: start.addingTimeInterval(901), durations: durations), .none)
+    }
+
+    func testDeepSessionPauseExcludesBackgroundTimeAndKeepsFractionalSeconds() {
+        let start = Date(timeIntervalSince1970: 1_000)
+        let durations = PomodoroPracticeDurations(focusMinutes: 1, shortBreakMinutes: 1, longBreakMinutes: 2, cycles: 1)
+        var clock = PomodoroPracticeSessionClock(focusMinutes: 1)
+        clock.start(durations: durations, now: start)
+        _ = clock.update(to: start.addingTimeInterval(0.75), durations: durations)
+        clock.pause()
+        _ = clock.update(to: start.addingTimeInterval(100), durations: durations)
+        XCTAssertEqual(clock.secondsRemaining, 60)
+        clock.resume(now: start.addingTimeInterval(100))
+        _ = clock.update(to: start.addingTimeInterval(100.25), durations: durations)
+        XCTAssertEqual(clock.secondsRemaining, 59)
+        _ = clock.update(to: start.addingTimeInterval(99), durations: durations)
+        XCTAssertEqual(clock.secondsRemaining, 59)
+        _ = clock.update(to: start.addingTimeInterval(100.25), durations: durations)
+        XCTAssertEqual(clock.secondsRemaining, 59)
+    }
+
+    func testDeepSessionIdlePolicyReleasesScreenWhenPausedInactiveOrClosed() {
+        var active = true
+        var disabled = false
+        let controller = MoriIdleTimerController(applicationActiveProvider: { active }, idleTimerSetter: { disabled = $0 })
+        let coordinator = SettleDarkRoomCoordinator(idleTimerController: controller)
+        coordinator.applyIdleTimerPolicy(keepScreenOn: false, isRunning: true, offScreenOverride: false)
+        XCTAssertFalse(disabled)
+        coordinator.applyIdleTimerPolicy(keepScreenOn: true, isRunning: true, offScreenOverride: false)
+        XCTAssertTrue(disabled)
+        coordinator.applyIdleTimerPolicy(keepScreenOn: true, isRunning: false, offScreenOverride: false)
+        XCTAssertFalse(disabled)
+        active = false
+        coordinator.applyIdleTimerPolicy(keepScreenOn: true, isRunning: true, offScreenOverride: false)
+        XCTAssertFalse(disabled)
+        active = true
+        coordinator.applyIdleTimerPolicy(keepScreenOn: true, isRunning: true, offScreenOverride: false)
+        coordinator.resetIdleTimer()
+        XCTAssertFalse(disabled)
+    }
+
+    func testBeforeFeedRemainingBreathsChangeOnlyAfterCompleteRounds() {
+        for (elapsed, expected) in [(-1.0, 3), (0, 3), (4, 3), (9.99, 3), (10, 2), (20, 1), (29.99, 1), (30, 0), (45, 0)] {
+            XCTAssertEqual(MoriBeforeFeedBreathProgress.remainingCycles(elapsed: elapsed, cycleDuration: 10, totalCycles: 3), expected)
+        }
+        XCTAssertEqual(MoriBeforeFeedBreathProgress.remainingCycles(elapsed: 12.49, cycleDuration: 12.5, totalCycles: 3), 3)
+        XCTAssertEqual(MoriBeforeFeedBreathProgress.remainingCycles(elapsed: 12.5, cycleDuration: 12.5, totalCycles: 3), 2)
+    }
+
     func testRecoveryDeepLinkOpensRecovery() {
         let request = MoriAppRouteRequest(url: URL(string: "mori://recovery")!)
         guard case .todayLaunch(.recovery) = request.route else {

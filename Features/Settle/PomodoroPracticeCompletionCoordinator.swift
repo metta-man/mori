@@ -5,6 +5,7 @@ final class PomodoroPracticeCompletionCoordinator {
     private let clarityStore: MoriClarityStore
     private let appLimitManager: AppLimitManager
     private var appLimitFocusWasActive = false
+    private var appLimitCoverageIsContinuous = true
 
     init() {
         self.clarityStore = MoriClarityStore.shared
@@ -25,7 +26,7 @@ final class PomodoroPracticeCompletionCoordinator {
                 remainingSeconds: remainingSeconds
             )
         ) {
-            appLimitFocusWasActive = true
+            appLimitFocusWasActive = appLimitCoverageIsContinuous
         }
     }
 
@@ -33,8 +34,15 @@ final class PomodoroPracticeCompletionCoordinator {
         appLimitManager.perform(.endAppLimit(feature: .pomodoroFocus))
     }
 
+    func invalidatePastAppLimitCoverage() {
+        // A later focus block cannot be claimed shielded while the UI was suspended.
+        appLimitCoverageIsContinuous = false
+        appLimitFocusWasActive = false
+    }
+
     func cancelSessionAppLimit() {
         appLimitFocusWasActive = false
+        appLimitCoverageIsContinuous = true
         appLimitManager.perform(.endAppLimit(feature: .pomodoroFocus))
     }
 

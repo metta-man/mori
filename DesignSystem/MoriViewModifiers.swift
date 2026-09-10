@@ -283,3 +283,22 @@ struct MoriViewModifiers_Previews: PreviewProvider {
     }
 }
 #endif
+
+/// Secondary time information on Mori's paper surfaces. Increased Contrast
+/// restores forest ink without changing the clock or its accessibility value.
+private struct MoriQuietTimerStyle: ViewModifier {
+    @Environment(\.colorSchemeContrast) private var contrast
+    let supporting: Bool
+
+    func body(content: Content) -> some View {
+        content.foregroundColor(contrast == .increased
+            ? MoriV2Palette.forestInk
+            : (supporting ? MoriV2Palette.mutedStone : MoriV2Palette.sage))
+    }
+}
+
+extension View {
+    func moriQuietTimerStyle(supporting: Bool = false) -> some View {
+        modifier(MoriQuietTimerStyle(supporting: supporting))
+    }
+}

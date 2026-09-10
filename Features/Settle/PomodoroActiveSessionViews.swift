@@ -33,12 +33,14 @@ struct PomodoroActiveSessionSurface<ControlRow: View>: View {
     let onResume: () -> Void
     let onEnd: () -> Void
     let controlRow: () -> ControlRow
+    @Binding var keepScreenOn: Bool
     @Binding var darkRoomDim: Double
     @State private var showsSessionOptions = false
 
     init(
         darkRoomEnabled: Bool,
         darkRoomDim: Binding<Double>,
+        keepScreenOn: Binding<Bool>,
         darkRoomOffScreen: Bool,
         darkRoomControlsVisible: Bool,
         timeText: String,
@@ -71,6 +73,7 @@ struct PomodoroActiveSessionSurface<ControlRow: View>: View {
     ) {
         self.darkRoomEnabled = darkRoomEnabled
         _darkRoomDim = darkRoomDim
+        _keepScreenOn = keepScreenOn
         self.darkRoomOffScreen = darkRoomOffScreen
         self.darkRoomControlsVisible = darkRoomControlsVisible
         self.timeText = timeText
@@ -158,6 +161,7 @@ struct PomodoroActiveSessionSurface<ControlRow: View>: View {
                             .multilineTextAlignment(.center)
                             .fixedSize(horizontal: false, vertical: true)
                         if showsSessionOptions {
+                            PomodoroScreenSettings(keepScreenOn: $keepScreenOn)
                             sessionOptionsCard
                                 .frame(minHeight: 69)
                         }
@@ -393,6 +397,7 @@ struct PomodoroActiveSessionSurface<ControlRow: View>: View {
     private var darkRoomControlPanel: some View {
         VStack(spacing: 14) {
             toggleRow
+            PomodoroScreenSettings(keepScreenOn: $keepScreenOn, isDarkRoom: true)
 
             HStack(spacing: 12) {
                 MoriDarkRoomDimControl(dim: $darkRoomDim)
@@ -561,7 +566,7 @@ private struct PomodoroActiveVisual: View {
 
             Text(timeText)
                 .font(.system(size: 74, weight: .regular, design: .serif))
-                .foregroundColor(MoriV2Palette.forestInk)
+                .moriQuietTimerStyle()
                 .monospacedDigit()
                 .lineLimit(1)
                 .minimumScaleFactor(0.68)

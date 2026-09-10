@@ -38,7 +38,7 @@ struct QuietTimerCard: View {
 
                     Text(timeText)
                         .font(.system(size: 58, weight: .regular, design: .serif))
-                        .foregroundColor(MoriV2Palette.forestInk)
+                        .moriQuietTimerStyle()
                         .monospacedDigit()
                         .minimumScaleFactor(0.72)
 

@@ -284,15 +284,15 @@ private struct MoriAttentionResetSheet: View {
             return nil
         }
 
-        let completedCycles = Int(floor(activeElapsed / pattern.totalCycleDuration))
-        let currentCycle = min(
-            beforeFeedPauseSnapshot.guidedCycleCount,
-            max(1, completedCycles + 1)
+        let remaining = MoriBeforeFeedBreathProgress.remainingCycles(
+            elapsed: activeElapsed,
+            cycleDuration: pattern.totalCycleDuration,
+            totalCycles: beforeFeedPauseSnapshot.guidedCycleCount
         )
         return MoriL10n.string(
-            "before_feed.pause.round_progress",
-            defaultValue: "Cycle %d of %d",
-            arguments: [currentCycle, beforeFeedPauseSnapshot.guidedCycleCount]
+            remaining == 1 ? "before_feed.breaths_remaining.one" : "before_feed.breaths_remaining.many",
+            defaultValue: remaining == 1 ? "1 breath remaining" : "%d breaths remaining",
+            arguments: remaining == 1 ? [] : [remaining]
         )
     }
 

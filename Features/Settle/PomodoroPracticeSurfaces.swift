@@ -9,6 +9,7 @@ struct PomodoroPracticeSetupSurface: View {
     @Binding var hapticsEnabled: Bool
     @Binding var animationEnabled: Bool
     @Binding var darkRoomEnabled: Bool
+    @Binding var keepScreenOn: Bool
 
     let phase: MoriPomodoroPhase
     let timerState: SettleTimerState
@@ -171,6 +172,7 @@ struct PomodoroPracticeSetupSurface: View {
                         hapticsEnabled: $hapticsEnabled,
                         animationEnabled: $animationEnabled,
                         darkRoomEnabled: $darkRoomEnabled,
+                        keepScreenOn: $keepScreenOn,
                         focusBreathing: focusBreathing,
                         breakBreathing: breakBreathing,
                         isGuidedBreathing: isGuidedBreathing,

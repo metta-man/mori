@@ -1965,3 +1965,11 @@
 "Allow Screen Time → Choose apps → Turn on limits" = "允许屏幕使用时间 → 选择 App → 开启限制";
 
 "Other resets" = "其他静心方式";
+
+"before_feed.breaths_remaining.one" = "还有 1 次呼吸";
+"before_feed.breaths_remaining.many" = "还有 %d 次呼吸";
+"before_feed.breath_key.guided_count_accessibility" = "%@。%@。";
+
+"Keep screen on" = "保持屏幕开启";
+
+"Your session continues when the screen is off." = "屏幕关闭后，练习仍会继续。";

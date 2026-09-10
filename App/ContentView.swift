@@ -229,6 +229,25 @@ struct ContentView: View {
         handledUITestLaunchRoute = true
 
         let arguments = ProcessInfo.processInfo.arguments
+        #if DEBUG
+        if arguments.contains("-MoriOpenBreathingTimerForUITest") {
+            open(.practiceTab, source: .deepLink)
+            rootNavigationPath.append(SettleNavigationRoute.breathingSession(
+                techniqueID: MoriBreathingTechniqueID.longExhale.rawValue,
+                durationMinutes: 5, autoStart: true
+            ))
+            return
+        } else if arguments.contains("-MoriOpenMorningTimerForUITest") {
+            open(.morningGateReset, source: .deepLink)
+            return
+        } else if arguments.contains("-MoriOpenManualTimerForUITest") {
+            open(.practiceSheet(.verification(.walkReset)), source: .deepLink)
+            return
+        } else if arguments.contains("-MoriOpenSettleTimerForUITest") {
+            open(.practiceSheet(.settleTimer), source: .deepLink)
+            return
+        }
+        #endif
         if arguments.contains("-MoriOpenLogForUITest") {
             open(.journalTab, source: .deepLink)
         } else if arguments.contains("-MoriOpenFocusForUITest") {

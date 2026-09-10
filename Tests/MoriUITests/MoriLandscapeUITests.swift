@@ -14,6 +14,39 @@ final class MoriLandscapeUITests: XCTestCase {
         return app
     }
 
+    func testQuietCountdownSurfacesKeepStartAndPauseReachable() {
+        for (route, name) in [
+            ("-MoriOpenQuietModeForUITest", "Quiet timer"),
+            ("-MoriOpenSettleTimerForUITest", "Settle timer"),
+            ("-MoriOpenMorningTimerForUITest", "Morning timer"),
+            ("-MoriOpenManualTimerForUITest", "Manual practice timer")
+        ] {
+            let app = launch([route, "-mori_timer_dark_room_enabled", "NO"])
+            let start = app.buttons["Start"].firstMatch
+            // Quiet/Settle legitimately restore an unfinished timer on relaunch.
+            let ready = XCTNSPredicateExpectation(predicate: NSPredicate { _, _ in
+                start.exists || app.buttons["Resume"].firstMatch.exists || app.buttons["Pause"].firstMatch.exists
+            }, object: nil)
+            XCTAssertEqual(XCTWaiter.wait(for: [ready], timeout: 8), .completed, name)
+            if !app.buttons["Pause"].firstMatch.exists {
+                let action = app.buttons["Resume"].firstMatch.exists ? app.buttons["Resume"].firstMatch : start
+                if !action.isHittable { app.swipeUp() }
+                action.tap()
+            }
+            let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+            let denyNotifications = springboard.buttons["Don’t Allow"].firstMatch
+            let denyNotificationsASCII = springboard.buttons["Don't Allow"].firstMatch
+            if denyNotifications.waitForExistence(timeout: 1) { denyNotifications.tap() }
+            else if denyNotificationsASCII.exists { denyNotificationsASCII.tap() }
+            let pause = app.buttons["Pause"].firstMatch
+            XCTAssertTrue(pause.waitForExistence(timeout: 5), name)
+            capture(name)
+            pause.tap()
+            XCTAssertFalse(pause.exists, name)
+            app.terminate()
+        }
+    }
+
     func testThreeTabsKeepCoreEntrypointsReachable() {
         let app = launch()
         XCTAssertTrue(app.staticTexts["Before Feed Reset"].waitForExistence(timeout: 10))

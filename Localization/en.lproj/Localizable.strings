@@ -1965,3 +1965,11 @@
 "Allow Screen Time → Choose apps → Turn on limits" = "Allow Screen Time → Choose apps → Turn on limits";
 
 "Other resets" = "Other resets";
+
+"before_feed.breaths_remaining.one" = "1 breath remaining";
+"before_feed.breaths_remaining.many" = "%d breaths remaining";
+"before_feed.breath_key.guided_count_accessibility" = "%@. %@.";
+
+"Keep screen on" = "Keep screen on";
+
+"Your session continues when the screen is off." = "Your session continues when the screen is off.";

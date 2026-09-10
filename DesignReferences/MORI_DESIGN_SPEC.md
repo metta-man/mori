@@ -430,7 +430,7 @@ for reapplying the shield.
   style, technique, cycles, and duration in the supporting summary rather than
   turning the mode name into the headline
 - short supporting sentence
-- breathing form and truthful countdown as one central composition
+- breathing form and phase as one central composition; guided mode shows remaining complete breaths in supporting text, without a seconds countdown
 - guided technique, phase, and cycle progress close to the form
 - for follow-your-own, a static breathing form and timer without phase prompts
 - secondary close control
@@ -445,8 +445,7 @@ for reapplying the shield.
 - a mode-name headline that competes with the breathing form
 
 In guided mode, the watercolor form should subtly expand and contract with the
-breathing phase. Under Reduce Motion, use static art, phase text, and the
-countdown instead of repeated scaling. Follow-your-own mode keeps the form
+breathing phase. Under Reduce Motion, use static art, phase text, and remaining breath count instead of repeated scaling. Follow-your-own mode keeps the form
 static and uses one long singing-bowl A cue only on its first start. The cue
 must not replay on resume or after sound is enabled late; stopping, pausing, or
 closing stops it. Follow-your-own has no completion sound. Breath completion
@@ -755,3 +754,26 @@ in Today's landscape height. Keep the watercolor, paper, forest palette and all
 working routes. Typed monochrome SF Symbols may replace decorative bitmap icons
 on settings and root navigation; illustrated feature artwork remains unchanged.
 See `docs/quality/SETTINGS_ICON_TODAY_REFINEMENT.md` and its Figma comparison.
+
+## Quiet countdowns — 2026-09-09
+
+The founder approved softening in-app countdown text and replacing Before Feed's
+guided countdown with remaining breaths. Preserve all actual durations and gates.
+- Guided Before Feed counts unfinished complete rounds; decrement only after a
+  full configured pattern, and reveal intent only at the existing completion.
+- Follow-your-own remains a timer: never infer measured breaths from elapsed time.
+- Large paper-surface countdowns use the muted sage token, supporting time uses
+  muted stone, and Increased Contrast restores forest ink. Dark Room retains its
+  dim control with a softer timer. Phase/action copy remains clearer than progress.
+
+## Deep Session screen-off continuity — 2026-09-09
+
+The founder approved continued timing while the screen is locked, plus a
+persistent Keep screen on option (default off) in setup and active Session
+options, including Dark Room. Count elapsed time independently of foreground
+refresh callbacks; manual pause excludes elapsed time. On foreground return,
+resolve focus/break phase and completion without replaying missed transitions.
+Keep-screen-on applies only while the session is running and foregrounded;
+release it on pause, completion, backgrounding and exit. Full-black presentation
+must not override this Deep Session preference. Retain the existing scene,
+quiet timer styling and working controls.

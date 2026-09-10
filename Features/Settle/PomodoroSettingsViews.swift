@@ -6,6 +6,7 @@ struct PomodoroAdvancedSettingsCard: View {
     @Binding var hapticsEnabled: Bool
     @Binding var animationEnabled: Bool
     @Binding var darkRoomEnabled: Bool
+    @Binding var keepScreenOn: Bool
     let focusBreathing: MoriPomodoroBreakBreathing
     let breakBreathing: MoriPomodoroBreakBreathing
     let isGuidedBreathing: Bool
@@ -37,6 +38,8 @@ struct PomodoroAdvancedSettingsCard: View {
                     animationEnabled: $animationEnabled,
                     darkRoomEnabled: $darkRoomEnabled
                 )
+
+                PomodoroScreenSettings(keepScreenOn: $keepScreenOn)
 
                 ScreenTimeLimitControls(contextTitle: "Deep Session", feature: .pomodoroFocus)
             } else if !isGuidedBreathing {
@@ -258,5 +261,28 @@ private struct PomodoroBreathingCue: View {
 
     private var activeSecondaryColor: Color {
         darkRoomEnabled ? .white.opacity(0.62) : MoriColors.botanicalMuted
+    }
+}
+
+struct PomodoroScreenSettings: View {
+    @Binding var keepScreenOn: Bool
+    var isDarkRoom = false
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Toggle(isOn: $keepScreenOn) {
+                Text(MoriL10n.display("Keep screen on"))
+                    .font(MoriV2Type.control)
+            }
+            .tint(MoriV2Palette.primaryForest)
+            .accessibilityIdentifier("deep-session-keep-screen-on")
+            Text(MoriL10n.display("Your session continues when the screen is off."))
+                .font(MoriV2Type.caption)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .foregroundColor(isDarkRoom ? .white.opacity(0.85) : MoriV2Palette.stone)
+        .padding(14)
+        .background(isDarkRoom ? Color.white.opacity(0.08) : MoriV2Palette.raisedPaper.opacity(0.92))
+        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
     }
 }
