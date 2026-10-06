@@ -569,3 +569,30 @@ enum MoriBeforeFeedBreathProgress {
         return totalCycles - Int(min(Double(totalCycles), completed))
     }
 }
+
+
+/// Presentation only: never changes the selected pattern or session clock.
+enum MoriBeforeFeedBreathingCopy {
+    static func patternDescription(
+        for pattern: MoriBreathPattern,
+        localeIdentifier: String = MoriLocalePreference.load().resolvedLocaleIdentifier
+    ) -> String {
+        func text(_ key: String, _ fallback: String, _ arguments: [CVarArg] = []) -> String {
+            let format = NSLocalizedString(key, bundle: MoriL10n.localizationBundle(for: localeIdentifier), value: fallback, comment: "")
+            return String(format: format, locale: Locale(identifier: localeIdentifier), arguments: arguments)
+        }
+        func seconds(_ value: Double) -> String {
+            let number = String(format: value.rounded() == value ? "%.0f" : "%.1f", locale: Locale(identifier: localeIdentifier), value)
+            return text("before_feed.pattern.seconds", "%@s", [number])
+        }
+        var parts = [text("before_feed.pattern.in", "Inhale %@", [seconds(pattern.inhale)])]
+        if let hold = pattern.inhaleHold, hold > 0 {
+            parts.append(text("before_feed.pattern.hold", "Hold %@", [seconds(hold)]))
+        }
+        parts.append(text("before_feed.pattern.out", "Exhale %@", [seconds(pattern.exhale)]))
+        if let hold = pattern.exhaleHold, hold > 0 {
+            parts.append(text("before_feed.pattern.hold", "Hold %@", [seconds(hold)]))
+        }
+        return parts.joined(separator: text("before_feed.pattern.separator", ", "))
+    }
+}

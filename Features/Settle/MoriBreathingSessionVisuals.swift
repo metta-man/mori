@@ -8,14 +8,15 @@ struct MoriBreathingInkBloomView: View {
     let animationEnabled: Bool
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
 
     private var usesPhaseMotion: Bool {
-        isSessionActive && animationEnabled && !reduceMotion
+        isSessionActive && animationEnabled && !reduceMotion && scenePhase == .active
     }
 
     private var phaseScale: CGFloat {
         guard usesPhaseMotion else { return 1 }
-        return 1 + ((visualState.scale - 1) * 0.42)
+        return visualState.scale
     }
 
     private var phaseOpacity: Double {
@@ -55,10 +56,9 @@ struct MoriBreathingInkBloomView: View {
                 .opacity(phaseOpacity * 0.18)
         }
         .blur(radius: phaseBlur)
-        .moriReduceMotionAnimation(MoriAnimation.breathInk, value: phaseScale)
-        .moriReduceMotionAnimation(MoriAnimation.breathInk, value: phaseOpacity)
-        .moriReduceMotionAnimation(MoriAnimation.breathInk, value: phaseDrift)
-        .moriReduceMotionAnimation(MoriAnimation.breathInk, value: phaseBlur)
+        // The phase already uses cosine easing, as in Santi. Applying a second
+        // animation here delays the visual behind the phase label at every tick.
+        .transaction { $0.animation = nil }
         .allowsHitTesting(false)
         .accessibilityHidden(true)
     }
@@ -149,5 +149,74 @@ struct MoriBreathingProgressRing: View {
 
     var body: some View {
         MoriTimerProgressRing(progress: progress, tint: tint)
+    }
+}
+
+/// Adapted from Santi's current AnaBreathingLight and BreathBackgroundGuidance.
+/// Visual mapping only: Mori owns the selected cadence, clock and phase labels.
+enum MoriSantiBreathingCircleMotion {
+    static func openness(phase: MoriBreathingCyclePhase, progress: Double) -> Double {
+        let eased = 0.5 - 0.5 * cos(.pi * min(max(progress, 0), 1))
+        switch phase {
+        case .inhale: return eased
+        case .holdAfterInhale: return 1
+        case .exhale: return 1 - eased
+        case .holdAfterExhale, .idle: return 0
+        }
+    }
+
+    static func scale(openness: Double, allowsMotion: Bool) -> CGFloat {
+        let expansion = allowsMotion ? min(1, max(0, openness)) : 0.5
+        return CGFloat(0.76 + expansion * 0.24)
+    }
+}
+
+struct MoriSantiBreathingCircleView: View {
+    let visualState: MoriBreathingCycleVisualState
+    let isRunning: Bool
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @Environment(\.scenePhase) private var scenePhase
+    @State private var frozenOpenness = 0.5
+
+    private var openness: Double {
+        MoriSantiBreathingCircleMotion.openness(phase: visualState.phase, progress: visualState.progress)
+    }
+
+    var body: some View {
+        MoriSantiBreathingCircleDrawing(
+            openness: isRunning ? openness : frozenOpenness,
+            allowsMotion: !reduceMotion && scenePhase == .active
+        )
+        .transaction { $0.animation = nil }
+        .onAppear { if isRunning { frozenOpenness = openness } }
+        .moriOnChange(of: visualState) { _ in
+            if isRunning { frozenOpenness = openness }
+        }
+        .accessibilityHidden(true)
+        .allowsHitTesting(false)
+    }
+}
+
+/// The same circle drawing used by the live view, independently renderable for
+/// phase snapshots without overriding system accessibility settings.
+struct MoriSantiBreathingCircleDrawing: View {
+    let openness: Double
+    let allowsMotion: Bool
+
+    var body: some View {
+        GeometryReader { proxy in
+            let diameter = min(proxy.size.width, proxy.size.height)
+            ZStack {
+                Circle().fill(MoriColors.sanctuarySurface)
+                Circle().fill(MoriColors.sanctuarySage.opacity(0.055))
+            }
+            .frame(width: diameter, height: diameter)
+            .scaleEffect(MoriSantiBreathingCircleMotion.scale(
+                openness: openness,
+                allowsMotion: allowsMotion
+            ))
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+        }
+        .padding(10)
     }
 }

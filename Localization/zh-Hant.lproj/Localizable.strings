@@ -239,14 +239,14 @@
 "Choose the feed apps Mori should slow down." = "選擇 Mori 應該放慢的資訊流 App。";
 "Turn on feed app protection to activate the shield." = "開啟資訊流 App 保護，啟用 shield。";
 "Protect feed app launches" = "保護資訊流 App 啟動";
-"Selected feed apps show Mori's iOS Screen Time shield before they open. Category selections are ignored so apps like WhatsApp are not caught accidentally." = "已選資訊流 App 打開前會顯示 Mori 的 iOS Screen Time shield。分類選擇會被忽略，避免 WhatsApp 等 App 被誤攔。";
+"Selected feed apps show Mori's iOS Screen Time shield before they open. Category selections are ignored so apps like WhatsApp are not caught accidentally." = "所揀嘅 App 會先顯示保護畫面。只按個別 App 封鎖，唔會按分類封鎖。";
 "Optional fallback. Shortcuts opens this app, but cannot return you to the triggering app." = "可選後備方案。捷徑可以打開此 App，但不能返回觸發它的 App。";
-"iOS cannot jump straight from the shield into Mori. Tapping Prepare reset records the request and closes the feed app; open Mori next and the reset appears." = "iOS 不能由 shield 直接跳入 Mori。點擊「準備重置」會記錄請求並關閉資訊流 App；之後打開 Mori，重置就會出現。";
+"iOS cannot jump straight from the shield into Mori. Tapping Prepare reset records the request and closes the feed app; open Mori next and the reset appears." = "點按「準備重置」會關閉 App。之後請自行打開 Mori。";
 "Activation flow" = "啟用流程";
 "Required by iOS before Mori can shield another app." = "Mori 要保護其他 App 前，iOS 需要先授權。";
 "Feed apps selected" = "已選資訊流 App";
 "Pick individual apps or websites for this flow." = "為這個流程選擇單個 App 或網站。";
-"Shield handoff clear" = "Shield 交接清楚";
+"Shield handoff clear" = "返回 Mori";
 "screen_time.before_feed.handoff_detail" = "打開資訊流 App -> 點準備重置 -> 打開 Mori -> 完成 %@。";
 "screen_time.morning.window_duration" = "晨間視窗 %@";
 
@@ -1012,7 +1012,7 @@
 "attention_reset.cue.morning.technique" = "先呼吸，再開始";
 "attention_reset.cue.morning.no_technique" = "從不滑資訊流開始";
 "attention_reset.running.before_feed.no_technique" = "等衝動過去";
-"Why now?" = "為何現在？";
+"Why now?" = "點解想打開？";
 "Pause. Notice. Choose." = "停一停。留意。再選擇。";
 "Reply to someone" = "回覆某人";
 "Learn" = "學習";
@@ -1059,8 +1059,8 @@
 "Review the plan" = "檢視計劃";
 "Still want to open?" = "仲想開啟嗎？";
 "Leave feed closed" = "保持資訊流關閉";
-"Closes Before Feed without opening a feed window." = "關閉 Before Feed，而唔開啟資訊流時段。";
-"Opens the selected feed apps for the chosen window. Switch back yourself." = "在所選時段內開啟資訊流 App；請自行切返去。";
+"Closes Before Feed without opening a feed window." = "關閉呢個畫面，唔會開啟新時段。";
+"Opens the selected feed apps for the chosen window. Switch back yourself." = "開啟所揀嘅時段。請自行切返去 App。";
 "Mori cannot open the triggering feed. Switch back yourself only if you still mean to." = "Mori 無法自動開啟頭先的資訊流；只有仍然真係想開時先自行切返去。";
 "Choose the feed window each time you pause." = "每次停頓時再選擇資訊流開啟時段。";
 "Pause style" = "停頓方式";
@@ -1456,6 +1456,8 @@
 "Prepare reset" = "準備重置";
 "Prepare Morning Reset" = "準備晨間重置";
 "Prepare reset, then open Mori. This app will close and Mori will be ready when you arrive." = "準備重置，然後打開 Mori。這個 App 會關閉，Mori 會在你抵達時準備好。";
+"Your feed window is open" = "資訊流開放時間進行中";
+"The reset is complete. You can continue now." = "重置已完成，現在可以繼續。";
 "Primary Action" = "主要操作";
 "Profile" = "個人資料";
 "Morning App Limit active" = "晨間 App 限制啟用中";
@@ -1859,9 +1861,9 @@
 "Breath complete" = "呼吸完成";
 "Breathe in when ready" = "準備好就吸氣";
 "Begin when ready" = "準備好就開始";
-"Continues the breath key from where it paused." = "由停低的位置繼續呼吸鑰匙。";
-"Pauses this Before Feed breath timer." = "暫停 Before Feed 呼吸計時。";
-"Continues this Before Feed breath timer from where it paused." = "由暫停的位置繼續 Before Feed 呼吸計時。";
+"Continues the breath key from where it paused." = "由暫停嘅位置繼續。";
+"Pauses this Before Feed breath timer." = "暫停呢次呼吸。";
+"Continues this Before Feed breath timer from where it paused." = "由暫停嘅位置繼續。";
 "before_feed.breath_key.accessibility" = "%@。剩餘 %@。一次呼吸：吸氣 4 秒，呼氣 6 秒。";
 "before_feed.breath_key.guided_accessibility" = "%@。%@。剩餘 %@。";
 "before_feed.breath_key.own_accessibility" = "跟隨自己的呼吸。%@。剩餘 %@。";
@@ -1884,9 +1886,9 @@
 "A gentle notification when the chosen window ends." = "所選時段結束時，發出一個溫柔通知。";
 "Open feed app -> tap Prepare reset -> take one 4-in / 6-out breath in Mori." = "開啟資訊流 App → 點按準備重置 → 在 Mori 吸氣 4 秒、呼氣 6 秒。";
 "Open feed app -> tap Prepare reset -> finish your configured breath in Mori." = "開啟資訊流 App → 點按準備重置 → 在 Mori 完成你設定的呼吸。";
-"Breath key ready" = "呼吸鑰匙已準備";
-"Screen Time opened this pause. After the breath, choose whether to return to the feed yourself." = "螢幕使用時間開啟了這個停頓。呼吸後，再選擇係咪自行返回資訊流。";
-"A shortcut opened Mori. After the breath, choose whether to return to the feed yourself." = "捷徑開啟了 Mori。呼吸後，再選擇係咪自行返回資訊流。";
+"Breath key ready" = "呼吸設定";
+"Screen Time opened this pause. After the breath, choose whether to return to the feed yourself." = "呼吸後，再決定要唔要繼續。";
+"A shortcut opened Mori. After the breath, choose whether to return to the feed yourself." = "呼吸後，再決定要唔要繼續。";
 "before_feed.intent.open_minutes" = "開啟 %d 分鐘";
 "today.before_feed.kept_closed_once" = "今日保持關閉 1 次";
 "today.before_feed.kept_closed_count" = "今日保持關閉 %d 次";
@@ -2006,3 +2008,28 @@
 "Optional planner. Open it only when one check-in is not enough." = "需要多一點規劃時，再打開它。";
 
 "Open Daily Spark" = "打開 Daily Spark";
+
+/* Gentle Before Feed reentry */
+"before_feed.reentry.title" = "呢刻想點？";
+"before_feed.reentry.previous_window" = "你啱啱揀咗一個 %@ 嘅時段。";
+"before_feed.reentry.previous_anchor" = "你之前想返去：%@。";
+"before_feed.reentry.choose_time" = "繼續揀時間";
+"before_feed.reentry.return" = "返去%@";
+"before_feed.reentry.aside" = "先放低手機";
+"before_feed.reentry.unchanged" = "沿用餘下時間，到鐘再停一停。離開唔會取消今次時段。";
+"before_feed.reentry.replacement" = "揀時間唔會改動原有時段。確認後，新時段由而家開始，取代原有時段。";
+"before_feed.reentry.save_failed" = "未能儲存呢個時段，原有時段未有改動。你可以再試，或者關閉。";
+"before_feed.reentry.time_title" = "揀一個時段";
+
+"before_feed.reentry.remaining" = "今次揀嘅時間仲有 %@。";
+"before_feed.reentry.expired" = "今次揀嘅時間已經完咗。";
+"before_feed.reentry.reuse" = "繼續餘下時間";
+"before_feed.reentry.rechoose" = "重新揀時間";
+"before_feed.reentry.edit_reason" = "改返原因（可選）";
+
+/* Before Feed localized cadence; presentation only */
+"before_feed.pattern.seconds" = "%@ 秒";
+"before_feed.pattern.in" = "吸氣 %@";
+"before_feed.pattern.out" = "呼氣 %@";
+"before_feed.pattern.hold" = "屏息 %@";
+"before_feed.pattern.separator" = " · ";

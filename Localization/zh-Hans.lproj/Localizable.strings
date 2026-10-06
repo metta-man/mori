@@ -1456,6 +1456,8 @@
 "Prepare reset" = "准备重置";
 "Prepare Morning Reset" = "准备晨间重置";
 "Prepare reset, then open Mori. This app will close and Mori will be ready when you arrive." = "准备重置，然后打开 Mori。这个 App 会关闭，Mori 会在你抵达时准备好。";
+"Your feed window is open" = "信息流开放时间进行中";
+"The reset is complete. You can continue now." = "重置已完成，现在可以继续。";
 "Primary Action" = "主要操作";
 "Profile" = "个人资料";
 "Morning App Limit active" = "晨间 App 限制启用中";
@@ -2006,3 +2008,28 @@
 "Optional planner. Open it only when one check-in is not enough." = "需要多一点规划时，再打开它。";
 
 "Open Daily Spark" = "打开 Daily Spark";
+
+/* Gentle Before Feed reentry */
+"before_feed.reentry.title" = "此刻想怎么做？";
+"before_feed.reentry.previous_window" = "你刚刚选了一个 %@ 的时段。";
+"before_feed.reentry.previous_anchor" = "你之前想回到：%@。";
+"before_feed.reentry.choose_time" = "继续选时间";
+"before_feed.reentry.return" = "回到%@";
+"before_feed.reentry.aside" = "先放下手机";
+"before_feed.reentry.unchanged" = "继续用不会改变原来的结束时间。这次时段结束后，重新停一停，再选择下一段时间。离开也会保留原来的时段。";
+"before_feed.reentry.replacement" = "选时间不会更改原有时段。确认后，新时段从现在开始，替代原有时段。";
+"before_feed.reentry.save_failed" = "未能保存这个时段，原有时段没有更改。你可以重试，或者关闭。";
+"before_feed.reentry.time_title" = "选一个时段";
+
+"before_feed.reentry.remaining" = "这次选的时间还剩 %@。";
+"before_feed.reentry.expired" = "这次选的时间已经结束了。";
+"before_feed.reentry.reuse" = "继续用剩余时间";
+"before_feed.reentry.rechoose" = "重新选时间";
+"before_feed.reentry.edit_reason" = "修改原因（可选）";
+
+/* Before Feed localized cadence; presentation only */
+"before_feed.pattern.seconds" = "%@ 秒";
+"before_feed.pattern.in" = "吸气 %@";
+"before_feed.pattern.out" = "呼气 %@";
+"before_feed.pattern.hold" = "屏息 %@";
+"before_feed.pattern.separator" = " · ";

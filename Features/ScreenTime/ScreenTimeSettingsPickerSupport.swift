@@ -162,6 +162,6 @@ enum ScreenTimeSettingsBreathingSummary {
             return MoriL10n.string("screen_time.breathing_summary.guided_on", defaultValue: "Guided breathing is on.")
         }
 
-        return "\(technique.patternDisplay) · \(technique.shortDescription)"
+        return "\(MoriL10n.display(technique.name)) · \(MoriBeforeFeedBreathingCopy.patternDescription(for: technique.breathPattern))"
     }
 }

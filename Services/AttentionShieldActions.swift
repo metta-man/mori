@@ -71,7 +71,7 @@ enum AttentionShieldAction {
     )
     case endResetProtectionIfNeeded(feature: MoriScreenTimeFeature)
     case endShield(feature: MoriScreenTimeFeature?)
-    case completeBeforeFeedResetAt(Date, openWindowSeconds: Int?)
+    case confirmBeforeFeedAllowance(MoriBeforeFeedAllowanceRequest)
     case completeMorningGateResetAt(Date)
 }
 
@@ -162,13 +162,6 @@ extension AttentionShieldAction {
 
     static func endResetAppLimitIfNeeded(feature: MoriScreenTimeFeature) -> Self {
         .endResetProtectionIfNeeded(feature: feature)
-    }
-
-    static func completeBeforeFeedReset(
-        openWindowSeconds: Int? = nil,
-        now: Date = Date()
-    ) -> Self {
-        .completeBeforeFeedResetAt(now, openWindowSeconds: openWindowSeconds)
     }
 
     static func completeMorningGateReset(now: Date = Date()) -> Self {

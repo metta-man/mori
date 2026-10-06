@@ -231,6 +231,14 @@ struct MoriBeforeFeedWindowAttributes: ActivityAttributes {
             max(0, Int(ceil(endsAt.timeIntervalSince(now))))
         }
 
+        func completed(at endedAt: Date) -> Self {
+            Self(startedAt: startedAt, endsAt: min(endsAt, endedAt), durationSeconds: durationSeconds)
+        }
+
+        static func dismissalDate(endedAt: Date) -> Date {
+            endedAt.addingTimeInterval(60)
+        }
+
         var timerInterval: ClosedRange<Date> {
             startedAt...max(startedAt, endsAt)
         }

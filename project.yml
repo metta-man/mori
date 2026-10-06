@@ -104,6 +104,7 @@ targets:
     platform: iOS
     sources:
       - path: ShieldConfiguration
+      - path: Services/BeforeFeedGateStore.swift
       - path: Services/AttentionShieldStateStore.swift
       - path: Shared
       - path: Localization

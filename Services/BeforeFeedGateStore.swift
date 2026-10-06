@@ -57,18 +57,144 @@ struct MoriBeforeFeedIntentEvent: Codable, Equatable, Identifiable {
     }
 }
 
+/// An allowance confirmation, not a measured target-app opening or usage interval.
+struct MoriBeforeFeedAllowanceRepeat: Equatable {
+    let previousEventID: UUID
+    let eventID: UUID
+    let secondsSincePreviousAllowance: TimeInterval
+    let secondsSincePreviousPlannedEnd: TimeInterval?
+
+    var requestedWithinPreviousPlannedWindow: Bool? {
+        secondsSincePreviousPlannedEnd.map { $0 < 0 }
+    }
+}
+
+struct MoriBeforeFeedFlowEligibility {
+    let startedAt: Date
+    let allowanceRevision: String
+    let historyGeneration: String
+}
+
+struct MoriBeforeFeedAllowanceRequest {
+    let eligibility: MoriBeforeFeedFlowEligibility?
+    let reason: MoriBeforeFeedIntentReason
+    let routeSource: String?
+    let enoughChoiceID: String
+    let openWindowSeconds: Int
+    let returnAnchorID: String?
+    let eventID: UUID
+    let historyGeneration: String
+    let now: Date
+}
+
+struct MoriBeforeFeedAllowanceConfirmation {
+    let event: MoriBeforeFeedIntentEvent
+    let endsAt: Date
+    let isNew: Bool
+}
+
+/// One evaluation per presented entry. Background resume/redraw cannot retrigger.
+struct MoriBeforeFeedReentryState: Equatable {
+    private(set) var hasEvaluated = false
+    private(set) var previousAllowance: MoriBeforeFeedIntentEvent?
+
+    private(set) var allowanceEndsAt: Date?
+
+    mutating func evaluate(events: [MoriBeforeFeedIntentEvent], now: Date, allowanceEndsAt: Date?) {
+        guard !hasEvaluated else { return }
+        hasEvaluated = true
+        guard let allowanceEndsAt, allowanceEndsAt > now else { return }
+        self.allowanceEndsAt = allowanceEndsAt
+        previousAllowance = events.filter { $0.resolvedOutcome == .openWindowRequested && $0.confirmedAt <= now }
+            .max(by: { $0.confirmedAt < $1.confirmedAt })
+    }
+
+}
+
 struct BeforeFeedGateStore {
     private static let intentEventsKey = "mori_before_feed_intent_events_v1"
+    // Preserve the entire pre-existing v1 history. Only new v2 writes have a cap.
+    private static let recentIntentEventsKey = "mori_before_feed_intent_events_v2_recent"
+    private static let recentHistoryTruncatedKey = "mori_before_feed_intent_events_v2_truncated"
+    static let recentIntentEventLimit = 1000
 
     private let defaults: UserDefaults
+    private static let historyGenerationKey = "mori_before_feed_history_generation"
     private let legacyDefaults: UserDefaults
+    private let persistData: ((Data, String) -> Bool)?
 
     init(
         defaults: UserDefaults = MoriAppGroup.defaults,
-        legacyDefaults: UserDefaults = .standard
+        legacyDefaults: UserDefaults = .standard,
+        persistData: ((Data, String) -> Bool)? = nil
     ) {
         self.defaults = defaults
         self.legacyDefaults = legacyDefaults
+        self.persistData = persistData
+    }
+
+    private static let allowanceRevisionKey = "mori_before_feed_allowance_revision"
+
+    /// Capture only when a fresh pause starts without an active allowance.
+    func beginFreshAllowanceFlow(now: Date = Date()) -> MoriBeforeFeedFlowEligibility? {
+        guard !isInGraceWindow(now: now) else { return nil }
+        return MoriBeforeFeedFlowEligibility(startedAt: now, allowanceRevision: defaults.string(forKey: Self.allowanceRevisionKey) ?? "", historyGeneration: historyGeneration)
+    }
+
+    var historyGeneration: String { defaults.string(forKey: Self.historyGenerationKey) ?? "" }
+
+    /// Save the decision and allowance before any shield/activity side effects.
+    /// A failed local write preserves the previous allowance and is not confirmed.
+    func confirmAllowance(_ request: MoriBeforeFeedAllowanceRequest) -> MoriBeforeFeedAllowanceConfirmation? {
+        guard historyGeneration == request.historyGeneration else { return nil }
+        if let existing = intentEvents().first(where: { $0.id == request.eventID }) {
+            guard let seconds = existing.openWindowSeconds, existing.resolvedOutcome == .openWindowRequested else { return nil }
+            return MoriBeforeFeedAllowanceConfirmation(event: existing, endsAt: existing.confirmedAt.addingTimeInterval(TimeInterval(seconds)), isNew: false)
+        }
+        guard let eligibility = request.eligibility,
+              eligibility.startedAt <= request.now,
+              eligibility.historyGeneration == historyGeneration,
+              eligibility.allowanceRevision == (defaults.string(forKey: Self.allowanceRevisionKey) ?? ""),
+              !isInGraceWindow(now: request.now) else { return nil }
+        let seconds = resolvedGraceWindowSeconds(override: request.openWindowSeconds)
+        let until = request.now.addingTimeInterval(TimeInterval(seconds))
+        let event = MoriBeforeFeedIntentEvent(
+            id: request.eventID, reason: request.reason, confirmedAt: request.now,
+            routeSource: request.routeSource, enoughChoiceID: request.enoughChoiceID,
+            openWindowSeconds: seconds, returnAnchorID: request.returnAnchorID, outcome: .openWindowRequested
+        )
+        let previousData = defaults.data(forKey: Self.recentIntentEventsKey)
+        let previousGrace = defaults.object(forKey: MoriScreenTimeShared.beforeFeedGraceUntilKey)
+        let recent = readEvents(key: Self.recentIntentEventsKey) + [event]
+        guard let data = try? JSONEncoder().encode(Array(recent.suffix(Self.recentIntentEventLimit))) else { return nil }
+        let wrote: Bool
+        if let persistData { wrote = persistData(data, Self.recentIntentEventsKey) }
+        else {
+            defaults.set(data, forKey: Self.recentIntentEventsKey)
+            wrote = defaults.data(forKey: Self.recentIntentEventsKey) == data
+        }
+        guard wrote, defaults.data(forKey: Self.recentIntentEventsKey) == data,
+              historyGeneration == request.historyGeneration,
+              eligibility.allowanceRevision == (defaults.string(forKey: Self.allowanceRevisionKey) ?? ""),
+              !isInGraceWindow(now: request.now) else {
+            if historyGeneration == request.historyGeneration {
+                defaults.set(previousData, forKey: Self.recentIntentEventsKey)
+            } else if defaults.data(forKey: Self.recentIntentEventsKey) == data {
+                // A deletion during the write must not recreate deleted decisions.
+                defaults.removeObject(forKey: Self.recentIntentEventsKey)
+            }
+            return nil
+        }
+        saveGraceUntil(until, now: request.now)
+        guard defaults.double(forKey: MoriScreenTimeShared.beforeFeedGraceUntilKey) == until.timeIntervalSince1970 else {
+            defaults.set(previousData, forKey: Self.recentIntentEventsKey)
+            defaults.set(previousGrace, forKey: MoriScreenTimeShared.beforeFeedGraceUntilKey)
+            return nil
+        }
+        if recent.count > Self.recentIntentEventLimit { defaults.set(true, forKey: Self.recentHistoryTruncatedKey) }
+        NotificationCenter.default.post(name: .moriBeforeFeedIntentDidRecord, object: event)
+        NotificationCenter.default.post(name: .moriBeforeFeedDecisionDidRecord, object: event)
+        return MoriBeforeFeedAllowanceConfirmation(event: event, endsAt: until, isNew: true)
     }
 
     func nativeGateEnabled() -> Bool {
@@ -154,6 +280,17 @@ struct BeforeFeedGateStore {
         graceUntil(now: now) != nil
     }
 
+    /// Reusing never writes history or renews the deadline. Reject expired/replaced/stale windows.
+    func canReuseAllowance(endsAt: Date, historyGeneration: String, now: Date = Date()) -> Bool {
+        guard self.historyGeneration == historyGeneration, endsAt > now else { return false }
+        return storedGraceUntil() == endsAt
+    }
+
+    /// A queued expiry belongs only to its captured window, never a replacement.
+    func shouldReapplyExpiredAllowance(endsAt: Date, now: Date = Date()) -> Bool {
+        endsAt <= now && storedGraceUntil() == endsAt
+    }
+
     func secondsUntilGraceExpires(now: Date = Date()) -> TimeInterval? {
         guard let graceUntil = graceUntil(now: now) else { return nil }
         let remaining = graceUntil.timeIntervalSince(now)
@@ -183,11 +320,6 @@ struct BeforeFeedGateStore {
         now: Date = Date(),
         source: MoriPendingResetLaunchSource = .screenTimeGate
     ) -> Bool {
-        guard !isInGraceWindow(now: now) else {
-            clearPendingResetLaunch()
-            return false
-        }
-
         requestResetLaunch(source: source)
         return true
     }
@@ -198,13 +330,40 @@ struct BeforeFeedGateStore {
     }
 
     func intentEvents() -> [MoriBeforeFeedIntentEvent] {
-        guard let data = defaults.data(forKey: Self.intentEventsKey),
-              let events = try? JSONDecoder().decode([MoriBeforeFeedIntentEvent].self, from: data)
-        else {
-            return []
-        }
+        var seen = Set<UUID>()
+        return (readEvents(key: Self.intentEventsKey) + readEvents(key: Self.recentIntentEventsKey))
+            .filter { seen.insert($0.id).inserted }
+            .sorted { $0.confirmedAt < $1.confirmedAt }
+    }
 
-        return events.sorted { $0.confirmedAt < $1.confirmedAt }
+    /// Derived from confirmed allowance requests only. Cancelled resets and kept-
+    /// closed decisions grant no allowance and never become the previous window.
+    /// The planned end is not an observed end: a reset can close the window early.
+    func allowanceRepeats() -> [MoriBeforeFeedAllowanceRepeat] {
+        let requests = intentEvents().filter { $0.resolvedOutcome == .openWindowRequested }
+        let legacyIDs = Set(readEvents(key: Self.intentEventsKey).map(\.id))
+        let hasGap = defaults.bool(forKey: Self.recentHistoryTruncatedKey)
+        return zip(requests, requests.dropFirst()).compactMap { previous, current in
+            // Do not report a direct repeat across a retention gap.
+            if hasGap && legacyIDs.contains(previous.id) != legacyIDs.contains(current.id) { return nil }
+            return
+            MoriBeforeFeedAllowanceRepeat(
+                previousEventID: previous.id,
+                eventID: current.id,
+                secondsSincePreviousAllowance: max(0, current.confirmedAt.timeIntervalSince(previous.confirmedAt)),
+                secondsSincePreviousPlannedEnd: previous.openWindowSeconds.flatMap { seconds in
+                    guard seconds > 0 else { return nil }
+                    return current.confirmedAt.timeIntervalSince(previous.confirmedAt.addingTimeInterval(TimeInterval(seconds)))
+                }
+            )
+        }
+    }
+
+    private func readEvents(key: String) -> [MoriBeforeFeedIntentEvent] {
+        guard let data = defaults.data(forKey: key),
+              let events = try? JSONDecoder().decode([MoriBeforeFeedIntentEvent].self, from: data)
+        else { return [] }
+        return events
     }
 
     @discardableResult
@@ -328,6 +487,7 @@ struct BeforeFeedGateStore {
             return
         }
 
+        defaults.set(UUID().uuidString, forKey: Self.allowanceRevisionKey)
         let latestAllowedGraceUntil = now.addingTimeInterval(TimeInterval(MoriScreenTimeShared.maxBeforeFeedGraceWindowSeconds))
         defaults.set(
             min(date, latestAllowedGraceUntil).timeIntervalSince1970,
@@ -361,7 +521,10 @@ struct BeforeFeedGateStore {
     }
 
     func clearIntentHistory() {
+        defaults.set(UUID().uuidString, forKey: Self.historyGenerationKey)
         defaults.removeObject(forKey: Self.intentEventsKey)
+        defaults.removeObject(forKey: Self.recentIntentEventsKey)
+        defaults.removeObject(forKey: Self.recentHistoryTruncatedKey)
         NotificationCenter.default.post(name: .moriBeforeFeedDecisionDidRecord, object: nil)
     }
 
@@ -369,9 +532,14 @@ struct BeforeFeedGateStore {
         _ event: MoriBeforeFeedIntentEvent,
         to events: inout [MoriBeforeFeedIntentEvent]
     ) {
-        events.append(event)
-        if let encodedEvents = try? JSONEncoder().encode(events) {
-            defaults.set(encodedEvents, forKey: Self.intentEventsKey)
+        var recentEvents = readEvents(key: Self.recentIntentEventsKey)
+        recentEvents.append(event)
+        if recentEvents.count > Self.recentIntentEventLimit {
+            defaults.set(true, forKey: Self.recentHistoryTruncatedKey)
+        }
+        recentEvents = Array(recentEvents.suffix(Self.recentIntentEventLimit))
+        if let encodedEvents = try? JSONEncoder().encode(recentEvents) {
+            defaults.set(encodedEvents, forKey: Self.recentIntentEventsKey)
         }
     }
 

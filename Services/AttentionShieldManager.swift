@@ -108,9 +108,12 @@ final class AttentionShieldManager: ObservableObject {
         case .endShield(let feature):
             endShield(feature: feature)
             return false
-        case .completeBeforeFeedResetAt(let now, let openWindowSeconds):
-            completeBeforeFeedReset(now: now, openWindowSeconds: openWindowSeconds)
-            return false
+        case .confirmBeforeFeedAllowance(let request):
+            guard let confirmation = beforeFeedGateStore.confirmAllowance(request) else { return false }
+            if confirmation.isNew {
+                activateBeforeFeedAllowance(until: confirmation.endsAt, now: request.now)
+            }
+            return true
         case .completeMorningGateResetAt(let now):
             completeMorningGateReset(now: now)
             return false
@@ -349,6 +352,8 @@ final class AttentionShieldManager: ObservableObject {
 
     @discardableResult
     private func beginBeforeFeedResetProtection(now: Date = Date()) -> Bool {
+        // Reentry is a choice, not permission to revoke a previously granted window.
+        guard !beforeFeedGateStore.isInGraceWindow(now: now) else { return false }
         beforeFeedWindowEndNotificationScheduler.cancel()
         beforeFeedGateStore.clearGraceUntil()
         MoriBeforeFeedWindowLiveActivityController.endAll()
@@ -360,17 +365,8 @@ final class AttentionShieldManager: ObservableObject {
         return passiveGatePolicy.shouldApplyBeforeFeedGate
     }
 
-    private func completeBeforeFeedReset(
-        now: Date = Date(),
-        openWindowSeconds: Int? = nil
-    ) {
-        let resolvedWindowSeconds = beforeFeedGateStore.resolvedGraceWindowSeconds(
-            override: openWindowSeconds
-        )
-        let until = now.addingTimeInterval(TimeInterval(resolvedWindowSeconds))
+    private func activateBeforeFeedAllowance(until authoritativeUntil: Date, now: Date) {
         let traceID = beforeFeedGateStore.beginWindowTrace()
-        beforeFeedGateStore.saveGraceUntil(until)
-        let authoritativeUntil = beforeFeedGateStore.graceUntil(now: now) ?? until
         if activeSession?.feature == .beforeFeed {
             clearActiveShieldSession()
         } else {
@@ -517,13 +513,14 @@ final class AttentionShieldManager: ObservableObject {
             return
         }
 
-        guard let delay = beforeFeedGateStore.secondsUntilGraceExpires(now: now) else {
+        guard let expectedGraceUntil = beforeFeedGateStore.graceUntil(now: now) else {
             MoriBeforeFeedWindowLiveActivityController.endAll()
             monitoringCoordinator.stopBeforeFeedGrace()
             lastScheduledBeforeFeedGraceUntil = nil
             return
         }
 
+        let delay = expectedGraceUntil.timeIntervalSince(now)
         guard delay > 1 else {
             beforeFeedGateStore.clearGraceUntil()
             MoriBeforeFeedWindowLiveActivityController.endAll()
@@ -541,11 +538,13 @@ final class AttentionShieldManager: ObservableObject {
         beforeFeedReapplyTask = Task { [weak self] in
             let nanoseconds = UInt64(min(delay, TimeInterval(Int.max)) * 1_000_000_000)
             try? await Task.sleep(nanoseconds: nanoseconds)
-            guard !Task.isCancelled else { return }
-            await MainActor.run {
-                MoriBeforeFeedWindowLiveActivityController.endAll()
-                self?.refreshBeforeFeedGateShield()
-            }
+            // This Task inherits the manager's MainActor isolation. Check and
+            // act together after suspension; never end a replacement window.
+            guard !Task.isCancelled, let self,
+                  self.beforeFeedGateStore.shouldReapplyExpiredAllowance(endsAt: expectedGraceUntil)
+            else { return }
+            MoriBeforeFeedWindowLiveActivityController.endAll()
+            self.refreshBeforeFeedGateShield()
         }
     }
 
@@ -772,71 +771,56 @@ typealias AppLimitManager = AttentionShieldManager
 #if canImport(ActivityKit) && os(iOS)
 @MainActor
 private enum MoriBeforeFeedWindowLiveActivityController {
+    private static var generation = UUID()
+    private static var expiryTask: Task<Void, Never>?
+    private static var endingIDs = Set<String>()
+
     static func start(until endsAt: Date, now: Date = Date()) {
         guard #available(iOS 16.2, *),
               ActivityAuthorizationInfo().areActivitiesEnabled,
-              endsAt > now
-        else {
-            return
-        }
-
+              endsAt > now else { return }
+        generation = UUID()
+        let requestGeneration = generation
+        expiryTask?.cancel()
+        // Capture before suspension: an old request must never end a new session.
+        let previousActivities = Activity<MoriBeforeFeedWindowAttributes>.activities
         Task {
-            await endExisting(dismissalPolicy: .immediate)
-            let durationSeconds = max(1, Int(ceil(endsAt.timeIntervalSince(now))))
+            for activity in previousActivities {
+                await end(activity, now: Date(), immediately: true)
+            }
+            guard generation == requestGeneration, endsAt > Date() else { return }
             let state = MoriBeforeFeedWindowAttributes.ContentState(
                 startedAt: now,
                 endsAt: endsAt,
-                durationSeconds: durationSeconds
+                durationSeconds: max(1, Int(ceil(endsAt.timeIntervalSince(now))))
             )
-            let content = ActivityContent(
-                state: state,
-                staleDate: endsAt,
-                relevanceScore: 1
-            )
-
-            _ = try? Activity.request(
+            guard let activity = try? Activity.request(
                 attributes: MoriBeforeFeedWindowAttributes(title: "Feed window"),
-                content: content,
+                content: ActivityContent(state: state, staleDate: endsAt, relevanceScore: 1),
                 pushType: nil
-            )
-            scheduleEndExpiredActivity(at: endsAt)
+            ) else { return }
+            expiryTask = Task {
+                let delay = max(0, endsAt.timeIntervalSince(Date()))
+                do {
+                    try await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+                } catch { return }
+                guard !Task.isCancelled, generation == requestGeneration else { return }
+                await end(activity, now: Date())
+            }
         }
     }
 
     static func endAll() {
         guard #available(iOS 16.2, *) else { return }
+        generation = UUID()
+        expiryTask?.cancel()
+        expiryTask = nil
+        let activities = Activity<MoriBeforeFeedWindowAttributes>.activities
+        let endedAt = Date()
         Task {
-            await endExisting(dismissalPolicy: .immediate)
-        }
-    }
-
-    @available(iOS 16.2, *)
-    private static func scheduleEndExpiredActivity(at endsAt: Date) {
-        Task {
-            let delay = max(0, endsAt.timeIntervalSince(Date()))
-            if delay > 0 {
-                try? await Task.sleep(nanoseconds: UInt64(delay * 1_000_000_000))
+            for activity in activities {
+                await end(activity, now: endedAt)
             }
-            await endExpired(now: Date(), dismissalPolicy: .immediate)
-        }
-    }
-
-    @available(iOS 16.2, *)
-    private static func endExpired(
-        now: Date,
-        dismissalPolicy: ActivityUIDismissalPolicy
-    ) async {
-        for activity in Activity<MoriBeforeFeedWindowAttributes>.activities {
-            guard activity.content.state.endsAt <= now else { continue }
-            await end(activity, now: now, dismissalPolicy: dismissalPolicy)
-        }
-    }
-
-    @available(iOS 16.2, *)
-    private static func endExisting(dismissalPolicy: ActivityUIDismissalPolicy) async {
-        let now = Date()
-        for activity in Activity<MoriBeforeFeedWindowAttributes>.activities {
-            await end(activity, now: now, dismissalPolicy: dismissalPolicy)
         }
     }
 
@@ -844,20 +828,19 @@ private enum MoriBeforeFeedWindowLiveActivityController {
     private static func end(
         _ activity: Activity<MoriBeforeFeedWindowAttributes>,
         now: Date,
-        dismissalPolicy: ActivityUIDismissalPolicy
+        immediately: Bool = false
     ) async {
+        guard activity.activityState == .active || activity.activityState == .stale,
+              endingIDs.insert(activity.id).inserted else { return }
+        defer { endingIDs.remove(activity.id) }
         let previousState = activity.content.state
-        let state = MoriBeforeFeedWindowAttributes.ContentState(
-            startedAt: previousState.startedAt,
-            endsAt: min(previousState.endsAt, now),
-            durationSeconds: previousState.durationSeconds
+        let state = previousState.completed(at: now)
+        // ActivityKit owns dismissal after end, even if Mori is subsequently suspended.
+        // staleDate / the countdown alone cannot end a still-running activity.
+        await activity.end(
+            ActivityContent(state: state, staleDate: nil, relevanceScore: 0),
+            dismissalPolicy: immediately ? .immediate : .after(MoriBeforeFeedWindowAttributes.ContentState.dismissalDate(endedAt: now))
         )
-        let content = ActivityContent(
-            state: state,
-            staleDate: now,
-            relevanceScore: 0
-        )
-        await activity.end(content, dismissalPolicy: dismissalPolicy)
     }
 }
 #else

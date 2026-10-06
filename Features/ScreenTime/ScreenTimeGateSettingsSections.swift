@@ -89,7 +89,7 @@ struct BeforeFeedSettingsSection: View {
             if pauseStyle == .guidedBreathing {
                 Picker(MoriL10n.display("Breathing technique"), selection: $breathingTechniqueID) {
                     ForEach(MoriBreathingTechniqueRepository.techniques) { technique in
-                        Text(technique.name).tag(technique.id)
+                        Text(MoriL10n.display(technique.name)).tag(technique.id)
                     }
                 }
                 .accessibilityIdentifier("before-feed-technique-picker")
@@ -761,7 +761,7 @@ enum MoriBeforeFeedPauseSettingsPresentation {
                 ?? MoriBreathingTechniqueRepository.getTechnique(
                     id: MoriScreenTimeShared.defaultBeforeFeedBreathingTechniqueID
                 )
-            let techniqueName = technique?.name ?? MoriL10n.display("Guided breathing")
+            let techniqueName = technique.map { MoriL10n.display($0.name) } ?? MoriL10n.display("Guided breathing")
             let duration = estimatedGuidedDuration(
                 technique: technique,
                 guidedCycleCount: guidedCycleCount
