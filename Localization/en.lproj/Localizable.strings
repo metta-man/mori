@@ -1973,3 +1973,56 @@
 "Keep screen on" = "Keep screen on";
 
 "Your session continues when the screen is off." = "Your session continues when the screen is off.";
+
+// Optional journal mood and explicit Health sharing
+"journal.mood.optional" = "How pleasant does this feel? (optional)";
+"journal.mood.veryUnpleasant" = "Very unpleasant";
+"journal.mood.unpleasant" = "Unpleasant";
+"journal.mood.neutral" = "Neutral";
+"journal.mood.pleasant" = "Pleasant";
+"journal.mood.veryPleasant" = "Very pleasant";
+"journal.mood.share" = "Save and share mood with Apple Health";
+"journal.mood.shared" = "Shared with Apple Health";
+"journal.mood.privacy" = "Your writing and photos are not shared. Deleting in Mori does not delete Health records.";
+"journal.mood.payload" = "Mood for Health: %@ · Feeling: %@ · Context: %@ · Recorded: %@";
+"journal.mood.update_time" = "Editing updates this moment using its original recorded time.";
+"journal.mood.none" = "None";
+"journal.mood.previously_shared" = "This version was shared earlier. No new Health record was saved.";
+"journal.mood.not_shared" = "Saved in Mori. This share did not complete. Check Health access and try again.";
+
+// Mori wording for a balanced optional feeling vocabulary
+"journal.emotion.happy" = "Happy";
+"journal.emotion.calm" = "Calm";
+"journal.emotion.okay" = "Okay";
+"journal.emotion.sad" = "Sad";
+"journal.emotion.content" = "Content";
+"journal.emotion.grateful" = "Grateful";
+"journal.emotion.hopeful" = "Hopeful";
+"journal.emotion.relieved" = "Relieved";
+"journal.emotion.anxious" = "Anxious";
+"journal.emotion.tired" = "Tired";
+"journal.emotion.hurt" = "Hurt";
+"journal.emotion.frustrated" = "Frustrated";
+"journal.emotion.unsure" = "Unsure";
+"journal.emotion.unclear" = "Hard to name";
+"journal.emotion.group.pleasant" = "Pleasant feelings";
+"journal.emotion.group.neutral" = "In between";
+"journal.emotion.group.difficult" = "Difficult feelings";
+"journal.emotion.skip" = "Skip naming a feeling";
+"journal.emotion.not_named" = "Not named";
+
+"journal.mood.not_set" = "Not set";
+
+"journal.mood.sharing" = "Sharing…";
+
+"journal.mood.private_short" = "Writing and photos are not shared.";
+
+"journal.mood.details" = "Sharing details";
+
+"journal.mood.delete_boundary" = "Deleting in Mori does not delete Health records.";
+
+"journal.photo.add" = "Add a photo";
+
+"journal.photo.limit" = "Photo limit reached";
+
+"journal.photo.optional" = "(optional)";

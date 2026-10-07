@@ -201,6 +201,7 @@ final class MoriLandscapeUITests: XCTestCase {
         XCTAssertTrue(app.buttons["journal-other-feelings"].waitForExistence(timeout: 8))
         XCTAssertFalse(app.buttons["Hopeful"].exists)
         app.buttons["journal-other-feelings"].tap()
+        app.buttons["journal-feeling-group-pleasant"].tap()
         XCTAssertTrue(app.buttons["Hopeful"].waitForExistence(timeout: 3))
         capture("Log other feelings")
         app.buttons["Hopeful"].tap()

@@ -15,6 +15,8 @@ struct HabitEntry: Identifiable, Codable {
     var journalEmotionID: String?
     var journalContextID: String?
     var journalResponseID: String?
+    var journalMood: MoriJournalMood?
+    var journalEmotionWasSkipped: Bool
 
     var isPositive: Bool {
         tone == .positive
@@ -39,7 +41,9 @@ struct HabitEntry: Identifiable, Codable {
         responsePlan: String? = nil,
         journalEmotionID: String? = nil,
         journalContextID: String? = nil,
-        journalResponseID: String? = nil
+        journalResponseID: String? = nil,
+        journalMood: MoriJournalMood? = nil,
+        journalEmotionWasSkipped: Bool = false
     ) {
         self.habitName = habitName
         self.id = id
@@ -54,6 +58,8 @@ struct HabitEntry: Identifiable, Codable {
         self.journalEmotionID = journalEmotionID
         self.journalContextID = journalContextID
         self.journalResponseID = journalResponseID
+        self.journalMood = journalMood
+        self.journalEmotionWasSkipped = journalEmotionWasSkipped
     }
 
     init(
@@ -103,6 +109,8 @@ struct HabitEntry: Identifiable, Codable {
         case journalEmotionID
         case journalContextID
         case journalResponseID
+        case journalMood
+        case journalEmotionWasSkipped
     }
 
     init(from decoder: Decoder) throws {
@@ -119,6 +127,8 @@ struct HabitEntry: Identifiable, Codable {
         journalEmotionID = try container.decodeIfPresent(String.self, forKey: .journalEmotionID)
         journalContextID = try container.decodeIfPresent(String.self, forKey: .journalContextID)
         journalResponseID = try container.decodeIfPresent(String.self, forKey: .journalResponseID)
+        journalMood = try container.decodeIfPresent(MoriJournalMood.self, forKey: .journalMood)
+        journalEmotionWasSkipped = try container.decodeIfPresent(Bool.self, forKey: .journalEmotionWasSkipped) ?? false
 
         if let decodedTone = try container.decodeIfPresent(HabitDayTone.self, forKey: .tone) {
             tone = decodedTone
@@ -144,6 +154,8 @@ struct HabitEntry: Identifiable, Codable {
         try container.encodeIfPresent(journalEmotionID, forKey: .journalEmotionID)
         try container.encodeIfPresent(journalContextID, forKey: .journalContextID)
         try container.encodeIfPresent(journalResponseID, forKey: .journalResponseID)
+        try container.encodeIfPresent(journalMood, forKey: .journalMood)
+        if journalEmotionWasSkipped { try container.encode(true, forKey: .journalEmotionWasSkipped) }
     }
 }
 
@@ -164,6 +176,12 @@ enum JournalGuidedStep: Int, CaseIterable, Equatable {
 
 enum JournalGuidedEmotion: String, CaseIterable, Codable, Identifiable {
     case calm
+    case happy
+    case content
+    case grateful
+    case relieved
+    case okay
+    case sad
     case hopeful
     case anxious
     case tired
@@ -177,6 +195,12 @@ enum JournalGuidedEmotion: String, CaseIterable, Codable, Identifiable {
     var title: String {
         switch self {
         case .calm: return "Calm"
+        case .happy: return "Happy"
+        case .content: return "Content"
+        case .grateful: return "Grateful"
+        case .relieved: return "Relieved"
+        case .okay: return "Okay"
+        case .sad: return "Sad"
         case .hopeful: return "Hopeful"
         case .anxious: return "Anxious"
         case .tired: return "Tired"
@@ -189,11 +213,11 @@ enum JournalGuidedEmotion: String, CaseIterable, Codable, Identifiable {
 
     var tone: HabitDayTone {
         switch self {
-        case .calm, .hopeful:
+        case .calm, .hopeful, .happy, .content, .grateful, .relieved:
             return .positive
-        case .tired, .unsure, .unclear:
+        case .tired, .unsure, .unclear, .okay:
             return .neutral
-        case .anxious, .hurt, .frustrated:
+        case .anxious, .hurt, .frustrated, .sad:
             return .negative
         }
     }
@@ -274,6 +298,7 @@ struct JournalGuidedLegacyFields: Equatable {
 
 struct JournalGuidedCheckInState: Equatable {
     private(set) var emotion: JournalGuidedEmotion?
+    private(set) var emotionWasSkipped: Bool
     private(set) var context: JournalGuidedContext?
     private(set) var response: JournalGuidedResponse?
     private(set) var currentStep: JournalGuidedStep
@@ -282,9 +307,11 @@ struct JournalGuidedCheckInState: Equatable {
         emotion: JournalGuidedEmotion? = nil,
         context: JournalGuidedContext? = nil,
         response: JournalGuidedResponse? = nil,
-        currentStep: JournalGuidedStep = .emotion
+        currentStep: JournalGuidedStep = .emotion,
+        emotionWasSkipped: Bool = false
     ) {
         self.emotion = emotion
+        self.emotionWasSkipped = emotion == nil && emotionWasSkipped
         self.context = context
         self.response = response
         self.currentStep = currentStep
@@ -293,10 +320,12 @@ struct JournalGuidedCheckInState: Equatable {
 
     init(restoring entry: HabitEntry?) {
         emotion = entry?.journalEmotionID.flatMap(JournalGuidedEmotion.init(rawValue:))
+        emotionWasSkipped = emotion == nil && entry?.journalEmotionWasSkipped == true
         context = entry?.journalContextID.flatMap(JournalGuidedContext.init(rawValue:))
         response = entry?.journalResponseID.flatMap(JournalGuidedResponse.init(rawValue:))
         currentStep = .emotion
-        if let entry, emotion?.tone != entry.tone {
+        if let entry, selectedTone != entry.tone {
+            emotionWasSkipped = false
             emotion = nil
             context = nil
             response = nil
@@ -306,7 +335,7 @@ struct JournalGuidedCheckInState: Equatable {
     }
 
     var selectedTone: HabitDayTone? {
-        emotion?.tone
+        emotion?.tone ?? (emotionWasSkipped ? .neutral : nil)
     }
 
     var availableResponses: [JournalGuidedResponse] {
@@ -315,14 +344,22 @@ struct JournalGuidedCheckInState: Equatable {
     }
 
     var canSave: Bool {
-        emotion != nil && context != nil && response != nil
+        (emotion != nil || emotionWasSkipped) && context != nil && response != nil
     }
 
     mutating func selectEmotion(_ emotion: JournalGuidedEmotion) {
+        emotionWasSkipped = false
         self.emotion = emotion
         if let response, !availableResponses.contains(response) {
             self.response = nil
         }
+        currentStep = .context
+    }
+
+    mutating func skipEmotion() {
+        emotion = nil
+        emotionWasSkipped = true
+        if let response, !availableResponses.contains(response) { self.response = nil }
         currentStep = .context
     }
 
@@ -345,14 +382,15 @@ struct JournalGuidedCheckInState: Equatable {
     }
 
     func legacyFields(preserving existingEntry: HabitEntry?) -> JournalGuidedLegacyFields? {
-        guard let emotion, let context, let response else { return nil }
+        guard emotion != nil || emotionWasSkipped, let context, let response else { return nil }
 
         let trigger = existingEntry?.journalContextID == context.id
             ? existingEntry?.trigger ?? context.title
             : context.title
-        let feeling = existingEntry?.journalEmotionID == emotion.id
-            ? existingEntry?.feeling ?? emotion.title
-            : emotion.title
+        let feeling = emotion.map { selected in
+            existingEntry?.journalEmotionID == selected.id
+                ? existingEntry?.feeling ?? selected.title : selected.title
+        }
         let responsePlan = existingEntry?.journalResponseID == response.id
             ? existingEntry?.responsePlan ?? response.title
             : response.title
@@ -366,14 +404,14 @@ struct JournalGuidedCheckInState: Equatable {
     }
 
     private var firstIncompleteStep: JournalGuidedStep {
-        if emotion == nil { return .emotion }
+        if emotion == nil && !emotionWasSkipped { return .emotion }
         if context == nil { return .context }
         if response == nil { return .response }
         return .details
     }
 
     private mutating func normalizeSelections() {
-        guard emotion != nil else {
+        guard emotion != nil || emotionWasSkipped else {
             context = nil
             response = nil
             return
@@ -438,7 +476,20 @@ struct HabitTrackerDashboardSnapshot {
 // MARK: - Habit Data Manager
 /// Coordinates habit tracking entry writes, queries, and derived summaries.
 class HabitDataManager {
-    static let shared = HabitDataManager()
+    static let shared: HabitDataManager = {
+        #if DEBUG
+        let arguments = ProcessInfo.processInfo.arguments
+        if arguments.contains("-MoriJournalMoodFixtureForUITest") {
+            let suite = "mori.journal.mood.ui.fixture"
+            let defaults = UserDefaults(suiteName: suite)!
+            if arguments.contains("-MoriStartFreshLogForUITest") {
+                defaults.removePersistentDomain(forName: suite)
+            }
+            return HabitDataManager(store: HabitEntryStore(defaults: defaults))
+        }
+        #endif
+        return HabitDataManager()
+    }()
 
     private let store: HabitEntryStore
     private let statisticsCalculator: HabitStatisticsCalculator
@@ -463,7 +514,10 @@ class HabitDataManager {
         responsePlan: String? = nil,
         journalEmotionID: String? = nil,
         journalContextID: String? = nil,
-        journalResponseID: String? = nil
+        journalResponseID: String? = nil,
+        journalEmotionWasSkipped: Bool? = nil,
+        moodEdit: MoriJournalMoodEdit = .preserve,
+        moodRecordedAt: Date = Date()
     ) -> HabitEntry {
         let calendar = Calendar.current
         let entryDate = calendar.startOfDay(for: date)
@@ -477,8 +531,9 @@ class HabitDataManager {
             normalizedContextID,
             normalizedResponseID
         ].contains { $0 != nil }
-        let existingEmotionMatchesTone = existingEntry?.journalEmotionID
-            .flatMap(JournalGuidedEmotion.init(rawValue:))?.tone == tone
+        let existingEmotionMatchesTone = (existingEntry?.journalEmotionID
+            .flatMap(JournalGuidedEmotion.init(rawValue:))?.tone == tone)
+            || (existingEntry?.journalEmotionWasSkipped == true && tone == .neutral)
         let preservedEntry = !hasIncomingGuidedSelection && existingEmotionMatchesTone
             ? existingEntry
             : nil
@@ -495,7 +550,11 @@ class HabitDataManager {
             responsePlan: Self.normalizedOptionalText(responsePlan),
             journalEmotionID: normalizedEmotionID ?? preservedEntry?.journalEmotionID,
             journalContextID: normalizedContextID ?? preservedEntry?.journalContextID,
-            journalResponseID: normalizedResponseID ?? preservedEntry?.journalResponseID
+            journalResponseID: normalizedResponseID ?? preservedEntry?.journalResponseID,
+            journalMood: moodEdit.applying(to: existingEntry?.journalMood,
+                emotionID: normalizedEmotionID ?? preservedEntry?.journalEmotionID,
+                contextID: normalizedContextID ?? preservedEntry?.journalContextID, now: moodRecordedAt),
+            journalEmotionWasSkipped: journalEmotionWasSkipped ?? preservedEntry?.journalEmotionWasSkipped ?? false
         )
 
         // Remove existing entry for the selected day if it exists.
@@ -560,6 +619,20 @@ class HabitDataManager {
             streak: statisticsCalculator.streak(for: entries, now: now, calendar: calendar),
             monthlyStats: statisticsCalculator.monthlyStats(for: entries, now: now, calendar: calendar)
         )
+    }
+
+    func persistedMood(id: UUID) -> MoriJournalMood? {
+        getAllEntries().compactMap(\.journalMood).first { $0.id == id }
+    }
+
+    /// A delayed share completion cannot mark an edited/deleted record as shared.
+    func markMoodShared(_ mood: MoriJournalMood) {
+        var entries = getAllEntries()
+        guard let index = entries.firstIndex(where: {
+            $0.journalMood?.id == mood.id && $0.journalMood?.version == mood.version
+        }) else { return }
+        entries[index].journalMood?.sharedVersion = mood.version
+        saveEntries(entries)
     }
 
     // MARK: - Clear Entries

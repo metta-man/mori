@@ -2006,3 +2006,56 @@
 "Optional planner. Open it only when one check-in is not enough." = "需要多一點規劃時，再打開它。";
 
 "Open Daily Spark" = "打開 Daily Spark";
+
+// Optional journal mood and explicit Health sharing
+"journal.mood.optional" = "現在感覺舒服嗎？（可略過）";
+"journal.mood.veryUnpleasant" = "很不舒服";
+"journal.mood.unpleasant" = "不舒服";
+"journal.mood.neutral" = "一般";
+"journal.mood.pleasant" = "舒服";
+"journal.mood.veryPleasant" = "很舒服";
+"journal.mood.share" = "儲存並分享心情到 Apple 健康";
+"journal.mood.shared" = "已分享到 Apple 健康";
+"journal.mood.privacy" = "不會分享文字或照片。在 Mori 刪除日記不會刪除健康紀錄。";
+"journal.mood.payload" = "健康心情紀錄：%@ · 感受：%@ · 情境：%@ · 紀錄時間：%@";
+"journal.mood.update_time" = "修改心情時會更新同一筆紀錄，保留原本的紀錄時間。";
+"journal.mood.none" = "無";
+"journal.mood.previously_shared" = "這個版本之前已分享，今次沒有新增健康紀錄。";
+"journal.mood.not_shared" = "已儲存到 Mori，今次未完成分享。請檢查健康權限後再試。";
+
+// Mori wording for a balanced optional feeling vocabulary
+"journal.emotion.happy" = "開心";
+"journal.emotion.calm" = "平靜";
+"journal.emotion.okay" = "一般";
+"journal.emotion.sad" = "難過";
+"journal.emotion.content" = "滿足";
+"journal.emotion.grateful" = "感恩";
+"journal.emotion.hopeful" = "有希望";
+"journal.emotion.relieved" = "鬆一口氣";
+"journal.emotion.anxious" = "焦慮";
+"journal.emotion.tired" = "疲累";
+"journal.emotion.hurt" = "受傷";
+"journal.emotion.frustrated" = "挫敗";
+"journal.emotion.unsure" = "不確定";
+"journal.emotion.unclear" = "說不清感受";
+"journal.emotion.group.pleasant" = "舒服的感受";
+"journal.emotion.group.neutral" = "中間的感受";
+"journal.emotion.group.difficult" = "不舒服的感受";
+"journal.emotion.skip" = "暫時不命名";
+"journal.emotion.not_named" = "暫未命名";
+
+"journal.mood.not_set" = "未設定";
+
+"journal.mood.sharing" = "分享中⋯";
+
+"journal.mood.private_short" = "不會分享文字或照片。";
+
+"journal.mood.details" = "分享詳情";
+
+"journal.mood.delete_boundary" = "在 Mori 刪除日記不會刪除健康紀錄。";
+
+"journal.photo.add" = "加入照片";
+
+"journal.photo.limit" = "已達照片上限";
+
+"journal.photo.optional" = "（可略過）";

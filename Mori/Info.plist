@@ -40,7 +40,7 @@
 	<key>NSHealthShareUsageDescription</key>
 	<string>Mori can read Apple Health data you approve, including HRV, heart rate, resting heart rate, sleep, respiratory rate, temperature, workouts, active energy, and walking or running distance, to personalize recovery readiness and attention signals.</string>
 	<key>NSHealthUpdateUsageDescription</key>
-	<string>Mori does not write data to Apple Health. Recovery features only read the Apple Health data you approve.</string>
+	<string>Mori saves the mood you explicitly choose to share with Apple Health. Your journal writing and photos are not shared.</string>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Mori lets you choose photos to attach to your private journal entries.</string>
 	<key>NSSupportsLiveActivities</key>

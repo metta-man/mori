@@ -62,6 +62,7 @@
 		22018377D314DA2D57C08F43 /* MoriRecoveryScoring.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1AA0D6B1025DD7BA89C262A4 /* MoriRecoveryScoring.swift */; };
 		22580AE9521D99D74BE9F237 /* AttentionShieldActions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1994966EBB19629655BC65FB /* AttentionShieldActions.swift */; };
 		2364C74F55A76F620399AABB /* MoriBreathingSessionFeedbackCoordinator.swift in Sources */ = {isa = PBXBuildFile; fileRef = 83F9AADB91DCBC5D2F059DE6 /* MoriBreathingSessionFeedbackCoordinator.swift */; };
+		247CA2B1BFC0FDDF370DD16E /* MoriJournalMoodUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 630C56953DD9814460230125 /* MoriJournalMoodUITests.swift */; };
 		24C4021E9E1AEE9641BB3DA6 /* RandomMemoryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = F0AFD524B54D362EA8FE9584 /* RandomMemoryView.swift */; };
 		256A58571C79102CA07F2E86 /* MoriIdleTimerController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9E554376F7C3CC84595C9296 /* MoriIdleTimerController.swift */; };
 		25D96C1516254179598F1601 /* Localizable.strings in Resources */ = {isa = PBXBuildFile; fileRef = 6F0478B91867768A095A6A75 /* Localizable.strings */; };
@@ -103,6 +104,7 @@
 		3922596DDD2B4471044C0EA9 /* TodayFocusDraftStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = AB1401806D53B06B169BD9F4 /* TodayFocusDraftStore.swift */; };
 		3979A4B4C9C5419E1C53DFE4 /* SettleTimerSurfaces.swift in Sources */ = {isa = PBXBuildFile; fileRef = B3139B6BB7155877E9BD3DCE /* SettleTimerSurfaces.swift */; };
 		3A17D907C81962A1F9BF44C6 /* MoriBackgrounds.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2E30417C5DF7A3B0CDAAB2C5 /* MoriBackgrounds.xcassets */; };
+		3A50C21D38121CDACD96838E /* MoriJournalMoodSharing.swift in Sources */ = {isa = PBXBuildFile; fileRef = 55649DF126497BA1232ECCAA /* MoriJournalMoodSharing.swift */; };
 		3B9124A0BD3B71125E81E6DC /* ScreenTimeSettingsLockAccessViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAC0CEC66357F501E723B5C9 /* ScreenTimeSettingsLockAccessViews.swift */; };
 		3D73AFB1DAA65AE7FD5E3489 /* HabitTrackerSupportViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0C205B434D0C4F805A0CD00B /* HabitTrackerSupportViews.swift */; };
 		3DE1A6B3ACC82D1B5A002D72 /* Default.mp3 in Resources */ = {isa = PBXBuildFile; fileRef = 55DA59D2C36E5038BE94BF38 /* Default.mp3 */; };
@@ -161,6 +163,7 @@
 		592DDF76235F5E6F1F9A7DFE /* MoriLocalization.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7C3C36A45EAF7FBD5EC51AE /* MoriLocalization.swift */; };
 		5935BA390B0538C3F08B80D2 /* MoriScreenTimeStores.swift in Sources */ = {isa = PBXBuildFile; fileRef = A93377C0D556E5B4AADB8674 /* MoriScreenTimeStores.swift */; };
 		59A30F2773343F0CE5B3A8CB /* QuietModeLifecycleModifier.swift in Sources */ = {isa = PBXBuildFile; fileRef = FE11F6D5013E8870404E0CEF /* QuietModeLifecycleModifier.swift */; };
+		59AE313A905FD50DFEB19344 /* MoriJournalMoodTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 52AA1F22124F5448A5AB639A /* MoriJournalMoodTests.swift */; };
 		5A9B6B3CD334527FFA3AE5ED /* MoriScreenTimeModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = ED2D9C07EE027CE5AFE75904 /* MoriScreenTimeModels.swift */; };
 		5B4C9F362A78AF0A34E71A55 /* MoriWatchWidgets.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85CB8CBA78E59A31E7AF7900 /* MoriWatchWidgets.swift */; };
 		5BD5337B4E3CF8F34FAC99AE /* WeekArchiveViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 36354D71DCA446F0ECBB77EB /* WeekArchiveViews.swift */; };
@@ -226,6 +229,7 @@
 		838F9B18877DD47876F4567F /* ScreenTimeSettingsLockManagementViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85238364440D3F1AA5A1B155 /* ScreenTimeSettingsLockManagementViews.swift */; };
 		840F9645B9ED48FE0692FE3D /* MoriAnalyticsConsentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74C7EFC21EB997BB557E24A2 /* MoriAnalyticsConsentView.swift */; };
 		8487D917A64A3B1A9D480D7C /* ScreenTimeSelectionPersistence.swift in Sources */ = {isa = PBXBuildFile; fileRef = F77726D3F81C83B47DFDAE79 /* ScreenTimeSelectionPersistence.swift */; };
+		84B336B768261CE8B5B0E463 /* MoriJournalMoodHealth.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4BEE80582B99D38C4230658 /* MoriJournalMoodHealth.swift */; };
 		859A36A80FD54C037064F2E2 /* GratitudeListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = E6935EB5F294F2B20BBC3BA4 /* GratitudeListView.swift */; };
 		85AD7F0BA70559DBBA8DB219 /* MoriLocalization.swift in Sources */ = {isa = PBXBuildFile; fileRef = F7C3C36A45EAF7FBD5EC51AE /* MoriLocalization.swift */; };
 		85AFFE165C95A09C33FA1983 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 92924907860068CC0E1416B3 /* InfoPlist.strings */; };
@@ -372,12 +376,14 @@
 		EF3EA5743938B7DFD02161F6 /* MoriPulseProxyClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1391F410CE3301DEE5C6F99E /* MoriPulseProxyClient.swift */; };
 		EFD635C8479F47A4C6BE6B36 /* MoriBreathingSessionVisuals.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F2ECDF3902D0BBE7779EC4F /* MoriBreathingSessionVisuals.swift */; };
 		F0998E8C727E19F304146849 /* AnalyticsDefinitions.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2811EABE0F3DDFEE4AFAA2B7 /* AnalyticsDefinitions.swift */; };
+		F107078A532D3784A17011CD /* MoriJournalGuidedSaveAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDC5689340D135CFF4ABB862 /* MoriJournalGuidedSaveAction.swift */; };
 		F22439E6CDEEBE60B3F14BE1 /* MoriBreathingLibrarySupportViews.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE65C3502DD94E9C8789A8E2 /* MoriBreathingLibrarySupportViews.swift */; };
 		F4EDAB9A6DF2FA31C528F0E2 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 92924907860068CC0E1416B3 /* InfoPlist.strings */; };
 		F6981DAF86203D8A43A218CA /* MoriGeneratedArt.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = D330FD3BA47C243F8E2F2E9E /* MoriGeneratedArt.xcassets */; };
 		F7CD39DD29DFFD7EA0DFAD36 /* MoriFeatureFlags.swift in Sources */ = {isa = PBXBuildFile; fileRef = 765045A52357B41BB2D98A34 /* MoriFeatureFlags.swift */; };
 		F9767318CBEF78676FD08275 /* MoriMorningGate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 767E7B99480BC7985A35BE38 /* MoriMorningGate.swift */; };
 		F9E4EFC65F8959CD73861180 /* BeforeFeedGateStore.swift in Sources */ = {isa = PBXBuildFile; fileRef = B6BC814A7037F3D171B02B1E /* BeforeFeedGateStore.swift */; };
+		FA8F9E9650CB8F242A3809E2 /* MoriJournalMood.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6DA479CA450442E00F19DFC6 /* MoriJournalMood.swift */; };
 		FBC88E968074E9BCB6BA4115 /* ScreenTimeSettingsPresentation.swift in Sources */ = {isa = PBXBuildFile; fileRef = C4E71F7BB783EB0D21B5337C /* ScreenTimeSettingsPresentation.swift */; };
 		FC97EDD105C4F86030D4976E /* AttentionShieldApplier.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8098DCA589708C4BF22C36B2 /* AttentionShieldApplier.swift */; };
 		FDB114A4DB5A5F234BACF08B /* MoriAttentionResetBreathingState.swift in Sources */ = {isa = PBXBuildFile; fileRef = EF0DB3945D20942D3433B94A /* MoriAttentionResetBreathingState.swift */; };
@@ -598,7 +604,9 @@
 		4CB764566AF64CBA2A6FCEC6 /* MoriRecoveryHistory.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriRecoveryHistory.swift; sourceTree = "<group>"; };
 		4CE525D4A2040CA4F2F886A1 /* MoriAppRouteStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriAppRouteStore.swift; sourceTree = "<group>"; };
 		504DA3B151456675B63DFE2B /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		52AA1F22124F5448A5AB639A /* MoriJournalMoodTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriJournalMoodTests.swift; sourceTree = "<group>"; };
 		552B91BF3C033DFBF9B831A4 /* MoriBreathingSessionLifecycleModifier.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriBreathingSessionLifecycleModifier.swift; sourceTree = "<group>"; };
+		55649DF126497BA1232ECCAA /* MoriJournalMoodSharing.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriJournalMoodSharing.swift; sourceTree = "<group>"; };
 		55DA59D2C36E5038BE94BF38 /* Default.mp3 */ = {isa = PBXFileReference; lastKnownFileType = audio.mp3; path = Default.mp3; sourceTree = "<group>"; };
 		588692147DFCF28293C335F8 /* MoriAppSheets.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriAppSheets.swift; sourceTree = "<group>"; };
 		58D92871BF988C20D0842BAC /* MoriLandscapeMotionTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriLandscapeMotionTests.swift; sourceTree = "<group>"; };
@@ -614,6 +622,7 @@
 		621655AAEDCD6569091620C4 /* LockedScreenTimeSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LockedScreenTimeSettingsView.swift; sourceTree = "<group>"; };
 		627F42D21BCA57F17DE7EE24 /* ScreenTimeSettingsPickerSupport.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenTimeSettingsPickerSupport.swift; sourceTree = "<group>"; };
 		62F9120F39BD4552A01D2CFB /* Mori.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = Mori.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		630C56953DD9814460230125 /* MoriJournalMoodUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriJournalMoodUITests.swift; sourceTree = "<group>"; };
 		637B113D92C69867FF51C003 /* MoriWatchBellNotifications.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriWatchBellNotifications.swift; sourceTree = "<group>"; };
 		63CEFA377BC9A2EA02F80C40 /* MoriRecoveryInsights.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriRecoveryInsights.swift; sourceTree = "<group>"; };
 		64985671A793913956065862 /* MoriBlockListsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriBlockListsView.swift; sourceTree = "<group>"; };
@@ -624,6 +633,7 @@
 		6BC0C859AEA281F195CD7DFF /* MoriRecoveryHealthAnalyzers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriRecoveryHealthAnalyzers.swift; sourceTree = "<group>"; };
 		6CFA765B290326E7F804ECDD /* MoriScreenTimeMonitorExtension.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriScreenTimeMonitorExtension.swift; sourceTree = "<group>"; };
 		6D4FED8A9C478365581D11AB /* AttentionShieldMonitoringCoordinator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttentionShieldMonitoringCoordinator.swift; sourceTree = "<group>"; };
+		6DA479CA450442E00F19DFC6 /* MoriJournalMood.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriJournalMood.swift; sourceTree = "<group>"; };
 		6E1B1E0C09E2858F081B4827 /* AttentionShieldActivityNames.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AttentionShieldActivityNames.swift; sourceTree = "<group>"; };
 		6E36D15394059AF344266FA3 /* MoriStateComponents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriStateComponents.swift; sourceTree = "<group>"; };
 		6E87FF050AA95C0D37934FFC /* MoriTests.xctest */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.cfbundle; path = MoriTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -724,6 +734,7 @@
 		BB0BE33C71F066F20E8D40AC /* MoriWatchSettingsSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriWatchSettingsSync.swift; sourceTree = "<group>"; };
 		BC8464F2DF27B1EC12340341 /* MoriClarityTopicPlanner.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriClarityTopicPlanner.swift; sourceTree = "<group>"; };
 		BD77358F0FCC6FF4640C8707 /* MoriAppRouting.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriAppRouting.swift; sourceTree = "<group>"; };
+		BDC5689340D135CFF4ABB862 /* MoriJournalGuidedSaveAction.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriJournalGuidedSaveAction.swift; sourceTree = "<group>"; };
 		C18904A637569B6BC4573AF2 /* ScreenTimeLimitControls.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ScreenTimeLimitControls.swift; sourceTree = "<group>"; };
 		C215387EE9D9D6CF0941D96D /* SettleSessionStatsCalculator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SettleSessionStatsCalculator.swift; sourceTree = "<group>"; };
 		C2618E7258D3C6894127B883 /* BeforeFeedResetIntents.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BeforeFeedResetIntents.swift; sourceTree = "<group>"; };
@@ -781,6 +792,7 @@
 		F2629447C181F93E76B12023 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		F2A439F1A1AD419A6D10525B /* MoriDesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriDesignTokens.swift; sourceTree = "<group>"; };
 		F386DDFCCD74C4942C6E8FE7 /* MoriRecoveryTagDefinitions.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriRecoveryTagDefinitions.swift; sourceTree = "<group>"; };
+		F4BEE80582B99D38C4230658 /* MoriJournalMoodHealth.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriJournalMoodHealth.swift; sourceTree = "<group>"; };
 		F4D1CB54FA41C312C0189AC8 /* MoriWatchRoutes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriWatchRoutes.swift; sourceTree = "<group>"; };
 		F50A5C6833F5961BA832B90E /* MoriRecoveryUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriRecoveryUITests.swift; sourceTree = "<group>"; };
 		F5C67CDF6F27A81D612E98F1 /* MoriRecoveryPreferencesStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MoriRecoveryPreferencesStore.swift; sourceTree = "<group>"; };
@@ -939,6 +951,8 @@
 				EE30AF395F755DDD32BD63C7 /* MoriClarityModels.swift */,
 				1481D4A97BE45AF3C7A7631A /* MoriClarityProgressModels.swift */,
 				69AF7028F30930032BC63BD5 /* MoriDailyPulseMock.swift */,
+				BDC5689340D135CFF4ABB862 /* MoriJournalGuidedSaveAction.swift */,
+				6DA479CA450442E00F19DFC6 /* MoriJournalMood.swift */,
 				7ABCF7106B42F84515B42DDF /* MoriPracticeModels.swift */,
 				86EA413BB560A55C35460F48 /* MoriPulseCardModels.swift */,
 				AA0723C10B6BDB16EB7939ED /* MoriPulseModels.swift */,
@@ -1018,6 +1032,8 @@
 				BC8464F2DF27B1EC12340341 /* MoriClarityTopicPlanner.swift */,
 				EEDBC33E44233C5D6A9DC33B /* MoriDataDeletionService.swift */,
 				9E554376F7C3CC84595C9296 /* MoriIdleTimerController.swift */,
+				F4BEE80582B99D38C4230658 /* MoriJournalMoodHealth.swift */,
+				55649DF126497BA1232ECCAA /* MoriJournalMoodSharing.swift */,
 				B442430C6042F6E1012A47B6 /* MoriLLMProviders.swift */,
 				D8E1A8F6A78AB29CBD27A884 /* MoriLLMService.swift */,
 				1391F410CE3301DEE5C6F99E /* MoriPulseProxyClient.swift */,
@@ -1133,6 +1149,7 @@
 				DB7DE4E397F716B5938C6D53 /* BeforeFeedWindowEndNotificationTests.swift */,
 				08E697104FBB9BD878DF5D69 /* MoriBlockListTests.swift */,
 				E298FD12C5D93D1847A6D9EA /* MoriCallContinuityTests.swift */,
+				52AA1F22124F5448A5AB639A /* MoriJournalMoodTests.swift */,
 				58D92871BF988C20D0842BAC /* MoriLandscapeMotionTests.swift */,
 				9B4DCD41E981E9C7E30536F7 /* MoriRoutingTests.swift */,
 			);
@@ -1202,6 +1219,7 @@
 			isa = PBXGroup;
 			children = (
 				FB23530024EE3224A0C4DA80 /* MoriBlockListUITests.swift */,
+				630C56953DD9814460230125 /* MoriJournalMoodUITests.swift */,
 				A53DC1ABD1FECBE25DA84372 /* MoriLandscapeUITests.swift */,
 				F50A5C6833F5961BA832B90E /* MoriRecoveryUITests.swift */,
 			);
@@ -1773,6 +1791,7 @@
 				4634DE7FFB23DCF4299AB60C /* BeforeFeedWindowEndNotificationTests.swift in Sources */,
 				9BE88050DD84A41EFB2AA3D9 /* MoriBlockListTests.swift in Sources */,
 				3369E9E2A7AF4D61179AD361 /* MoriCallContinuityTests.swift in Sources */,
+				59AE313A905FD50DFEB19344 /* MoriJournalMoodTests.swift in Sources */,
 				09F8152ABA5D0429A151A3E9 /* MoriLandscapeMotionTests.swift in Sources */,
 				5560E735FCD386719B541DA9 /* MoriRoutingTests.swift in Sources */,
 			);
@@ -1783,6 +1802,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				D2146E7EFABAAF18BC9CDE0A /* MoriBlockListUITests.swift in Sources */,
+				247CA2B1BFC0FDDF370DD16E /* MoriJournalMoodUITests.swift in Sources */,
 				5464E4E1346EE47A3404D4C2 /* MoriLandscapeUITests.swift in Sources */,
 				8C07F03E29C7F07E31CF2EE6 /* MoriRecoveryUITests.swift in Sources */,
 			);
@@ -1897,6 +1917,10 @@
 				5E4E1C9F45F1E59DB5265058 /* MoriFeatureFlags.swift in Sources */,
 				67DDE1C9D049F960E42303C2 /* MoriGeneratedArt.swift in Sources */,
 				256A58571C79102CA07F2E86 /* MoriIdleTimerController.swift in Sources */,
+				F107078A532D3784A17011CD /* MoriJournalGuidedSaveAction.swift in Sources */,
+				FA8F9E9650CB8F242A3809E2 /* MoriJournalMood.swift in Sources */,
+				84B336B768261CE8B5B0E463 /* MoriJournalMoodHealth.swift in Sources */,
+				3A50C21D38121CDACD96838E /* MoriJournalMoodSharing.swift in Sources */,
 				08A445A6FF273FECA607E5A2 /* MoriLLMProviders.swift in Sources */,
 				B98FD7C7A5251B834D077C1D /* MoriLLMService.swift in Sources */,
 				1C2D0B9A6C530A4BD8516FD7 /* MoriLivingLandscape.swift in Sources */,
@@ -2322,7 +2346,7 @@
 				INFOPLIST_KEY_MORI_POSTHOG_HOST = "$(MORI_POSTHOG_HOST)";
 				INFOPLIST_KEY_MORI_PULSE_PROXY_BASE_URL = "$(MORI_PULSE_PROXY_BASE_URL)";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Mori can read Apple Health data you approve, including HRV, heart rate, resting heart rate, sleep, respiratory rate, temperature, workouts, active energy, and walking or running distance, to personalize recovery readiness and attention signals.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Mori does not write data to Apple Health. Recovery features only read the Apple Health data you approve.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Mori saves the mood you explicitly choose to share with Apple Health. Your journal writing and photos are not shared.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Mori lets you choose photos to attach to your private journal entries.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -2505,7 +2529,7 @@
 				INFOPLIST_KEY_MORI_POSTHOG_HOST = "$(MORI_POSTHOG_HOST)";
 				INFOPLIST_KEY_MORI_PULSE_PROXY_BASE_URL = "$(MORI_PULSE_PROXY_BASE_URL)";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "Mori can read Apple Health data you approve, including HRV, heart rate, resting heart rate, sleep, respiratory rate, temperature, workouts, active energy, and walking or running distance, to personalize recovery readiness and attention signals.";
-				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Mori does not write data to Apple Health. Recovery features only read the Apple Health data you approve.";
+				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "Mori saves the mood you explicitly choose to share with Apple Health. Your journal writing and photos are not shared.";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "Mori lets you choose photos to attach to your private journal entries.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
