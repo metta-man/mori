@@ -189,10 +189,10 @@ final class MoriRecoveryUITests: XCTestCase {
     func testBeforeFeedStartsWithThreeBreathsBeforeIntentChoices() {
         let app = launchBeforeFeed()
 
-        XCTAssertTrue(app.staticTexts["Begin with the breath"].waitForExistence(timeout: 8))
-        XCTAssertTrue(app.staticTexts["Long Exhale (4-6) · 3 cycles · about 30 seconds"].exists)
+        XCTAssertTrue(app.buttons["Pause"].waitForExistence(timeout: 8))
+        XCTAssertFalse(app.staticTexts["Long Exhale (4-6) · 3 cycles · about 30 seconds"].exists)
         XCTAssertTrue(app.staticTexts["3 breaths remaining"].exists)
-        XCTAssertTrue(app.staticTexts["Breathe in for 4. Breathe out for 6."].exists)
+        XCTAssertFalse(app.staticTexts["Breathe in for 4. Breathe out for 6."].exists)
         XCTAssertFalse(app.staticTexts["Why now?"].exists)
         attachScreenshot(named: "before-feed-breath-key")
     }
@@ -221,8 +221,8 @@ final class MoriRecoveryUITests: XCTestCase {
             "-MoriFreezeBeforeFeedTimerForUITest"
         ])
 
-        XCTAssertTrue(app.staticTexts["Begin with the breath"].waitForExistence(timeout: 8))
-        XCTAssertTrue(app.staticTexts["Coherent Breathing (5-5) · 3 cycles · about 30 seconds"].exists)
+        XCTAssertTrue(app.buttons["Pause"].waitForExistence(timeout: 8))
+        XCTAssertFalse(app.staticTexts["Coherent Breathing (5-5) · 3 cycles · about 30 seconds"].exists)
         XCTAssertTrue(app.staticTexts["3 breaths remaining"].exists)
         XCTAssertFalse(app.staticTexts["00:30"].exists)
         attachScreenshot(named: "before-feed-configured-guided")
@@ -255,6 +255,17 @@ final class MoriRecoveryUITests: XCTestCase {
         XCTAssertTrue(cycleStepper.exists)
         XCTAssertTrue(app.staticTexts["Coherent Breathing (5-5) · 3 cycles · about 30 seconds"].exists)
         attachScreenshot(named: "before-feed-configured-guided-settings")
+    }
+
+    func testBeforeFeedTraditionalChineseSettingsLocalizeTechniqueSummary() {
+        let app = launchBeforeFeedSettings(extraArguments: [
+            "-MoriShowBeforeFeedConfiguredGuidedSettingsForUITest", "-mori_locale_preference", "zh-Hant"
+        ])
+        let picker = app.descendants(matching: .any)["before-feed-technique-picker"]
+        XCTAssertTrue(scrollUntilExists(picker, in: app))
+        XCTAssertTrue(app.staticTexts["共振呼吸（5-5） · 3 次 · 約 30 秒"].exists)
+        XCTAssertEqual(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Coherent Breathing")).count, 0)
+        attachScreenshot(named: "Mori Before Feed localized TC settings")
     }
 
     func testBeforeFeedFollowOwnSettingsExposeBoundedDurationAndSoundContract() {
@@ -453,16 +464,19 @@ final class MoriRecoveryUITests: XCTestCase {
         let relaunchedApp = XCUIApplication()
         relaunchedApp.launchArguments += [
             "-MoriSkipOnboardingForUITest",
+            "-AppleLanguages", "(en)", "-AppleLocale", "en_US", "-mori_locale_preference", "en",
             "-MoriOpenSettingsForUITest",
             "-MoriDisableAIPulse"
         ]
         relaunchedApp.launch()
 
         let appLimitsButton = relaunchedApp.buttons.matching(
-            NSPredicate(format: "label CONTAINS %@", "Open App Limits")
+            NSPredicate(format: "label BEGINSWITH %@", "App Limits,")
         ).firstMatch
         XCTAssertTrue(appLimitsButton.waitForExistence(timeout: 8))
+        XCTAssertEqual(relaunchedApp.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "App Limits,")).count, 1)
         appLimitsButton.tap()
+        XCTAssertTrue(relaunchedApp.staticTexts["App Limits"].waitForExistence(timeout: 5))
         XCTAssertTrue(
             relaunchedApp.staticTexts["App Limits are locked"].waitForExistence(timeout: 5)
         )
@@ -479,16 +493,19 @@ final class MoriRecoveryUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments += [
             "-MoriSkipOnboardingForUITest",
+            "-AppleLanguages", "(en)", "-AppleLocale", "en_US", "-mori_locale_preference", "en",
             "-MoriOpenSettingsForUITest",
             "-MoriDisableAIPulse"
         ] + extraArguments
         app.launch()
 
         let appLimitsButton = app.buttons.matching(
-            NSPredicate(format: "label CONTAINS %@", "Open App Limits")
+            NSPredicate(format: "label BEGINSWITH %@", "App Limits,")
         ).firstMatch
         XCTAssertTrue(appLimitsButton.waitForExistence(timeout: 8))
+        XCTAssertEqual(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "App Limits,")).count, 1)
         appLimitsButton.tap()
+        XCTAssertTrue(app.staticTexts["App Limits"].waitForExistence(timeout: 5))
 
         let preventChangesButton = app.buttons["Prevent Changes"]
         if preventChangesButton.waitForExistence(timeout: 3) {
@@ -521,6 +538,7 @@ final class MoriRecoveryUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments += [
             "-MoriSkipOnboardingForUITest",
+            "-AppleLanguages", "(en)", "-AppleLocale", "en_US", "-mori_locale_preference", "en",
             "-MoriOpenSettingsForUITest",
             "-MoriOpenAppAndDataForUITest",
             "-MoriDisableAIPulse"
@@ -548,8 +566,9 @@ final class MoriRecoveryUITests: XCTestCase {
                 $0 == "-MoriUseFollowOwnBeforeFeedPauseForUITest" ||
                 $0 == "-MoriShowBeforeFeedQuietPauseForUITest"
         }) ? [] : ["-MoriUseDefaultBeforeFeedPauseForUITest"]
-        app.launchArguments += [
+        app.launchArguments = [
             "-MoriSkipOnboardingForUITest",
+            "-AppleLanguages", "(en)", "-mori_locale_preference", "en",
             "-MoriOpenBeforeFeedForUITest",
             "-MoriDisableAIPulse"
         ] + pauseFixtureArguments + extraArguments
@@ -563,8 +582,9 @@ final class MoriRecoveryUITests: XCTestCase {
 
     private func launchBeforeFeedSettings(extraArguments: [String]) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments += [
+        app.launchArguments = [
             "-MoriSkipOnboardingForUITest",
+            "-AppleLanguages", "(en)", "-mori_locale_preference", "en",
             "-MoriOpenBeforeFeedSettingsForUITest",
             "-MoriDisableAIPulse"
         ] + extraArguments

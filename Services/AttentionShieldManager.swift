@@ -67,6 +67,8 @@ final class AttentionShieldManager: ObservableObject {
 
     @discardableResult
     func perform(_ action: AttentionShieldAction) -> Bool {
+        return MoriShieldCoordination.legacy(fallback: false) {
+
         switch action {
         case .requestAuthorization:
             Task { await requestAuthorization() }
@@ -108,13 +110,54 @@ final class AttentionShieldManager: ObservableObject {
         case .endShield(let feature):
             endShield(feature: feature)
             return false
-        case .completeBeforeFeedResetAt(let now, let openWindowSeconds):
-            completeBeforeFeedReset(now: now, openWindowSeconds: openWindowSeconds)
-            return false
+        case .confirmBeforeFeedAllowance(let request):
+            guard let confirmation = beforeFeedGateStore.confirmAllowance(request) else { return false }
+            if confirmation.isNew {
+                activateBeforeFeedAllowance(until: confirmation.endsAt, now: request.now)
+            }
+            return true
         case .completeMorningGateResetAt(let now):
             completeMorningGateReset(now: now)
             return false
         }
+
+        }
+    }
+
+    func confirmJointBeforeFeedAllowance(_ request: MoriBeforeFeedAllowanceRequest, host: ProtectionHost,
+                                       ticket: ProtectionBreathTicket, completed: Bool) -> Bool {
+        guard MoriProtectionIntegration.isEligible else { return false }
+        var openedEnd: Date?
+        let opened = (try? MoriShieldCoordination.exclusive {
+            try MoriJointAllowanceJournal.recover(host: host, authorized: isAuthorized) { try MoriProtectionIntegration.repairExistingContributionAcknowledged() }
+            let journal = try MoriJointAllowanceJournal(request: request)
+            var confirmation: MoriBeforeFeedAllowanceConfirmation?
+            let partner = MoriJointAllowancePartner(commit: {
+                guard let saved = self.beforeFeedGateStore.confirmAllowance(request) else { throw ProtectionHostError.independentRestriction }
+                confirmation = saved
+                if saved.isNew { self.activateBeforeFeedAllowance(until: saved.endsAt, now: request.now, presentationEffects: false) }
+                if self.beforeFeedGateStore.nativeGateEnabled() && self.hasEffectiveSelection(for: .beforeFeed) && self.lastScheduledBeforeFeedGraceUntil != saved.endsAt {
+                    throw ProtectionHostError.registrationFailed
+                }
+            }, open: {
+                guard let saved = confirmation else { return false }
+                return self.beforeFeedGateStore.jointAllowanceIsCurrent(eventID: request.eventID,
+                    historyGeneration: request.historyGeneration, end: saved.endsAt)
+            }, compensate: {
+                // Use durable ownership even if commit returned no receipt after
+                // a partial write; never infer no mutation from confirmation=nil.
+                try journal.compensatePartner { try MoriProtectionIntegration.repairExistingContributionAcknowledged() }
+            })
+            let success = ProtectionJointAllowance.confirm(host: host, ticket: ticket, completed: completed,
+                seconds: request.openWindowSeconds, authorized: isAuthorized, partner: partner, journal: journal)
+            if success { openedEnd = confirmation?.endsAt }
+            return success
+        }) ?? false
+        if opened, let end = openedEnd, beforeFeedGateStore.graceUntil() == end {
+            MoriBeforeFeedWindowLiveActivityController.start(until: end, now: request.now)
+            beforeFeedWindowEndNotificationScheduler.scheduleIfPermitted(at: end, now: request.now)
+        }
+        return opened
     }
 
     private func requestAuthorization() async {
@@ -128,6 +171,9 @@ final class AttentionShieldManager: ObservableObject {
     }
 
     func resetAllProtectionData() {
+        return MoriShieldCoordination.legacy(fallback: ()) {
+        MoriProtectionIntegration.deleteProtectionData()
+
         beforeFeedReapplyTask?.cancel()
         beforeFeedReapplyTask = nil
         beforeFeedWindowEndNotificationScheduler.cancel()
@@ -139,6 +185,8 @@ final class AttentionShieldManager: ObservableObject {
         lastScheduledBeforeFeedGraceUntil = nil
         lastErrorMessage = nil
         refreshSelectionState()
+
+        }
     }
 
     private func setDailyThresholdMinutes(_ minutes: Int) {
@@ -293,14 +341,26 @@ final class AttentionShieldManager: ObservableObject {
     }
 
     private func reconcileProtectionState() {
+        MoriProtectionIntegration.foreground()
+        if MoriShieldCoordination.scheduledOwnsMorning, activeSession?.feature == .morningGate {
+            activeSession = nil
+            if activeSessionStore.load()?.feature == .morningGate { activeSessionStore.clear() }
+            stopActiveSessionMonitoring()
+        }
+        return MoriShieldCoordination.legacy(fallback: ()) {
+
         restoreActiveShieldIfNeeded()
         scheduleDailyThresholdMonitoring()
         if activeSession != nil {
             refreshScreenTimeGates()
         }
+
+        }
     }
 
     private func restoreActiveShieldIfNeeded() {
+        return MoriShieldCoordination.legacy(fallback: ()) {
+
         guard let session = activeSessionStore.loadUnexpiredSession() else {
             activeSession = nil
             stopActiveSessionMonitoring()
@@ -315,15 +375,23 @@ final class AttentionShieldManager: ObservableObject {
         } else {
             clearShieldAndActiveSession(clearStoredSession: true)
         }
+
+        }
     }
 
     private func refreshScreenTimeGates() {
+        return MoriShieldCoordination.legacy(fallback: ()) {
+
         scheduleBeforeFeedGateReapplyIfNeeded()
         scheduleMorningGateMonitoring()
         refreshPassiveGateShield()
+
+        }
     }
 
     private func reconcilePassiveGatesOnForeground() {
+        return MoriShieldCoordination.legacy(fallback: ()) {
+
         scheduleBeforeFeedGateReapplyIfNeeded()
         scheduleMorningGateMonitoring()
 
@@ -345,10 +413,14 @@ final class AttentionShieldManager: ObservableObject {
             shieldApplier: shieldApplier,
             authorizationStatus: authorizationStatus
         )
+
+        }
     }
 
     @discardableResult
     private func beginBeforeFeedResetProtection(now: Date = Date()) -> Bool {
+        // Reentry is a choice, not permission to revoke a previously granted window.
+        guard !beforeFeedGateStore.isInGraceWindow(now: now) else { return false }
         beforeFeedWindowEndNotificationScheduler.cancel()
         beforeFeedGateStore.clearGraceUntil()
         MoriBeforeFeedWindowLiveActivityController.endAll()
@@ -360,17 +432,8 @@ final class AttentionShieldManager: ObservableObject {
         return passiveGatePolicy.shouldApplyBeforeFeedGate
     }
 
-    private func completeBeforeFeedReset(
-        now: Date = Date(),
-        openWindowSeconds: Int? = nil
-    ) {
-        let resolvedWindowSeconds = beforeFeedGateStore.resolvedGraceWindowSeconds(
-            override: openWindowSeconds
-        )
-        let until = now.addingTimeInterval(TimeInterval(resolvedWindowSeconds))
+    private func activateBeforeFeedAllowance(until authoritativeUntil: Date, now: Date, presentationEffects: Bool = true) {
         let traceID = beforeFeedGateStore.beginWindowTrace()
-        beforeFeedGateStore.saveGraceUntil(until)
-        let authoritativeUntil = beforeFeedGateStore.graceUntil(now: now) ?? until
         if activeSession?.feature == .beforeFeed {
             clearActiveShieldSession()
         } else {
@@ -383,6 +446,7 @@ final class AttentionShieldManager: ObservableObject {
             graceUntil: authoritativeUntil,
             policy: .clear
         )
+        guard presentationEffects else { return }
         MoriBeforeFeedWindowLiveActivityController.start(until: authoritativeUntil, now: now)
         beforeFeedWindowEndNotificationScheduler.scheduleIfPermitted(
             at: authoritativeUntil,
@@ -392,6 +456,7 @@ final class AttentionShieldManager: ObservableObject {
 
     @discardableResult
     private func beginMorningGateResetProtection(now: Date = Date()) -> Bool {
+        if MoriShieldCoordination.scheduledOwnsMorning { return MoriProtectionIntegration.breathingHost() != nil }
         guard MorningGate.shouldApplyShield(now: now) else { return false }
 
         refreshMorningGateShield()
@@ -402,6 +467,7 @@ final class AttentionShieldManager: ObservableObject {
     }
 
     private func completeMorningGateReset(now: Date = Date()) {
+        guard !MoriShieldCoordination.scheduledOwnsMorning else { return }
         MorningGate.completeResetForActiveWindow(now: now)
         if activeSession?.feature == .morningGate {
             clearActiveShieldSession()
@@ -424,7 +490,7 @@ final class AttentionShieldManager: ObservableObject {
         applyMonitoringOutcome(
             monitoringCoordinator.scheduleMorningGate(
                 isAuthorized: isAuthorized,
-                isEnabled: MorningGate.isEnabled,
+                isEnabled: MorningGate.isEnabled && !MoriShieldCoordination.scheduledOwnsMorning,
                 hasSelection: selectionCoordinator.hasEffectiveSelection(for: .morningGate)
             )
         )
@@ -458,6 +524,12 @@ final class AttentionShieldManager: ObservableObject {
     }
 
     private func applyShield(for feature: MoriScreenTimeFeature) {
+        if feature == .morningGate && MoriShieldCoordination.scheduledOwnsMorning {
+            if activeSession?.feature == .morningGate { activeSession = nil }
+            if activeSessionStore.load()?.feature == .morningGate { activeSessionStore.clear() }
+            refreshPassiveGateShield()
+            return
+        }
         let payload = selectionCoordinator.shieldPayload(
             for: feature,
             authorizationStatus: authorizationStatus
@@ -490,6 +562,8 @@ final class AttentionShieldManager: ObservableObject {
     }
 
     private func refreshPassiveGateShield() {
+        return MoriShieldCoordination.legacy(fallback: ()) {
+
         let now = Date()
         let action = passiveGatePolicy.refreshAction(activeSession: activeSession, now: now)
         if activeSession?.isExpired(at: now) == true {
@@ -500,6 +574,8 @@ final class AttentionShieldManager: ObservableObject {
             shieldApplier: shieldApplier,
             authorizationStatus: authorizationStatus
         )
+
+        }
     }
 
     private func scheduleBeforeFeedGateReapplyIfNeeded() {
@@ -517,13 +593,14 @@ final class AttentionShieldManager: ObservableObject {
             return
         }
 
-        guard let delay = beforeFeedGateStore.secondsUntilGraceExpires(now: now) else {
+        guard let expectedGraceUntil = beforeFeedGateStore.graceUntil(now: now) else {
             MoriBeforeFeedWindowLiveActivityController.endAll()
             monitoringCoordinator.stopBeforeFeedGrace()
             lastScheduledBeforeFeedGraceUntil = nil
             return
         }
 
+        let delay = expectedGraceUntil.timeIntervalSince(now)
         guard delay > 1 else {
             beforeFeedGateStore.clearGraceUntil()
             MoriBeforeFeedWindowLiveActivityController.endAll()
@@ -541,11 +618,13 @@ final class AttentionShieldManager: ObservableObject {
         beforeFeedReapplyTask = Task { [weak self] in
             let nanoseconds = UInt64(min(delay, TimeInterval(Int.max)) * 1_000_000_000)
             try? await Task.sleep(nanoseconds: nanoseconds)
-            guard !Task.isCancelled else { return }
-            await MainActor.run {
-                MoriBeforeFeedWindowLiveActivityController.endAll()
-                self?.refreshBeforeFeedGateShield()
-            }
+            // This Task inherits the manager's MainActor isolation. Check and
+            // act together after suspension; never end a replacement window.
+            guard !Task.isCancelled, let self,
+                  self.beforeFeedGateStore.shouldReapplyExpiredAllowance(endsAt: expectedGraceUntil)
+            else { return }
+            MoriBeforeFeedWindowLiveActivityController.endAll()
+            self.refreshBeforeFeedGateShield()
         }
     }
 
@@ -663,8 +742,12 @@ final class AttentionShieldManager: ObservableObject {
     }
 
     private func clearShieldAndActiveSession(clearStoredSession: Bool) {
+        return MoriShieldCoordination.legacy(fallback: ()) {
+
         clearShield()
         clearActiveSessionState(clearStoredSession: clearStoredSession, refreshGates: true)
+
+        }
     }
 
     @discardableResult
@@ -681,6 +764,8 @@ final class AttentionShieldManager: ObservableObject {
     }
 
     private func clearActiveSessionState(clearStoredSession: Bool, refreshGates: Bool) {
+        return MoriShieldCoordination.legacy(fallback: ()) {
+
         activeSession = nil
         if clearStoredSession {
             activeSessionStore.clear()
@@ -688,6 +773,8 @@ final class AttentionShieldManager: ObservableObject {
         stopActiveSessionMonitoring()
         if refreshGates {
             refreshScreenTimeGates()
+        }
+
         }
     }
 
@@ -724,9 +811,13 @@ final class AttentionShieldManager: ObservableObject {
     }
 
     private func handleAuthorizationStatusChange(_ status: AuthorizationStatus) {
+        return MoriShieldCoordination.legacy(fallback: ()) {
+
         authorizationStatus = status
         refreshSelectionState()
         reconcileProtectionState()
+
+        }
     }
 
     private func reapplyActiveShieldIfNeeded() {

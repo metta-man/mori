@@ -26,13 +26,25 @@ struct AttentionShieldActiveSessionStore {
     }
 
     func persist(_ session: MoriScreenTimeActiveSession) {
+        return MoriShieldCoordination.legacy(fallback: ()) {
+
         guard let data = try? encoder.encode(session) else { return }
         defaults.set(data, forKey: MoriScreenTimeShared.activeSessionKey)
+
+        }
     }
 
     func load() -> MoriScreenTimeActiveSession? {
         guard let data = defaults.data(forKey: MoriScreenTimeShared.activeSessionKey) else { return nil }
         return try? decoder.decode(MoriScreenTimeActiveSession.self, from: data)
+    }
+
+    /// Non-mutating; an expired valid session is distinct from unreadable data.
+    func loadChecked(using reader: ProtectionCheckedInputReader) throws -> MoriScreenTimeActiveSession? {
+        guard let session = try reader.decoded(MoriScreenTimeShared.activeSessionKey, as: MoriScreenTimeActiveSession.self, decoder: decoder) else { return nil }
+        guard session.startedAt.timeIntervalSince1970.isFinite, session.endDate.timeIntervalSince1970.isFinite,
+              session.endDate >= session.startedAt else { throw ProtectionCheckedInputError.invalidValue(MoriScreenTimeShared.activeSessionKey) }
+        return session
     }
 
     func loadUnexpiredSession(now: Date = Date()) -> MoriScreenTimeActiveSession? {
@@ -45,6 +57,10 @@ struct AttentionShieldActiveSessionStore {
     }
 
     func clear() {
+        return MoriShieldCoordination.legacy(fallback: ()) {
+
         defaults.removeObject(forKey: MoriScreenTimeShared.activeSessionKey)
+
+        }
     }
 }

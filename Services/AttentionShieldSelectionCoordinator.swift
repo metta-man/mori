@@ -57,6 +57,8 @@ struct AttentionShieldSelectionCoordinator {
         _ draft: AttentionShieldSelectionDraft,
         authorizationStatus: AuthorizationStatus
     ) -> AttentionShieldSelectionTarget {
+        return MoriShieldCoordination.legacy(fallback: draft.target) {
+
         switch draft.target {
         case .defaultList:
             saveDefaultSelection(draft.selection, authorizationStatus: authorizationStatus)
@@ -68,15 +70,21 @@ struct AttentionShieldSelectionCoordinator {
             )
         }
         return draft.target
+
+        }
     }
 
     func updateProfile(
         for feature: MoriScreenTimeFeature,
         mutate: (inout MoriScreenTimeFeatureProfile) -> Void
     ) {
+        return MoriShieldCoordination.legacy(fallback: ()) {
+
         var profile = selectionStore.profile(for: feature)
         mutate(&profile)
         selectionStore.saveProfile(profile, for: feature)
+
+        }
     }
 
     func hasEffectiveSelection(for feature: MoriScreenTimeFeature) -> Bool {

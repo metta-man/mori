@@ -178,6 +178,17 @@ private extension View {
     }
 }
 
+enum MoriScrollScreenLayout {
+    case root
+    case settings
+}
+
+private enum MoriSettingsScrollMetrics {
+    // The pushed App Limits parent can already ignore the bottom safe area,
+    // leaving its descendant geometry with no inset to measure.
+    static let minimumBottomClearance: CGFloat = 44
+}
+
 struct MoriRootScrollScreen<HeaderTrailing: View, Content: View>: View {
     let title: String
     let subtitle: String?
@@ -188,6 +199,7 @@ struct MoriRootScrollScreen<HeaderTrailing: View, Content: View>: View {
     var showsBackground: Bool = true
     var minimumTopInset: CGFloat?
     var headerStyle: MoriRootHeaderStyle = .sanctuary
+    var layout: MoriScrollScreenLayout = .root
     var topAnchorID: String?
     private let onScrollAppear: ((ScrollViewProxy) -> Void)?
     private let headerTrailing: HeaderTrailing
@@ -203,6 +215,7 @@ struct MoriRootScrollScreen<HeaderTrailing: View, Content: View>: View {
         showsBackground: Bool = true,
         minimumTopInset: CGFloat? = nil,
         headerStyle: MoriRootHeaderStyle = .sanctuary,
+        layout: MoriScrollScreenLayout = .root,
         topAnchorID: String? = nil,
         onScrollAppear: ((ScrollViewProxy) -> Void)? = nil,
         @ViewBuilder headerTrailing: () -> HeaderTrailing,
@@ -217,6 +230,7 @@ struct MoriRootScrollScreen<HeaderTrailing: View, Content: View>: View {
         self.showsBackground = showsBackground
         self.minimumTopInset = minimumTopInset
         self.headerStyle = headerStyle
+        self.layout = layout
         self.topAnchorID = topAnchorID
         self.onScrollAppear = onScrollAppear
         self.headerTrailing = headerTrailing()
@@ -235,24 +249,45 @@ struct MoriRootScrollScreen<HeaderTrailing: View, Content: View>: View {
                 ScrollViewReader { scrollProxy in
                     ScrollView(showsIndicators: false) {
                         VStack(alignment: .leading, spacing: spacing) {
-                            MoriRootHeaderBlock(
-                                title: title,
-                                subtitle: subtitle,
-                                safeAreaTopInset: proxy.safeAreaInsets.top,
-                                minimumTopInset: minimumTopInset,
-                                style: headerStyle,
-                                topAnchorID: topAnchorID,
-                                trailing: { headerTrailing }
-                            )
-                            .padding(.top, -proxy.safeAreaInsets.top - 12)
+                            if layout == .settings {
+                                MoriRootHeader(
+                                    title: title,
+                                    subtitle: subtitle,
+                                    style: headerStyle,
+                                    trailing: { headerTrailing }
+                                )
+                                .padding(.top, minimumTopInset ?? 16)
+                                .padding(.bottom, MoriRootScreenMetrics.headerContentGap)
+                                .applyOptionalID(topAnchorID)
+                            } else {
+                                MoriRootHeaderBlock(
+                                    title: title,
+                                    subtitle: subtitle,
+                                    safeAreaTopInset: proxy.safeAreaInsets.top,
+                                    minimumTopInset: minimumTopInset,
+                                    style: headerStyle,
+                                    topAnchorID: topAnchorID,
+                                    trailing: { headerTrailing }
+                                )
+                                .padding(.top, -proxy.safeAreaInsets.top - 12)
+                            }
 
                             content
                         }
                         .padding(.horizontal, horizontalPadding)
-                        .padding(.bottom, bottomPadding)
+                        .padding(
+                            .bottom,
+                            layout == .settings
+                                ? max(bottomPadding + proxy.safeAreaInsets.bottom,
+                                      MoriSettingsScrollMetrics.minimumBottomClearance)
+                                : bottomPadding
+                        )
                     }
                     .clipped()
-                    .padding(.top, MoriRootScreenMetrics.visibleScrollTopOffset + 12)
+                    // Utility pages scroll through the lower scenery; keep home-indicator
+                    // clearance in the content rather than shrinking the viewport.
+                    .ignoresSafeArea(.container, edges: layout == .settings ? .bottom : [])
+                    .padding(.top, layout == .settings ? 0 : MoriRootScreenMetrics.visibleScrollTopOffset + 12)
                     .onAppear {
                         onScrollAppear?(scrollProxy)
                     }
@@ -273,6 +308,7 @@ extension MoriRootScrollScreen where HeaderTrailing == EmptyView {
         showsBackground: Bool = true,
         minimumTopInset: CGFloat? = nil,
         headerStyle: MoriRootHeaderStyle = .sanctuary,
+        layout: MoriScrollScreenLayout = .root,
         topAnchorID: String? = nil,
         onScrollAppear: ((ScrollViewProxy) -> Void)? = nil,
         @ViewBuilder content: () -> Content
@@ -286,6 +322,7 @@ extension MoriRootScrollScreen where HeaderTrailing == EmptyView {
         self.showsBackground = showsBackground
         self.minimumTopInset = minimumTopInset
         self.headerStyle = headerStyle
+        self.layout = layout
         self.topAnchorID = topAnchorID
         self.onScrollAppear = onScrollAppear
         self.headerTrailing = EmptyView()

@@ -6,8 +6,16 @@ import ActivityKit
 enum MoriAppGroup {
     static let identifier = "group.com.mettalabs.mori"
 
-    static var defaults: UserDefaults {
-        UserDefaults(suiteName: identifier) ?? .standard
+    private static let coordinatedDefaults: UserDefaults = {
+        let base = UserDefaults(suiteName: identifier) ?? .standard
+        guard let group = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: identifier),
+              let coordinated = try? MoriCoordinatedPreferences(base: base, directory: group.appendingPathComponent("ScheduledProtection")) else { return base }
+        return coordinated
+    }()
+    static var defaults: UserDefaults { coordinatedDefaults }
+    static var hasFreshProtectionPreferences: Bool {
+        guard let preferences = defaults as? MoriCoordinatedPreferences else { return false }
+        return (try? preferences.validateSnapshot()) != nil
     }
 }
 

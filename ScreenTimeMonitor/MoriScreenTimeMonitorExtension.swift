@@ -27,6 +27,7 @@ final class MoriScreenTimeMonitorExtension: DeviceActivityMonitor {
 
     override func intervalDidStart(for activity: DeviceActivityName) {
         super.intervalDidStart(for: activity)
+        if MoriProtectionIntegration.callback(activity, started: true) { return }
 
         switch activity {
         case .moriBeforeFeedGrace:
@@ -44,6 +45,7 @@ final class MoriScreenTimeMonitorExtension: DeviceActivityMonitor {
 
     override func intervalDidEnd(for activity: DeviceActivityName) {
         super.intervalDidEnd(for: activity)
+        if MoriProtectionIntegration.callback(activity, started: false) { return }
 
         switch activity {
         case .moriActiveSession:
@@ -62,12 +64,18 @@ final class MoriScreenTimeMonitorExtension: DeviceActivityMonitor {
     }
 
     private func applyPassiveGateShieldIfNeeded() {
+        return MoriShieldCoordination.legacy(fallback: ()) {
+
         passiveGateApplier.apply(
             passiveGatePolicy.refreshAction(activeSession: unexpiredActiveSession)
         )
+
+        }
     }
 
     private func refreshAfterBeforeFeedGraceExpired() {
+        return MoriShieldCoordination.legacy(fallback: ()) {
+
         beforeFeedGateStore.clearGraceUntil()
         recordBeforeFeedMonitorEvent(
             kind: .beforeFeedGraceExpired,
@@ -82,6 +90,8 @@ final class MoriScreenTimeMonitorExtension: DeviceActivityMonitor {
             kind: .beforeFeedGraceScheduleStopped,
             action: "stopAfterExpiry"
         )
+
+        }
     }
 
     private func recordBeforeFeedMonitorEvent(
@@ -111,12 +121,18 @@ final class MoriScreenTimeMonitorExtension: DeviceActivityMonitor {
     }
 
     private func refreshAfterMorningGateEnded() {
+        return MoriShieldCoordination.legacy(fallback: ()) {
+
         passiveGateApplier.apply(
             passiveGatePolicy.morningGateEndedAction(activeSession: unexpiredActiveSession)
         )
+
+        }
     }
 
     private func refreshAfterActiveSessionEnded() {
+        return MoriShieldCoordination.legacy(fallback: ()) {
+
         guard let session = activeSession else {
             applyPassiveGateShieldIfNeeded()
             return
@@ -129,6 +145,8 @@ final class MoriScreenTimeMonitorExtension: DeviceActivityMonitor {
 
         activeSessionStore.clear()
         passiveGateApplier.apply(passiveGatePolicy.refreshAction)
+
+        }
     }
 
     private var passiveGateApplier: AttentionShieldPassiveGateApplier {

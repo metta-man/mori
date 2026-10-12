@@ -841,3 +841,28 @@ final class MoriRoutingTests: XCTestCase {
         try body(defaults, legacyDefaults)
     }
 }
+
+
+final class MoriBeforeFeedCopyTests: XCTestCase {
+    func testTraditionalChineseTechniqueNamesArePresentForEverySelectableTechnique() {
+        let bundle = MoriL10n.localizationBundle(for: "zh-Hant")
+        for technique in MoriBreathingTechniqueRepository.techniques {
+            let translated = NSLocalizedString(technique.name, bundle: bundle, value: technique.name, comment: "")
+            XCTAssertNotEqual(translated, technique.name, technique.id)
+        }
+    }
+
+    func testTraditionalChineseCadenceUsesSecondsAndPreservesBothHoldPhases() {
+        let pattern = MoriBreathPattern(inhale: 4.5, inhaleHold: 1.5, exhale: 6.5, exhaleHold: 2)
+        XCTAssertEqual(MoriBeforeFeedBreathingCopy.patternDescription(for: pattern, localeIdentifier: "zh-Hant"),
+                       "吸氣 4.5 秒 · 屏息 1.5 秒 · 呼氣 6.5 秒 · 屏息 2 秒")
+        XCTAssertEqual(pattern.totalCycleDuration, 14.5)
+    }
+
+    func testCoherentCadenceLocalizesWithoutChangingFractionalSeconds() {
+        let pattern = MoriBreathPattern(inhale: 5.5, inhaleHold: nil, exhale: 5.5, exhaleHold: nil)
+        XCTAssertEqual(MoriBeforeFeedBreathingCopy.patternDescription(for: pattern, localeIdentifier: "zh-Hant"), "吸氣 5.5 秒 · 呼氣 5.5 秒")
+        XCTAssertEqual(MoriBeforeFeedBreathingCopy.patternDescription(for: pattern, localeIdentifier: "zh-Hans"), "吸气 5.5 秒 · 呼气 5.5 秒")
+        XCTAssertEqual(MoriBeforeFeedBreathingCopy.patternDescription(for: pattern, localeIdentifier: "en"), "Inhale 5.5s, Exhale 5.5s")
+    }
+}

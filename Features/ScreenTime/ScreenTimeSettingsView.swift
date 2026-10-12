@@ -99,10 +99,11 @@ struct ScreenTimeSettingsView: View {
             title: "App Limits",
             subtitle: "Choose what deserves a pause, then let Mori protect the space around it.",
             spacing: 22,
-            bottomPadding: 44,
+            bottomPadding: 12,
             backgroundVariant: .appLimit,
             minimumTopInset: 16,
-            headerStyle: .editorial
+            headerStyle: .editorial,
+            layout: .settings
         ) {
             AppLimitsReadinessCard(
                 isAuthorized: presentation.isAuthorized,

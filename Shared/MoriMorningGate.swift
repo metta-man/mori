@@ -89,7 +89,7 @@ enum MorningGate {
     }
 
     static func shouldApplyShield(now: Date = Date()) -> Bool {
-        guard let window = activeWindow(now: now) else { return false }
+        guard !MoriShieldCoordination.scheduledOwnsMorning, let window = activeWindow(now: now) else { return false }
         return !store.hasCompletedWindow(dateKey: window.dateKey)
     }
 

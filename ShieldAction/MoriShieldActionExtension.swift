@@ -2,6 +2,8 @@ import ManagedSettings
 
 final class MoriShieldActionExtension: ShieldActionDelegate {
     private let shieldStateStore = AttentionShieldStateStore()
+    private let beforeFeedGateStore = BeforeFeedGateStore()
+    private let managedStore = ManagedSettingsStore()
     private let resetRequestRouter = MoriShieldResetRequestRouter()
 
     override func handle(
@@ -9,8 +11,7 @@ final class MoriShieldActionExtension: ShieldActionDelegate {
         for application: ApplicationToken,
         completionHandler: @escaping (ShieldActionResponse) -> Void
     ) {
-        recordAttempt(action: action, targetKind: .application)
-        completionHandler(response(for: action))
+        completionHandler(response(for: action, targetKind: .application))
     }
 
     override func handle(
@@ -18,8 +19,7 @@ final class MoriShieldActionExtension: ShieldActionDelegate {
         for webDomain: WebDomainToken,
         completionHandler: @escaping (ShieldActionResponse) -> Void
     ) {
-        recordAttempt(action: action, targetKind: .webDomain)
-        completionHandler(response(for: action))
+        completionHandler(response(for: action, targetKind: .webDomain))
     }
 
     override func handle(
@@ -27,18 +27,31 @@ final class MoriShieldActionExtension: ShieldActionDelegate {
         for category: ActivityCategoryToken,
         completionHandler: @escaping (ShieldActionResponse) -> Void
     ) {
-        recordAttempt(action: action, targetKind: .category)
-        completionHandler(response(for: action))
+        completionHandler(response(for: action, targetKind: .category))
     }
 
-    private func response(for action: ShieldAction) -> ShieldActionResponse {
+    private func response(
+        for action: ShieldAction,
+        targetKind: MoriScreenTimeAttemptTargetKind
+    ) -> ShieldActionResponse {
+        return MoriShieldCoordination.legacy(fallback: .close) {
+
         switch action {
         case .primaryButtonPressed:
+            if MoriBeforeFeedShieldRecoveryPolicy.shouldRelease(
+                isInOpenWindow: beforeFeedGateStore.isInGraceWindow(),
+                currentFeature: currentShieldFeature
+            ) {
+                releaseStaleBeforeFeedShield()
+                return .defer
+            }
+            recordAttempt(action: action, targetKind: targetKind)
             if currentShieldFeature == .beforeFeed {
                 resetRequestRouter.requestResetLaunch(for: currentShieldFeature)
             }
             return .close
         case .secondaryButtonPressed:
+            recordAttempt(action: action, targetKind: targetKind)
             if currentShieldFeature != .beforeFeed {
                 resetRequestRouter.requestResetLaunch(for: currentShieldFeature)
             }
@@ -46,6 +59,25 @@ final class MoriShieldActionExtension: ShieldActionDelegate {
         default:
             return .none
         }
+
+        }
+    }
+
+    private func releaseStaleBeforeFeedShield() {
+        managedStore.clearAllSettings()
+        if #available(iOS 26.5, *) {
+            managedStore.isActive = false
+        }
+        shieldStateStore.clearCurrentShield()
+        MoriScreenTimeMonitorHealthStore.record(
+            MoriScreenTimeMonitorHealthEvent(
+                traceID: beforeFeedGateStore.currentWindowTraceID(),
+                kind: .shieldCleared,
+                action: "shieldActionOpenWindowRecovery",
+                policy: .clear,
+                beforeFeedInGraceWindow: true
+            )
+        )
     }
 
     private func recordAttempt(action: ShieldAction, targetKind: MoriScreenTimeAttemptTargetKind) {

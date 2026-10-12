@@ -32,6 +32,10 @@ targets:
     platform: iOS
     sources:
       - path: App
+      - path: Prototype/ScheduledProtection/Sources/MoriProtection
+        excludes:
+          - ProtectionPreviewSession.swift
+      - path: NativeProtection
       - path: Features
         excludes:
           - "**/*.md"
@@ -80,6 +84,10 @@ targets:
     platform: iOS
     sources:
       - path: ScreenTimeMonitor
+      - path: Prototype/ScheduledProtection/Sources/MoriProtection
+        excludes:
+          - ProtectionPreviewSession.swift
+      - path: NativeProtection
       - path: Services/BeforeFeedGateStore.swift
       - path: Services/AttentionShieldActivityNames.swift
       - path: Services/AttentionShieldActiveSessionStore.swift
@@ -104,7 +112,10 @@ targets:
     platform: iOS
     sources:
       - path: ShieldConfiguration
+      - path: Services/BeforeFeedGateStore.swift
       - path: Services/AttentionShieldStateStore.swift
+      - path: Prototype/ScheduledProtection/Sources/MoriProtection/ProtectionWriterCoordination.swift
+      - path: Prototype/ScheduledProtection/Sources/MoriProtection/ProtectionPreferenceSnapshot.swift
       - path: Shared
       - path: Localization
     dependencies:
@@ -123,6 +134,8 @@ targets:
       - path: ShieldAction
       - path: Services/BeforeFeedGateStore.swift
       - path: Services/AttentionShieldStateStore.swift
+      - path: Prototype/ScheduledProtection/Sources/MoriProtection/ProtectionWriterCoordination.swift
+      - path: Prototype/ScheduledProtection/Sources/MoriProtection/ProtectionPreferenceSnapshot.swift
       - path: Shared
       - path: Localization
     dependencies:
@@ -139,6 +152,8 @@ targets:
     platform: iOS
     sources:
       - path: Widgets
+      - path: Prototype/ScheduledProtection/Sources/MoriProtection/ProtectionWriterCoordination.swift
+      - path: Prototype/ScheduledProtection/Sources/MoriProtection/ProtectionPreferenceSnapshot.swift
       - path: Shared
       - path: Localization
     settings:
@@ -153,6 +168,8 @@ targets:
     platform: watchOS
     sources:
       - path: WatchApp
+      - path: Prototype/ScheduledProtection/Sources/MoriProtection/ProtectionWriterCoordination.swift
+      - path: Prototype/ScheduledProtection/Sources/MoriProtection/ProtectionPreferenceSnapshot.swift
       - path: Shared
       - path: Localization
     dependencies:
@@ -172,6 +189,8 @@ targets:
     platform: watchOS
     sources:
       - path: WatchWidgets
+      - path: Prototype/ScheduledProtection/Sources/MoriProtection/ProtectionWriterCoordination.swift
+      - path: Prototype/ScheduledProtection/Sources/MoriProtection/ProtectionPreferenceSnapshot.swift
       - path: Shared
       - path: Localization
     settings:

@@ -22,10 +22,11 @@ struct SettingsView: View {
                 title: "Settings",
                 subtitle: "App limits, preferences, and your data.",
                 spacing: 20,
-                bottomPadding: 42,
+                bottomPadding: 12,
                 backgroundVariant: .settings,
                 minimumTopInset: 18,
                 headerStyle: .editorial,
+                layout: .settings,
                 headerTrailing: {
                     Button(MoriL10n.display("Done")) {
                         dismiss()

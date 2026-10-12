@@ -1973,3 +1973,26 @@
 "Keep screen on" = "Keep screen on";
 
 "Your session continues when the screen is off." = "Your session continues when the screen is off.";
+
+"Your feed window is open" = "Your feed window is open";
+"The reset is complete. You can continue now." = "The reset is complete. You can continue now.";
+"before_feed.reentry.title" = "What would you like now?";
+"before_feed.reentry.previous_window" = "You recently chose a %@ window.";
+"before_feed.reentry.previous_anchor" = "You wanted to return to %@.";
+"before_feed.reentry.choose_time" = "Continue choosing a time";
+"before_feed.reentry.return" = "Return to %@";
+"before_feed.reentry.aside" = "Put my phone aside";
+"before_feed.reentry.unchanged" = "Continuing keeps the same end time. After this window ends, start a fresh pause before choosing more time. Leaving keeps this allowance unchanged.";
+"before_feed.reentry.replacement" = "Choosing a time leaves your existing window unchanged. Confirming starts a new window now and replaces it.";
+"before_feed.reentry.save_failed" = "This window could not be saved. Your previous window is unchanged. You can try again or close.";
+"before_feed.reentry.time_title" = "Choose a time";
+"before_feed.reentry.remaining" = "Your planned window has %@ remaining.";
+"before_feed.reentry.expired" = "Your planned window has ended.";
+"before_feed.reentry.reuse" = "Continue with remaining time";
+"before_feed.reentry.rechoose" = "Choose a different time";
+"before_feed.reentry.edit_reason" = "Edit reason (optional)";
+"before_feed.pattern.seconds" = "%@s";
+"before_feed.pattern.in" = "Inhale %@";
+"before_feed.pattern.out" = "Exhale %@";
+"before_feed.pattern.hold" = "Hold %@";
+"before_feed.pattern.separator" = ", ";

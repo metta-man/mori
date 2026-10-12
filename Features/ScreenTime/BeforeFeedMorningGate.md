@@ -80,6 +80,12 @@ triggering feed app.
 ### Open Window and Re-Lock
 
 The open window is stored as `beforeFeedGraceUntil` in the app-group defaults.
+Mori clears its default ManagedSettings store when the window opens. On iOS
+26.5 and later it also deactivates that store, excluding its restrictions from
+the effective settings calculation; applying the next shield reactivates it.
+If an old system shield remains visible during an open window, its primary
+action clears Mori's store again and asks iOS to redraw the shield. This recovery
+does not run while another Mori protection feature owns the shield.
 Mori uses three paths to re-lock after the window:
 
 - DeviceActivity callback for `.moriBeforeFeedGrace`.
