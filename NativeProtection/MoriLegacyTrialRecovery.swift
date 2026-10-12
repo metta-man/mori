@@ -59,10 +59,16 @@ enum MoriLegacyTrialRecovery {
                     let children = try FileManager.default.contentsOfDirectory(at: runs, includingPropertiesForKeys: nil)
                     guard children.count <= maximumRuns else { return .pending }
                     for child in children {
-                        if let id = UUID(uuidString: child.lastPathComponent),
-                           id.uuidString.lowercased() == child.lastPathComponent,
-                           try directory(child, create: false) { ids.insert(id) }
-                        else { unknown = true }
+                        do {
+                            if let id = UUID(uuidString: child.lastPathComponent),
+                               id.uuidString.lowercased() == child.lastPathComponent,
+                               try directory(child, create: false) { ids.insert(id) }
+                            else { unknown = true }
+                        } catch {
+                            // Preserve the unsafe child, but do not let it prevent
+                            // cleanup of another independently known healthy run.
+                            unknown = true
+                        }
                     }
                 }
                 guard ids.count <= maximumRuns else { return .pending }

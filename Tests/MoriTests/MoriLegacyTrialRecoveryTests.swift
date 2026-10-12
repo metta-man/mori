@@ -116,6 +116,47 @@ final class MoriLegacyTrialRecoveryTests: XCTestCase {
         XCTAssertFalse(FileManager.default.fileExists(atPath: target.appendingPathComponent("OFF-v1").path))
     }
 
+    func testCorruptUUIDFileDoesNotBlockHealthyKnownRun() throws {
+        try assertCorruptChildPreservesHealthyRecovery(symlink: false)
+    }
+
+    func testCorruptUUIDSymlinkDoesNotBlockHealthyKnownRun() throws {
+        try assertCorruptChildPreservesHealthyRecovery(symlink: true)
+    }
+
+    private func assertCorruptChildPreservesHealthyRecovery(symlink: Bool) throws {
+        let fake = Fake()
+        let independentNames = fake.names; let independentStores = fake.stores
+        fake.names.formUnion([name(id), name(otherID, "bedtime.r2")])
+        fake.stores.formUnion([store(id), store(otherID)])
+        let leaseBytes = try lease(otherID)
+        try FileManager.default.createDirectory(at: root.appendingPathComponent("runs"), withIntermediateDirectories: false)
+        let preserved = Data("preserve unsafe run".utf8)
+        let target = root.appendingPathComponent("ordinary-data")
+        if symlink {
+            try FileManager.default.createDirectory(at: target, withIntermediateDirectories: false)
+            try preserved.write(to: target.appendingPathComponent("record"))
+            try FileManager.default.createSymbolicLink(at: run(otherID), withDestinationURL: target)
+        } else {
+            try preserved.write(to: run(otherID))
+        }
+
+        XCTAssertEqual(Recovery.recover(root: root, effects: fake.effects), .pending)
+        XCTAssertEqual(fake.cleared, [store(id)])
+        XCTAssertEqual(fake.stopped, [name(id)])
+        XCTAssertEqual(fake.names, independentNames.union([name(otherID, "bedtime.r2")]))
+        XCTAssertEqual(fake.stores, independentStores.union([store(otherID)]))
+        XCTAssertEqual(try Data(contentsOf: run(id).appendingPathComponent("OFF-v1")), Data("OFF".utf8))
+        XCTAssertEqual(try Data(contentsOf: root.appendingPathComponent("lease-v1.json")), leaseBytes)
+        if symlink {
+            XCTAssertEqual(try Data(contentsOf: target.appendingPathComponent("record")), preserved)
+            XCTAssertFalse(FileManager.default.fileExists(atPath: target.appendingPathComponent("OFF-v1").path))
+            XCTAssertEqual(try FileManager.default.destinationOfSymbolicLink(atPath: run(otherID).path), target.path)
+        } else {
+            XCTAssertEqual(try Data(contentsOf: run(otherID)), preserved)
+        }
+    }
+
     func testOverEightKnownRunsPerformNoOSMutation() {
         let fake = Fake()
         for _ in 0..<9 { let id = UUID(); fake.names.insert(name(id)); fake.stores.insert(store(id)) }
