@@ -391,6 +391,13 @@ struct ScreenTimeSettingsView: View {
                 events: monitorHealthEvents,
                 onRefresh: refreshMonitorHealth
             )
+            Section {
+                NavigationLink {
+                    MoriLegacyTrialRecoveryView()
+                } label: {
+                    Text(MoriL10n.display("Previous test restrictions"))
+                }
+            }
         }
         .moriSettingsForm()
         .navigationTitle(MoriL10n.display("Advanced"))

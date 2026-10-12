@@ -2059,3 +2059,11 @@
 
 "journal.mood.health_title" = "Apple Health";
 "journal.mood.optional_qualifier" = "(optional)";
+
+/* Cleanup-only compatibility for previous device tests. */
+"Previous test restrictions" = "Previous test restrictions";
+"Remove previous test restrictions" = "Remove previous test restrictions";
+"Remove restrictions left by a previous Mori test. Your regular app limits, saved data and Screen Time permission stay as they are." = "Remove restrictions left by a previous Mori test. Your regular app limits, saved data and Screen Time permission stay as they are.";
+"Known test restrictions were cleared. Try the app again. Other app limits may still apply." = "Known test restrictions were cleared. Try the app again. Other app limits may still apply.";
+"No recoverable test restrictions were found. If an app is still blocked, its restriction has not been confirmed cleared." = "No recoverable test restrictions were found. If an app is still blocked, its restriction has not been confirmed cleared.";
+"Recovery is still pending. You can retry. Keep your saved data and Screen Time permission in place; contact support if the app remains blocked." = "Recovery is still pending. You can retry. Keep your saved data and Screen Time permission in place; contact support if the app remains blocked.";

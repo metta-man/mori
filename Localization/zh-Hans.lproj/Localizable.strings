@@ -2092,3 +2092,11 @@
 
 "journal.mood.health_title" = "Apple 健康";
 "journal.mood.optional_qualifier" = "（可选）";
+
+/* Cleanup-only compatibility for previous device tests. */
+"Previous test restrictions" = "先前测试的限制";
+"Remove previous test restrictions" = "移除先前测试的限制";
+"Remove restrictions left by a previous Mori test. Your regular app limits, saved data and Screen Time permission stay as they are." = "移除先前 Mori 测试留下的限制。一般 App 限制、已保存数据及屏幕使用时间权限会保持不变。";
+"Known test restrictions were cleared. Try the app again. Other app limits may still apply." = "已清除可识别的测试限制。请再试打开 App。其他 App 限制仍可能适用。";
+"No recoverable test restrictions were found. If an app is still blocked, its restriction has not been confirmed cleared." = "找不到可恢复的测试限制。如果 App 仍被限制，就尚未确认已清除该限制。";
+"Recovery is still pending. You can retry. Keep your saved data and Screen Time permission in place; contact support if the app remains blocked." = "恢复尚未完成，可以重试。请保留已保存数据及屏幕使用时间权限；如果 App 仍被限制，请联系支持。";

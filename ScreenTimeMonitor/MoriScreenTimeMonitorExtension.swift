@@ -3,10 +3,11 @@ import Foundation
 import FamilyControls
 
 final class MoriScreenTimeMonitorExtension: DeviceActivityMonitor {
-    private let selectionStore = ScreenTimeSelectionStore()
-    private let activeSessionStore = AttentionShieldActiveSessionStore()
-    private let shieldApplier = AttentionShieldApplier()
-    private let beforeFeedGateStore = BeforeFeedGateStore()
+    // Recovery callbacks must not initialize stores whose init migrates legacy data.
+    private lazy var selectionStore = ScreenTimeSelectionStore()
+    private lazy var activeSessionStore = AttentionShieldActiveSessionStore()
+    private lazy var shieldApplier = AttentionShieldApplier()
+    private lazy var beforeFeedGateStore = BeforeFeedGateStore()
 
     override func eventDidReachThreshold(_ event: DeviceActivityEvent.Name, activity: DeviceActivityName) {
         super.eventDidReachThreshold(event, activity: activity)
@@ -27,6 +28,7 @@ final class MoriScreenTimeMonitorExtension: DeviceActivityMonitor {
 
     override func intervalDidStart(for activity: DeviceActivityName) {
         super.intervalDidStart(for: activity)
+        if MoriLegacyTrialRecoveryNative.callback(activity) { return }
         if MoriProtectionIntegration.callback(activity, started: true) { return }
 
         switch activity {
@@ -45,6 +47,7 @@ final class MoriScreenTimeMonitorExtension: DeviceActivityMonitor {
 
     override func intervalDidEnd(for activity: DeviceActivityName) {
         super.intervalDidEnd(for: activity)
+        if MoriLegacyTrialRecoveryNative.callback(activity) { return }
         if MoriProtectionIntegration.callback(activity, started: false) { return }
 
         switch activity {
