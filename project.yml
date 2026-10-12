@@ -76,7 +76,7 @@ targets:
         INFOPLIST_KEY_MORI_POSTHOG_API_KEY: "$(MORI_POSTHOG_API_KEY)"
         INFOPLIST_KEY_MORI_POSTHOG_HOST: "$(MORI_POSTHOG_HOST)"
         INFOPLIST_KEY_NSHealthShareUsageDescription: "Mori can read Apple Health data you approve, including HRV, heart rate, resting heart rate, sleep, respiratory rate, temperature, workouts, active energy, and walking or running distance, to personalize recovery readiness and attention signals."
-        INFOPLIST_KEY_NSHealthUpdateUsageDescription: "Mori does not write data to Apple Health. Recovery features only read the Apple Health data you approve."
+        INFOPLIST_KEY_NSHealthUpdateUsageDescription: "Mori saves the mood you explicitly choose to share with Apple Health. Your journal writing and photos are not shared."
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "Mori lets you choose photos to attach to your private journal entries."
 
   MoriScreenTimeMonitor:

@@ -200,6 +200,11 @@ struct GratitudeJournalDismissButton: View {
 struct GratitudeJournalHomeContent: View {
     @ObservedObject var dailySparkStore: DailySparkStore
     @Binding var guidedCheckIn: JournalGuidedCheckInState
+    @Binding var moodValence: MoriJournalValence?
+    let isSharingMood: Bool
+    let moodShareMessage: String
+    let moodPayload: MoriJournalMoodHealthPayload?
+    let onShareMood: () -> Void
     let todayHabitEntry: HabitEntry?
     @Binding var dailyEntryNote: String
     @Binding var dailyEntryPhotos: [GratitudePhotoAttachment]
@@ -230,6 +235,11 @@ struct GratitudeJournalHomeContent: View {
 
             JournalTodayPanel(
                 guidedCheckIn: $guidedCheckIn,
+                moodValence: $moodValence,
+                isSharingMood: isSharingMood,
+                moodShareMessage: moodShareMessage,
+                moodPayload: moodPayload,
+                onShareMood: onShareMood,
                 note: $dailyEntryNote,
                 attachedPhotos: $dailyEntryPhotos,
                 selectedPhotoItems: $selectedDailyPhotoItems,
@@ -255,6 +265,11 @@ struct GratitudeJournalHomeContent: View {
 
 struct JournalTodayPanel: View {
     @Binding var guidedCheckIn: JournalGuidedCheckInState
+    @Binding var moodValence: MoriJournalValence?
+    let isSharingMood: Bool
+    let moodShareMessage: String
+    let moodPayload: MoriJournalMoodHealthPayload?
+    let onShareMood: () -> Void
     @Binding var note: String
     @Binding var attachedPhotos: [GratitudePhotoAttachment]
     @Binding var selectedPhotoItems: [PhotosPickerItem]
@@ -264,6 +279,10 @@ struct JournalTodayPanel: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @State private var isNoteExpanded = false
     @State private var showsOtherFeelings = false
+    @State private var showsMoodValence = false
+    @State private var showsMoodSharingDetails = false
+    @State private var showsHealthSharing = false
+    @State private var expandedFeelingGroups = Set<MoriJournalFeelingGroup>()
 
     private var canAddPhotos: Bool {
         attachedPhotos.count < 6
@@ -272,7 +291,7 @@ struct JournalTodayPanel: View {
     private var photoCountText: String {
         switch attachedPhotos.count {
         case 0:
-            return MoriL10n.display("(optional)")
+            return MoriL10n.string("journal.photo.optional", defaultValue: "(optional)")
         case 1:
             return MoriL10n.display("(1 photo attached)")
         default:
@@ -281,15 +300,12 @@ struct JournalTodayPanel: View {
     }
 
     private var visibleFeelings: [JournalGuidedEmotion] {
-        let primary: [JournalGuidedEmotion] = [.calm, .anxious, .tired, .unclear]
-        let additional = JournalGuidedEmotion.allCases.filter { !primary.contains($0) }
-        // Keep an existing selection visible when revisiting a saved check-in.
-        return showsOtherFeelings ? primary + additional
-            : primary + additional.filter { $0 == guidedCheckIn.emotion }
+        MoriJournalFeelingGroup.visiblePrimary(selected: guidedCheckIn.emotion)
     }
 
     private func feelingTitle(_ emotion: JournalGuidedEmotion) -> String {
-        emotion == .unclear ? "Hard to name" : emotion.title
+        MoriL10n.string("journal.emotion." + emotion.id,
+            defaultValue: emotion == .unclear ? "Hard to name" : emotion.title)
     }
 
     private var compactChoiceColumns: [GridItem] {
@@ -343,10 +359,10 @@ struct JournalTodayPanel: View {
     private var guidedStepContent: some View {
         switch guidedCheckIn.currentStep {
         case .emotion:
-            questionHeader(
-                title: "How are you right now?",
-                subtitle: "Choose what feels closest."
-            )
+            Text(MoriL10n.string("journal.feeling.prompt", defaultValue: "How do you feel?"))
+                .font(MoriTypography.sanctuarySection)
+                .foregroundColor(MoriColors.sanctuaryInk)
+                .fixedSize(horizontal: false, vertical: true)
 
             LazyVGrid(columns: compactChoiceColumns, spacing: 10) {
                 ForEach(visibleFeelings) { emotion in
@@ -377,6 +393,53 @@ struct JournalTodayPanel: View {
             .buttonStyle(MoriV2PressButtonStyle())
             .accessibilityIdentifier("journal-other-feelings")
             .accessibilityValue(MoriL10n.display(showsOtherFeelings ? "Expanded" : "Collapsed"))
+
+            if showsOtherFeelings {
+                ForEach(MoriJournalFeelingGroup.allCases) { group in
+                    VStack(alignment: .leading, spacing: 8) {
+                        Button {
+                            if expandedFeelingGroups.contains(group) { expandedFeelingGroups.remove(group) }
+                            else { expandedFeelingGroups.insert(group) }
+                        } label: {
+                            HStack {
+                                Text(MoriL10n.string("journal.emotion.group." + group.rawValue,
+                                    defaultValue: group.rawValue.capitalized))
+                                Spacer()
+                                Image(systemName: expandedFeelingGroups.contains(group) ? "chevron.up" : "chevron.down")
+                                    .accessibilityHidden(true)
+                            }
+                            .frame(minHeight: 44)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityIdentifier("journal-feeling-group-" + group.id)
+                        .accessibilityValue(MoriL10n.display(expandedFeelingGroups.contains(group) ? "Expanded" : "Collapsed"))
+                        if expandedFeelingGroups.contains(group) {
+                            LazyVGrid(columns: compactChoiceColumns, spacing: 10) {
+                                ForEach(MoriJournalFeelingGroup.additionalChoices(in: group, selected: guidedCheckIn.emotion)) { emotion in
+                                    optionButton(title: feelingTitle(emotion),
+                                        isSelected: guidedCheckIn.emotion == emotion,
+                                        accessibilityIdentifier: "journal-guided-emotion-\(emotion.id)") {
+                                        selectEmotion(emotion)
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    .font(MoriTypography.callout)
+                    .foregroundColor(MoriColors.botanicalInk)
+                }
+            }
+            Button {
+                guidedCheckIn.skipEmotion()
+            } label: {
+                Text(MoriL10n.string("journal.emotion.skip", defaultValue: "Skip naming a feeling"))
+                    .font(MoriTypography.callout)
+                    .frame(minHeight: 44)
+            }
+            .buttonStyle(.plain)
+            .foregroundColor(MoriColors.botanicalMuted)
+            .accessibilityIdentifier("journal-guided-skip-feeling")
 
         case .context:
             questionHeader(
@@ -437,6 +500,8 @@ struct JournalTodayPanel: View {
         VStack(spacing: 0) {
             if let emotion = guidedCheckIn.emotion {
                 summaryRow(label: "Feeling", value: feelingTitle(emotion), step: .emotion)
+            } else if guidedCheckIn.emotionWasSkipped {
+                summaryRow(label: "Feeling", value: MoriL10n.string("journal.emotion.not_named", defaultValue: "Not named"), step: .emotion)
             }
 
             if guidedCheckIn.currentStep.rawValue > JournalGuidedStep.context.rawValue,
@@ -507,6 +572,13 @@ struct JournalTodayPanel: View {
     @ViewBuilder
     private var detailsContent: some View {
         VStack(alignment: .leading, spacing: 14) {
+            MoriPrimaryButton(
+                title: "Save check-in",
+                icon: .leaf,
+                isEnabled: guidedCheckIn.canSave,
+                action: onSave
+            )
+            .accessibilityIdentifier("journal-guided-save")
             Button {
                 isNoteExpanded.toggle()
             } label: {
@@ -550,14 +622,215 @@ struct JournalTodayPanel: View {
                 )
             }
 
-            MoriPrimaryButton(
-                title: "Save check-in",
-                icon: .leaf,
-                isEnabled: guidedCheckIn.canSave,
-                action: onSave
-            )
-            .accessibilityIdentifier("journal-guided-save")
+            optionalHealthSharing
         }
+    }
+
+    @ViewBuilder
+    private var optionalHealthSharing: some View {
+        if MoriJournalMoodHealth.isAvailable {
+        VStack(alignment: .leading, spacing: 10) {
+            Button { showsHealthSharing.toggle() } label: {
+                healthSharingHeading
+                    .foregroundColor(MoriColors.botanicalInk)
+                    .frame(minHeight: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("journal-mood-health-disclosure")
+            .accessibilityLabel(MoriL10n.string("journal.mood.health_optional", defaultValue: "Apple Health (optional)"))
+            .accessibilityValue(MoriL10n.display(showsHealthSharing ? "Expanded" : "Collapsed"))
+
+            if showsHealthSharing {
+                moodControls
+            } else if isSharingMood {
+                Text(MoriL10n.string("journal.mood.sharing", defaultValue: "Sharing…"))
+                    .font(MoriTypography.callout)
+                    .accessibilityIdentifier("journal-mood-sharing-pending")
+            } else if !moodShareMessage.isEmpty {
+                moodShareStatus
+            }
+        }
+        } else {
+            moodValenceSelector
+        }
+    }
+
+    @ViewBuilder
+    private var healthSharingHeading: some View {
+        if dynamicTypeSize.isAccessibilitySize {
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(alignment: .center, spacing: 10) {
+                    Image(systemName: "heart")
+                        .font(.system(size: 17))
+                        .accessibilityHidden(true)
+                    Text(MoriL10n.string("journal.mood.health_title", defaultValue: "Apple Health"))
+                        .font(MoriTypography.callout.weight(.semibold))
+                        .fixedSize(horizontal: false, vertical: true)
+                    Spacer(minLength: 0)
+                    Image(systemName: showsHealthSharing ? "chevron.up" : "chevron.down")
+                        .font(.system(size: 12))
+                        .frame(width: 24, height: 44)
+                        .accessibilityHidden(true)
+                }
+                Text(MoriL10n.string("journal.mood.optional_qualifier", defaultValue: "(optional)"))
+                    .font(MoriTypography.caption)
+                    .foregroundColor(MoriColors.botanicalMuted)
+                    .fixedSize(horizontal: false, vertical: true)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+            }
+        } else {
+            HStack(alignment: .center, spacing: 10) {
+                Image(systemName: "heart").accessibilityHidden(true)
+                Text(MoriL10n.string("journal.mood.health_optional", defaultValue: "Apple Health (optional)"))
+                    .fixedSize(horizontal: false, vertical: true)
+                Spacer(minLength: 0)
+                Image(systemName: showsHealthSharing ? "chevron.up" : "chevron.down")
+                    .accessibilityHidden(true)
+            }
+            .font(MoriTypography.callout.weight(.semibold))
+        }
+    }
+
+    private var moodValenceSelector: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Button { showsMoodValence.toggle() } label: {
+                HStack {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text(MoriL10n.string("journal.mood.optional", defaultValue: "How pleasant does this feel? (optional)"))
+                        Text(moodValence.map { MoriL10n.string("journal.mood." + $0.rawValue, defaultValue: $0.title) }
+                             ?? MoriL10n.string("journal.mood.not_set", defaultValue: "Not set"))
+                            .font(MoriTypography.caption)
+                            .foregroundColor(MoriColors.botanicalMuted)
+                    }
+                    Spacer()
+                    Image(systemName: showsMoodValence ? "chevron.up" : "chevron.down")
+                        .accessibilityHidden(true)
+                }
+                .frame(minHeight: 44)
+                .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("journal-mood-valence-disclosure")
+            .accessibilityValue(MoriL10n.display(showsMoodValence ? "Expanded" : "Collapsed"))
+            if showsMoodValence {
+                VStack(alignment: .leading, spacing: 8) {
+                    ForEach(MoriJournalValence.allCases) { valence in
+                        Button {
+                            moodValence = moodValence == valence ? nil : valence
+                        } label: {
+                            HStack {
+                                Text(MoriL10n.string("journal.mood." + valence.rawValue, defaultValue: valence.title))
+                                Spacer()
+                                if moodValence == valence { Image(systemName: "checkmark") }
+                            }
+                            .frame(minHeight: 44)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityAddTraits(moodValence == valence ? .isSelected : [])
+                        .accessibilityIdentifier("journal-mood-" + valence.rawValue)
+                    }
+                }
+            }
+        }
+        .font(MoriTypography.callout)
+        .foregroundColor(MoriColors.botanicalInk)
+    }
+
+    private var moodShareStatus: some View {
+        HStack(alignment: .top, spacing: 8) {
+            Image(systemName: "info.circle").accessibilityHidden(true)
+            Text(moodShareMessage).accessibilityIdentifier("journal-mood-share-status")
+        }
+        .font(MoriTypography.callout)
+        .foregroundColor(MoriColors.botanicalInk)
+        .padding(12)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(MoriColors.botanicalInk.opacity(0.06), in: RoundedRectangle(cornerRadius: 12))
+    }
+
+    private var moodControls: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            moodValenceSelector
+            if moodValence != nil, MoriJournalMoodHealth.isAvailable {
+                Button(action: onShareMood) {
+                    HStack(spacing: 10) {
+                        if isSharingMood { ProgressView() }
+                        else { Image(systemName: "heart") }
+                        Text(MoriL10n.string(isSharingMood ? "journal.mood.sharing" : "journal.mood.share",
+                            defaultValue: isSharingMood ? "Sharing…" : "Save and share mood with Apple Health"))
+                        Spacer(minLength: 0)
+                    }
+                    .frame(minHeight: 44)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .contentShape(RoundedRectangle(cornerRadius: 14))
+                    .background(MoriColors.botanicalInk.opacity(0.05), in: RoundedRectangle(cornerRadius: 14))
+                    .overlay(RoundedRectangle(cornerRadius: 14).stroke(MoriColors.botanicalInk.opacity(0.35), lineWidth: 1))
+                }
+                .buttonStyle(.plain)
+                .disabled(isSharingMood || !guidedCheckIn.canSave)
+                .accessibilityIdentifier("journal-mood-share-health")
+                if !moodShareMessage.isEmpty {
+                    moodShareStatus
+                }
+                moodPayloadDisclosure
+                Text(MoriL10n.string("journal.mood.private_short", defaultValue: "Writing and photos are not shared."))
+                    .font(MoriTypography.caption)
+                    .foregroundColor(MoriColors.botanicalMuted)
+                Button { showsMoodSharingDetails.toggle() } label: {
+                    HStack {
+                        Text(MoriL10n.string("journal.mood.details", defaultValue: "Sharing details"))
+                        Spacer()
+                        Image(systemName: showsMoodSharingDetails ? "chevron.up" : "chevron.down")
+                            .accessibilityHidden(true)
+                    }.frame(minHeight: 44)
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("journal-mood-sharing-details")
+                if showsMoodSharingDetails {
+                    Text(MoriL10n.string("journal.mood.update_time", defaultValue: "Editing updates this moment using its original recorded time."))
+                    Text(MoriL10n.string("journal.mood.delete_boundary", defaultValue: "Deleting in Mori does not delete Health records."))
+                }
+            }
+            #if DEBUG
+            if isSharingMood, ProcessInfo.processInfo.arguments.contains("-MoriMoodHealthDeferredForUITest") {
+                Button("Complete fixture share") { MoriJournalMoodFixtureGate.shared.release() }
+                    .frame(minHeight: 44)
+                    .accessibilityIdentifier("journal-mood-finish-fixture")
+            }
+            #endif
+
+        }
+    }
+
+    @ViewBuilder
+    private var moodPayloadDisclosure: some View {
+        if let payload = moodPayload {
+            let valence = MoriL10n.string("journal.mood." + payload.valence.rawValue,
+                                         defaultValue: payload.valence.title)
+            let label = payload.labelID.flatMap(JournalGuidedEmotion.init(rawValue:))
+                .map { feelingTitle($0) }
+                ?? MoriL10n.string("journal.mood.none", defaultValue: "None")
+            let association = payload.associationID == "money"
+                ? MoriL10n.display("Money") : MoriL10n.string("journal.mood.none", defaultValue: "None")
+            Text(MoriL10n.string("journal.mood.payload", defaultValue: "Mood for Health: %@ · Feeling: %@ · Context: %@ · Recorded: %@",
+                arguments: [valence, label, association,
+                            formattedMoodTime(payload.recordedAt)]))
+                .font(MoriTypography.caption)
+                .foregroundColor(MoriColors.botanicalMuted)
+                .accessibilityIdentifier("journal-mood-health-payload")
+
+        }
+    }
+
+    private func formattedMoodTime(_ date: Date) -> String {
+        let formatter = DateFormatter()
+        formatter.locale = MoriLocalePreference.load().locale
+        formatter.dateStyle = .medium
+        formatter.timeStyle = .medium
+        return formatter.string(from: date)
     }
 
     private var noteEditor: some View {
@@ -605,8 +878,11 @@ struct JournalTodayPanel: View {
                     )
                     .frame(width: 22, height: 22)
 
-                HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(MoriL10n.display(canAddPhotos ? "Add a photo" : "Photo limit reached"))
+                let photoTextLayout = dynamicTypeSize.isAccessibilitySize
+                    ? AnyLayout(VStackLayout(alignment: .leading, spacing: 4))
+                    : AnyLayout(HStackLayout(alignment: .firstTextBaseline, spacing: 4))
+                photoTextLayout {
+                    Text(MoriL10n.string(canAddPhotos ? "journal.photo.add" : "journal.photo.limit", defaultValue: canAddPhotos ? "Add a photo" : "Photo limit reached"))
                         .font(MoriTypography.callout.weight(.semibold))
                         .foregroundColor(canAddPhotos ? MoriColors.botanicalInk : MoriColors.botanicalMuted)
 

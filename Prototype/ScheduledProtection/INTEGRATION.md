@@ -99,12 +99,16 @@ The83-test suite retains all previous77 tests. A real non-root filesystem fixtur
 
 ## Scoped internal-testing release — 2026-10-12
 
-The earlier scope statements in this document describe dated prototype evidence.
-The current scoped release keeps the reviewed inactive protection core, Before Feed
-allowance and breathing changes, and Settings/App Limits viewport changes. It
-excludes the memory-only settings/breathing preview, DEBUG device-trial routes,
-new synthetic UI hooks, unrelated Journal/Health-sharing work, and the separate
-Live Activity behavior change. Pure host regression tests remain in this package;
-ProtectionPreviewSession is excluded from native app/monitor target membership.
-Production eligibility remains OFF. This release is an internal testing candidate;
-large-text visual checks and real OS delivery/reliability remain unverified.
+Installed build 7, not the older Git HEAD, is the production compatibility
+baseline. The release retains its Journal UI, stored mood/skipped fields, optional
+explicit Health sharing, and existing Live Activity behavior. These source changes
+were already installed and are required continuity rather than new scope. The
+Settings/App Limits viewport change remains the intended product delta.
+
+Memory-only protection preview routes, DEBUG device-trial/synthetic drivers and
+new allowance-inspection fixtures remain excluded. Journal fixture writers/gates
+are explicitly DEBUG-only. Pure host tests remain in the package, while
+ProtectionPreviewSession is excluded from native app/monitor membership.
+Production eligibility remains OFF. Large-text visual coverage and actual OS
+delivery/reliability remain unverified. Verification outcomes are recorded in the task release receipt. Apple live
+build allocation remains pending.

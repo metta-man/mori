@@ -325,13 +325,16 @@ final class MoriRecoveryUITests: XCTestCase {
     func testGuidedLogSavesWithoutTypingAndRestores() {
         let app = launchGuidedLog(fresh: true)
 
-        XCTAssertTrue(app.staticTexts["How are you right now?"].waitForExistence(timeout: 8))
+        let expectedHeading = "How do you feel?"
+        XCTAssertTrue(app.staticTexts[expectedHeading].waitForExistence(timeout: 8))
+        tapGuidedControl("journal-other-feelings", app)
+        tapGuidedControl("journal-feeling-group-difficult", app)
         XCTAssertTrue(app.buttons["Anxious"].exists)
         XCTAssertFalse(app.keyboards.firstMatch.exists)
         XCTAssertEqual(app.textViews.count, 0)
         attachScreenshot(named: "guided-log-step-1")
 
-        app.buttons["Anxious"].tap()
+        tapGuidedControl("journal-guided-emotion-anxious", app)
         XCTAssertTrue(app.staticTexts["What is this connected to?"].waitForExistence(timeout: 3))
         attachScreenshot(named: "guided-log-step-2")
 
@@ -358,11 +361,11 @@ final class MoriRecoveryUITests: XCTestCase {
         let restoredApp = launchGuidedLog(fresh: false)
         XCTAssertTrue(restoredApp.buttons["Save check-in"].waitForExistence(timeout: 8))
         XCTAssertTrue(restoredApp.buttons["Add a sentence"].exists)
-        XCTAssertFalse(restoredApp.staticTexts["How are you right now?"].exists)
+        XCTAssertFalse(restoredApp.staticTexts[expectedHeading].exists)
         attachScreenshot(named: "guided-log-restored")
 
-        restoredApp.buttons["journal-guided-summary-0"].tap()
-        XCTAssertTrue(restoredApp.staticTexts["How are you right now?"].waitForExistence(timeout: 3))
+        tapGuidedControl("journal-guided-summary-0", restoredApp)
+        XCTAssertTrue(restoredApp.staticTexts[expectedHeading].waitForExistence(timeout: 3))
         attachScreenshot(named: "guided-log-edit-selection")
     }
 
@@ -600,10 +603,24 @@ final class MoriRecoveryUITests: XCTestCase {
         return element.waitForExistence(timeout: 1)
     }
 
+    private func tapGuidedControl(_ id: String, _ app: XCUIApplication) {
+        let target = app.descendants(matching: .any).matching(identifier: id).firstMatch
+        for _ in 0..<6 where !target.isHittable {
+            if target.exists && target.frame.midY < app.frame.midY { app.swipeDown() }
+            else { app.swipeUp() }
+        }
+        attachScreenshot(named: "guided-control-" + id)
+        XCTAssertTrue(target.waitForExistence(timeout: 5), id)
+        XCTAssertTrue(target.isHittable, id)
+        target.tap()
+    }
+
+
     private func launchGuidedLog(fresh: Bool) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments += [
             "-MoriSkipOnboardingForUITest",
+            "-AppleLanguages", "(en)", "-AppleLocale", "en_US", "-mori_locale_preference", "en",
             "-MoriSkipAnalyticsConsentForUITest",
             "-MoriSkipCloudBackupForUITest",
             "-MoriOpenLogForUITest",

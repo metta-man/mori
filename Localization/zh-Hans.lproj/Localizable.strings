@@ -1456,6 +1456,8 @@
 "Prepare reset" = "准备重置";
 "Prepare Morning Reset" = "准备晨间重置";
 "Prepare reset, then open Mori. This app will close and Mori will be ready when you arrive." = "准备重置，然后打开 Mori。这个 App 会关闭，Mori 会在你抵达时准备好。";
+"Your feed window is open" = "信息流开放时间进行中";
+"The reset is complete. You can continue now." = "重置已完成，现在可以继续。";
 "Primary Action" = "主要操作";
 "Profile" = "个人资料";
 "Morning App Limit active" = "晨间 App 限制启用中";
@@ -2007,8 +2009,7 @@
 
 "Open Daily Spark" = "打开 Daily Spark";
 
-"Your feed window is open" = "信息流开放时间进行中";
-"The reset is complete. You can continue now." = "重置已完成，现在可以继续。";
+/* Gentle Before Feed reentry */
 "before_feed.reentry.title" = "此刻想怎么做？";
 "before_feed.reentry.previous_window" = "你刚刚选了一个 %@ 的时段。";
 "before_feed.reentry.previous_anchor" = "你之前想回到：%@。";
@@ -2019,13 +2020,75 @@
 "before_feed.reentry.replacement" = "选时间不会更改原有时段。确认后，新时段从现在开始，替代原有时段。";
 "before_feed.reentry.save_failed" = "未能保存这个时段，原有时段没有更改。你可以重试，或者关闭。";
 "before_feed.reentry.time_title" = "选一个时段";
+
 "before_feed.reentry.remaining" = "这次选的时间还剩 %@。";
 "before_feed.reentry.expired" = "这次选的时间已经结束了。";
 "before_feed.reentry.reuse" = "继续用剩余时间";
 "before_feed.reentry.rechoose" = "重新选时间";
 "before_feed.reentry.edit_reason" = "修改原因（可选）";
+
+/* Before Feed localized cadence; presentation only */
 "before_feed.pattern.seconds" = "%@ 秒";
 "before_feed.pattern.in" = "吸气 %@";
 "before_feed.pattern.out" = "呼气 %@";
 "before_feed.pattern.hold" = "屏息 %@";
 "before_feed.pattern.separator" = " · ";
+
+// Optional journal mood and explicit Health sharing
+"journal.mood.optional" = "现在感觉舒服吗？（可略过）";
+"journal.mood.veryUnpleasant" = "很不舒服";
+"journal.mood.unpleasant" = "不舒服";
+"journal.mood.neutral" = "一般";
+"journal.mood.pleasant" = "舒服";
+"journal.mood.veryPleasant" = "很舒服";
+"journal.mood.share" = "保存并分享心情到 Apple 健康";
+"journal.mood.shared" = "已分享到 Apple 健康";
+"journal.mood.privacy" = "不会分享文字或照片。在 Mori 删除日记不会删除健康记录。";
+"journal.mood.payload" = "健康心情记录：%@ · 感受：%@ · 情境：%@ · 记录时间：%@";
+"journal.mood.update_time" = "修改心情时会更新同一条记录，保留原本的记录时间。";
+"journal.mood.none" = "无";
+"journal.mood.previously_shared" = "这个版本之前已分享，这次没有新增健康记录。";
+"journal.mood.not_shared" = "已保存到 Mori，这次未完成分享。请检查健康权限后再试。";
+
+// Mori wording for a balanced optional feeling vocabulary
+"journal.emotion.happy" = "开心";
+"journal.emotion.calm" = "平静";
+"journal.emotion.okay" = "一般";
+"journal.emotion.sad" = "难过";
+"journal.emotion.content" = "满足";
+"journal.emotion.grateful" = "感恩";
+"journal.emotion.hopeful" = "有希望";
+"journal.emotion.relieved" = "松一口气";
+"journal.emotion.anxious" = "焦虑";
+"journal.emotion.tired" = "疲累";
+"journal.emotion.hurt" = "受伤";
+"journal.emotion.frustrated" = "挫败";
+"journal.emotion.unsure" = "不确定";
+"journal.emotion.unclear" = "说不清感受";
+"journal.emotion.group.pleasant" = "舒服的感受";
+"journal.emotion.group.neutral" = "中间的感受";
+"journal.emotion.group.difficult" = "不舒服的感受";
+"journal.emotion.skip" = "暂时不命名";
+"journal.emotion.not_named" = "暂未命名";
+
+"journal.mood.not_set" = "未设置";
+
+"journal.mood.sharing" = "分享中⋯";
+
+"journal.mood.private_short" = "不会分享文字或照片。";
+
+"journal.mood.details" = "分享详情";
+
+"journal.mood.delete_boundary" = "在 Mori 删除日记不会删除健康记录。";
+
+"journal.photo.add" = "添加照片";
+
+"journal.photo.limit" = "已达照片上限";
+
+"journal.photo.optional" = "（可略过）";
+
+"journal.feeling.prompt" = "现在的心情？";
+"journal.mood.health_optional" = "Apple 健康（可选）";
+
+"journal.mood.health_title" = "Apple 健康";
+"journal.mood.optional_qualifier" = "（可选）";
