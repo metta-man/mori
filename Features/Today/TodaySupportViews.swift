@@ -149,7 +149,7 @@ struct TodayFocusCard: View {
             .padding(.top, isEditingFocus ? 16 : 10)
             .padding(.bottom, isEditingFocus ? 16 : 6)
             .frame(maxWidth: .infinity, minHeight: 82, alignment: .leading)
-            .background(MoriV2Palette.raisedPaper.opacity(0.88))
+            .background(MoriV2Palette.raisedPaper)
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -199,13 +199,13 @@ struct TodayFocusCard: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(MoriL10n.display("Today's intention"))
                             .font(.system(.footnote, design: .default, weight: .medium))
-                            .foregroundColor(MoriV2Palette.stone)
+                            .foregroundColor(MoriV2Palette.forestInk)
 
                         Text(trimmedFocus.isEmpty ? MoriL10n.display("Set a gentle intention for today.") : trimmedFocus)
                             .font(.system(.subheadline, design: .default, weight: .regular))
                             .foregroundColor(trimmedFocus.isEmpty ? MoriV2Palette.mutedStone : MoriV2Palette.forestInk)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .lineLimit(2)
+                            .lineLimit(trimmedFocus.isEmpty ? nil : 2)
                             .fixedSize(horizontal: false, vertical: true)
                     }
 
@@ -291,8 +291,9 @@ struct TodayPrimaryResetCard: View {
                     .accessibilityHidden(true)
             }
             .font(MoriV2Type.caption)
-            .foregroundColor(MoriV2Palette.stone)
+            .foregroundColor(MoriV2Palette.forestInk)
             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            .background(MoriV2Palette.paper)
             .contentShape(Rectangle())
         }
         .buttonStyle(MoriV2PressButtonStyle())
@@ -367,8 +368,9 @@ struct TodayQuietMetricsCard: View {
                         .accessibilityHidden(true)
                 }
                 .font(MoriV2Type.supporting)
-                .foregroundColor(MoriV2Palette.stone)
+                .foregroundColor(MoriV2Palette.forestInk)
                 .frame(minHeight: 44)
+                .background(MoriV2Palette.paper)
                 .contentShape(Rectangle())
             }
             .buttonStyle(MoriV2PressButtonStyle())
