@@ -297,7 +297,7 @@ final class MoriLandscapeUITests: XCTestCase {
             switch name {
             case "Today": destination = app.buttons["today-next-action"]
             case "Focus": destination = app.buttons["專心做一件事"]
-            case "Log": destination = app.staticTexts["你現在感覺如何？"]
+            case "Log": destination = app.buttons["journal-guided-emotion-calm"]
             case "Settings": destination = app.buttons["完成"]
             case "Setup": destination = app.steppers.firstMatch
             case "Active": destination = app.buttons["暫停"]
@@ -362,6 +362,10 @@ final class MoriLandscapeUITests: XCTestCase {
         XCTAssertTrue(app.buttons["journal-other-feelings"].waitForExistence(timeout: 8))
         XCTAssertFalse(app.buttons["Hopeful"].exists)
         app.buttons["journal-other-feelings"].tap()
+        let pleasant = app.buttons["journal-feeling-group-pleasant"]
+        XCTAssertTrue(pleasant.waitForExistence(timeout: 3))
+        for _ in 0..<4 where !pleasant.isHittable { app.swipeUp() }
+        pleasant.tap()
         XCTAssertTrue(app.buttons["Hopeful"].waitForExistence(timeout: 3))
         capture("Log other feelings")
         app.buttons["Hopeful"].tap()
