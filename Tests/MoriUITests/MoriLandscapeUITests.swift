@@ -211,7 +211,7 @@ final class MoriLandscapeUITests: XCTestCase {
 
     func testThreeTabsKeepCoreEntrypointsReachable() {
         let app = launch()
-        XCTAssertTrue(app.staticTexts["Before Feed Reset"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["today-next-action"].waitForExistence(timeout: 10))
         capture("Today")
         app.buttons["Focus"].tap()
         XCTAssertTrue(app.buttons["Focus on one thing"].waitForExistence(timeout: 5))
@@ -226,7 +226,7 @@ final class MoriLandscapeUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Log"].waitForExistence(timeout: 5))
         capture("Log")
         app.buttons["Today"].tap()
-        XCTAssertTrue(app.staticTexts["Before Feed Reset"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["today-next-action"].waitForExistence(timeout: 5))
     }
 
     func testSetupDurationUpdatesTimerAndStartsChosenLength() {
@@ -295,7 +295,7 @@ final class MoriLandscapeUITests: XCTestCase {
             app.launch()
             let destination: XCUIElement
             switch name {
-            case "Today": destination = app.staticTexts["資訊流前重置"]
+            case "Today": destination = app.buttons["today-next-action"]
             case "Focus": destination = app.buttons["專心做一件事"]
             case "Log": destination = app.staticTexts["你現在感覺如何？"]
             case "Settings": destination = app.buttons["完成"]
