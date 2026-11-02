@@ -55,7 +55,7 @@ struct MoriDuoContentRegion<Content: View>: View {
     private func divisions(in proxy: GeometryProxy) -> [CGRect] {
         // Xcode 27.1+ is the supported shipping SDK for Duo. Older toolchains
         // retain the safe-area/available-width layout for existing iPhones.
-        #if compiler(>=6.4)
+        #if MORI_DUO_SDK
         if #available(iOS 27.1, *) {
             return proxy.reservedRegions(kind: .division).map(\.frame)
         }

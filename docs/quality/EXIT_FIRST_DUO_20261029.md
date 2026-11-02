@@ -80,3 +80,21 @@ in `metta-man/mori`. An earlier automatic review blocked publication pending
 explicit destination approval. The user subsequently approved pushing this new
 branch, opening the draft PR and running CI on 2026-11-01 (Hong Kong time).
 Publication is now authorized; native validation remains pending CI results.
+
+
+## PR 7 review fixes
+
+The shipping configuration keeps `nativeEligibilityReviewed = false`. Both the
+snapshot migration and legacy file-lock participation are gated by this value:
+existing app and extension writers continue using their original shared defaults
+and cannot drop expiry callbacks due to experimental file-lock contention.
+Before enabling native protection, implement and validate retryable initialization,
+acknowledged writes, and durable callback recovery; the disabled prototype is not
+production acceptance evidence.
+
+Duo-only SDK symbols require the explicit `MORI_DUO_SDK` Swift compilation
+condition, which is disabled in the shipping configuration. Swift 6.4 alone is
+insufficient: Xcode 27.0 has that compiler but lacks the required SwiftUI symbols.
+Enable the condition only with a validated SDK/toolchain that provides those APIs.
+The default build retains the existing width-adaptive layout; full Duo acceptance
+remains pending and must not be claimed by this merge.

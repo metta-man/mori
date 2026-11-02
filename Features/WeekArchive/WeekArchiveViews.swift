@@ -14,7 +14,7 @@ private struct MoriArchiveArrangement<Primary: View, Detail: View>: View {
     }
 
     var body: some View {
-        #if compiler(>=6.4)
+        #if MORI_DUO_SDK
         if #available(iOS 27.1, *) {
             ArrangementView { primary } secondary: { detail }
                 .arrangementViewStyle(.split.axes(.horizontal))

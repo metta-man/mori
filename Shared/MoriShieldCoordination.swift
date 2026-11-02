@@ -30,13 +30,13 @@ enum MoriShieldCoordination {
         try ProtectionWriterCoordination.exclusive(url: url(), body)
     }
     static func legacy<T>(fallback: T, _ body: () -> T) -> T {
-        // Failure performs no write. Native eligibility remains disabled; legacy
-        // void APIs require acknowledgement propagation before final activation.
-        do { return try exclusive(body) }
-        catch ProtectionWriterError.unavailable where !nativeEligibilityReviewed {
-            // Preserve existing injected/local-default legacy behavior when no
-            // App Group exists. Native activation is impossible in this mode.
+        // Do not impose a fallible experimental file lock on shipping callbacks.
+        // Keep this gate paired with MoriAppGroup's preference-store selection.
+        guard nativeEligibilityReviewed else {
             return ProtectionWriterCoordination.processOnly(body)
-        } catch { return fallback }
+        }
+        // Native activation still requires acknowledgement/retry propagation.
+        do { return try exclusive(body) }
+        catch { return fallback }
     }
 }

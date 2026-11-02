@@ -578,6 +578,22 @@ def write_assets(root: Path) -> None:
     )
 
 
+def asset_contents_match(expected: Path, actual: Path) -> bool:
+    if expected.suffix.lower() != ".png":
+        return filecmp.cmp(expected, actual, shallow=False)
+    # PNG's compressed bytes vary across zlib builds. Compare the rendered pixels
+    # and color profile so CI checks the artwork, not the encoder implementation.
+    try:
+        with Image.open(expected) as reference, Image.open(actual) as candidate:
+            return (
+                reference.size == candidate.size
+                and reference.info.get("icc_profile") == candidate.info.get("icc_profile")
+                and reference.convert("RGBA").tobytes() == candidate.convert("RGBA").tobytes()
+            )
+    except (OSError, ValueError):
+        return False
+
+
 def check_assets() -> int:
     with tempfile.TemporaryDirectory(prefix="mori-botanical-assets-") as tmp:
         expected_root = Path(tmp)
@@ -588,7 +604,7 @@ def check_assets() -> int:
             actual = ROOT / expected.relative_to(expected_root)
             if not actual.exists():
                 failures.append(f"missing {actual.relative_to(ROOT)}")
-            elif not filecmp.cmp(expected, actual, shallow=False):
+            elif not asset_contents_match(expected, actual):
                 failures.append(f"outdated {actual.relative_to(ROOT)}")
 
         deprecated_paths = (

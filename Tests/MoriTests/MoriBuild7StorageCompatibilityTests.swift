@@ -1,8 +1,36 @@
 import Foundation
+import Darwin
 import XCTest
 @testable import Mori
 
 final class MoriBuild7StorageCompatibilityTests: XCTestCase {
+    func testShippingPreferencesStayInSharedDefaults() throws {
+        XCTAssertFalse(MoriShieldCoordination.nativeEligibilityReviewed)
+        XCTAssertFalse(MoriAppGroup.defaults is MoriCoordinatedPreferences)
+        let key = "mori_before_feed_review_test_" + UUID().uuidString
+        let suite = try XCTUnwrap(UserDefaults(suiteName: MoriAppGroup.identifier))
+        defer { suite.removeObject(forKey: key) }
+        MoriAppGroup.defaults.set("from-app", forKey: key)
+        XCTAssertEqual(suite.string(forKey: key), "from-app")
+        suite.set("from-extension", forKey: key)
+        XCTAssertEqual(MoriAppGroup.defaults.string(forKey: key), "from-extension")
+    }
+
+    func testShippingExpiryWorkRunsWhileExperimentalWriterLockIsBusy() throws {
+        let url = try MoriShieldCoordination.url()
+        try FileManager.default.createDirectory(at: url.deletingLastPathComponent(), withIntermediateDirectories: true)
+        let descriptor = open(url.path, O_CREAT | O_RDWR, 0o600)
+        XCTAssertGreaterThanOrEqual(descriptor, 0)
+        guard descriptor >= 0 else { return }
+        defer { flock(descriptor, LOCK_UN); close(descriptor) }
+        XCTAssertEqual(flock(descriptor, LOCK_EX | LOCK_NB), 0)
+        // A distinct open-file description simulates another process holding the lock.
+        XCTAssertThrowsError(try MoriShieldCoordination.exclusive { XCTFail("Lock should be busy") })
+        var expiryHandled = false
+        MoriShieldCoordination.legacy(fallback: ()) { expiryHandled = true }
+        XCTAssertTrue(expiryHandled, "Shipping callbacks must not silently drop expiry work")
+    }
+
     private let referenceDay = Calendar.current.startOfDay(for: Date(timeIntervalSince1970: 2_000_000_000))
 
     func testBuild7CollectionRoundTripAndUnrelatedSaveKeepUntouchedMetadata() throws {

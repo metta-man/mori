@@ -8,6 +8,9 @@ enum MoriAppGroup {
 
     private static let coordinatedDefaults: UserDefaults = {
         let base = UserDefaults(suiteName: identifier) ?? .standard
+        // The snapshot and cross-process writer protocol are one opt-in migration.
+        // Shipping legacy writers must continue sharing the same UserDefaults suite.
+        guard MoriShieldCoordination.nativeEligibilityReviewed else { return base }
         guard let group = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: identifier),
               let coordinated = try? MoriCoordinatedPreferences(base: base, directory: group.appendingPathComponent("ScheduledProtection")) else { return base }
         return coordinated
