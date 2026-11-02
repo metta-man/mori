@@ -16,6 +16,9 @@ struct QuietModeView: View {
     @State private var isRunning = false
     @State private var urgeReason = ""
     @State private var selectedReplacement: QuietReplacementAction?
+    @State private var replacementEventIDs: [QuietReplacementAction: UUID] = [:]
+    @State private var urgeEventID = UUID()
+    @State private var showsOfflineHandoff = false
     @State private var didCompleteTimer = false
     @State private var quietAppLimitWasActive = false
     @State private var activeTimerSession: MoriQuietTimerSession?
@@ -103,6 +106,10 @@ struct QuietModeView: View {
             onCustomMinutesChange: syncCustomMinutes
         )
         .moriKeyboardDoneToolbar()
+        .sheet(isPresented: $showsOfflineHandoff) {
+            MoriOfflineHandoffContent(onDone: { showsOfflineHandoff = false })
+                .moriBotanicalSheetPresentation()
+        }
         .moriHidesMainTabBar()
     }
 
@@ -233,21 +240,28 @@ struct QuietModeView: View {
         clarityStore.record(
             kind: .urgeCheckIn,
             title: MoriL10n.display("Named the urge"),
-            seeds: 2,
-            minutes: 2,
-            note: note
+            seeds: 0,
+            minutes: 0,
+            note: note,
+            evidence: .selfReportedCompleted,
+            eventID: urgeEventID
         )
     }
 
     private func recordReplacementAction(_ action: QuietReplacementAction) {
         selectedReplacement = action
+        let eventID = replacementEventIDs[action] ?? UUID()
+        replacementEventIDs[action] = eventID
         clarityStore.record(
             kind: .replacementAction,
             title: action.title,
-            seeds: action.seeds,
-            minutes: action.minutes,
-            note: action.note
+            seeds: 0,
+            minutes: 0,
+            note: action.note,
+            evidence: .selected,
+            eventID: eventID
         )
+        showsOfflineHandoff = true
     }
 
     private func tick() {
@@ -906,13 +920,14 @@ struct EssentialModeView: View {
     private func endEssentialMode() {
         guard let session = activeSession else { return }
         appLimitManager.perform(.endAppLimit(feature: .walkOfflineReset))
-        let protectedMinutes = max(1, Int(Date().timeIntervalSince(session.startedAt) / 60))
+        let protectedMinutes = max(0, Int(min(Date(), session.endDate).timeIntervalSince(session.startedAt) / 60))
         clarityStore.record(
             kind: .replacementAction,
             title: "Essential Mode",
             seeds: 2,
             minutes: protectedMinutes,
-            note: "Kept only essential apps available"
+            note: "Kept only essential apps available",
+            evidence: .timerCompleted
         )
         didComplete = true
     }

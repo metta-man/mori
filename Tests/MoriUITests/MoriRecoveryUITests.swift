@@ -193,7 +193,7 @@ final class MoriRecoveryUITests: XCTestCase {
         XCTAssertFalse(app.staticTexts["Long Exhale (4-6) · 3 cycles · about 30 seconds"].exists)
         XCTAssertTrue(app.staticTexts["3 breaths remaining"].exists)
         XCTAssertFalse(app.staticTexts["Breathe in for 4. Breathe out for 6."].exists)
-        XCTAssertFalse(app.staticTexts["Why now?"].exists)
+        XCTAssertFalse(app.staticTexts["How much time do you need?"].exists)
         attachScreenshot(named: "before-feed-breath-key")
     }
 
@@ -210,8 +210,8 @@ final class MoriRecoveryUITests: XCTestCase {
         app.buttons["Resume"].tap()
         XCTAssertTrue(app.staticTexts["2 breaths remaining"].waitForExistence(timeout: 12))
         XCTAssertTrue(app.staticTexts["1 breath remaining"].waitForExistence(timeout: 12))
-        XCTAssertFalse(app.staticTexts["Why now?"].exists)
-        XCTAssertTrue(app.staticTexts["Why now?"].waitForExistence(timeout: 12))
+        XCTAssertFalse(app.staticTexts["How much time do you need?"].exists)
+        XCTAssertTrue(app.staticTexts["How much time do you need?"].waitForExistence(timeout: 12))
         XCTAssertTrue(app.buttons["Keep feed closed"].exists)
     }
 
@@ -287,14 +287,12 @@ final class MoriRecoveryUITests: XCTestCase {
             "-MoriShowBeforeFeedIntentForUITest"
         ])
 
-        XCTAssertTrue(app.staticTexts["Why now?"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.staticTexts["How much time do you need?"].waitForExistence(timeout: 8))
         XCTAssertTrue(app.buttons["Keep feed closed"].exists)
         XCTAssertFalse(app.buttons["Choose a time to open"].exists)
-        XCTAssertFalse(app.staticTexts["What would be enough?"].exists)
+        XCTAssertFalse(app.buttons["Just checking"].exists)
         attachScreenshot(named: "before-feed-intent-entry")
-        app.buttons["Just checking"].tap()
-
-        XCTAssertTrue(app.staticTexts["What would be enough?"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["Choose a time"].exists)
         XCTAssertTrue(app.buttons["15 minutes"].waitForExistence(timeout: 3))
         app.buttons["15 minutes"].tap()
 
@@ -318,6 +316,8 @@ final class MoriRecoveryUITests: XCTestCase {
         let keepClosedButton = app.buttons["Keep feed closed"]
         XCTAssertTrue(keepClosedButton.waitForExistence(timeout: 8))
         keepClosedButton.tap()
+        XCTAssertTrue(app.staticTexts["offline-handoff.title"].waitForExistence(timeout: 5))
+        app.buttons["Close"].firstMatch.tap()
 
         XCTAssertTrue(app.staticTexts["Kept closed once today"].waitForExistence(timeout: 5))
     }

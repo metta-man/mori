@@ -97,7 +97,7 @@ struct WeekArchiveData {
                 Calendar.current.component(.year, from: $0.createdAt) == year &&
                     $0.kind.isQuietArchiveAction
             }
-            .reduce(0) { $0 + $1.minutes }
+            .reduce(0) { $0 + $1.recordedQuietMinutes }
     }
 
     func mostCommonTone(inYear year: Int) -> HabitDayTone? {
@@ -338,19 +338,18 @@ struct WeekArchiveWeekSummary: Identifiable {
 
     var quietMinutes: Int {
         actions
-            .filter { $0.kind.isQuietArchiveAction }
-            .reduce(0) { $0 + $1.minutes }
+            .reduce(0) { $0 + $1.recordedQuietMinutes }
     }
 
     var quietActionCount: Int {
-        actions.filter { $0.kind.isQuietArchiveAction }.count
+        actions.filter { $0.kind.isQuietArchiveAction && $0.isCompletedActivity }.count
     }
 
     var practiceMinutes: Int {
         sessions.reduce(0) { $0 + $1.actualMinutes } +
             actions
             .filter { $0.kind.isPracticeArchiveAction }
-            .reduce(0) { $0 + $1.minutes }
+            .reduce(0) { $0 + $1.recordedQuietMinutes }
     }
 
     var hasRecords: Bool {
@@ -367,7 +366,7 @@ struct WeekArchiveWeekSummary: Identifiable {
             let date = Calendar.current.date(byAdding: .day, value: offset, to: startDate) ?? startDate
             let dayActions = actions.filter { Calendar.current.isDate($0.createdAt, inSameDayAs: date) }
             let seeds = dayActions.reduce(0) { $0 + $1.seeds }
-            let quiet = dayActions.filter { $0.kind.isQuietArchiveAction }.reduce(0) { $0 + $1.minutes }
+            let quiet = dayActions.reduce(0) { $0 + $1.recordedQuietMinutes }
             let score = max(0, min(100, 46 + seeds * 4 + min(16, quiet / 2)))
             return WeekArchiveTrendPoint(label: WeekArchiveTrendPoint.weekdayLabels[offset], score: score)
         }
@@ -409,19 +408,18 @@ struct WeekArchiveDaySummary: Identifiable {
 
     var quietMinutes: Int {
         actions
-            .filter { $0.kind.isQuietArchiveAction }
-            .reduce(0) { $0 + $1.minutes }
+            .reduce(0) { $0 + $1.recordedQuietMinutes }
     }
 
     var quietActionCount: Int {
-        actions.filter { $0.kind.isQuietArchiveAction }.count
+        actions.filter { $0.kind.isQuietArchiveAction && $0.isCompletedActivity }.count
     }
 
     var practiceMinutes: Int {
         sessions.reduce(0) { $0 + $1.actualMinutes } +
             actions
             .filter { $0.kind.isPracticeArchiveAction }
-            .reduce(0) { $0 + $1.minutes }
+            .reduce(0) { $0 + $1.recordedQuietMinutes }
     }
 
     var clarityScore: Int {

@@ -1,5 +1,39 @@
 # Mori Design Specification
 
+## Exit-first and iPhone Duo amendment — 2026-10-29
+
+Approved by the founder after the flow review. This amendment supersedes the
+breath-first sequence below; visual references, paper, type and landscape remain.
+
+- Before Feed opens with one offline step, a primary **Put my phone aside** action,
+  **I need to use my phone**, and optional configured breathing. No compulsory
+  breath, reason, time choice or return visit is required to leave.
+- Deliberate use requires an explicit 2/5/10/15-minute boundary. Reason and return
+  activity are optional. A breath completion never opens a window automatically.
+- Re-entry preserves the original allowance deadline. Putting the phone aside
+  does not cancel an existing allowance and is not counted as a kept-closed feed.
+- The handoff invites locking the phone. It has no countdown, reward or check-in.
+- Selecting an offline activity records intent only: zero minutes, zero seeds.
+  Legacy replacement estimates remain stored but are excluded from quiet totals.
+  Timed and self-reported completion remain distinguishable. Timer time is not
+  evidence that the person was away from their phone.
+- Today distinguishes permission, selection, configured, active allowance,
+  expired allowance and active-session states. Settings being on is not proof
+  that iOS is currently enforcing a shield.
+- First use offers a small offline action before permissions. Setup targets one
+  app; enabling Before Feed no longer silently enables Morning Gate.
+- Optional, already-authorized window reminders use the chosen return activity.
+- Build the shipping Duo app with Xcode 27.1 / iOS 27.1 SDK or later. The system
+  tab bar owns the new vertical chrome. View bounds and active reserved division
+  regions govern controls; never use device names or fixed screen dimensions.
+- Root reading widths are bounded. Log uses columns when space and text size
+  permit. Life Grid uses a system split arrangement on iOS 27.1; older systems
+  retain a width-adaptive pair and compact day sheets. Portrait and both landscape
+  orientations are supported. View state is owned outside layout decisions.
+
+Implementation and verification status: `docs/quality/EXIT_FIRST_DUO_20261029.md`.
+
+
 **Status:** Approved visual direction
 **Reference image:** `DesignReferences/mori-approved-reference.jpeg`
 **Primary platforms:** iOS and watchOS

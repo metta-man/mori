@@ -48,12 +48,16 @@ final class MoriShieldActionExtension: ShieldActionDelegate {
             recordAttempt(action: action, targetKind: targetKind)
             if currentShieldFeature == .beforeFeed {
                 resetRequestRouter.requestResetLaunch(for: currentShieldFeature)
+                if #available(iOS 26.5, *) { return .openParentalControlsApp }
             }
             return .close
         case .secondaryButtonPressed:
             recordAttempt(action: action, targetKind: targetKind)
             if currentShieldFeature != .beforeFeed {
                 resetRequestRouter.requestResetLaunch(for: currentShieldFeature)
+                if currentShieldFeature == .morningGate {
+                    if #available(iOS 26.5, *) { return .openParentalControlsApp }
+                }
             }
             return .close
         default:

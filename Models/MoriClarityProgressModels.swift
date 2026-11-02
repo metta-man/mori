@@ -64,6 +64,23 @@ enum MoriMindfulActionKind: String, Codable, CaseIterable, Identifiable {
     }
 }
 
+/// Evidence describes what Mori knows, not whether someone stayed off their phone.
+enum MoriActionEvidence: String, Codable {
+    case selected
+    case started
+    case selfReportedCompleted
+    case timerCompleted
+    case legacyEstimate
+
+    static func historicalDefault(for kind: MoriMindfulActionKind) -> Self {
+        switch kind {
+        case .replacementAction, .urgeCheckIn, .resetAction: return .legacyEstimate
+        case .quietTimer, .settleSession, .breathingSession, .pomodoroSession: return .timerCompleted
+        default: return .selfReportedCompleted
+        }
+    }
+}
+
 struct MoriMindfulAction: Identifiable, Codable, Equatable {
     let id: UUID
     let kind: MoriMindfulActionKind
@@ -72,6 +89,8 @@ struct MoriMindfulAction: Identifiable, Codable, Equatable {
     let minutes: Int
     let note: String?
     let createdAt: Date
+    /// Optional for lossless decoding of existing history.
+    let evidence: MoriActionEvidence?
 
     init(
         id: UUID = UUID(),
@@ -80,7 +99,8 @@ struct MoriMindfulAction: Identifiable, Codable, Equatable {
         seeds: Int,
         minutes: Int = 0,
         note: String? = nil,
-        createdAt: Date = Date()
+        createdAt: Date = Date(),
+        evidence: MoriActionEvidence? = nil
     ) {
         self.id = id
         self.kind = kind
@@ -89,6 +109,24 @@ struct MoriMindfulAction: Identifiable, Codable, Equatable {
         self.minutes = minutes
         self.note = note
         self.createdAt = createdAt
+        self.evidence = evidence
+    }
+
+    var resolvedEvidence: MoriActionEvidence {
+        evidence ?? .historicalDefault(for: kind)
+    }
+
+    var isCompletedActivity: Bool {
+        resolvedEvidence == .timerCompleted || resolvedEvidence == .selfReportedCompleted
+    }
+
+    var recordedQuietMinutes: Int {
+        switch kind {
+        case .quietTimer, .settleSession, .breathingSession, .pomodoroSession, .replacementAction:
+            return isCompletedActivity ? max(0, minutes) : 0
+        default:
+            return 0
+        }
     }
 
     var dateKey: String {

@@ -1,6 +1,44 @@
 import SwiftUI
 import CoreData
 
+/// Kept outside the scroll views so the system can arrange both reading panes.
+private struct MoriArchiveArrangement<Primary: View, Detail: View>: View {
+    let showsDetail: Bool
+    private let primary: Primary
+    private let detail: Detail
+
+    init(showsDetail: Bool, @ViewBuilder primary: () -> Primary, @ViewBuilder detail: () -> Detail) {
+        self.showsDetail = showsDetail
+        self.primary = primary()
+        self.detail = detail()
+    }
+
+    var body: some View {
+        #if compiler(>=6.4)
+        if #available(iOS 27.1, *) {
+            ArrangementView { primary } secondary: { detail }
+                .arrangementViewStyle(.split.axes(.horizontal))
+        } else {
+            fallback
+        }
+        #else
+        fallback
+        #endif
+    }
+
+    private var fallback: some View {
+        HStack(alignment: .top, spacing: showsDetail ? 24 : 0) {
+            primary.frame(maxWidth: .infinity)
+            detail
+                .frame(maxWidth: showsDetail ? .infinity : 0, maxHeight: showsDetail ? .infinity : 0)
+                .clipped()
+                .opacity(showsDetail ? 1 : 0)
+                .allowsHitTesting(showsDetail)
+                .accessibilityHidden(!showsDetail)
+        }
+    }
+}
+
 private enum WeekArchiveSheet: Identifiable {
     case day(WeekArchiveDaySummary)
 
@@ -18,6 +56,8 @@ struct WeekArchiveDetailView: View {
     @StateObject private var clarityStore = MoriClarityStore.shared
     @StateObject private var dailySparkStore = DailySparkStore.shared
     @StateObject private var settleStore = SettleSessionStore.shared
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
+    @State private var selectedDay: Date?
     @State private var selectedMode: WeekArchiveDetailMode = .month
     @State private var focusedMonth: Date
     @State private var focusedYear: Int
@@ -56,54 +96,76 @@ struct WeekArchiveDetailView: View {
     }
 
     var body: some View {
-        ZStack {
-            MoriLandscapeBackground(
-                scene: .none,
-                placement: .lowerThird
-            )
-            .ignoresSafeArea()
+        GeometryReader { proxy in
+            let wide = MoriAdaptiveLayout.usesColumns(width: proxy.size.width, accessibility: dynamicTypeSize.isAccessibilitySize)
+            ZStack {
+                MoriLandscapeBackground(
+                    scene: .none,
+                    placement: .lowerThird
+                )
+                .ignoresSafeArea()
 
-            if selectedMode == .month {
-                LifeGridMonthLandscape()
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .ignoresSafeArea(edges: .bottom)
-                    .transition(.opacity)
-            }
-
-            ScrollView(.vertical, showsIndicators: false) {
-                LazyVStack(spacing: 0) {
-                    LifeGridHeader(
-                        isCompact: selectedMode == .year,
-                        onBack: dismiss.callAsFunction,
-                        onOpenWeeklyArchive: { showsWeeklyArchive = true }
-                    )
-
-                    LifeGridModePicker(selection: $selectedMode)
-
-                    switch selectedMode {
-                    case .month:
-                        WeekArchiveMonthGrid(
-                            focusedMonth: $focusedMonth,
-                            data: archiveData,
-                            today: lifeGridToday,
-                            onDaySelected: { date in
-                                activeSheet = .day(archiveData.daySummary(for: date))
-                            }
-                        )
-                        .padding(.top, 46)
-
-                    case .year:
-                        WeekArchiveYearGrid(
-                            focusedYear: $focusedYear,
-                            data: archiveData,
-                            onMonthSelected: openMonth
-                        )
-                        .padding(.top, 23)
-                    }
+                if selectedMode == .month {
+                    LifeGridMonthLandscape()
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .ignoresSafeArea(edges: .bottom)
+                        .transition(.opacity)
                 }
-                .padding(.bottom, 30)
+
+                MoriArchiveArrangement(showsDetail: wide) {
+                    ScrollView(.vertical, showsIndicators: false) {
+                        LazyVStack(spacing: 0) {
+                            LifeGridHeader(
+                                isCompact: selectedMode == .year,
+                                onBack: dismiss.callAsFunction,
+                                onOpenWeeklyArchive: { showsWeeklyArchive = true }
+                            )
+
+                            LifeGridModePicker(selection: $selectedMode)
+                            if !wide, let selectedDay {
+                                Button(MoriL10n.display("View selected day")) {
+                                    activeSheet = .day(archiveData.daySummary(for: selectedDay))
+                                }.frame(minHeight: 44)
+                            }
+
+                            switch selectedMode {
+                            case .month:
+                                WeekArchiveMonthGrid(
+                                    focusedMonth: $focusedMonth,
+                                    data: archiveData,
+                                    today: lifeGridToday,
+                                    onDaySelected: { date in
+                                        selectedDay = date
+                                        if !wide { activeSheet = .day(archiveData.daySummary(for: date)) }
+                                    }
+                                )
+                                .padding(.top, 46)
+
+                            case .year:
+                                WeekArchiveYearGrid(
+                                    focusedYear: $focusedYear,
+                                    data: archiveData,
+                                    onMonthSelected: openMonth
+                                )
+                                .padding(.top, 23)
+                            }
+                        }
+                        .padding(.bottom, 30)
+                    }
+                    .frame(maxWidth: 640)
+                } detail: {
+                    WeekArchiveDayDetailSheet(
+                        summary: archiveData.daySummary(for: selectedDay ?? lifeGridToday),
+                        onSaveDayLog: saveDayLog
+                    )
+                    .id(MoriDateKey.value(for: selectedDay ?? lifeGridToday))
+                    .frame(maxWidth: 520)
+                }
+                .frame(maxWidth: 1160)
+                .frame(maxWidth: .infinity)
             }
         }
+
         .navigationTitle("")
         .toolbar(.hidden, for: .navigationBar)
         .moriHidesMainTabBar()

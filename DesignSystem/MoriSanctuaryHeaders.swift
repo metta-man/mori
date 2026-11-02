@@ -275,6 +275,8 @@ struct MoriRootScrollScreen<HeaderTrailing: View, Content: View>: View {
                             content
                         }
                         .padding(.horizontal, horizontalPadding)
+                        .frame(maxWidth: backgroundVariant == .journal ? 1040 : 680)
+                        .frame(maxWidth: .infinity)
                         .padding(
                             .bottom,
                             layout == .settings

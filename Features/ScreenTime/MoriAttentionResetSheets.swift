@@ -202,23 +202,19 @@ private struct MoriAttentionResetSheet: View {
 
     private var beforeFeedSecondaryContext: String? {
         switch routeSource {
-        case .screenTimeGate?:
-            return MoriL10n.display("Screen Time opened this pause. After the breath, choose whether to return to the feed yourself.")
-        case .shortcut?:
-            return MoriL10n.display("A shortcut opened Mori. After the breath, choose whether to return to the feed yourself.")
+        case .screenTimeGate?, .shortcut?:
+            return MoriL10n.display("Opening a window never switches you back to the feed automatically.")
         default:
             return nil
         }
     }
 
     private var beforeFeedEnoughChoices: [MoriBeforeFeedEnoughChoice] {
-        guard let reason = beforeFeedFlow.reason else { return [] }
-        return MoriBeforeFeedEnoughChoice.choices(for: reason)
+        MoriBeforeFeedEnoughChoice.choices(for: beforeFeedFlow.reason ?? .other)
     }
 
     private var shouldShowReturnAnchors: Bool {
-        guard let reason = beforeFeedFlow.reason else { return false }
-        return MoriBeforeFeedReturnAnchorPolicy.shouldShow(for: reason)
+        beforeFeedFlow.enoughChoice != nil
     }
 
     private var beforeFeedOpenActionTitle: String {
@@ -366,7 +362,7 @@ private struct MoriAttentionResetSheet: View {
                     )
 
                     resetContent
-                    .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
+                    .frame(maxWidth: 640, maxHeight: .infinity, alignment: .top)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
             }
@@ -398,16 +394,30 @@ private struct MoriAttentionResetSheet: View {
     private var resetContent: some View {
         switch context {
         case .beforeFeed:
-            if let endsAt = reentry.allowanceEndsAt {
+            if beforeFeedFlow.stage == .handoff {
+                MoriOfflineHandoffContent(onDone: resetAndDismiss)
+            } else if let endsAt = reentry.allowanceEndsAt {
                 MoriBeforeFeedReentryContent(
                     previous: reentry.previousAllowance,
                     endsAt: endsAt,
                     onReuse: reuseExistingAllowance,
-                    onReturn: closeWithoutChangingAllowance
+                    onReturn: leaveFeedClosed
                 )
             } else {
             switch beforeFeedFlow.stage {
+            case .choice:
+                MoriBeforeFeedExitChoiceContent(
+                    onLeave: leaveFeedClosed,
+                    onContinue: chooseIntent,
+                    onBreathe: {
+                        beforeFeedFlow.chooseBreathing()
+                        startOrResumeReset()
+                    }
+                )
+            case .handoff:
+                MoriOfflineHandoffContent(onDone: resetAndDismiss)
             case .breathKey:
+                VStack(spacing: 0) {
                 MoriBeforeFeedBreathKeyContent(
                     pauseStyle: beforeFeedPauseSnapshot.style,
                     title: beforeFeedPauseTitle,
@@ -422,6 +432,16 @@ private struct MoriAttentionResetSheet: View {
                     secondaryContext: beforeFeedSecondaryContext,
                     onTogglePause: toggleResetRunning
                 )
+                    Button(MoriL10n.display("Put my phone aside"), action: leaveFeedClosed)
+                        .font(MoriTheme.Typography.supporting)
+                        .foregroundColor(MoriColors.sanctuaryInk)
+                        .frame(minHeight: 44)
+                        .accessibilityIdentifier("before-feed.leave")
+                    Button(MoriL10n.display("I need to use my phone"), action: chooseIntent)
+                        .font(MoriTheme.Typography.supporting)
+                        .foregroundColor(MoriColors.sanctuaryInk)
+                        .frame(minHeight: 44)
+                }
             case .intent:
                 MoriBeforeFeedIntentContent(
                     selectedReason: beforeFeedFlow.reason,
@@ -488,7 +508,7 @@ private struct MoriAttentionResetSheet: View {
 
         #if DEBUG
         // Explicit practice fixtures start fresh, independent of a prior UI test's allowance.
-        if ["-MoriUseDefaultBeforeFeedPauseForUITest", "-MoriUseConfiguredGuidedBeforeFeedPauseForUITest",
+        if ["-MoriUseFreshExitForUITest", "-MoriUseDefaultBeforeFeedPauseForUITest", "-MoriUseConfiguredGuidedBeforeFeedPauseForUITest",
             "-MoriUseFollowOwnBeforeFeedPauseForUITest", "-MoriShowBeforeFeedQuietPauseForUITest"]
             .contains(where: { arguments.contains($0) }) {
             beforeFeedGateStore.clearGraceUntil()
@@ -503,6 +523,12 @@ private struct MoriAttentionResetSheet: View {
         freshAllowanceEligibility = beforeFeedGateStore.beginFreshAllowanceFlow()
         didResolveBeforeFeedOutcome = false
         didHandleOwnBreathOpeningCue = false
+
+        #if DEBUG
+        if arguments.contains(where: { $0.hasPrefix("-MoriShowBeforeFeed") || $0.hasPrefix("-MoriUse") && $0.contains("BeforeFeed") || $0 == "-MoriCompleteBeforeFeedBreathForUITest" || $0 == "-MoriStartBeforeFeedBreathForUITest" }) {
+            beforeFeedFlow.chooseBreathing()
+        }
+        #endif
 
         if arguments.contains("-MoriShowBeforeFeedCompletionForUITest") {
             _ = beforeFeedFlow.completeBreath()
@@ -529,7 +555,7 @@ private struct MoriAttentionResetSheet: View {
             _ = beforeFeedFlow.completeBreath()
             activeElapsed = targetDuration
             secondsRemaining = 0
-        } else {
+        } else if beforeFeedFlow.stage == .breathKey {
             startOrResumeReset()
         }
     }
@@ -704,14 +730,17 @@ private struct MoriAttentionResetSheet: View {
         finishBeforeFeedIntent()
     }
 
+    private func chooseIntent() {
+        if isRunning { pauseReset() }
+        beforeFeedFlow.chooseIntent()
+    }
+
     private func finishBeforeFeedIntent() {
         guard context == .beforeFeed,
-              let selectedBeforeFeedReason = beforeFeedFlow.reason,
               let enoughChoice = beforeFeedFlow.enoughChoice,
               let openWindowSeconds = beforeFeedFlow.confirmedOpenWindowSeconds,
               !didResolveBeforeFeedOutcome,
-              beforeFeedFlow.canOpenFeed,
-              secondsRemaining == 0
+              beforeFeedFlow.canOpenFeed
         else {
             return
         }
@@ -724,11 +753,11 @@ private struct MoriAttentionResetSheet: View {
         if let scheduledProtectionHost {
             guard let scheduledTicket else { isSubmittingAllowance = false; confirmationFailed = true; return }
             let saved = appLimitManager.confirmJointBeforeFeedAllowance(MoriBeforeFeedAllowanceRequest(
-                eligibility: freshAllowanceEligibility, reason: selectedBeforeFeedReason, routeSource: routeSource?.rawValue,
+                eligibility: freshAllowanceEligibility, reason: beforeFeedFlow.reason, routeSource: routeSource?.rawValue,
                 enoughChoiceID: enoughChoice.rawValue, openWindowSeconds: openWindowSeconds,
                 returnAnchorID: beforeFeedFlow.returnAnchor?.rawValue, eventID: beforeFeedIntentEventID,
                 historyGeneration: entryHistoryGeneration, now: Date()), host: scheduledProtectionHost,
-                ticket: scheduledTicket, completed: secondsRemaining == 0)
+                ticket: scheduledTicket, completed: beforeFeedFlow.hasCompletedBreath)
             isSubmittingAllowance = false
             guard saved else {
                 confirmationFailed = true; return
@@ -741,7 +770,7 @@ private struct MoriAttentionResetSheet: View {
         }
         let saved = appLimitManager.perform(.confirmBeforeFeedAllowance(MoriBeforeFeedAllowanceRequest(
             eligibility: freshAllowanceEligibility,
-            reason: selectedBeforeFeedReason, routeSource: routeSource?.rawValue,
+            reason: beforeFeedFlow.reason, routeSource: routeSource?.rawValue,
             enoughChoiceID: enoughChoice.rawValue, openWindowSeconds: openWindowSeconds,
             returnAnchorID: beforeFeedFlow.returnAnchor?.rawValue,
             eventID: beforeFeedIntentEventID, historyGeneration: entryHistoryGeneration, now: Date()
@@ -774,25 +803,29 @@ private struct MoriAttentionResetSheet: View {
     }
 
     private func leaveFeedClosed() {
-        if preservesExistingAllowance || reentry.allowanceEndsAt != nil {
-            closeWithoutChangingAllowance()
-            return
-        }
+        let choseSuggestedStep = beforeFeedFlow.stage == .choice && reentry.allowanceEndsAt == nil
         guard context == .beforeFeed,
-              beforeFeedFlow.stage == .intent,
-              beforeFeedFlow.hasCompletedBreath,
-              !didResolveBeforeFeedOutcome
+              !hasEndedEntry, !didResolveBeforeFeedOutcome,
+              entryHistoryGeneration == beforeFeedGateStore.historyGeneration,
+              beforeFeedFlow.chooseOffline()
         else {
             return
         }
 
         didResolveBeforeFeedOutcome = true
-        beforeFeedGateStore.recordKeptClosed(
-            routeSource: routeSource?.rawValue,
-            eventID: beforeFeedIntentEventID
-        )
+        if choseSuggestedStep {
+            let step = MoriOfflineStep(rawValue: UserDefaults.standard.string(forKey: "mori_offline_step") ?? "") ?? .window
+            clarityStore.record(kind: .replacementAction, title: step.title, seeds: 0,
+                                note: step.instruction, evidence: .selected, eventID: beforeFeedIntentEventID)
+        }
+        if !preservesExistingAllowance, reentry.allowanceEndsAt == nil,
+           !beforeFeedGateStore.isInGraceWindow() {
+            beforeFeedGateStore.recordKeptClosed(
+                routeSource: routeSource?.rawValue,
+                eventID: beforeFeedIntentEventID
+            )
+        }
         reset()
-        dismiss()
     }
 
     private func reset() {

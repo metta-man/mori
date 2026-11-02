@@ -238,11 +238,11 @@ private struct BeforeFeedActivationPanel: View {
                 )
                 BeforeFeedReadinessRow(
                     title: "Shield handoff clear",
-                    detail: "Open feed app -> tap Prepare reset -> finish your configured breath in Mori.",
+                    detail: "Return to Mori to put your phone aside or choose a short window.",
                     isComplete: nativeGateEnabled
                 )
                 BeforeFeedReadinessRow(
-                    title: "Breath key ready",
+                    title: "Optional breathing ready",
                     detail: pauseSummary,
                     isComplete: isReady
                 )

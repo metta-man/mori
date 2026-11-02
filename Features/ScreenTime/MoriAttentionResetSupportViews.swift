@@ -1,5 +1,108 @@
 import SwiftUI
 
+enum MoriOfflineStep: String, CaseIterable {
+    case window, water, task, rest
+
+    var title: String {
+        switch self {
+        case .window: return MoriL10n.display("Look out of a window")
+        case .water: return MoriL10n.display("Get a glass of water")
+        case .task: return MoriL10n.display("Return to one small task")
+        case .rest: return MoriL10n.display("Rest your eyes for a moment")
+        }
+    }
+
+    var instruction: String {
+        switch self {
+        case .window: return MoriL10n.display("Put your phone down and notice something outside.")
+        case .water: return MoriL10n.display("Leave your phone here while you get some water.")
+        case .task: return MoriL10n.display("Put your phone out of reach. Start with one small step.")
+        case .rest: return MoriL10n.display("Let your phone rest. You can rest too.")
+        }
+    }
+
+    var next: Self {
+        let values = Self.allCases
+        return values[((values.firstIndex(of: self) ?? 0) + 1) % values.count]
+    }
+}
+
+struct MoriBeforeFeedExitChoiceContent: View {
+    @AppStorage("mori_offline_step") private var stepRaw = MoriOfflineStep.window.rawValue
+    let onLeave: () -> Void
+    let onContinue: () -> Void
+    let onBreathe: () -> Void
+
+    private var step: MoriOfflineStep { MoriOfflineStep(rawValue: stepRaw) ?? .window }
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 22) {
+                Text(MoriL10n.display("Let the next moment be yours."))
+                    .font(.system(.largeTitle, design: .serif))
+                    .foregroundColor(MoriV2Palette.forestInk)
+                    .fixedSize(horizontal: false, vertical: true)
+
+                MoriLivingLandscape(mood: .waterside, motionEnabled: false)
+                    .aspectRatio(2.6, contentMode: .fit)
+                    .clipShape(RoundedRectangle(cornerRadius: 22))
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text(step.title).font(.title3.weight(.medium))
+                    Text(step.instruction).font(.body)
+                        .foregroundColor(MoriV2Palette.stone)
+                    Button(MoriL10n.display("Try another small step")) { stepRaw = step.next.rawValue }
+                        .font(.subheadline)
+                        .frame(minHeight: 44)
+                }
+                .foregroundColor(MoriV2Palette.forestInk)
+
+                MoriPrimaryButton(title: MoriL10n.display("Put my phone aside"), action: onLeave)
+                    .accessibilityIdentifier("before-feed.leave")
+                Button(MoriL10n.display("I need to use my phone"), action: onContinue)
+                    .font(.body)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .accessibilityIdentifier("before-feed.continue")
+                Button(MoriL10n.display("Take a breath first (optional)"), action: onBreathe)
+                    .font(.subheadline)
+                    .frame(maxWidth: .infinity, minHeight: 44)
+                    .accessibilityIdentifier("before-feed.breathe")
+            }
+            .padding(24)
+            .frame(maxWidth: 560)
+            .frame(maxWidth: .infinity)
+        }
+        .tint(MoriV2Palette.forestInk)
+    }
+}
+
+struct MoriOfflineHandoffContent: View {
+    let onDone: () -> Void
+
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 24) {
+                MoriBitmapIconImage(icon: .leaf, size: 36)
+                    .accessibilityHidden(true)
+                Text(MoriL10n.display("You can lock your phone now."))
+                    .font(.system(.largeTitle, design: .serif))
+                    .accessibilityIdentifier("offline-handoff.title")
+                Text(MoriL10n.display("No timer to watch. No need to come back and mark it done."))
+                    .font(.body)
+                    .foregroundColor(MoriV2Palette.stone)
+                Button(MoriL10n.display("Close"), action: onDone)
+                    .font(.body)
+                    .frame(minHeight: 44)
+            }
+            .foregroundColor(MoriV2Palette.forestInk)
+            .padding(28)
+            .frame(maxWidth: 560)
+            .frame(maxWidth: .infinity)
+        }
+        .background(MoriV2Palette.paper)
+    }
+}
+
 enum MoriAttentionResetContext: Equatable {
     case beforeFeed
     case morningGate
@@ -357,7 +460,7 @@ struct MoriBeforeFeedIntentContent: View {
     ]
 
     private var canOpen: Bool {
-        selectedReason != nil && selectedEnoughChoice != nil
+        selectedEnoughChoice != nil
     }
 
     var body: some View {
@@ -365,13 +468,13 @@ struct MoriBeforeFeedIntentContent: View {
             ScrollView(showsIndicators: false) {
                 VStack(spacing: 0) {
                     VStack(spacing: 8) {
-                        Text(isReentry ? MoriL10n.string("before_feed.reentry.time_title", defaultValue: "Choose a time") : MoriL10n.display("BREATH COMPLETE"))
+                        Text(MoriL10n.display("A small boundary"))
                             .font(.system(size: 11, weight: .semibold))
                             .tracking(1.3)
                             .foregroundColor(MoriColors.sanctuarySage)
 
-                        if selectedReason == nil {
-                            Text(MoriL10n.display("Why now?"))
+                        if selectedEnoughChoice == nil {
+                            Text(MoriL10n.display("How much time do you need?"))
                                 .font(.system(size: 31, weight: .regular, design: .serif))
                                 .foregroundColor(MoriColors.sanctuaryInk)
                                 .multilineTextAlignment(.center)
@@ -382,13 +485,14 @@ struct MoriBeforeFeedIntentContent: View {
                     }
                     .padding(.top, 10)
 
-                    if isReentry {
-                        Button(MoriL10n.string("before_feed.reentry.edit_reason", defaultValue: "Edit reason (optional)")) {
+                    if selectedEnoughChoice != nil {
+                        Button(MoriL10n.display("Add a reason (optional)")) {
                             showsReasonEditor.toggle()
                         }.font(MoriTheme.Typography.supporting).foregroundColor(MoriColors.sanctuaryInk)
+                            .frame(minHeight: 44)
                             .padding(.vertical, 12)
                     }
-                    if !isReentry || showsReasonEditor {
+                    if showsReasonEditor {
                     VStack(alignment: .leading, spacing: 12) {
                         LazyVGrid(columns: reasonColumns, alignment: .leading, spacing: 9) {
                             ForEach(MoriBeforeFeedIntentReason.allCases) { reason in
@@ -401,9 +505,9 @@ struct MoriBeforeFeedIntentContent: View {
 
                     }
 
-                    if selectedReason != nil {
+                    Group {
                         VStack(alignment: .leading, spacing: 12) {
-                            Text(MoriL10n.display("What would be enough?"))
+                            Text(MoriL10n.display("Choose a time"))
                                 .font(.system(size: 18, weight: .semibold, design: .serif))
                                 .foregroundColor(MoriColors.sanctuaryInk)
 

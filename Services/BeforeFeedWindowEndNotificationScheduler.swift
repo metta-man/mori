@@ -7,7 +7,7 @@ struct BeforeFeedWindowEndNotificationPlan: Equatable {
     let title: String
     let body: String
 
-    static func make(graceUntil: Date, now: Date = Date()) -> Self? {
+    static func make(graceUntil: Date, now: Date = Date(), returnAnchorID: String? = nil) -> Self? {
         guard graceUntil.timeIntervalSince(now) > 1 else { return nil }
 
         return Self(
@@ -17,11 +17,20 @@ struct BeforeFeedWindowEndNotificationPlan: Equatable {
                 "notification.before_feed_window_complete.title",
                 defaultValue: "Feed window complete"
             ),
-            body: MoriL10n.string(
-                "notification.before_feed_window_complete.body",
-                defaultValue: "Time’s up. Returning to your life."
-            )
+            body: returnPrompt(for: returnAnchorID)
         )
+    }
+
+    static func returnPrompt(for anchorID: String?) -> String {
+        switch anchorID {
+        case "work": return MoriL10n.display("Put your phone aside and return to one small piece of work.")
+        case "study": return MoriL10n.display("Put your phone aside and return to the next page.")
+        case "someone": return MoriL10n.display("Put your phone aside and give someone your attention.")
+        case "rest": return MoriL10n.display("Let your phone rest. You can rest too.")
+        case "move": return MoriL10n.display("Put your phone down and take a few steps.")
+        case "sleep": return MoriL10n.display("Leave your phone out of reach and settle for sleep.")
+        default: return MoriL10n.display("Your chosen time has ended. You can put your phone aside.")
+        }
     }
 }
 
@@ -99,8 +108,13 @@ final class BeforeFeedWindowEndNotificationScheduler {
             withIdentifiers: [MoriScreenTimeShared.beforeFeedWindowEndNotificationIdentifier]
         )
 
+        let anchorID = gateStore.intentEvents().last(where: { event in
+            guard let seconds = event.openWindowSeconds else { return false }
+            return event.resolvedOutcome == .openWindowRequested &&
+                abs(event.confirmedAt.addingTimeInterval(TimeInterval(seconds)).timeIntervalSince(graceUntil)) < 0.5
+        })?.returnAnchorID
         guard gateStore.windowEndReminderEnabled(),
-              let plan = BeforeFeedWindowEndNotificationPlan.make(graceUntil: graceUntil, now: now)
+              let plan = BeforeFeedWindowEndNotificationPlan.make(graceUntil: graceUntil, now: now, returnAnchorID: anchorID)
         else {
             return
         }

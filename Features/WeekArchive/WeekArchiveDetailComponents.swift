@@ -196,6 +196,14 @@ struct WeekArchiveActionRow: View {
                     .font(.system(size: 12, weight: .regular))
                     .foregroundColor(MoriColors.botanicalMuted)
 
+                if action.resolvedEvidence == .legacyEstimate {
+                    Text(MoriL10n.display("Earlier estimate · excluded from quiet minutes"))
+                        .font(.caption).foregroundColor(MoriColors.botanicalMuted)
+                } else if action.resolvedEvidence == .selected || action.resolvedEvidence == .started {
+                    Text(MoriL10n.display("Chosen activity · completion not recorded"))
+                        .font(.caption).foregroundColor(MoriColors.botanicalMuted)
+                }
+
                 if let note = action.weekArchiveDisplayNote {
                     Text(note)
                         .font(.system(size: 12, weight: .regular))

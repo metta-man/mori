@@ -83,18 +83,29 @@ private struct MoriShieldCopy {
     let primaryButtonTitle: String
     let secondaryButtonTitle: String?
 
-    static let beforeFeed = MoriShieldCopy(
-        iconAssetName: "moriIconBeforeFeedReset",
-        title: "Reset before the feed",
-        subtitle: "Prepare reset, then open Mori. This app will close and Mori will be ready when you arrive.",
-        primaryButtonTitle: "Prepare reset",
-        secondaryButtonTitle: "Not now"
-    )
+    static var beforeFeed: MoriShieldCopy {
+        if #available(iOS 26.5, *) {
+            return MoriShieldCopy(
+                    iconAssetName: "moriIconBeforeFeedReset",
+                    title: "Reset before the feed",
+                    subtitle: "Put your phone aside, or choose a short window in Mori.",
+                    primaryButtonTitle: "Open Mori",
+                    secondaryButtonTitle: "Not now"
+                )
+            }
+            return MoriShieldCopy(
+            iconAssetName: "moriIconBeforeFeedReset",
+            title: "Reset before the feed",
+            subtitle: "Prepare reset, then open Mori. This app will close and Mori will be ready when you arrive.",
+            primaryButtonTitle: "Prepare reset",
+            secondaryButtonTitle: "Not now"
+        )
+    }
 
     static let beforeFeedWindowOpen = MoriShieldCopy(
         iconAssetName: "moriIconBeforeFeedReset",
         title: "Your feed window is open",
-        subtitle: "The reset is complete. You can continue now.",
+        subtitle: "Continue with your remaining time. The deadline stays the same.",
         primaryButtonTitle: "Continue",
         secondaryButtonTitle: "Not now"
     )

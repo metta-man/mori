@@ -88,6 +88,13 @@ jobs:
         MORI_TEST_RESULTS_PATH: ${{ runner.temp }}/MoriTests.xcresult
       run: bash scripts/run_native_tests.sh
 
+    - name: Export native screenshots
+      if: always()
+      run: |
+        if [ -d "$RUNNER_TEMP/MoriTests.xcresult" ]; then
+          xcrun xcresulttool export attachments --path "$RUNNER_TEMP/MoriTests.xcresult" --output-path "$RUNNER_TEMP/MoriScreenshots"
+        fi
+
     - name: Upload native test results
       if: always()
       uses: actions/upload-artifact@v4
@@ -96,6 +103,7 @@ jobs:
         path: |
           ${{ runner.temp }}/MoriTests.log
           ${{ runner.temp }}/MoriTests.xcresult
+          ${{ runner.temp }}/MoriScreenshots
         if-no-files-found: warn
         retention-days: 14
 

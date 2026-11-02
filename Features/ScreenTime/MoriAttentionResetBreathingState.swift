@@ -341,8 +341,10 @@ struct MoriBeforeFeedPauseSessionSnapshot: Equatable {
 }
 
 enum MoriBeforeFeedFlowStage: Equatable {
+    case choice
     case breathKey
     case intent
+    case handoff
 }
 
 enum MoriBeforeFeedBreathKey {
@@ -407,14 +409,14 @@ enum MoriBeforeFeedReturnAnchorPolicy {
 }
 
 struct MoriBeforeFeedFlowState: Equatable {
-    private(set) var stage: MoriBeforeFeedFlowStage = .breathKey
+    private(set) var stage: MoriBeforeFeedFlowStage = .choice
     private(set) var hasCompletedBreath = false
     private(set) var reason: MoriBeforeFeedIntentReason?
     private(set) var enoughChoice: MoriBeforeFeedEnoughChoice?
     private(set) var returnAnchor: MoriBeforeFeedReturnAnchor?
 
     var canOpenFeed: Bool {
-        stage == .intent && hasCompletedBreath && reason != nil && enoughChoice != nil
+        stage == .intent && enoughChoice != nil
     }
 
     var confirmedOpenWindowSeconds: Int? {
@@ -423,10 +425,26 @@ struct MoriBeforeFeedFlowState: Equatable {
     }
 
     mutating func selectReason(_ reason: MoriBeforeFeedIntentReason) {
-        guard stage == .intent, hasCompletedBreath else { return }
+        guard stage == .intent else { return }
         self.reason = reason
-        enoughChoice = nil
-        returnAnchor = nil
+        if let choice = enoughChoice, !choice.isAvailable(for: reason) { enoughChoice = nil }
+    }
+
+    mutating func chooseBreathing() {
+        guard stage == .choice else { return }
+        stage = .breathKey
+    }
+
+    mutating func chooseIntent() {
+        guard stage == .choice || stage == .breathKey else { return }
+        stage = .intent
+    }
+
+    @discardableResult
+    mutating func chooseOffline() -> Bool {
+        guard stage != .handoff else { return false }
+        stage = .handoff
+        return true
     }
 
     @discardableResult
@@ -440,9 +458,7 @@ struct MoriBeforeFeedFlowState: Equatable {
     @discardableResult
     mutating func selectEnoughChoice(_ choice: MoriBeforeFeedEnoughChoice) -> Bool {
         guard stage == .intent,
-              hasCompletedBreath,
-              let reason,
-              choice.isAvailable(for: reason)
+              choice != .oneReply || reason == .replyToSomeone
         else {
             return false
         }
@@ -451,7 +467,7 @@ struct MoriBeforeFeedFlowState: Equatable {
     }
 
     mutating func selectReturnAnchor(_ anchor: MoriBeforeFeedReturnAnchor?) {
-        guard stage == .intent, hasCompletedBreath else { return }
+        guard stage == .intent else { return }
         returnAnchor = anchor
     }
 

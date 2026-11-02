@@ -18,6 +18,16 @@ final class BeforeFeedWindowEndNotificationTests: XCTestCase {
         XCTAssertFalse(plan.body.isEmpty)
     }
 
+    func testReturnPromptUsesChosenActivityWithoutChangingExpiry() throws {
+        let now = Date()
+        let end = now.addingTimeInterval(120)
+        let generic = try XCTUnwrap(BeforeFeedWindowEndNotificationPlan.make(graceUntil: end, now: now))
+        let work = try XCTUnwrap(BeforeFeedWindowEndNotificationPlan.make(graceUntil: end, now: now, returnAnchorID: "work"))
+        XCTAssertEqual(generic.fireDate, work.fireDate)
+        XCTAssertNotEqual(generic.body, work.body)
+        XCTAssertEqual(generic.body, BeforeFeedWindowEndNotificationPlan.returnPrompt(for: "unknown"))
+    }
+
     func testNotificationPlanRejectsExpiredOrNearExpiredWindow() {
         let now = Date(timeIntervalSince1970: 2_000_000_000)
 

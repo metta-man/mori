@@ -41,6 +41,7 @@ enum MoriLocalTaggingEngine {
             case .settleSession:
                 tags.append(MoriFactorTag(id: .meditation, confidence: 0.92, sourceKind: .practice, sourceID: action.id.uuidString))
             case .replacementAction:
+                guard action.isCompletedActivity else { continue }
                 tags.append(MoriFactorTag(id: .walk, confidence: 0.82, sourceKind: .practice, sourceID: action.id.uuidString))
             case .urgeCheckIn, .screenTimeThresholdReached:
                 tags.append(MoriFactorTag(id: .screenTimePressure, confidence: 0.80, sourceKind: .practice, sourceID: action.id.uuidString))

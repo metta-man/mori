@@ -200,30 +200,114 @@ final class MoriRoutingTests: XCTestCase {
         )
     }
 
-    func testBeforeFeedFlowCannotOpenUntilBreathAndIntentAreComplete() {
+    @MainActor
+    func testReplacementSelectionNeverCreatesMinutesOrSeedsAndIsIdempotent() throws {
+        let suite = "MoriExitFirst.\(UUID().uuidString)"
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defer { defaults.removePersistentDomain(forName: suite) }
+        let store = MoriClarityStore(persistence: MoriClarityPersistence(userDefaults: defaults))
+        let eventID = UUID()
+        let first = store.record(kind: .replacementAction, title: "Walk", seeds: 3,
+                                 minutes: 8, evidence: .selected, eventID: eventID)
+        let second = store.record(kind: .replacementAction, title: "Walk", seeds: 3,
+                                  minutes: 8, evidence: .selected, eventID: eventID)
+        XCTAssertEqual(first.id, second.id)
+        XCTAssertEqual(store.actions.count, 1)
+        XCTAssertEqual(first.minutes, 0)
+        XCTAssertEqual(first.seeds, 0)
+        XCTAssertEqual(first.recordedQuietMinutes, 0)
+    }
+
+    func testLegacyActivityHistoryDecodesWithoutPretendingSelectionWasMeasured() throws {
+        let action = MoriMindfulAction(kind: .replacementAction, title: "Walk", seeds: 3, minutes: 8)
+        let encoded = try JSONEncoder().encode(action)
+        let restored = try JSONDecoder().decode(MoriMindfulAction.self, from: encoded)
+        XCTAssertEqual(restored.minutes, 8, "Retain historical data")
+        XCTAssertEqual(restored.resolvedEvidence, .legacyEstimate)
+        XCTAssertEqual(restored.recordedQuietMinutes, 0)
+        let timer = MoriMindfulAction(kind: .quietTimer, title: "Quiet", seeds: 0, minutes: 5)
+        XCTAssertEqual(timer.recordedQuietMinutes, 5)
+        let reported = MoriMindfulAction(kind: .replacementAction, title: "Walk", seeds: 0,
+                                         minutes: 4, evidence: .selfReportedCompleted)
+        XCTAssertEqual(reported.recordedQuietMinutes, 4)
+    }
+
+    func testDisplayReadDoesNotInvalidateTheExpiryOwner() {
+        withDefaults { defaults, legacyDefaults in
+            let store = BeforeFeedGateStore(defaults: defaults, legacyDefaults: legacyDefaults)
+            let now = Date()
+            let end = now.addingTimeInterval(120)
+            store.saveGraceUntil(end, now: now)
+            XCTAssertEqual(store.allowanceDeadlineForDisplay(), end)
+            XCTAssertTrue(store.shouldReapplyExpiredAllowance(endsAt: end, now: end))
+            XCTAssertEqual(store.allowanceDeadlineForDisplay(), end)
+            XCTAssertTrue(store.shouldReapplyExpiredAllowance(endsAt: end, now: end.addingTimeInterval(1)))
+        }
+    }
+
+    func testTodayUsesOriginalExpiryAndPermissionPrecedesConfiguredState() {
+        let now = Date()
+        let end = now.addingTimeInterval(120)
+        XCTAssertEqual(MoriTodayAttentionState.resolve(authorized: false, hasSelection: true, enabled: true,
+            allowanceEndsAt: end, session: nil, lastWindowEnd: nil, now: now), .permission)
+        XCTAssertEqual(MoriTodayAttentionState.resolve(authorized: true, hasSelection: true, enabled: true,
+            allowanceEndsAt: end, session: nil, lastWindowEnd: nil, now: now), .allowance(endsAt: end))
+        XCTAssertEqual(MoriTodayAttentionState.resolve(authorized: true, hasSelection: true, enabled: true,
+            allowanceEndsAt: end, session: nil, lastWindowEnd: end, now: end), .expired)
+    }
+
+    func testAdaptiveControlsAvoidBookAndTabletopDivisions() {
+        let size = CGSize(width: 900, height: 700)
+        let vertical = CGRect(x: 440, y: 0, width: 20, height: 700)
+        let book = MoriAdaptiveLayout.interactionRegion(size: size, divisions: [vertical])
+        XCTAssertEqual(book, CGRect(x: 460, y: 0, width: 440, height: 700))
+        let horizontal = CGRect(x: 0, y: 340, width: 900, height: 20)
+        let tabletop = MoriAdaptiveLayout.interactionRegion(size: size, divisions: [horizontal])
+        XCTAssertEqual(tabletop, CGRect(x: 0, y: 360, width: 900, height: 340))
+        XCTAssertEqual(MoriAdaptiveLayout.interactionRegion(size: size, divisions: []), CGRect(origin: .zero, size: size))
+        XCTAssertFalse(MoriAdaptiveLayout.usesColumns(width: 900, accessibility: true))
+    }
+
+    func testBeforeFeedCanLeaveImmediatelyWithoutInventingACompletedBreath() {
         var state = MoriBeforeFeedFlowState()
-
-        XCTAssertEqual(state.stage, .breathKey)
+        XCTAssertEqual(state.stage, .choice)
+        XCTAssertFalse(state.canOpenFeed)
+        XCTAssertTrue(state.chooseOffline())
+        XCTAssertEqual(state.stage, .handoff)
         XCTAssertFalse(state.hasCompletedBreath)
+        XCTAssertFalse(state.chooseOffline(), "Repeated taps must not record another outcome")
+        state.chooseIntent()
         XCTAssertFalse(state.canOpenFeed)
-        XCTAssertNil(state.confirmedOpenWindowSeconds)
+    }
 
-        state.selectReason(.relax)
-        XCTAssertNil(state.reason, "Intent choices must stay locked before the breath key completes")
-        XCTAssertFalse(state.selectEnoughChoice(.twoMinutes))
-
-        XCTAssertTrue(state.completeBreath())
-        XCTAssertEqual(state.stage, .intent)
-        XCTAssertTrue(state.hasCompletedBreath)
+    func testDeliberateUseRequiresExplicitTimeButNotReasonOrBreath() {
+        var state = MoriBeforeFeedFlowState()
+        XCTAssertFalse(state.selectEnoughChoice(.fiveMinutes))
+        state.chooseIntent()
         XCTAssertFalse(state.canOpenFeed)
-
-        state.selectReason(.relax)
         XCTAssertFalse(state.selectEnoughChoice(.oneReply))
         XCTAssertTrue(state.selectEnoughChoice(.twoMinutes))
         XCTAssertTrue(state.canOpenFeed)
-        XCTAssertEqual(state.confirmedOpenWindowSeconds, 2 * 60)
-        XCTAssertNil(state.returnAnchor, "The return anchor remains optional")
-        XCTAssertFalse(state.completeBreath(), "The breath transition is idempotent")
+        XCTAssertNil(state.reason)
+        XCTAssertNil(state.returnAnchor)
+        XCTAssertFalse(state.hasCompletedBreath)
+        XCTAssertEqual(state.confirmedOpenWindowSeconds, 120)
+        state.selectReason(.learn)
+        XCTAssertEqual(state.confirmedOpenWindowSeconds, 120, "Optional reason editing keeps a valid boundary")
+    }
+
+    func testOptionalBreathingStillCompletesOnlyOnceAndNeverOpensAutomatically() {
+        var state = MoriBeforeFeedFlowState()
+        state.chooseBreathing()
+        XCTAssertFalse(state.canOpenFeed)
+        XCTAssertTrue(state.completeBreath())
+        XCTAssertFalse(state.completeBreath())
+        XCTAssertTrue(state.hasCompletedBreath)
+        XCTAssertFalse(state.canOpenFeed)
+        state.selectReason(.replyToSomeone)
+        XCTAssertTrue(state.selectEnoughChoice(.oneReply))
+        state.selectReason(.learn)
+        XCTAssertNil(state.confirmedOpenWindowSeconds)
     }
 
     func testBeforeFeedLongExhaleCycleUsesFourInSixOut() {

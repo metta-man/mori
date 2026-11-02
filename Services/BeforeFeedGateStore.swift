@@ -77,7 +77,7 @@ struct MoriBeforeFeedFlowEligibility {
 
 struct MoriBeforeFeedAllowanceRequest {
     let eligibility: MoriBeforeFeedFlowEligibility?
-    let reason: MoriBeforeFeedIntentReason
+    let reason: MoriBeforeFeedIntentReason?
     let routeSource: String?
     let enoughChoiceID: String
     let openWindowSeconds: Int
@@ -312,6 +312,12 @@ struct BeforeFeedGateStore {
         return normalizedGraceWindowSeconds(requestedSeconds)
     }
 
+    /// A display read must not clear an expired deadline: the enforcement owner
+    /// still needs it to identify the queued expiry callback for this allowance.
+    func allowanceDeadlineForDisplay() -> Date? {
+        storedGraceUntil()
+    }
+
     func graceUntil(now: Date = Date()) -> Date? {
         guard let storedGraceUntil = storedGraceUntil() else { return nil }
         guard storedGraceUntil > now else {
@@ -451,7 +457,7 @@ struct BeforeFeedGateStore {
 
     /// Records the explicit choice to leave the protected feed closed. This is
     /// deliberately independent of reason and window selection because the
-    /// choice is available immediately after the breath key.
+    /// choice is available immediately, without a breath or intent requirement.
     @discardableResult
     func recordKeptClosed(
         routeSource: String?,

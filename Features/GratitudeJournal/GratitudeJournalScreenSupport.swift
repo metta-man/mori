@@ -198,6 +198,8 @@ struct GratitudeJournalDismissButton: View {
 }
 
 struct GratitudeJournalHomeContent: View {
+    @Environment(\.moriAvailableWidth) private var availableWidth
+    @Environment(\.dynamicTypeSize) private var dynamicTypeSize
     @ObservedObject var dailySparkStore: DailySparkStore
     @Binding var guidedCheckIn: JournalGuidedCheckInState
     @Binding var moodValence: MoriJournalValence?
@@ -233,32 +235,36 @@ struct GratitudeJournalHomeContent: View {
                 .padding(.horizontal, -20)
                 .padding(.bottom, -22)
 
-            JournalTodayPanel(
-                guidedCheckIn: $guidedCheckIn,
-                moodValence: $moodValence,
-                isSharingMood: isSharingMood,
-                moodShareMessage: moodShareMessage,
-                moodPayload: moodPayload,
-                onShareMood: onShareMood,
-                note: $dailyEntryNote,
-                attachedPhotos: $dailyEntryPhotos,
-                selectedPhotoItems: $selectedDailyPhotoItems,
-                onSave: onSaveDailyEntry,
-                onRemovePhoto: onRemoveDailyPhoto
-            )
+            let columns = MoriAdaptiveLayout.usesColumns(width: availableWidth, accessibility: dynamicTypeSize.isAccessibilitySize)
+            let layout = columns ? AnyLayout(HStackLayout(alignment: .top, spacing: 28)) : AnyLayout(VStackLayout(alignment: .leading, spacing: 21))
+            layout {
+                JournalTodayPanel(
+                    guidedCheckIn: $guidedCheckIn,
+                    moodValence: $moodValence,
+                    isSharingMood: isSharingMood,
+                    moodShareMessage: moodShareMessage,
+                    moodPayload: moodPayload,
+                    onShareMood: onShareMood,
+                    note: $dailyEntryNote,
+                    attachedPhotos: $dailyEntryPhotos,
+                    selectedPhotoItems: $selectedDailyPhotoItems,
+                    onSave: onSaveDailyEntry,
+                    onRemovePhoto: onRemoveDailyPhoto
+                )
 
-            JournalLifeGridSection(
-                dailySparkStore: dailySparkStore,
-                selectedTone: guidedCheckIn.selectedTone ?? todayHabitEntry?.tone,
-                recentEntries: recentEntries,
-                lifeGridSnapshot: lifeGridSnapshot,
-                onDailySparkSaved: onDailySparkSaved,
-                onOpenPatternLog: onOpenPatternLog,
-                onOpenWeekArchive: onOpenWeekArchive,
-                onRandomMemory: onRandomMemory,
-                onViewHistory: onViewHistory,
-                onEntryTap: onEntryTap
-            )
+                JournalLifeGridSection(
+                    dailySparkStore: dailySparkStore,
+                    selectedTone: guidedCheckIn.selectedTone ?? todayHabitEntry?.tone,
+                    recentEntries: recentEntries,
+                    lifeGridSnapshot: lifeGridSnapshot,
+                    onDailySparkSaved: onDailySparkSaved,
+                    onOpenPatternLog: onOpenPatternLog,
+                    onOpenWeekArchive: onOpenWeekArchive,
+                    onRandomMemory: onRandomMemory,
+                    onViewHistory: onViewHistory,
+                    onEntryTap: onEntryTap
+                )
+            }
         }
     }
 }
