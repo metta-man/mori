@@ -479,10 +479,11 @@ final class MoriRecoveryUITests: XCTestCase {
         XCTAssertTrue(appLimitsButton.waitForExistence(timeout: 8))
         XCTAssertEqual(relaunchedApp.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "App Limits,")).count, 1)
         appLimitsButton.tap()
-        XCTAssertTrue(relaunchedApp.staticTexts["App Limits"].waitForExistence(timeout: 5))
+        XCTAssertTrue(relaunchedApp.secureTextFields["6-digit PIN"].waitForExistence(timeout: 5))
         XCTAssertTrue(
             relaunchedApp.staticTexts["App Limits are locked"].waitForExistence(timeout: 5)
         )
+        XCTAssertFalse(relaunchedApp.buttons["Unlock App Limits"].isEnabled)
 
         relaunchedApp.terminate()
         clearAppLimitsAndPINData()
