@@ -89,7 +89,7 @@ struct BeforeFeedSettingsSection: View {
             if pauseStyle == .guidedBreathing {
                 Picker(MoriL10n.display("Breathing technique"), selection: $breathingTechniqueID) {
                     ForEach(MoriBreathingTechniqueRepository.techniques) { technique in
-                        Text(technique.name).tag(technique.id)
+                        Text(MoriL10n.display(technique.name)).tag(technique.id)
                     }
                 }
                 .accessibilityIdentifier("before-feed-technique-picker")
@@ -238,11 +238,11 @@ private struct BeforeFeedActivationPanel: View {
                 )
                 BeforeFeedReadinessRow(
                     title: "Shield handoff clear",
-                    detail: "Open feed app -> tap Prepare reset -> finish your configured breath in Mori.",
+                    detail: "Return to Mori to put your phone aside or choose a short window.",
                     isComplete: nativeGateEnabled
                 )
                 BeforeFeedReadinessRow(
-                    title: "Breath key ready",
+                    title: "Optional breathing ready",
                     detail: pauseSummary,
                     isComplete: isReady
                 )
@@ -761,7 +761,7 @@ enum MoriBeforeFeedPauseSettingsPresentation {
                 ?? MoriBreathingTechniqueRepository.getTechnique(
                     id: MoriScreenTimeShared.defaultBeforeFeedBreathingTechniqueID
                 )
-            let techniqueName = technique?.name ?? MoriL10n.display("Guided breathing")
+            let techniqueName = technique.map { MoriL10n.display($0.name) } ?? MoriL10n.display("Guided breathing")
             let duration = estimatedGuidedDuration(
                 technique: technique,
                 guidedCycleCount: guidedCycleCount

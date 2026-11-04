@@ -400,7 +400,7 @@ struct ClarityPulseView: View {
         case .worthIgnoring:
             clarityStore.record(kind: .pulseRead, title: MoriL10n.string("pulse.record.skipped_noisy_loop", defaultValue: "Skipped noisy loop"), seeds: 2, minutes: 5)
         case .attentionTrap:
-            clarityStore.record(kind: .urgeCheckIn, title: MoriL10n.string("pulse.record.named_attention_trap", defaultValue: "Named an attention trap"), seeds: 2, minutes: 3)
+            clarityStore.record(kind: .urgeCheckIn, title: MoriL10n.string("pulse.record.named_attention_trap", defaultValue: "Named an attention trap"), seeds: 0, minutes: 0, evidence: .selfReportedCompleted)
         case .resetAction:
             presentPracticeSheet(.selection)
         case .reclaimedTime:

@@ -189,11 +189,11 @@ final class MoriRecoveryUITests: XCTestCase {
     func testBeforeFeedStartsWithThreeBreathsBeforeIntentChoices() {
         let app = launchBeforeFeed()
 
-        XCTAssertTrue(app.staticTexts["Begin with the breath"].waitForExistence(timeout: 8))
-        XCTAssertTrue(app.staticTexts["Long Exhale (4-6) · 3 cycles · about 30 seconds"].exists)
+        XCTAssertTrue(app.buttons["Pause"].waitForExistence(timeout: 8))
+        XCTAssertFalse(app.staticTexts["Long Exhale (4-6) · 3 cycles · about 30 seconds"].exists)
         XCTAssertTrue(app.staticTexts["3 breaths remaining"].exists)
-        XCTAssertTrue(app.staticTexts["Breathe in for 4. Breathe out for 6."].exists)
-        XCTAssertFalse(app.staticTexts["Why now?"].exists)
+        XCTAssertFalse(app.staticTexts["Breathe in for 4. Breathe out for 6."].exists)
+        XCTAssertFalse(app.staticTexts["How much time do you need?"].exists)
         attachScreenshot(named: "before-feed-breath-key")
     }
 
@@ -210,8 +210,8 @@ final class MoriRecoveryUITests: XCTestCase {
         app.buttons["Resume"].tap()
         XCTAssertTrue(app.staticTexts["2 breaths remaining"].waitForExistence(timeout: 12))
         XCTAssertTrue(app.staticTexts["1 breath remaining"].waitForExistence(timeout: 12))
-        XCTAssertFalse(app.staticTexts["Why now?"].exists)
-        XCTAssertTrue(app.staticTexts["Why now?"].waitForExistence(timeout: 12))
+        XCTAssertFalse(app.staticTexts["How much time do you need?"].exists)
+        XCTAssertTrue(app.staticTexts["How much time do you need?"].waitForExistence(timeout: 12))
         XCTAssertTrue(app.buttons["Keep feed closed"].exists)
     }
 
@@ -221,8 +221,8 @@ final class MoriRecoveryUITests: XCTestCase {
             "-MoriFreezeBeforeFeedTimerForUITest"
         ])
 
-        XCTAssertTrue(app.staticTexts["Begin with the breath"].waitForExistence(timeout: 8))
-        XCTAssertTrue(app.staticTexts["Coherent Breathing (5-5) · 3 cycles · about 30 seconds"].exists)
+        XCTAssertTrue(app.buttons["Pause"].waitForExistence(timeout: 8))
+        XCTAssertFalse(app.staticTexts["Coherent Breathing (5-5) · 3 cycles · about 30 seconds"].exists)
         XCTAssertTrue(app.staticTexts["3 breaths remaining"].exists)
         XCTAssertFalse(app.staticTexts["00:30"].exists)
         attachScreenshot(named: "before-feed-configured-guided")
@@ -257,6 +257,17 @@ final class MoriRecoveryUITests: XCTestCase {
         attachScreenshot(named: "before-feed-configured-guided-settings")
     }
 
+    func testBeforeFeedTraditionalChineseSettingsLocalizeTechniqueSummary() {
+        let app = launchBeforeFeedSettings(extraArguments: [
+            "-MoriShowBeforeFeedConfiguredGuidedSettingsForUITest", "-mori_locale_preference", "zh-Hant"
+        ])
+        let picker = app.descendants(matching: .any)["before-feed-technique-picker"]
+        XCTAssertTrue(scrollUntilExists(picker, in: app))
+        XCTAssertTrue(app.staticTexts["共振呼吸（5-5） · 3 次 · 約 30 秒"].exists)
+        XCTAssertEqual(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Coherent Breathing")).count, 0)
+        attachScreenshot(named: "Mori Before Feed localized TC settings")
+    }
+
     func testBeforeFeedFollowOwnSettingsExposeBoundedDurationAndSoundContract() {
         let app = launchBeforeFeedSettings(extraArguments: [
             "-MoriShowBeforeFeedOwnBreathSettingsForUITest"
@@ -276,14 +287,12 @@ final class MoriRecoveryUITests: XCTestCase {
             "-MoriShowBeforeFeedIntentForUITest"
         ])
 
-        XCTAssertTrue(app.staticTexts["Why now?"].waitForExistence(timeout: 8))
+        XCTAssertTrue(app.staticTexts["How much time do you need?"].waitForExistence(timeout: 8))
         XCTAssertTrue(app.buttons["Keep feed closed"].exists)
         XCTAssertFalse(app.buttons["Choose a time to open"].exists)
-        XCTAssertFalse(app.staticTexts["What would be enough?"].exists)
+        XCTAssertFalse(app.buttons["Just checking"].exists)
         attachScreenshot(named: "before-feed-intent-entry")
-        app.buttons["Just checking"].tap()
-
-        XCTAssertTrue(app.staticTexts["What would be enough?"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["Choose a time"].exists)
         XCTAssertTrue(app.buttons["15 minutes"].waitForExistence(timeout: 3))
         app.buttons["15 minutes"].tap()
 
@@ -307,6 +316,8 @@ final class MoriRecoveryUITests: XCTestCase {
         let keepClosedButton = app.buttons["Keep feed closed"]
         XCTAssertTrue(keepClosedButton.waitForExistence(timeout: 8))
         keepClosedButton.tap()
+        XCTAssertTrue(app.staticTexts["offline-handoff.title"].waitForExistence(timeout: 5))
+        app.buttons["Close"].firstMatch.tap()
 
         XCTAssertTrue(app.staticTexts["Kept closed once today"].waitForExistence(timeout: 5))
     }
@@ -314,13 +325,16 @@ final class MoriRecoveryUITests: XCTestCase {
     func testGuidedLogSavesWithoutTypingAndRestores() {
         let app = launchGuidedLog(fresh: true)
 
-        XCTAssertTrue(app.staticTexts["How are you right now?"].waitForExistence(timeout: 8))
+        let expectedHeading = "How do you feel?"
+        XCTAssertTrue(app.staticTexts[expectedHeading].waitForExistence(timeout: 8))
+        tapGuidedControl("journal-other-feelings", app)
+        tapGuidedControl("journal-feeling-group-difficult", app)
         XCTAssertTrue(app.buttons["Anxious"].exists)
         XCTAssertFalse(app.keyboards.firstMatch.exists)
         XCTAssertEqual(app.textViews.count, 0)
         attachScreenshot(named: "guided-log-step-1")
 
-        app.buttons["Anxious"].tap()
+        tapGuidedControl("journal-guided-emotion-anxious", app)
         XCTAssertTrue(app.staticTexts["What is this connected to?"].waitForExistence(timeout: 3))
         attachScreenshot(named: "guided-log-step-2")
 
@@ -347,11 +361,11 @@ final class MoriRecoveryUITests: XCTestCase {
         let restoredApp = launchGuidedLog(fresh: false)
         XCTAssertTrue(restoredApp.buttons["Save check-in"].waitForExistence(timeout: 8))
         XCTAssertTrue(restoredApp.buttons["Add a sentence"].exists)
-        XCTAssertFalse(restoredApp.staticTexts["How are you right now?"].exists)
+        XCTAssertFalse(restoredApp.staticTexts[expectedHeading].exists)
         attachScreenshot(named: "guided-log-restored")
 
-        restoredApp.buttons["journal-guided-summary-0"].tap()
-        XCTAssertTrue(restoredApp.staticTexts["How are you right now?"].waitForExistence(timeout: 3))
+        tapGuidedControl("journal-guided-summary-0", restoredApp)
+        XCTAssertTrue(restoredApp.staticTexts[expectedHeading].waitForExistence(timeout: 3))
         attachScreenshot(named: "guided-log-edit-selection")
     }
 
@@ -453,19 +467,23 @@ final class MoriRecoveryUITests: XCTestCase {
         let relaunchedApp = XCUIApplication()
         relaunchedApp.launchArguments += [
             "-MoriSkipOnboardingForUITest",
+            "-AppleLanguages", "(en)", "-AppleLocale", "en_US", "-mori_locale_preference", "en",
             "-MoriOpenSettingsForUITest",
             "-MoriDisableAIPulse"
         ]
         relaunchedApp.launch()
 
         let appLimitsButton = relaunchedApp.buttons.matching(
-            NSPredicate(format: "label CONTAINS %@", "Open App Limits")
+            NSPredicate(format: "label BEGINSWITH %@", "App Limits,")
         ).firstMatch
         XCTAssertTrue(appLimitsButton.waitForExistence(timeout: 8))
+        XCTAssertEqual(relaunchedApp.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "App Limits,")).count, 1)
         appLimitsButton.tap()
+        XCTAssertTrue(relaunchedApp.secureTextFields["6-digit PIN"].waitForExistence(timeout: 5))
         XCTAssertTrue(
             relaunchedApp.staticTexts["App Limits are locked"].waitForExistence(timeout: 5)
         )
+        XCTAssertFalse(relaunchedApp.buttons["Unlock App Limits"].isEnabled)
 
         relaunchedApp.terminate()
         clearAppLimitsAndPINData()
@@ -479,16 +497,19 @@ final class MoriRecoveryUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments += [
             "-MoriSkipOnboardingForUITest",
+            "-AppleLanguages", "(en)", "-AppleLocale", "en_US", "-mori_locale_preference", "en",
             "-MoriOpenSettingsForUITest",
             "-MoriDisableAIPulse"
         ] + extraArguments
         app.launch()
 
         let appLimitsButton = app.buttons.matching(
-            NSPredicate(format: "label CONTAINS %@", "Open App Limits")
+            NSPredicate(format: "label BEGINSWITH %@", "App Limits,")
         ).firstMatch
         XCTAssertTrue(appLimitsButton.waitForExistence(timeout: 8))
+        XCTAssertEqual(app.buttons.matching(NSPredicate(format: "label BEGINSWITH %@", "App Limits,")).count, 1)
         appLimitsButton.tap()
+        XCTAssertTrue(app.staticTexts["App Limits"].waitForExistence(timeout: 5))
 
         let preventChangesButton = app.buttons["Prevent Changes"]
         if preventChangesButton.waitForExistence(timeout: 3) {
@@ -521,6 +542,7 @@ final class MoriRecoveryUITests: XCTestCase {
         let app = XCUIApplication()
         app.launchArguments += [
             "-MoriSkipOnboardingForUITest",
+            "-AppleLanguages", "(en)", "-AppleLocale", "en_US", "-mori_locale_preference", "en",
             "-MoriOpenSettingsForUITest",
             "-MoriOpenAppAndDataForUITest",
             "-MoriDisableAIPulse"
@@ -548,8 +570,9 @@ final class MoriRecoveryUITests: XCTestCase {
                 $0 == "-MoriUseFollowOwnBeforeFeedPauseForUITest" ||
                 $0 == "-MoriShowBeforeFeedQuietPauseForUITest"
         }) ? [] : ["-MoriUseDefaultBeforeFeedPauseForUITest"]
-        app.launchArguments += [
+        app.launchArguments = [
             "-MoriSkipOnboardingForUITest",
+            "-AppleLanguages", "(en)", "-mori_locale_preference", "en",
             "-MoriOpenBeforeFeedForUITest",
             "-MoriDisableAIPulse"
         ] + pauseFixtureArguments + extraArguments
@@ -563,8 +586,9 @@ final class MoriRecoveryUITests: XCTestCase {
 
     private func launchBeforeFeedSettings(extraArguments: [String]) -> XCUIApplication {
         let app = XCUIApplication()
-        app.launchArguments += [
+        app.launchArguments = [
             "-MoriSkipOnboardingForUITest",
+            "-AppleLanguages", "(en)", "-mori_locale_preference", "en",
             "-MoriOpenBeforeFeedSettingsForUITest",
             "-MoriDisableAIPulse"
         ] + extraArguments
@@ -580,10 +604,24 @@ final class MoriRecoveryUITests: XCTestCase {
         return element.waitForExistence(timeout: 1)
     }
 
+    private func tapGuidedControl(_ id: String, _ app: XCUIApplication) {
+        let target = app.descendants(matching: .any).matching(identifier: id).firstMatch
+        for _ in 0..<6 where !target.isHittable {
+            if target.exists && target.frame.midY < app.frame.midY { app.swipeDown() }
+            else { app.swipeUp() }
+        }
+        attachScreenshot(named: "guided-control-" + id)
+        XCTAssertTrue(target.waitForExistence(timeout: 5), id)
+        XCTAssertTrue(target.isHittable, id)
+        target.tap()
+    }
+
+
     private func launchGuidedLog(fresh: Bool) -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments += [
             "-MoriSkipOnboardingForUITest",
+            "-AppleLanguages", "(en)", "-AppleLocale", "en_US", "-mori_locale_preference", "en",
             "-MoriSkipAnalyticsConsentForUITest",
             "-MoriSkipCloudBackupForUITest",
             "-MoriOpenLogForUITest",

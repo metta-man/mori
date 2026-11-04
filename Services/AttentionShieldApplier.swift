@@ -44,6 +44,8 @@ struct AttentionShieldApplier {
         hiddenApplicationTokens: Set<ApplicationToken>? = nil,
         restrictionPolicy: MoriScreenTimeRestrictionPolicy = .blockSelected
     ) {
+        return MoriShieldCoordination.legacy(fallback: ()) {
+
         let effectivePolicy = policy ?? (currentFeature == .beforeFeed ? .shieldLock : .shieldOnly)
         if effectivePolicy == .hiddenAppLock {
             applyApplicationRestrictions(hiddenApplicationTokens ?? selection.applicationTokens)
@@ -61,7 +63,12 @@ struct AttentionShieldApplier {
             managedStore.shield.applicationCategories = .all(except: selection.applicationTokens)
             managedStore.shield.webDomains = nil
         }
+        managedStore.shield.webDomainCategories = nil
         stateStore.saveCurrentShield(feature: currentFeature, displayNames: displayNames)
+        if #available(iOS 26.5, *) {
+            // Restore enforcement only after the complete desired shield is written.
+            managedStore.isActive = true
+        }
         let isBeforeFeedShield = currentFeature == .beforeFeed
         let eventKind: MoriScreenTimeMonitorHealthEventKind = {
             if effectivePolicy == .hiddenAppLock {
@@ -85,6 +92,8 @@ struct AttentionShieldApplier {
                 displayNames: displayNames
             )
         )
+
+        }
     }
 
     func matchesAppliedState(
@@ -98,6 +107,7 @@ struct AttentionShieldApplier {
         // marker, so a changed selection or an OS-cleared restriction is repaired.
         let effectivePolicy = policy ?? (currentFeature == .beforeFeed ? .shieldLock : .shieldOnly)
         guard stateStore.loadCurrentFeature() == currentFeature else { return false }
+        if #available(iOS 26.5, *), !managedStore.isActive { return false }
 
         if effectivePolicy == .hiddenAppLock {
             let tokens = hiddenApplicationTokens ?? selection.applicationTokens
@@ -114,20 +124,23 @@ struct AttentionShieldApplier {
             return managedStore.shield.applications == (selection.applicationTokens.isEmpty ? nil : selection.applicationTokens)
                 && managedStore.shield.applicationCategories == nil
                 && managedStore.shield.webDomains == (selection.webDomainTokens.isEmpty ? nil : selection.webDomainTokens)
+                && managedStore.shield.webDomainCategories == nil
         case .allowSelected:
             return managedStore.shield.applications == nil
                 && managedStore.shield.applicationCategories == .all(except: selection.applicationTokens)
                 && managedStore.shield.webDomains == nil
+                && managedStore.shield.webDomainCategories == nil
         }
     }
 
     func matchesClearedState() -> Bool {
-        AttentionShieldClearedStateMatchPolicy.matches(
+        if #available(iOS 26.5, *), managedStore.isActive { return false }
+        return AttentionShieldClearedStateMatchPolicy.matches(
             currentFeature: stateStore.loadCurrentFeature(),
             hasBlockedApplications: managedStore.application.blockedApplications != nil,
             hasShieldApplications: managedStore.shield.applications != nil,
             hasShieldApplicationCategories: managedStore.shield.applicationCategories != nil,
-            hasShieldWebDomains: managedStore.shield.webDomains != nil
+            hasShieldWebDomains: managedStore.shield.webDomains != nil || managedStore.shield.webDomainCategories != nil
         )
     }
 
@@ -156,10 +169,13 @@ struct AttentionShieldApplier {
         beforeFeedApplicationTokenCount: Int? = nil,
         beforeFeedWebDomainTokenCount: Int? = nil
     ) {
-        clearApplicationRestrictions()
-        managedStore.shield.applications = nil
-        managedStore.shield.applicationCategories = nil
-        managedStore.shield.webDomains = nil
+        return MoriShieldCoordination.legacy(fallback: ()) {
+
+        managedStore.clearAllSettings()
+        if #available(iOS 26.5, *) {
+            // An inactive store is excluded from iOS's effective restrictions.
+            managedStore.isActive = false
+        }
         stateStore.clearCurrentShield()
         MoriScreenTimeMonitorHealthStore.record(
             MoriScreenTimeMonitorHealthEvent(
@@ -174,6 +190,8 @@ struct AttentionShieldApplier {
                 webDomainTokenCount: beforeFeedWebDomainTokenCount
             )
         )
+
+        }
     }
 
     private func clearApplicationRestrictions() {

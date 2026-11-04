@@ -28,7 +28,8 @@ private struct MoriAttentionResetLifecycleModifier: ViewModifier {
     let onTick: (Date) -> Void
     let onSoundEnabledChange: (Bool) -> Void
 
-    private let ticker = Timer.publish(every: 0.25, on: .main, in: .common).autoconnect()
+    @Environment(\.scenePhase) private var scenePhase
+    private let ticker = Timer.publish(every: 1.0 / 18.0, on: .main, in: .common).autoconnect()
 
     func body(content: Content) -> some View {
         content
@@ -36,7 +37,13 @@ private struct MoriAttentionResetLifecycleModifier: ViewModifier {
                 DispatchQueue.main.async(execute: onPrepare)
             }
             .onDisappear(perform: onCleanup)
-            .onReceive(ticker, perform: onTick)
+            .onReceive(ticker) { date in
+                guard scenePhase == .active else { return }
+                onTick(date)
+            }
+            .moriOnChange(of: scenePhase) { phase in
+                if phase == .active { onTick(Date()) }
+            }
             .moriOnChange(of: soundEnabled, perform: onSoundEnabledChange)
     }
 }

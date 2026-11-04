@@ -1,4 +1,54 @@
 import SwiftUI
+
+enum MoriTodayAttentionState: Equatable {
+    case permission, selection, paused, ready, expired
+    case allowance(endsAt: Date)
+    case focus
+
+    static func resolve(authorized: Bool, hasSelection: Bool, enabled: Bool,
+                        allowanceEndsAt: Date?, session: MoriScreenTimeActiveSession?,
+                        lastWindowEnd: Date?, now: Date) -> Self {
+        guard authorized else { return .permission }
+        if let session, [.quiet, .pomodoroFocus, .settle, .breathing, .walkOfflineReset].contains(session.feature),
+           !session.isExpired(at: now) { return .focus }
+        guard hasSelection else { return .selection }
+        guard enabled else { return .paused }
+        if let end = allowanceEndsAt, end > now { return .allowance(endsAt: end) }
+        if let end = lastWindowEnd, end <= now, Calendar.current.isDate(end, inSameDayAs: now) { return .expired }
+        return .ready
+    }
+
+    var isFocus: Bool { self == .focus }
+    var title: String {
+        switch self {
+        case .allowance: return "Your time has a boundary."
+        case .focus: return "A quiet session is underway."
+        case .expired: return "Your chosen time has ended."
+        default: return "Make room for your day."
+        }
+    }
+    var detail: String {
+        switch self {
+        case .allowance(let end):
+            return MoriL10n.string("today.allowance.ends", defaultValue: "Your feed window ends at %@. You can put your phone aside sooner.", arguments: [end.formatted(date: .omitted, time: .shortened)])
+        case .focus: return "You can lock your phone and let the session continue."
+        case .expired: return "Return to one small thing away from the screen."
+        default: return "Choose one small step away from the screen."
+        }
+    }
+    var status: String {
+        switch self {
+        case .permission: return "Permission needed"
+        case .selection: return "No app selected"
+        case .paused: return "App Limits off"
+        case .ready: return "Before Feed configured"
+        case .allowance: return "Feed window open"
+        case .focus: return "Session in progress"
+        case .expired: return "Feed window ended"
+        }
+    }
+    var actionTitle: String { isFocus ? "Return to Focus" : "Put my phone aside" }
+}
 import FamilyControls
 import ManagedSettings
 
@@ -99,6 +149,8 @@ struct TodayRootScrollScreen<Content: View>: View {
                     .padding(.horizontal, 22)
                 }
                 .padding(.bottom, MoriMainTabBarMetrics.scrollBottomInset + MoriTheme.Spacing.xLarge)
+                .frame(maxWidth: 640)
+                .frame(maxWidth: .infinity)
             }
             .clipped()
             .padding(.top, 12)
@@ -149,7 +201,7 @@ struct TodayFocusCard: View {
             .padding(.top, isEditingFocus ? 16 : 10)
             .padding(.bottom, isEditingFocus ? 16 : 6)
             .frame(maxWidth: .infinity, minHeight: 82, alignment: .leading)
-            .background(MoriV2Palette.raisedPaper.opacity(0.88))
+            .background(MoriV2Palette.raisedPaper)
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .overlay(
                 RoundedRectangle(cornerRadius: 18, style: .continuous)
@@ -199,13 +251,13 @@ struct TodayFocusCard: View {
                     VStack(alignment: .leading, spacing: 6) {
                         Text(MoriL10n.display("Today's intention"))
                             .font(.system(.footnote, design: .default, weight: .medium))
-                            .foregroundColor(MoriV2Palette.stone)
+                            .foregroundColor(MoriV2Palette.forestInk)
 
                         Text(trimmedFocus.isEmpty ? MoriL10n.display("Set a gentle intention for today.") : trimmedFocus)
                             .font(.system(.subheadline, design: .default, weight: .regular))
                             .foregroundColor(trimmedFocus.isEmpty ? MoriV2Palette.mutedStone : MoriV2Palette.forestInk)
                             .frame(maxWidth: .infinity, alignment: .leading)
-                            .lineLimit(2)
+                            .lineLimit(trimmedFocus.isEmpty ? nil : 2)
                             .fixedSize(horizontal: false, vertical: true)
                     }
 
@@ -237,6 +289,7 @@ struct TodayPrimaryResetCard: View {
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
 
     let appLimitPresentation: TodayAppLimitPresentation
+    var attentionState: MoriTodayAttentionState = .ready
     let keptClosedCount: Int
     let onStartReset: () -> Void
     let onOpenAppLimits: () -> Void
@@ -254,14 +307,20 @@ struct TodayPrimaryResetCard: View {
                 .padding(.horizontal, -22)
 
             VStack(alignment: .leading, spacing: 12) {
-                Text(MoriL10n.display("Before Feed Reset"))
+                Text(MoriL10n.display(attentionState.title))
                     .font(.system(.title2, design: .serif, weight: .regular))
                     .foregroundColor(MoriV2Palette.forestInk)
                     .fixedSize(horizontal: false, vertical: true)
-                Text(MoriL10n.display(appLimitPresentation.resetSubtitle))
+                Text(MoriL10n.display(attentionState.detail))
                     .font(MoriV2Type.body)
                     .foregroundColor(MoriV2Palette.stone)
                     .fixedSize(horizontal: false, vertical: true)
+                if case .allowance(let end) = attentionState {
+                    Text(end, style: .timer)
+                        .font(.title3.monospacedDigit())
+                        .foregroundColor(MoriV2Palette.forestInk)
+                        .accessibilityLabel(MoriL10n.display("Time remaining"))
+                }
                 startButton
                 protectionStatus
                 if keptClosedCount > 0 {
@@ -283,7 +342,7 @@ struct TodayPrimaryResetCard: View {
             HStack(spacing: 8) {
                 Image(systemName: "lock.shield")
                     .accessibilityHidden(true)
-                Text(MoriL10n.display("App Limits") + " · " + MoriL10n.display(appLimitPresentation.stateLabel))
+                Text(MoriL10n.display("App Limits") + " · " + MoriL10n.display(attentionState.status))
                     .fixedSize(horizontal: false, vertical: true)
                 Spacer(minLength: 4)
                 Image(systemName: "chevron.right")
@@ -291,8 +350,9 @@ struct TodayPrimaryResetCard: View {
                     .accessibilityHidden(true)
             }
             .font(MoriV2Type.caption)
-            .foregroundColor(MoriV2Palette.stone)
+            .foregroundColor(MoriV2Palette.forestInk)
             .frame(maxWidth: .infinity, minHeight: 44, alignment: .leading)
+            .background(MoriV2Palette.paper)
             .contentShape(Rectangle())
         }
         .buttonStyle(MoriV2PressButtonStyle())
@@ -310,7 +370,7 @@ struct TodayPrimaryResetCard: View {
                     .background(MoriTheme.Colors.onPrimary)
                     .clipShape(Circle())
 
-                Text(MoriL10n.display("Begin quiet pause"))
+                Text(MoriL10n.display(attentionState.actionTitle))
                     .font(.system(.body, design: .default, weight: .semibold))
                     .lineLimit(dynamicTypeSize.isAccessibilitySize ? 2 : 1)
                     .minimumScaleFactor(0.84)
@@ -327,7 +387,8 @@ struct TodayPrimaryResetCard: View {
             .contentShape(RoundedRectangle(cornerRadius: 15, style: .continuous))
         }
         .buttonStyle(MoriV2PressButtonStyle())
-        .accessibilityLabel(MoriL10n.display("Begin quiet pause"))
+        .accessibilityLabel(MoriL10n.display(attentionState.actionTitle))
+        .accessibilityIdentifier("today-next-action")
         .accessibilityHint(MoriL10n.display("Opens Before Feed Reset"))
     }
 
@@ -367,8 +428,9 @@ struct TodayQuietMetricsCard: View {
                         .accessibilityHidden(true)
                 }
                 .font(MoriV2Type.supporting)
-                .foregroundColor(MoriV2Palette.stone)
+                .foregroundColor(MoriV2Palette.forestInk)
                 .frame(minHeight: 44)
+                .background(MoriV2Palette.paper)
                 .contentShape(Rectangle())
             }
             .buttonStyle(MoriV2PressButtonStyle())
@@ -376,6 +438,10 @@ struct TodayQuietMetricsCard: View {
             .accessibilityValue(MoriL10n.display(showsDetails ? "Expanded" : "Collapsed"))
 
             if showsDetails {
+                Text(MoriL10n.display("Quiet minutes count timers and activities you confirm, not verified time away from your phone."))
+                    .font(.caption).foregroundColor(MoriV2Palette.stone)
+                    .fixedSize(horizontal: false, vertical: true)
+
                 HStack {
                     Text(MoriL10n.display("Longest quiet"))
                     Spacer()
@@ -686,8 +752,8 @@ struct TodayAppLimitPresentation {
             isReady = false
             timingRows = []
         } else if summary.isEnabled {
-            stateLabel = "App Limit on"
-            title = "App Limit active"
+            stateLabel = "Before Feed configured"
+            title = "Before Feed configured"
             detail = Self.limitedDetail(for: summary)
             buttonTitle = "Adjust Timing"
             badgeIcon = .leaf
@@ -708,7 +774,7 @@ struct TodayAppLimitPresentation {
 
     var statusKicker: String {
         if isReady {
-            return "App Limit active"
+            return "Before Feed configured"
         }
 
         return hasEffectiveSelection ? stateLabel : "App Limit setup"
@@ -801,7 +867,7 @@ struct TodayAppLimitPresentation {
             TodayAppLimitTimingRow(
                 id: "pause",
                 icon: .breathe,
-                title: "Breath key",
+                title: "Optional breathing",
                 value: summary
             ),
             TodayAppLimitTimingRow(

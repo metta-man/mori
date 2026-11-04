@@ -13,9 +13,10 @@ final class MoriClarityStore: ObservableObject {
 
     let maxActiveTopicCount = 5
     private let firstSeedBonus = 2
-    private let persistence = MoriClarityPersistence.standard
+    private let persistence: MoriClarityPersistence
 
-    private init() {
+    init(persistence: MoriClarityPersistence = .standard) {
+        self.persistence = persistence
         actions = load([MoriMindfulAction].self, forKey: MoriClarityPersistence.Key.actions) ?? []
         selectedTopics = MoriClarityTopicPlanner.sanitizedTopics(
             Set(load([PulseTopic].self, forKey: MoriClarityPersistence.Key.selectedTopics) ?? Array(selectedTopics))
@@ -63,7 +64,8 @@ final class MoriClarityStore: ObservableObject {
             title: practice.title,
             seeds: practice.seeds,
             minutes: practice.minutes,
-            note: note ?? practice.note
+            note: note ?? practice.note,
+            evidence: .selfReportedCompleted
         )
     }
 
@@ -183,17 +185,23 @@ final class MoriClarityStore: ObservableObject {
         seeds: Int,
         minutes: Int = 0,
         note: String? = nil,
-        createdAt: Date = Date()
+        createdAt: Date = Date(),
+        evidence: MoriActionEvidence? = nil,
+        eventID: UUID = UUID()
     ) -> MoriMindfulAction {
-        let baseSeeds = max(0, seeds)
+        if let existing = actions.first(where: { $0.id == eventID }) { return existing }
+        let isIntention = evidence == .selected || evidence == .started
+        let baseSeeds = isIntention ? 0 : max(0, seeds)
         let bonus = firstSeedBonusIfNeeded(for: baseSeeds, on: createdAt)
         let action = MoriMindfulAction(
+            id: eventID,
             kind: kind,
             title: title,
             seeds: baseSeeds + bonus,
-            minutes: max(0, minutes),
+            minutes: isIntention ? 0 : max(0, minutes),
             note: note?.trimmingCharacters(in: .whitespacesAndNewlines),
-            createdAt: createdAt
+            createdAt: createdAt,
+            evidence: evidence ?? .historicalDefault(for: kind)
         )
         actions.insert(action, at: 0)
         pruneOldActions()

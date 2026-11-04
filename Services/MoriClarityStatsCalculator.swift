@@ -9,15 +9,7 @@ enum MoriClarityStatsCalculator {
     ) -> MoriClarityMetrics {
         let todayActions = actionsOn(Date(), in: allActions)
         let actionSeeds = todayActions.reduce(0) { $0 + $1.seeds }
-        let quietMinutes = todayActions
-            .filter {
-                $0.kind == .quietTimer ||
-                    $0.kind == .replacementAction ||
-                    $0.kind == .urgeCheckIn ||
-                    $0.kind == .breathingSession ||
-                    $0.kind == .pomodoroSession
-            }
-            .reduce(0) { $0 + $1.minutes }
+        let quietMinutes = todayActions.reduce(0) { $0 + $1.recordedQuietMinutes }
         let settleActions = todayActions.filter {
             $0.kind == .settleSession ||
                 $0.kind == .breathingSession ||
@@ -78,7 +70,7 @@ enum MoriClarityStatsCalculator {
         let metrics = metrics(settings: settings, actions: allActions, latestPulse: latestPulse)
         return MoriWeeklyStats(
             seeds: recent.reduce(0) { $0 + $1.seeds },
-            quietMinutes: recent.reduce(0) { $0 + ($1.kind == .quietTimer ? $1.minutes : 0) },
+            quietMinutes: recent.reduce(0) { $0 + $1.recordedQuietMinutes },
             reclaimedMinutes: recent.reduce(0) { $0 + ($1.kind == .pulseRead ? $1.minutes : 0) },
             rootsStreak: metrics.rootsStreak,
             clarityAverage: metrics.clarityScore
@@ -225,20 +217,11 @@ enum MoriClarityStatsCalculator {
 
     private static func quietMinutes(in actions: [MoriMindfulAction]) -> Int {
         actions
-            .filter(isQuietGrowthAction)
-            .reduce(0) { $0 + $1.minutes }
+            .reduce(0) { $0 + $1.recordedQuietMinutes }
     }
 
     private static func clarityScore(seeds: Int, quietMinutes: Int) -> Int {
         max(0, min(100, 46 + seeds * 4 + min(24, quietMinutes / 2)))
     }
 
-    private static func isQuietGrowthAction(_ action: MoriMindfulAction) -> Bool {
-        switch action.kind {
-        case .quietTimer, .replacementAction, .urgeCheckIn, .breathingSession, .pomodoroSession, .settleSession:
-            return true
-        case .pulseRead, .resetAction, .dailyFocus, .dailyCheckIn, .dailySpark, .weekArchiveProof, .journal, .screenTimeLimitKept, .screenTimeThresholdReached:
-            return false
-        }
-    }
 }

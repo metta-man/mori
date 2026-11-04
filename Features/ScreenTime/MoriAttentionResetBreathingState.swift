@@ -341,8 +341,10 @@ struct MoriBeforeFeedPauseSessionSnapshot: Equatable {
 }
 
 enum MoriBeforeFeedFlowStage: Equatable {
+    case choice
     case breathKey
     case intent
+    case handoff
 }
 
 enum MoriBeforeFeedBreathKey {
@@ -407,14 +409,14 @@ enum MoriBeforeFeedReturnAnchorPolicy {
 }
 
 struct MoriBeforeFeedFlowState: Equatable {
-    private(set) var stage: MoriBeforeFeedFlowStage = .breathKey
+    private(set) var stage: MoriBeforeFeedFlowStage = .choice
     private(set) var hasCompletedBreath = false
     private(set) var reason: MoriBeforeFeedIntentReason?
     private(set) var enoughChoice: MoriBeforeFeedEnoughChoice?
     private(set) var returnAnchor: MoriBeforeFeedReturnAnchor?
 
     var canOpenFeed: Bool {
-        stage == .intent && hasCompletedBreath && reason != nil && enoughChoice != nil
+        stage == .intent && enoughChoice != nil
     }
 
     var confirmedOpenWindowSeconds: Int? {
@@ -423,10 +425,26 @@ struct MoriBeforeFeedFlowState: Equatable {
     }
 
     mutating func selectReason(_ reason: MoriBeforeFeedIntentReason) {
-        guard stage == .intent, hasCompletedBreath else { return }
+        guard stage == .intent else { return }
         self.reason = reason
-        enoughChoice = nil
-        returnAnchor = nil
+        if let choice = enoughChoice, !choice.isAvailable(for: reason) { enoughChoice = nil }
+    }
+
+    mutating func chooseBreathing() {
+        guard stage == .choice else { return }
+        stage = .breathKey
+    }
+
+    mutating func chooseIntent() {
+        guard stage == .choice || stage == .breathKey else { return }
+        stage = .intent
+    }
+
+    @discardableResult
+    mutating func chooseOffline() -> Bool {
+        guard stage != .handoff else { return false }
+        stage = .handoff
+        return true
     }
 
     @discardableResult
@@ -440,9 +458,7 @@ struct MoriBeforeFeedFlowState: Equatable {
     @discardableResult
     mutating func selectEnoughChoice(_ choice: MoriBeforeFeedEnoughChoice) -> Bool {
         guard stage == .intent,
-              hasCompletedBreath,
-              let reason,
-              choice.isAvailable(for: reason)
+              choice != .oneReply || reason == .replyToSomeone
         else {
             return false
         }
@@ -451,7 +467,7 @@ struct MoriBeforeFeedFlowState: Equatable {
     }
 
     mutating func selectReturnAnchor(_ anchor: MoriBeforeFeedReturnAnchor?) {
-        guard stage == .intent, hasCompletedBreath else { return }
+        guard stage == .intent else { return }
         returnAnchor = anchor
     }
 
@@ -567,5 +583,32 @@ enum MoriBeforeFeedBreathProgress {
         guard elapsed.isFinite else { return totalCycles }
         let completed = floor(max(0, elapsed) / cycleDuration)
         return totalCycles - Int(min(Double(totalCycles), completed))
+    }
+}
+
+
+/// Presentation only: never changes the selected pattern or session clock.
+enum MoriBeforeFeedBreathingCopy {
+    static func patternDescription(
+        for pattern: MoriBreathPattern,
+        localeIdentifier: String = MoriLocalePreference.load().resolvedLocaleIdentifier
+    ) -> String {
+        func text(_ key: String, _ fallback: String, _ arguments: [CVarArg] = []) -> String {
+            let format = NSLocalizedString(key, bundle: MoriL10n.localizationBundle(for: localeIdentifier), value: fallback, comment: "")
+            return String(format: format, locale: Locale(identifier: localeIdentifier), arguments: arguments)
+        }
+        func seconds(_ value: Double) -> String {
+            let number = String(format: value.rounded() == value ? "%.0f" : "%.1f", locale: Locale(identifier: localeIdentifier), value)
+            return text("before_feed.pattern.seconds", "%@s", [number])
+        }
+        var parts = [text("before_feed.pattern.in", "Inhale %@", [seconds(pattern.inhale)])]
+        if let hold = pattern.inhaleHold, hold > 0 {
+            parts.append(text("before_feed.pattern.hold", "Hold %@", [seconds(hold)]))
+        }
+        parts.append(text("before_feed.pattern.out", "Exhale %@", [seconds(pattern.exhale)]))
+        if let hold = pattern.exhaleHold, hold > 0 {
+            parts.append(text("before_feed.pattern.hold", "Hold %@", [seconds(hold)]))
+        }
+        return parts.joined(separator: text("before_feed.pattern.separator", ", "))
     }
 }

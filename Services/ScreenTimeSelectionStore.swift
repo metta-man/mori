@@ -110,8 +110,12 @@ struct ScreenTimeSelectionStore {
     }
 
     func saveDefaultSelection(_ selection: FamilyActivitySelection, displayNames: [String] = []) {
+        return MoriShieldCoordination.legacy(fallback: ()) {
+
         saveSelection(supportedSelection(selection), forKey: MoriScreenTimeShared.defaultSelectionKey)
         saveDefaultDisplayNames(displayNames)
+
+        }
     }
 
     func loadSelection(for feature: MoriScreenTimeFeature) -> FamilyActivitySelection {
@@ -123,10 +127,14 @@ struct ScreenTimeSelectionStore {
         for feature: MoriScreenTimeFeature,
         displayNames: [String] = []
     ) {
+        return MoriShieldCoordination.legacy(fallback: ()) {
+
         saveSelection(supportedSelection(selection), forKey: selectionKey(for: feature))
         var profile = profile(for: feature)
         profile.displayNames = displayNames
         saveProfile(profile, for: feature)
+
+        }
     }
 
     func supportedSelection(_ selection: FamilyActivitySelection) -> FamilyActivitySelection {
@@ -152,7 +160,7 @@ struct ScreenTimeSelectionStore {
     }
 
     func profile(for feature: MoriScreenTimeFeature) -> MoriScreenTimeFeatureProfile {
-        var profile = profiles()[feature.rawValue] ?? defaultProfile(for: feature)
+        var profile = profiles()[feature.rawValue] ?? Self.defaultProfile(for: feature)
         if feature == .walkOfflineReset {
             profile.usesDefaultSelection = false
             profile.restrictionPolicy = .allowSelected
@@ -161,9 +169,13 @@ struct ScreenTimeSelectionStore {
     }
 
     func saveProfile(_ profile: MoriScreenTimeFeatureProfile, for feature: MoriScreenTimeFeature) {
+        return MoriShieldCoordination.legacy(fallback: ()) {
+
         var profiles = profiles()
         profiles[feature.rawValue] = profile
         saveProfiles(profiles)
+
+        }
     }
 
     func summaries() -> [MoriScreenTimeProfileSummary] {
@@ -244,7 +256,7 @@ struct ScreenTimeSelectionStore {
         persistence.saveProfiles(profiles)
     }
 
-    private func defaultProfile(for feature: MoriScreenTimeFeature) -> MoriScreenTimeFeatureProfile {
+    static func defaultProfile(for feature: MoriScreenTimeFeature) -> MoriScreenTimeFeatureProfile {
         switch feature {
         case .quiet, .pomodoroFocus:
             return MoriScreenTimeFeatureProfile(isEnabled: true, usesDefaultSelection: true)
@@ -274,18 +286,24 @@ struct ScreenTimeSelectionStore {
     }
 
     private func migrateLegacySelectionIfNeeded() {
+        return MoriShieldCoordination.legacy(fallback: ()) {
+
         guard !persistence.hasCompletedFeatureMigration() else { return }
         persistence.migrateLegacyDefaultSelectionIfNeeded()
 
         var profiles = profiles()
         for feature in MoriScreenTimeFeature.allCases where profiles[feature.rawValue] == nil {
-            profiles[feature.rawValue] = defaultProfile(for: feature)
+            profiles[feature.rawValue] = Self.defaultProfile(for: feature)
         }
         saveProfiles(profiles)
         persistence.markFeatureMigrationCompleted()
+
+        }
     }
 
     private func migrateBeforeFeedToDedicatedSelectionIfNeeded() {
+        return MoriShieldCoordination.legacy(fallback: ()) {
+
         // Hidden App Lock is the strictest policy. When a person already chose
         // a dedicated feed list, do not inherit a broader shared block list.
         let migrationCompleted = persistence.hasCompletedBeforeFeedDedicatedSelectionMigration()
@@ -311,5 +329,7 @@ struct ScreenTimeSelectionStore {
 
         beforeFeedProfile.usesDefaultSelection = false
         saveProfile(beforeFeedProfile, for: .beforeFeed)
+
+        }
     }
 }

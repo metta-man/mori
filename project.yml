@@ -5,7 +5,7 @@ options:
   deploymentTarget:
     iOS: "16.0"
     watchOS: "10.0"
-  xcodeVersion: "15.0"
+  xcodeVersion: "27.1"
   generateEmptyDirectories: true
 
 settings:
@@ -18,7 +18,7 @@ settings:
     INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
     INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: YES
     INFOPLIST_KEY_UILaunchScreen_Generation: YES
-    INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait"
+    INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
     INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad: "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight"
 
 packages:
@@ -32,6 +32,10 @@ targets:
     platform: iOS
     sources:
       - path: App
+      - path: Prototype/ScheduledProtection/Sources/MoriProtection
+        excludes:
+          - ProtectionPreviewSession.swift
+      - path: NativeProtection
       - path: Features
         excludes:
           - "**/*.md"
@@ -72,7 +76,7 @@ targets:
         INFOPLIST_KEY_MORI_POSTHOG_API_KEY: "$(MORI_POSTHOG_API_KEY)"
         INFOPLIST_KEY_MORI_POSTHOG_HOST: "$(MORI_POSTHOG_HOST)"
         INFOPLIST_KEY_NSHealthShareUsageDescription: "Mori can read Apple Health data you approve, including HRV, heart rate, resting heart rate, sleep, respiratory rate, temperature, workouts, active energy, and walking or running distance, to personalize recovery readiness and attention signals."
-        INFOPLIST_KEY_NSHealthUpdateUsageDescription: "Mori does not write data to Apple Health. Recovery features only read the Apple Health data you approve."
+        INFOPLIST_KEY_NSHealthUpdateUsageDescription: "Mori saves the mood you explicitly choose to share with Apple Health. Your journal writing and photos are not shared."
         INFOPLIST_KEY_NSPhotoLibraryUsageDescription: "Mori lets you choose photos to attach to your private journal entries."
 
   MoriScreenTimeMonitor:
@@ -80,6 +84,10 @@ targets:
     platform: iOS
     sources:
       - path: ScreenTimeMonitor
+      - path: Prototype/ScheduledProtection/Sources/MoriProtection
+        excludes:
+          - ProtectionPreviewSession.swift
+      - path: NativeProtection
       - path: Services/BeforeFeedGateStore.swift
       - path: Services/AttentionShieldActivityNames.swift
       - path: Services/AttentionShieldActiveSessionStore.swift
@@ -104,7 +112,10 @@ targets:
     platform: iOS
     sources:
       - path: ShieldConfiguration
+      - path: Services/BeforeFeedGateStore.swift
       - path: Services/AttentionShieldStateStore.swift
+      - path: Prototype/ScheduledProtection/Sources/MoriProtection/ProtectionWriterCoordination.swift
+      - path: Prototype/ScheduledProtection/Sources/MoriProtection/ProtectionPreferenceSnapshot.swift
       - path: Shared
       - path: Localization
     dependencies:
@@ -123,6 +134,8 @@ targets:
       - path: ShieldAction
       - path: Services/BeforeFeedGateStore.swift
       - path: Services/AttentionShieldStateStore.swift
+      - path: Prototype/ScheduledProtection/Sources/MoriProtection/ProtectionWriterCoordination.swift
+      - path: Prototype/ScheduledProtection/Sources/MoriProtection/ProtectionPreferenceSnapshot.swift
       - path: Shared
       - path: Localization
     dependencies:
@@ -139,6 +152,8 @@ targets:
     platform: iOS
     sources:
       - path: Widgets
+      - path: Prototype/ScheduledProtection/Sources/MoriProtection/ProtectionWriterCoordination.swift
+      - path: Prototype/ScheduledProtection/Sources/MoriProtection/ProtectionPreferenceSnapshot.swift
       - path: Shared
       - path: Localization
     settings:
@@ -153,6 +168,8 @@ targets:
     platform: watchOS
     sources:
       - path: WatchApp
+      - path: Prototype/ScheduledProtection/Sources/MoriProtection/ProtectionWriterCoordination.swift
+      - path: Prototype/ScheduledProtection/Sources/MoriProtection/ProtectionPreferenceSnapshot.swift
       - path: Shared
       - path: Localization
     dependencies:
@@ -172,6 +189,8 @@ targets:
     platform: watchOS
     sources:
       - path: WatchWidgets
+      - path: Prototype/ScheduledProtection/Sources/MoriProtection/ProtectionWriterCoordination.swift
+      - path: Prototype/ScheduledProtection/Sources/MoriProtection/ProtectionPreferenceSnapshot.swift
       - path: Shared
       - path: Localization
     settings:

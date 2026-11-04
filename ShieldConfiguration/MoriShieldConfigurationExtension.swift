@@ -4,6 +4,7 @@ import UIKit
 
 final class MoriShieldConfigurationExtension: ShieldConfigurationDataSource {
     private let shieldStateStore = AttentionShieldStateStore()
+    private let beforeFeedGateStore = BeforeFeedGateStore()
 
     override func configuration(shielding application: Application) -> ShieldConfiguration {
         moriConfiguration
@@ -50,7 +51,15 @@ final class MoriShieldConfigurationExtension: ShieldConfigurationDataSource {
     }
 
     private var shieldCopy: MoriShieldCopy {
-        guard let feature = shieldStateStore.loadCurrentFeature() else {
+        let feature = shieldStateStore.loadCurrentFeature()
+        if MoriBeforeFeedShieldRecoveryPolicy.shouldRelease(
+            isInOpenWindow: beforeFeedGateStore.isInGraceWindow(),
+            currentFeature: feature
+        ) {
+            return .beforeFeedWindowOpen
+        }
+
+        guard let feature else {
             return .practice
         }
 
@@ -74,11 +83,30 @@ private struct MoriShieldCopy {
     let primaryButtonTitle: String
     let secondaryButtonTitle: String?
 
-    static let beforeFeed = MoriShieldCopy(
+    static var beforeFeed: MoriShieldCopy {
+        if #available(iOS 26.5, *) {
+            return MoriShieldCopy(
+                    iconAssetName: "moriIconBeforeFeedReset",
+                    title: "Reset before the feed",
+                    subtitle: "Put your phone aside, or choose a short window in Mori.",
+                    primaryButtonTitle: "Open Mori",
+                    secondaryButtonTitle: "Not now"
+                )
+            }
+            return MoriShieldCopy(
+            iconAssetName: "moriIconBeforeFeedReset",
+            title: "Reset before the feed",
+            subtitle: "Prepare reset, then open Mori. This app will close and Mori will be ready when you arrive.",
+            primaryButtonTitle: "Prepare reset",
+            secondaryButtonTitle: "Not now"
+        )
+    }
+
+    static let beforeFeedWindowOpen = MoriShieldCopy(
         iconAssetName: "moriIconBeforeFeedReset",
-        title: "Reset before the feed",
-        subtitle: "Prepare reset, then open Mori. This app will close and Mori will be ready when you arrive.",
-        primaryButtonTitle: "Prepare reset",
+        title: "Your feed window is open",
+        subtitle: "Continue with your remaining time. The deadline stays the same.",
+        primaryButtonTitle: "Continue",
         secondaryButtonTitle: "Not now"
     )
 

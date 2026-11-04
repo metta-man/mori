@@ -239,14 +239,14 @@
 "Choose the feed apps Mori should slow down." = "選擇 Mori 應該放慢的資訊流 App。";
 "Turn on feed app protection to activate the shield." = "開啟資訊流 App 保護，啟用 shield。";
 "Protect feed app launches" = "保護資訊流 App 啟動";
-"Selected feed apps show Mori's iOS Screen Time shield before they open. Category selections are ignored so apps like WhatsApp are not caught accidentally." = "已選資訊流 App 打開前會顯示 Mori 的 iOS Screen Time shield。分類選擇會被忽略，避免 WhatsApp 等 App 被誤攔。";
+"Selected feed apps show Mori's iOS Screen Time shield before they open. Category selections are ignored so apps like WhatsApp are not caught accidentally." = "所揀嘅 App 會先顯示保護畫面。只按個別 App 封鎖，唔會按分類封鎖。";
 "Optional fallback. Shortcuts opens this app, but cannot return you to the triggering app." = "可選後備方案。捷徑可以打開此 App，但不能返回觸發它的 App。";
-"iOS cannot jump straight from the shield into Mori. Tapping Prepare reset records the request and closes the feed app; open Mori next and the reset appears." = "iOS 不能由 shield 直接跳入 Mori。點擊「準備重置」會記錄請求並關閉資訊流 App；之後打開 Mori，重置就會出現。";
+"iOS cannot jump straight from the shield into Mori. Tapping Prepare reset records the request and closes the feed app; open Mori next and the reset appears." = "點按「準備重置」會關閉 App。之後請自行打開 Mori。";
 "Activation flow" = "啟用流程";
 "Required by iOS before Mori can shield another app." = "Mori 要保護其他 App 前，iOS 需要先授權。";
 "Feed apps selected" = "已選資訊流 App";
 "Pick individual apps or websites for this flow." = "為這個流程選擇單個 App 或網站。";
-"Shield handoff clear" = "Shield 交接清楚";
+"Shield handoff clear" = "返回 Mori";
 "screen_time.before_feed.handoff_detail" = "打開資訊流 App -> 點準備重置 -> 打開 Mori -> 完成 %@。";
 "screen_time.morning.window_duration" = "晨間視窗 %@";
 
@@ -1012,7 +1012,7 @@
 "attention_reset.cue.morning.technique" = "先呼吸，再開始";
 "attention_reset.cue.morning.no_technique" = "從不滑資訊流開始";
 "attention_reset.running.before_feed.no_technique" = "等衝動過去";
-"Why now?" = "為何現在？";
+"Why now?" = "點解想打開？";
 "Pause. Notice. Choose." = "停一停。留意。再選擇。";
 "Reply to someone" = "回覆某人";
 "Learn" = "學習";
@@ -1059,8 +1059,8 @@
 "Review the plan" = "檢視計劃";
 "Still want to open?" = "仲想開啟嗎？";
 "Leave feed closed" = "保持資訊流關閉";
-"Closes Before Feed without opening a feed window." = "關閉 Before Feed，而唔開啟資訊流時段。";
-"Opens the selected feed apps for the chosen window. Switch back yourself." = "在所選時段內開啟資訊流 App；請自行切返去。";
+"Closes Before Feed without opening a feed window." = "關閉呢個畫面，唔會開啟新時段。";
+"Opens the selected feed apps for the chosen window. Switch back yourself." = "開啟所揀嘅時段。請自行切返去 App。";
 "Mori cannot open the triggering feed. Switch back yourself only if you still mean to." = "Mori 無法自動開啟頭先的資訊流；只有仍然真係想開時先自行切返去。";
 "Choose the feed window each time you pause." = "每次停頓時再選擇資訊流開啟時段。";
 "Pause style" = "停頓方式";
@@ -1456,6 +1456,8 @@
 "Prepare reset" = "準備重置";
 "Prepare Morning Reset" = "準備晨間重置";
 "Prepare reset, then open Mori. This app will close and Mori will be ready when you arrive." = "準備重置，然後打開 Mori。這個 App 會關閉，Mori 會在你抵達時準備好。";
+"Your feed window is open" = "資訊流開放時間進行中";
+"The reset is complete. You can continue now." = "重置已完成，現在可以繼續。";
 "Primary Action" = "主要操作";
 "Profile" = "個人資料";
 "Morning App Limit active" = "晨間 App 限制啟用中";
@@ -1859,9 +1861,9 @@
 "Breath complete" = "呼吸完成";
 "Breathe in when ready" = "準備好就吸氣";
 "Begin when ready" = "準備好就開始";
-"Continues the breath key from where it paused." = "由停低的位置繼續呼吸鑰匙。";
-"Pauses this Before Feed breath timer." = "暫停 Before Feed 呼吸計時。";
-"Continues this Before Feed breath timer from where it paused." = "由暫停的位置繼續 Before Feed 呼吸計時。";
+"Continues the breath key from where it paused." = "由暫停嘅位置繼續。";
+"Pauses this Before Feed breath timer." = "暫停呢次呼吸。";
+"Continues this Before Feed breath timer from where it paused." = "由暫停嘅位置繼續。";
 "before_feed.breath_key.accessibility" = "%@。剩餘 %@。一次呼吸：吸氣 4 秒，呼氣 6 秒。";
 "before_feed.breath_key.guided_accessibility" = "%@。%@。剩餘 %@。";
 "before_feed.breath_key.own_accessibility" = "跟隨自己的呼吸。%@。剩餘 %@。";
@@ -1884,9 +1886,9 @@
 "A gentle notification when the chosen window ends." = "所選時段結束時，發出一個溫柔通知。";
 "Open feed app -> tap Prepare reset -> take one 4-in / 6-out breath in Mori." = "開啟資訊流 App → 點按準備重置 → 在 Mori 吸氣 4 秒、呼氣 6 秒。";
 "Open feed app -> tap Prepare reset -> finish your configured breath in Mori." = "開啟資訊流 App → 點按準備重置 → 在 Mori 完成你設定的呼吸。";
-"Breath key ready" = "呼吸鑰匙已準備";
-"Screen Time opened this pause. After the breath, choose whether to return to the feed yourself." = "螢幕使用時間開啟了這個停頓。呼吸後，再選擇係咪自行返回資訊流。";
-"A shortcut opened Mori. After the breath, choose whether to return to the feed yourself." = "捷徑開啟了 Mori。呼吸後，再選擇係咪自行返回資訊流。";
+"Breath key ready" = "呼吸設定";
+"Screen Time opened this pause. After the breath, choose whether to return to the feed yourself." = "呼吸後，再決定要唔要繼續。";
+"A shortcut opened Mori. After the breath, choose whether to return to the feed yourself." = "呼吸後，再決定要唔要繼續。";
 "before_feed.intent.open_minutes" = "開啟 %d 分鐘";
 "today.before_feed.kept_closed_once" = "今日保持關閉 1 次";
 "today.before_feed.kept_closed_count" = "今日保持關閉 %d 次";
@@ -2006,3 +2008,151 @@
 "Optional planner. Open it only when one check-in is not enough." = "需要多一點規劃時，再打開它。";
 
 "Open Daily Spark" = "打開 Daily Spark";
+
+/* Gentle Before Feed reentry */
+"before_feed.reentry.title" = "呢刻想點？";
+"before_feed.reentry.previous_window" = "你啱啱揀咗一個 %@ 嘅時段。";
+"before_feed.reentry.previous_anchor" = "你之前想返去：%@。";
+"before_feed.reentry.choose_time" = "繼續揀時間";
+"before_feed.reentry.return" = "返去%@";
+"before_feed.reentry.aside" = "先放低手機";
+"before_feed.reentry.unchanged" = "沿用餘下時間，到鐘再停一停。離開唔會取消今次時段。";
+"before_feed.reentry.replacement" = "揀時間唔會改動原有時段。確認後，新時段由而家開始，取代原有時段。";
+"before_feed.reentry.save_failed" = "未能儲存呢個時段，原有時段未有改動。你可以再試，或者關閉。";
+"before_feed.reentry.time_title" = "揀一個時段";
+
+"before_feed.reentry.remaining" = "今次揀嘅時間仲有 %@。";
+"before_feed.reentry.expired" = "今次揀嘅時間已經完咗。";
+"before_feed.reentry.reuse" = "繼續餘下時間";
+"before_feed.reentry.rechoose" = "重新揀時間";
+"before_feed.reentry.edit_reason" = "改返原因（可選）";
+
+/* Before Feed localized cadence; presentation only */
+"before_feed.pattern.seconds" = "%@ 秒";
+"before_feed.pattern.in" = "吸氣 %@";
+"before_feed.pattern.out" = "呼氣 %@";
+"before_feed.pattern.hold" = "屏息 %@";
+"before_feed.pattern.separator" = " · ";
+
+// Optional journal mood and explicit Health sharing
+"journal.mood.optional" = "現在感覺舒服嗎？（可略過）";
+"journal.mood.veryUnpleasant" = "很不舒服";
+"journal.mood.unpleasant" = "不舒服";
+"journal.mood.neutral" = "一般";
+"journal.mood.pleasant" = "舒服";
+"journal.mood.veryPleasant" = "很舒服";
+"journal.mood.share" = "儲存並分享心情到 Apple 健康";
+"journal.mood.shared" = "已分享到 Apple 健康";
+"journal.mood.privacy" = "不會分享文字或照片。在 Mori 刪除日記不會刪除健康紀錄。";
+"journal.mood.payload" = "健康心情紀錄：%@ · 感受：%@ · 情境：%@ · 紀錄時間：%@";
+"journal.mood.update_time" = "修改心情時會更新同一筆紀錄，保留原本的紀錄時間。";
+"journal.mood.none" = "無";
+"journal.mood.previously_shared" = "這個版本之前已分享，今次沒有新增健康紀錄。";
+"journal.mood.not_shared" = "已儲存到 Mori，今次未完成分享。請檢查健康權限後再試。";
+
+// Mori wording for a balanced optional feeling vocabulary
+"journal.emotion.happy" = "開心";
+"journal.emotion.calm" = "平靜";
+"journal.emotion.okay" = "一般";
+"journal.emotion.sad" = "難過";
+"journal.emotion.content" = "滿足";
+"journal.emotion.grateful" = "感恩";
+"journal.emotion.hopeful" = "有希望";
+"journal.emotion.relieved" = "鬆一口氣";
+"journal.emotion.anxious" = "焦慮";
+"journal.emotion.tired" = "疲累";
+"journal.emotion.hurt" = "受傷";
+"journal.emotion.frustrated" = "挫敗";
+"journal.emotion.unsure" = "不確定";
+"journal.emotion.unclear" = "說不清感受";
+"journal.emotion.group.pleasant" = "舒服的感受";
+"journal.emotion.group.neutral" = "中間的感受";
+"journal.emotion.group.difficult" = "不舒服的感受";
+"journal.emotion.skip" = "暫時不命名";
+"journal.emotion.not_named" = "暫未命名";
+
+"journal.mood.not_set" = "未設定";
+
+"journal.mood.sharing" = "分享中⋯";
+
+"journal.mood.private_short" = "不會分享文字或照片。";
+
+"journal.mood.details" = "分享詳情";
+
+"journal.mood.delete_boundary" = "在 Mori 刪除日記不會刪除健康紀錄。";
+
+"journal.photo.add" = "加入照片";
+
+"journal.photo.limit" = "已達照片上限";
+
+"journal.photo.optional" = "（可略過）";
+
+"journal.feeling.prompt" = "現在的心情？";
+"journal.mood.health_optional" = "Apple 健康（可選）";
+
+"journal.mood.health_title" = "Apple 健康";
+"journal.mood.optional_qualifier" = "（可選）";
+
+/* Cleanup-only compatibility for previous device tests. */
+"Previous test restrictions" = "先前測試的限制";
+"Remove previous test restrictions" = "移除先前測試的限制";
+"Remove restrictions left by a previous Mori test. Your regular app limits, saved data and Screen Time permission stay as they are." = "移除先前 Mori 測試留下的限制。一般 App 限制、已儲存資料及螢幕使用時間權限會保持不變。";
+"Known test restrictions were cleared. Try the app again. Other app limits may still apply." = "已清除可識別的測試限制。請再試開啟 App。其他 App 限制仍可能適用。";
+"No recoverable test restrictions were found. If an app is still blocked, its restriction has not been confirmed cleared." = "找不到可復原的測試限制。如果 App 仍被限制，就尚未確認已清除該限制。";
+"Recovery is still pending. You can retry. Keep your saved data and Screen Time permission in place; contact support if the app remains blocked." = "復原尚未完成，可以重試。請保留已儲存資料及螢幕使用時間權限；如果 App 仍被限制，請聯絡支援。";
+
+// Exit-first flow and adaptive iPhone layout
+"Look out of a window" = "望一望窗外";
+"Get a glass of water" = "去飲杯水";
+"Return to one small task" = "返去做一件小事";
+"Rest your eyes for a moment" = "畀雙眼休息一陣";
+"Put your phone down and notice something outside." = "放低電話，留意窗外一樣嘢。";
+"Leave your phone here while you get some water." = "電話留喺呢度，去飲杯水。";
+"Put your phone out of reach. Start with one small step." = "將電話擺遠少少，由一個小步驟開始。";
+"Let your phone rest. You can rest too." = "電話可以休息，你都可以。";
+"Let the next moment be yours." = "將下一刻留返畀自己。";
+"Try another small step" = "換一個小行動";
+"Put my phone aside" = "放低電話";
+"I need to use my phone" = "我有事要用電話";
+"Take a breath first (optional)" = "先呼吸一下（可選）";
+"You can lock your phone now." = "可以鎖屏，放低電話喇。";
+"No timer to watch. No need to come back and mark it done." = "唔使睇住計時，亦唔使返嚟打卡。";
+"A small boundary" = "留一個小界線";
+"How much time do you need?" = "今次需要幾耐？";
+"Add a reason (optional)" = "加個原因（可選）";
+"Before Feed configured" = "已設定 Before Feed";
+"Your time has a boundary." = "今次有個截止時間。";
+"A quiet session is underway." = "安靜時段進行中。";
+"Your chosen time has ended." = "你揀嘅時間已經完咗。";
+"Make room for your day." = "為今日留返啲空間。";
+"You can lock your phone and let the session continue." = "可以鎖屏，時段會繼續計時。";
+"Return to one small thing away from the screen." = "返去做一件離開螢幕嘅小事。";
+"Choose one small step away from the screen." = "揀一個離開螢幕嘅小行動。";
+"App Limits off" = "App 限制未開啟";
+"Feed window open" = "放行時段內";
+"Session in progress" = "時段進行中";
+"Feed window ended" = "放行時段已完";
+"Return to Focus" = "返回專注";
+"Put your phone aside and return to one small piece of work." = "放低電話，返去做一小部分工作。";
+"Put your phone aside and return to the next page." = "放低電話，繼續讀下一頁。";
+"Put your phone aside and give someone your attention." = "放低電話，留返注意力畀身邊嘅人。";
+"Put your phone down and take a few steps." = "放低電話，行幾步。";
+"Leave your phone out of reach and settle for sleep." = "將電話擺遠少少，準備休息。";
+"Your chosen time has ended. You can put your phone aside." = "你揀嘅時間已完，可以放低電話喇。";
+"View selected day" = "查看選取嘅一日";
+"Earlier estimate · excluded from quiet minutes" = "舊有估算 · 不計入安靜分鐘";
+"Chosen activity · completion not recorded" = "已選活動 · 未記錄完成";
+"Start with one small moment away from the screen." = "先留一小刻畀螢幕以外嘅生活。";
+"Try putting my phone aside" = "試下放低電話";
+"Set up one app" = "先設定一個 App";
+"Explore Mori first" = "先睇下 Mori";
+"Quiet minutes count timers and activities you confirm, not verified time away from your phone." = "安靜分鐘來自計時及你確認嘅活動，唔代表已驗證離開電話嘅時間。";
+"today.allowance.ends" = "放行時段到 %@ 結束，你可以提早放低電話。";
+
+"Optional breathing" = "可選呼吸練習";
+"Optional breathing ready" = "已設定可選呼吸練習";
+"Put your phone aside, or choose a short window in Mori." = "放低電話，或者去 Mori 揀一個短時段。";
+"Open Mori" = "開啟 Mori";
+"Continue with your remaining time. The deadline stays the same." = "繼續用剩低嘅時間，截止時間唔會改變。";
+"Opening a window never switches you back to the feed automatically." = "放行後亦唔會自動跳返動態 App。";
+"Return to Mori to put your phone aside or choose a short window." = "返回 Mori，選擇放低電話或開啟短時段。";

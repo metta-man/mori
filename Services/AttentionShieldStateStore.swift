@@ -8,12 +8,16 @@ struct AttentionShieldStateStore {
     }
 
     func saveCurrentShield(feature: MoriScreenTimeFeature, displayNames: [String]) {
+        return MoriShieldCoordination.legacy(fallback: ()) {
+
         saveCurrentFeature(feature)
         MoriScreenTimeSavedTimeEstimator.persistCurrentEstimate(
             feature: feature,
             displayNames: displayNames,
             defaults: defaults
         )
+
+        }
     }
 
     private func saveCurrentFeature(_ feature: MoriScreenTimeFeature) {
@@ -32,7 +36,11 @@ struct AttentionShieldStateStore {
     }
 
     func clearCurrentShield() {
+        return MoriShieldCoordination.legacy(fallback: ()) {
+
         clearCurrentFeature()
         MoriScreenTimeSavedTimeEstimator.clearCurrentEstimate(defaults: defaults)
+
+        }
     }
 }

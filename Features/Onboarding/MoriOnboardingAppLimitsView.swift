@@ -35,7 +35,6 @@ struct OnboardingAppLimitsScreen: View {
         let snapshot = appLimitManager.settingsSnapshot
 
         if snapshot.isAppLimitReady(for: .beforeFeed) {
-            FirstAppLimitSetupMorningGateActivation.activate(using: appLimitManager)
             onComplete("first_app_limit_ready")
             return
         }
@@ -43,7 +42,6 @@ struct OnboardingAppLimitsScreen: View {
         guard snapshot.isAuthorized, summary.hasEffectiveSelection else { return }
 
         appLimitManager.perform(.setFeatureEnabled(true, .beforeFeed))
-        FirstAppLimitSetupMorningGateActivation.activate(using: appLimitManager)
         guard trackCompletedIfReady() else { return }
         onComplete("first_app_limit_ready")
     }

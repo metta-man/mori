@@ -1456,6 +1456,8 @@
 "Prepare reset" = "准备重置";
 "Prepare Morning Reset" = "准备晨间重置";
 "Prepare reset, then open Mori. This app will close and Mori will be ready when you arrive." = "准备重置，然后打开 Mori。这个 App 会关闭，Mori 会在你抵达时准备好。";
+"Your feed window is open" = "信息流开放时间进行中";
+"The reset is complete. You can continue now." = "重置已完成，现在可以继续。";
 "Primary Action" = "主要操作";
 "Profile" = "个人资料";
 "Morning App Limit active" = "晨间 App 限制启用中";
@@ -2006,3 +2008,151 @@
 "Optional planner. Open it only when one check-in is not enough." = "需要多一点规划时，再打开它。";
 
 "Open Daily Spark" = "打开 Daily Spark";
+
+/* Gentle Before Feed reentry */
+"before_feed.reentry.title" = "此刻想怎么做？";
+"before_feed.reentry.previous_window" = "你刚刚选了一个 %@ 的时段。";
+"before_feed.reentry.previous_anchor" = "你之前想回到：%@。";
+"before_feed.reentry.choose_time" = "继续选时间";
+"before_feed.reentry.return" = "回到%@";
+"before_feed.reentry.aside" = "先放下手机";
+"before_feed.reentry.unchanged" = "继续用不会改变原来的结束时间。这次时段结束后，重新停一停，再选择下一段时间。离开也会保留原来的时段。";
+"before_feed.reentry.replacement" = "选时间不会更改原有时段。确认后，新时段从现在开始，替代原有时段。";
+"before_feed.reentry.save_failed" = "未能保存这个时段，原有时段没有更改。你可以重试，或者关闭。";
+"before_feed.reentry.time_title" = "选一个时段";
+
+"before_feed.reentry.remaining" = "这次选的时间还剩 %@。";
+"before_feed.reentry.expired" = "这次选的时间已经结束了。";
+"before_feed.reentry.reuse" = "继续用剩余时间";
+"before_feed.reentry.rechoose" = "重新选时间";
+"before_feed.reentry.edit_reason" = "修改原因（可选）";
+
+/* Before Feed localized cadence; presentation only */
+"before_feed.pattern.seconds" = "%@ 秒";
+"before_feed.pattern.in" = "吸气 %@";
+"before_feed.pattern.out" = "呼气 %@";
+"before_feed.pattern.hold" = "屏息 %@";
+"before_feed.pattern.separator" = " · ";
+
+// Optional journal mood and explicit Health sharing
+"journal.mood.optional" = "现在感觉舒服吗？（可略过）";
+"journal.mood.veryUnpleasant" = "很不舒服";
+"journal.mood.unpleasant" = "不舒服";
+"journal.mood.neutral" = "一般";
+"journal.mood.pleasant" = "舒服";
+"journal.mood.veryPleasant" = "很舒服";
+"journal.mood.share" = "保存并分享心情到 Apple 健康";
+"journal.mood.shared" = "已分享到 Apple 健康";
+"journal.mood.privacy" = "不会分享文字或照片。在 Mori 删除日记不会删除健康记录。";
+"journal.mood.payload" = "健康心情记录：%@ · 感受：%@ · 情境：%@ · 记录时间：%@";
+"journal.mood.update_time" = "修改心情时会更新同一条记录，保留原本的记录时间。";
+"journal.mood.none" = "无";
+"journal.mood.previously_shared" = "这个版本之前已分享，这次没有新增健康记录。";
+"journal.mood.not_shared" = "已保存到 Mori，这次未完成分享。请检查健康权限后再试。";
+
+// Mori wording for a balanced optional feeling vocabulary
+"journal.emotion.happy" = "开心";
+"journal.emotion.calm" = "平静";
+"journal.emotion.okay" = "一般";
+"journal.emotion.sad" = "难过";
+"journal.emotion.content" = "满足";
+"journal.emotion.grateful" = "感恩";
+"journal.emotion.hopeful" = "有希望";
+"journal.emotion.relieved" = "松一口气";
+"journal.emotion.anxious" = "焦虑";
+"journal.emotion.tired" = "疲累";
+"journal.emotion.hurt" = "受伤";
+"journal.emotion.frustrated" = "挫败";
+"journal.emotion.unsure" = "不确定";
+"journal.emotion.unclear" = "说不清感受";
+"journal.emotion.group.pleasant" = "舒服的感受";
+"journal.emotion.group.neutral" = "中间的感受";
+"journal.emotion.group.difficult" = "不舒服的感受";
+"journal.emotion.skip" = "暂时不命名";
+"journal.emotion.not_named" = "暂未命名";
+
+"journal.mood.not_set" = "未设置";
+
+"journal.mood.sharing" = "分享中⋯";
+
+"journal.mood.private_short" = "不会分享文字或照片。";
+
+"journal.mood.details" = "分享详情";
+
+"journal.mood.delete_boundary" = "在 Mori 删除日记不会删除健康记录。";
+
+"journal.photo.add" = "添加照片";
+
+"journal.photo.limit" = "已达照片上限";
+
+"journal.photo.optional" = "（可略过）";
+
+"journal.feeling.prompt" = "现在的心情？";
+"journal.mood.health_optional" = "Apple 健康（可选）";
+
+"journal.mood.health_title" = "Apple 健康";
+"journal.mood.optional_qualifier" = "（可选）";
+
+/* Cleanup-only compatibility for previous device tests. */
+"Previous test restrictions" = "先前测试的限制";
+"Remove previous test restrictions" = "移除先前测试的限制";
+"Remove restrictions left by a previous Mori test. Your regular app limits, saved data and Screen Time permission stay as they are." = "移除先前 Mori 测试留下的限制。一般 App 限制、已保存数据及屏幕使用时间权限会保持不变。";
+"Known test restrictions were cleared. Try the app again. Other app limits may still apply." = "已清除可识别的测试限制。请再试打开 App。其他 App 限制仍可能适用。";
+"No recoverable test restrictions were found. If an app is still blocked, its restriction has not been confirmed cleared." = "找不到可恢复的测试限制。如果 App 仍被限制，就尚未确认已清除该限制。";
+"Recovery is still pending. You can retry. Keep your saved data and Screen Time permission in place; contact support if the app remains blocked." = "恢复尚未完成，可以重试。请保留已保存数据及屏幕使用时间权限；如果 App 仍被限制，请联系支持。";
+
+// Exit-first flow and adaptive iPhone layout
+"Look out of a window" = "看一看窗外";
+"Get a glass of water" = "去喝杯水";
+"Return to one small task" = "回去做一件小事";
+"Rest your eyes for a moment" = "让双眼休息一会儿";
+"Put your phone down and notice something outside." = "放下手机，留意窗外的一样事物。";
+"Leave your phone here while you get some water." = "把手机留在这里，去喝杯水。";
+"Put your phone out of reach. Start with one small step." = "把手机放远一点，从一个小步骤开始。";
+"Let your phone rest. You can rest too." = "手机可以休息，你也可以。";
+"Let the next moment be yours." = "把下一刻留给自己。";
+"Try another small step" = "换一个小行动";
+"Put my phone aside" = "放下手机";
+"I need to use my phone" = "我有事需要用手机";
+"Take a breath first (optional)" = "先呼吸一下（可选）";
+"You can lock your phone now." = "可以锁屏，放下手机了。";
+"No timer to watch. No need to come back and mark it done." = "不用盯着计时，也不用回来打卡。";
+"A small boundary" = "留一个小界线";
+"How much time do you need?" = "这次需要多久？";
+"Add a reason (optional)" = "添加原因（可选）";
+"Before Feed configured" = "已设置 Before Feed";
+"Your time has a boundary." = "这次有个截止时间。";
+"A quiet session is underway." = "安静时段进行中。";
+"Your chosen time has ended." = "你选择的时间已经结束。";
+"Make room for your day." = "为今天留一点空间。";
+"You can lock your phone and let the session continue." = "可以锁屏，时段会继续计时。";
+"Return to one small thing away from the screen." = "回去做一件离开屏幕的小事。";
+"Choose one small step away from the screen." = "选一个离开屏幕的小行动。";
+"App Limits off" = "App 限制未开启";
+"Feed window open" = "放行时段内";
+"Session in progress" = "时段进行中";
+"Feed window ended" = "放行时段已结束";
+"Return to Focus" = "返回专注";
+"Put your phone aside and return to one small piece of work." = "放下手机，回去做一小部分工作。";
+"Put your phone aside and return to the next page." = "放下手机，继续读下一页。";
+"Put your phone aside and give someone your attention." = "放下手机，把注意力留给身边的人。";
+"Put your phone down and take a few steps." = "放下手机，走几步。";
+"Leave your phone out of reach and settle for sleep." = "把手机放远一点，准备休息。";
+"Your chosen time has ended. You can put your phone aside." = "你选择的时间已结束，可以放下手机了。";
+"View selected day" = "查看所选的一天";
+"Earlier estimate · excluded from quiet minutes" = "旧有估算 · 不计入安静分钟";
+"Chosen activity · completion not recorded" = "已选活动 · 未记录完成";
+"Start with one small moment away from the screen." = "先留一小刻给屏幕以外的生活。";
+"Try putting my phone aside" = "试着放下手机";
+"Set up one app" = "先设置一个 App";
+"Explore Mori first" = "先看看 Mori";
+"Quiet minutes count timers and activities you confirm, not verified time away from your phone." = "安静分钟来自计时及你确认的活动，不代表已验证离开手机的时间。";
+"today.allowance.ends" = "放行时段到 %@ 结束，你可以提早放下手机。";
+
+"Optional breathing" = "可选呼吸练习";
+"Optional breathing ready" = "已设置可选呼吸练习";
+"Put your phone aside, or choose a short window in Mori." = "放下手机，或者去 Mori 选一个短时段。";
+"Open Mori" = "打开 Mori";
+"Continue with your remaining time. The deadline stays the same." = "继续用剩余的时间，截止时间不会改变。";
+"Opening a window never switches you back to the feed automatically." = "放行后也不会自动跳回动态 App。";
+"Return to Mori to put your phone aside or choose a short window." = "返回 Mori，选择放下手机或开启短时段。";

@@ -77,6 +77,8 @@ struct AttentionShieldPassiveGateApplier {
     }
 
     func apply(_ action: AttentionShieldPassiveGateAction) {
+        return MoriShieldCoordination.legacy(fallback: ()) {
+
         switch action {
         case .preserveActiveSession:
             break
@@ -92,6 +94,8 @@ struct AttentionShieldPassiveGateApplier {
                 beforeFeedApplicationTokenCount: beforeFeedSelection.applicationTokens.count,
                 beforeFeedWebDomainTokenCount: beforeFeedSelection.webDomainTokens.count
             )
+        }
+
         }
     }
 
@@ -113,6 +117,8 @@ struct AttentionShieldPassiveGateApplier {
     }
 
     func apply(features: [MoriScreenTimeFeature]) {
+        return MoriShieldCoordination.legacy(fallback: ()) {
+
         let plan = plan(for: features)
         if !plan.hiddenApplicationTokens.isEmpty {
             shieldApplier.apply(
@@ -135,6 +141,8 @@ struct AttentionShieldPassiveGateApplier {
                 beforeFeedWebDomainTokenCount: plan.beforeFeedSelection?.webDomainTokens.count,
                 policy: plan.policy
             )
+        }
+
         }
     }
 

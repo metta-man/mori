@@ -201,6 +201,33 @@ final class MoriCallContinuityTests: XCTestCase {
             )
         }
     }
+
+    func testBeforeFeedShieldRecoveryOnlyRunsForAnOpenWindow() {
+        XCTAssertTrue(
+            MoriBeforeFeedShieldRecoveryPolicy.shouldRelease(
+                isInOpenWindow: true,
+                currentFeature: nil
+            )
+        )
+        XCTAssertTrue(
+            MoriBeforeFeedShieldRecoveryPolicy.shouldRelease(
+                isInOpenWindow: true,
+                currentFeature: .beforeFeed
+            )
+        )
+        XCTAssertFalse(
+            MoriBeforeFeedShieldRecoveryPolicy.shouldRelease(
+                isInOpenWindow: false,
+                currentFeature: .beforeFeed
+            )
+        )
+        XCTAssertFalse(
+            MoriBeforeFeedShieldRecoveryPolicy.shouldRelease(
+                isInOpenWindow: true,
+                currentFeature: .morningGate
+            )
+        )
+    }
 }
 
 private final class FakeSettleBellAudioSessionManager: SettleBellAudioSessionManaging {

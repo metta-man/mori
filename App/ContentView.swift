@@ -43,7 +43,7 @@ struct ContentView: View {
                             .environment(\.moriLandscapeMotionAllowed,
                                          presentation.activeSheet == nil && rootNavigationPath.isEmpty)
                     }
-                    .frame(width: proxy.size.width, height: proxy.size.height)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .allowsHitTesting(presentation.activeSheet == nil)
                     .disabled(presentation.activeSheet != nil)
                     .accessibilityHidden(presentation.activeSheet != nil)
@@ -77,15 +77,14 @@ struct ContentView: View {
                         selectTab(tab)
                     }
                 )
-                    .opacity(mainTabBarHidden ? 0 : 1)
-                    .allowsHitTesting(!mainTabBarHidden && presentation.activeSheet == nil)
+                    .opacity(mainTabBarHidden || usesSystemTabs ? 0 : 1)
+                    .allowsHitTesting(!usesSystemTabs && !mainTabBarHidden && presentation.activeSheet == nil)
                     .disabled(presentation.activeSheet != nil)
-                    .accessibilityHidden(mainTabBarHidden || presentation.activeSheet != nil)
+                    .accessibilityHidden(usesSystemTabs || mainTabBarHidden || presentation.activeSheet != nil)
             }
             .frame(width: proxy.size.width, height: proxy.size.height)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .ignoresSafeArea(edges: .bottom)
         .onPreferenceChange(MoriMainTabBarHiddenPreferenceKey.self) { hidden in
             mainTabBarHidden = hidden
         }
@@ -126,17 +125,40 @@ struct ContentView: View {
 
     @ViewBuilder
     private var selectedTabContent: some View {
-        if presentation.selectedTab == .today {
+        if usesSystemTabs {
+            TabView(selection: Binding(get: { presentation.selectedTab }, set: selectTab)) {
+                ForEach(AppTab.allCases, id: \.self) { tab in
+                    MoriDuoContentRegion { tabContent(tab) }
+                        .tabItem { Label(tab.title, systemImage: tab.bitmapIcon.legacySystemName) }
+                        .tag(tab)
+                }
+            }
+            .toolbar(mainTabBarHidden ? .hidden : .visible, for: .tabBar)
+            .toolbarBackground(MoriV2Palette.paper, for: .tabBar)
+            .toolbarBackground(.visible, for: .tabBar)
+        } else {
+            MoriDuoContentRegion { tabContent(presentation.selectedTab) }
+        }
+    }
+
+    private var usesSystemTabs: Bool {
+        if #available(iOS 27.1, *) { return true }
+        return false
+    }
+
+    @ViewBuilder
+    private func tabContent(_ tab: AppTab) -> some View {
+        if tab == .today {
             TodayView(launchRequest: presentation.todayLaunchRequest)
         }
 
-        if presentation.selectedTab == .practice {
+        if tab == .practice {
             SettleView(
                 launchRequest: presentation.practiceLaunchRequest
             )
         }
 
-        if presentation.selectedTab == .journal {
+        if tab == .journal {
             GratitudeJournalScreen(usesAppShellNavigation: true)
         }
     }

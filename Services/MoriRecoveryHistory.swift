@@ -125,7 +125,7 @@ enum MoriDailyFactorLogBuilder {
         MoriDailyPracticeSummary(
             settleMinutes: actions.filter { $0.kind == .settleSession }.reduce(0) { $0 + $1.minutes },
             breathingMinutes: actions.filter { $0.kind == .breathingSession }.reduce(0) { $0 + $1.minutes },
-            walkMinutes: actions.filter { $0.kind == .replacementAction }.reduce(0) { $0 + $1.minutes },
+            walkMinutes: actions.filter { $0.kind == .replacementAction }.reduce(0) { $0 + $1.recordedQuietMinutes },
             focusMinutes: actions.filter { $0.kind == .pomodoroSession }.reduce(0) { $0 + $1.minutes }
         )
     }

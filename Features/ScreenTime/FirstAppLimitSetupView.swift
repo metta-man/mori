@@ -57,7 +57,6 @@ struct FirstAppLimitSetupView: View {
 
     private func finishOrTurnAppLimitOn(_ summary: MoriScreenTimeProfileSummary) {
         if snapshot.isAppLimitReady(for: feature) {
-            FirstAppLimitSetupMorningGateActivation.activate(using: appLimitManager)
             if !openRoute(.todayTab, source: .userInteraction) {
                 dismiss()
             }
@@ -66,7 +65,6 @@ struct FirstAppLimitSetupView: View {
 
         guard summary.hasEffectiveSelection else { return }
         appLimitManager.perform(.setFeatureEnabled(true, .beforeFeed))
-        FirstAppLimitSetupMorningGateActivation.activate(using: appLimitManager)
         trackCompletedIfReady()
     }
 
@@ -473,7 +471,7 @@ private struct FirstAppLimitTimingCard: View {
             VStack(alignment: .leading, spacing: 0) {
                 FirstAppLimitTimingPickerRow(
                     icon: .breathe,
-                    title: "Breath key",
+                    title: "Optional breathing",
                     detail: "Guided breathing or your own timed breath"
                 ) {
                     EmptyView()

@@ -60,17 +60,7 @@ struct TodayView: View {
     }
 
     private var longestQuietToday: Int {
-        clarityStore.actions(for: Date())
-            .filter { action in
-                switch action.kind {
-                case .quietTimer, .replacementAction, .urgeCheckIn, .breathingSession, .pomodoroSession:
-                    return true
-                default:
-                    return false
-                }
-            }
-            .map(\.minutes)
-            .max() ?? 0
+        clarityStore.actions(for: Date()).map(\.recordedQuietMinutes).max() ?? 0
     }
 
     init(launchRequest: MoriTodayLaunchRequest? = nil) {
@@ -83,12 +73,19 @@ struct TodayView: View {
             subtitle: "One mindful choice at a time.",
             onOpenSettings: openSettings
         ) {
-            TodayPrimaryResetCard(
-                appLimitPresentation: appLimitPresentation,
-                keptClosedCount: todayKeptClosedCount,
-                onStartReset: openBeforeFeedReset,
-                onOpenAppLimits: openAppLimits
-            )
+            TimelineView(.periodic(from: Date(), by: 1)) { timeline in
+                let state = attentionState(now: timeline.date)
+                TodayPrimaryResetCard(
+                    appLimitPresentation: appLimitPresentation,
+                    attentionState: state,
+                    keptClosedCount: todayKeptClosedCount,
+                    onStartReset: {
+                        if state.isFocus { openRoute(.practiceTab) }
+                        else { openBeforeFeedReset() }
+                    },
+                    onOpenAppLimits: openAppLimits
+                )
+            }
 
             TodayQuietMetricsCard(
                 quietMinutes: quietMinutesToday,
@@ -129,6 +126,23 @@ struct TodayView: View {
         .moriOnChange(of: launchRequest?.id) { _ in
             handleLaunchRequestIfNeeded()
         }
+    }
+
+    private func attentionState(now: Date) -> MoriTodayAttentionState {
+        let store = BeforeFeedGateStore()
+        let lastWindow = store.intentEvents().last { $0.resolvedOutcome == .openWindowRequested }
+        let lastEnd = lastWindow.flatMap { event in
+            event.openWindowSeconds.map { event.confirmedAt.addingTimeInterval(TimeInterval($0)) }
+        }
+        return .resolve(
+            authorized: appLimitManager.settingsSnapshot.isAuthorized,
+            hasSelection: appLimitPresentation.profileSummary.hasEffectiveSelection,
+            enabled: appLimitPresentation.profileSummary.isEnabled,
+            allowanceEndsAt: store.allowanceDeadlineForDisplay(),
+            session: appLimitManager.activeSession,
+            lastWindowEnd: lastEnd,
+            now: now
+        )
     }
 
     private func openSettings() {

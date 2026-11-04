@@ -171,15 +171,7 @@ enum MoriWidgetContextPublisher {
 
         let todayActions = clarityStore.actions()
         let seeds = todayActions.reduce(0) { $0 + $1.seeds }
-        let quietMinutes = todayActions
-            .filter {
-                $0.kind == .quietTimer ||
-                    $0.kind == .replacementAction ||
-                    $0.kind == .urgeCheckIn ||
-                    $0.kind == .breathingSession ||
-                    $0.kind == .pomodoroSession
-            }
-            .reduce(0) { $0 + $1.minutes }
+        let quietMinutes = todayActions.reduce(0) { $0 + $1.recordedQuietMinutes }
         let pulseMinutes: Int
         if let latestPulse = clarityStore.latestPulse,
            latestPulse.dateKey == MoriDateKey.value() {

@@ -6,8 +6,19 @@ import ActivityKit
 enum MoriAppGroup {
     static let identifier = "group.com.mettalabs.mori"
 
-    static var defaults: UserDefaults {
-        UserDefaults(suiteName: identifier) ?? .standard
+    private static let coordinatedDefaults: UserDefaults = {
+        let base = UserDefaults(suiteName: identifier) ?? .standard
+        // The snapshot and cross-process writer protocol are one opt-in migration.
+        // Shipping legacy writers must continue sharing the same UserDefaults suite.
+        guard MoriShieldCoordination.nativeEligibilityReviewed else { return base }
+        guard let group = FileManager.default.containerURL(forSecurityApplicationGroupIdentifier: identifier),
+              let coordinated = try? MoriCoordinatedPreferences(base: base, directory: group.appendingPathComponent("ScheduledProtection")) else { return base }
+        return coordinated
+    }()
+    static var defaults: UserDefaults { coordinatedDefaults }
+    static var hasFreshProtectionPreferences: Bool {
+        guard let preferences = defaults as? MoriCoordinatedPreferences else { return false }
+        return (try? preferences.validateSnapshot()) != nil
     }
 }
 
@@ -229,6 +240,14 @@ struct MoriBeforeFeedWindowAttributes: ActivityAttributes {
 
         func remainingSeconds(now: Date = Date()) -> Int {
             max(0, Int(ceil(endsAt.timeIntervalSince(now))))
+        }
+
+        func completed(at endedAt: Date) -> Self {
+            Self(startedAt: startedAt, endsAt: min(endsAt, endedAt), durationSeconds: durationSeconds)
+        }
+
+        static func dismissalDate(endedAt: Date) -> Date {
+            endedAt.addingTimeInterval(60)
         }
 
         var timerInterval: ClosedRange<Date> {

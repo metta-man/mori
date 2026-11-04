@@ -15,6 +15,167 @@ final class MoriLandscapeUITests: XCTestCase {
         return app
     }
 
+    func testFreshEntryCanLeaveWithoutBreathingOrChoosingTime() {
+        let app = launch(["-MoriOpenBeforeFeedForUITest", "-MoriUseFreshExitForUITest",
+                          "-MoriClearBeforeFeedHistoryForUITest"])
+        let leave = app.buttons["before-feed.leave"]
+        XCTAssertTrue(leave.waitForExistence(timeout: 10))
+        XCTAssertFalse(app.buttons["Pause"].exists)
+        capture("exit-first-entry")
+        if !leave.isHittable { app.swipeUp() }
+        leave.tap()
+        XCTAssertTrue(app.staticTexts["offline-handoff.title"].waitForExistence(timeout: 5))
+        capture("exit-first-handoff")
+        XCUIDevice.shared.press(.home)
+        app.activate()
+        XCTAssertTrue(app.staticTexts["offline-handoff.title"].waitForExistence(timeout: 5))
+    }
+
+    func testExplicitUseChoosesTimeWithoutRequiredReason() {
+        let app = launch(["-MoriOpenBeforeFeedForUITest", "-MoriUseFreshExitForUITest"])
+        let use = app.buttons["before-feed.continue"]
+        XCTAssertTrue(use.waitForExistence(timeout: 10))
+        if !use.isHittable { app.swipeUp() }
+        use.tap()
+        XCTAssertTrue(app.buttons["2 minutes"].waitForExistence(timeout: 5))
+        app.buttons["2 minutes"].tap()
+        XCTAssertTrue(app.buttons["Open for 2 minutes"].waitForExistence(timeout: 5))
+        XCTAssertFalse(app.buttons["Just checking"].exists)
+        capture("exit-first-deliberate-use")
+    }
+
+    func testExitFlowRemainsReachableInLandscapeAndLargeTraditionalChineseText() {
+        defer { XCUIDevice.shared.orientation = .portrait }
+        let app = launch(["-MoriOpenBeforeFeedForUITest", "-MoriUseFreshExitForUITest",
+                          "-mori_locale_preference", "zh-Hant",
+                          "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"])
+        XCUIDevice.shared.orientation = .landscapeLeft
+        let leave = app.buttons["before-feed.leave"]
+        XCTAssertTrue(leave.waitForExistence(timeout: 10))
+        for _ in 0..<5 where !leave.isHittable { app.swipeUp() }
+        XCTAssertTrue(leave.isHittable)
+        capture("exit-first-landscape-tc-large")
+        leave.tap()
+        XCTAssertTrue(app.staticTexts["offline-handoff.title"].waitForExistence(timeout: 5))
+    }
+
+    func testLogDraftSurvivesRotationAndBackgrounding() {
+        defer { XCUIDevice.shared.orientation = .portrait }
+        let app = launch(["-MoriOpenLogForUITest", "-MoriStartFreshLogForUITest"])
+        for id in ["journal-guided-emotion-calm", "journal-guided-context-work-or-study", "journal-guided-response-just-record-it", "journal-guided-add-sentence"] {
+            let button = app.buttons[id]
+            XCTAssertTrue(button.waitForExistence(timeout: 8))
+            for _ in 0..<4 where !button.isHittable { app.swipeUp() }
+            button.tap()
+        }
+        let note = app.textViews["journal-guided-note"]
+        XCTAssertTrue(note.waitForExistence(timeout: 5))
+        note.tap()
+        note.typeText("A draft that stays with me")
+        XCUIDevice.shared.orientation = .landscapeLeft
+        XCTAssertEqual(note.value as? String, "A draft that stays with me")
+        capture("log-landscape-unsaved-draft")
+        XCUIDevice.shared.press(.home)
+        app.activate()
+        XCTAssertEqual(note.value as? String, "A draft that stays with me")
+        XCUIDevice.shared.orientation = .portrait
+        XCTAssertEqual(note.value as? String, "A draft that stays with me")
+        capture("log-portrait-draft-retained")
+    }
+
+    func testBreathingPhasePauseResumeAndBackgroundContinuity() {
+        let app = launch(["-MoriOpenBreathingTimerForUITest", "-mori_timer_dark_room_enabled", "NO",
+                          "-mori_settle_breathing_sound_enabled", "NO", "-mori_settle_breathing_haptics_enabled", "NO"])
+        XCTAssertTrue(app.buttons["Pause"].waitForExistence(timeout: 15))
+        let active = XCTAttachment(screenshot: app.screenshot())
+        active.name = "breathing-active-pass-1"
+        active.lifetime = .keepAlways
+        add(active)
+        app.buttons["Pause"].tap()
+        XCTAssertTrue(app.buttons["Resume"].waitForExistence(timeout: 3))
+        let paused = XCTAttachment(screenshot: app.screenshot())
+        paused.name = "breathing-paused-pass-2"
+        paused.lifetime = .keepAlways
+        add(paused)
+        XCUIDevice.shared.press(.home)
+        app.activate()
+        XCTAssertTrue(app.buttons["Resume"].waitForExistence(timeout: 5))
+        app.buttons["Resume"].tap()
+        XCTAssertTrue(app.buttons["Pause"].waitForExistence(timeout: 3))
+        let resumed = XCTAttachment(screenshot: app.screenshot())
+        resumed.name = "breathing-resumed"
+        resumed.lifetime = .keepAlways
+        add(resumed)
+    }
+
+    private var beforeFeedCircleFlags: [String] {
+        ["-MoriOpenBeforeFeedForUITest", "-MoriStartBeforeFeedBreathForUITest", "-MoriClearBeforeFeedHistoryForUITest",
+         "-mori_before_feed_grace_until", "0",
+         "-mori_before_feed_pause_style_v1", "guided_breathing",
+         "-mori_before_feed_breathing_technique_id", "Coherent (5.5s in - 5.5s out)",
+         "-mori_before_feed_guided_cycle_count", "3"]
+    }
+
+    func testBeforeFeedSantiCirclePhasePauseResumeAndCompletion() {
+        let app = launch(beforeFeedCircleFlags)
+        XCTAssertTrue(app.buttons["Pause"].waitForExistence(timeout: 12))
+        let visual = app.descendants(matching: .any)["before-feed.breath-visual"].firstMatch
+        XCTAssertTrue(visual.waitForExistence(timeout: 3))
+        capture("Mori Santi circle active pass 1")
+        let exhale = NSPredicate(format: "label CONTAINS[c] %@", "Exhale")
+        expectation(for: exhale, evaluatedWith: visual)
+        waitForExpectations(timeout: 12)
+        app.buttons["Pause"].tap()
+        XCTAssertTrue(app.buttons["Resume"].waitForExistence(timeout: 3))
+        let pausedLabel = visual.label
+        capture("Mori Santi circle paused pass 2")
+        XCUIDevice.shared.press(.home); app.activate()
+        XCTAssertTrue(app.buttons["Resume"].waitForExistence(timeout: 5))
+        XCTAssertEqual(visual.label, pausedLabel)
+        app.buttons["Resume"].tap()
+        XCTAssertTrue(app.buttons["Pause"].waitForExistence(timeout: 3))
+        XCTAssertTrue(app.staticTexts["How much time do you need?"].waitForExistence(timeout: 40))
+        XCTAssertFalse(visual.exists)
+    }
+
+    func testBeforeFeedConciseTraditionalChineseHasNoVisibleTechniqueOrSeconds() {
+        let app = launch(beforeFeedCircleFlags + ["-mori_locale_preference", "zh-Hant", "-MoriFreezeBeforeFeedTimerForUITest"])
+        XCTAssertTrue(app.buttons["暫停"].waitForExistence(timeout: 12))
+        let visual = app.descendants(matching: .any)["before-feed.breath-visual"].firstMatch
+        XCTAssertTrue(visual.exists)
+        XCTAssertTrue(visual.label.contains("3") && visual.label.contains("呼吸"))
+        XCTAssertEqual(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "秒")).count, 0)
+        XCTAssertEqual(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "Coherent")).count, 0)
+        XCTAssertFalse(app.staticTexts["呼吸鑰匙"].exists)
+        XCTAssertFalse(app.staticTexts["從呼吸開始"].exists)
+        capture("Mori concise Before Feed TC pass 1")
+        app.buttons["暫停"].tap()
+        XCTAssertTrue(app.buttons["繼續"].waitForExistence(timeout: 3))
+    }
+
+    func testBeforeFeedConciseTraditionalChineseLargeTextKeepsControlsReachable() {
+        let app = launch(beforeFeedCircleFlags + ["-mori_locale_preference", "zh-Hant", "-MoriFreezeBeforeFeedTimerForUITest",
+                          "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"])
+        let pause = app.buttons["暫停"]
+        XCTAssertTrue(pause.waitForExistence(timeout: 12))
+        if !pause.isHittable { app.swipeUp() }
+        XCTAssertTrue(pause.isHittable)
+        XCTAssertEqual(app.staticTexts.matching(NSPredicate(format: "label CONTAINS %@", "秒")).count, 0)
+        capture("Mori concise Before Feed TC large text pass 2")
+    }
+
+    func testBeforeFeedSantiCircleTraditionalChineseAtAccessibilityTextSize() {
+        let app = launch(beforeFeedCircleFlags + ["-mori_locale_preference", "zh-Hant",
+                          "-UIPreferredContentSizeCategoryName", "UICTContentSizeCategoryAccessibilityXXXL"])
+        let pause = app.buttons["暫停"]
+        XCTAssertTrue(pause.waitForExistence(timeout: 12))
+        if !pause.isHittable { app.swipeUp() }
+        XCTAssertTrue(pause.isHittable)
+        capture("Mori Santi circle Traditional Chinese large text")
+        pause.tap()
+        XCTAssertTrue(app.buttons["繼續"].waitForExistence(timeout: 3))
+    }
+
     func testQuietCountdownSurfacesKeepStartAndPauseReachable() {
         for (route, name) in [
             ("-MoriOpenQuietModeForUITest", "Quiet timer"),
@@ -50,7 +211,7 @@ final class MoriLandscapeUITests: XCTestCase {
 
     func testThreeTabsKeepCoreEntrypointsReachable() {
         let app = launch()
-        XCTAssertTrue(app.staticTexts["Before Feed Reset"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["today-next-action"].waitForExistence(timeout: 10))
         capture("Today")
         app.buttons["Focus"].tap()
         XCTAssertTrue(app.buttons["Focus on one thing"].waitForExistence(timeout: 5))
@@ -65,7 +226,7 @@ final class MoriLandscapeUITests: XCTestCase {
         XCTAssertTrue(app.staticTexts["Log"].waitForExistence(timeout: 5))
         capture("Log")
         app.buttons["Today"].tap()
-        XCTAssertTrue(app.staticTexts["Before Feed Reset"].waitForExistence(timeout: 5))
+        XCTAssertTrue(app.buttons["today-next-action"].waitForExistence(timeout: 5))
     }
 
     func testSetupDurationUpdatesTimerAndStartsChosenLength() {
@@ -134,9 +295,9 @@ final class MoriLandscapeUITests: XCTestCase {
             app.launch()
             let destination: XCUIElement
             switch name {
-            case "Today": destination = app.staticTexts["資訊流前重置"]
+            case "Today": destination = app.buttons["today-next-action"]
             case "Focus": destination = app.buttons["專心做一件事"]
-            case "Log": destination = app.staticTexts["你現在感覺如何？"]
+            case "Log": destination = app.buttons["journal-guided-emotion-calm"]
             case "Settings": destination = app.buttons["完成"]
             case "Setup": destination = app.steppers.firstMatch
             case "Active": destination = app.buttons["暫停"]
@@ -201,6 +362,10 @@ final class MoriLandscapeUITests: XCTestCase {
         XCTAssertTrue(app.buttons["journal-other-feelings"].waitForExistence(timeout: 8))
         XCTAssertFalse(app.buttons["Hopeful"].exists)
         app.buttons["journal-other-feelings"].tap()
+        let pleasant = app.buttons["journal-feeling-group-pleasant"]
+        XCTAssertTrue(pleasant.waitForExistence(timeout: 3))
+        for _ in 0..<4 where !pleasant.isHittable { app.swipeUp() }
+        pleasant.tap()
         XCTAssertTrue(app.buttons["Hopeful"].waitForExistence(timeout: 3))
         capture("Log other feelings")
         app.buttons["Hopeful"].tap()
@@ -250,7 +415,7 @@ final class MoriLandscapeUITests: XCTestCase {
             }
         }
         let app = launch()
-        XCTAssertTrue(app.buttons["Begin quiet pause"].waitForExistence(timeout: 10))
+        XCTAssertTrue(app.buttons["today-next-action"].waitForExistence(timeout: 10))
         // Compare pixels in the landscape only, excluding system chrome and text.
         Thread.sleep(forTimeInterval: 2)
         let firstCapture = XCUIScreen.main.screenshot()

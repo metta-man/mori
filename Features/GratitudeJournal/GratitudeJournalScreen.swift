@@ -55,6 +55,10 @@ struct GratitudeJournalScreen: View {
     @State private var showImporter = false
     @State private var todayHabitEntry: HabitEntry?
     @State private var guidedCheckIn = JournalGuidedCheckInState()
+    @State private var moodValence: MoriJournalValence?
+    @State private var newMoodRecordedAt = Date()
+    @State private var isSharingMood = false
+    @State private var moodSharePresentation = MoriJournalMoodSharePresentation()
     @State private var dailyEntryNote = ""
     @State private var dailyEntryPhotos: [GratitudePhotoAttachment] = []
     @State private var persistedDailyEntryPhotos: [GratitudePhotoAttachment] = []
@@ -103,6 +107,11 @@ struct GratitudeJournalScreen: View {
             GratitudeJournalHomeContent(
                 dailySparkStore: dailySparkStore,
                 guidedCheckIn: $guidedCheckIn,
+                moodValence: moodValenceBinding,
+                isSharingMood: isSharingMood,
+                moodShareMessage: moodShareMessage,
+                moodPayload: moodPreviewPayload,
+                onShareMood: shareMoodWithHealth,
                 todayHabitEntry: todayHabitEntry,
                 dailyEntryNote: $dailyEntryNote,
                 dailyEntryPhotos: $dailyEntryPhotos,
@@ -155,6 +164,9 @@ struct GratitudeJournalScreen: View {
             onReloadJournal: reloadJournalData,
             onReloadHabitData: loadHabitData
         )
+        .moriOnChange(of: moodValence) { _ in clearMoodStatusIfChanged() }
+        .moriOnChange(of: guidedCheckIn) { _ in clearMoodStatusIfChanged() }
+        .moriOnChange(of: todayHabitEntry?.journalMood) { _ in clearMoodStatusIfChanged() }
         .moriOnChange(of: dailySparkStore.entries.count) { _ in
             reloadJournalData()
         }
@@ -262,6 +274,7 @@ struct GratitudeJournalScreen: View {
 
         todayHabitEntry = HabitDataManager.shared.getTodayEntry()
         guidedCheckIn = JournalGuidedCheckInState(restoring: todayHabitEntry)
+        moodValence = todayHabitEntry?.journalMood?.valence
         dailyEntryNote = todayHabitEntry?.note ?? ""
         loadDailyEntryPhotos()
         refreshLifeGridSnapshot()
@@ -278,25 +291,63 @@ struct GratitudeJournalScreen: View {
         refreshLifeGridSnapshot()
     }
 
-    private func saveDailyEntryFromJournal() {
-        guard guidedCheckIn.canSave,
-              let emotion = guidedCheckIn.emotion,
-              let context = guidedCheckIn.context,
-              let response = guidedCheckIn.response,
-              let legacyFields = guidedCheckIn.legacyFields(preserving: todayHabitEntry) else { return }
+    private var moodValenceBinding: Binding<MoriJournalValence?> {
+        Binding(get: { moodValence }, set: { selection in
+            if todayHabitEntry?.journalMood == nil, selection != nil { newMoodRecordedAt = Date() }
+            moodValence = selection
+            clearMoodStatusIfChanged()
+        })
+    }
+    private var moodDraft: MoriJournalMoodDraft {
+        .init(valence: moodValence, emotionID: guidedCheckIn.emotion?.id,
+              contextID: guidedCheckIn.context?.id)
+    }
+    private var moodPreviewPayload: MoriJournalMoodHealthPayload? {
+        guard let valence = moodValence else { return nil }
+        return MoriJournalMood.editing(todayHabitEntry?.journalMood, valence: valence,
+            emotionID: guidedCheckIn.emotion?.id, contextID: guidedCheckIn.context?.id,
+            now: newMoodRecordedAt).healthPayload
+    }
+    private var moodShareMessage: String {
+        switch moodSharePresentation.outcome {
+        case .written: return MoriL10n.string("journal.mood.shared", defaultValue: "Shared with Apple Health")
+        case .previouslyShared: return MoriL10n.string("journal.mood.previously_shared", defaultValue: "This version was shared earlier. No new Health record was saved.")
+        case .failed: return MoriL10n.string("journal.mood.not_shared", defaultValue: "Saved in Mori. This share did not complete. Check Health access and try again.")
+        case nil: return ""
+        }
+    }
+    private func clearMoodStatusIfChanged() {
+        moodSharePresentation.clearIfChanged(draft: moodDraft, persisted: todayHabitEntry?.journalMood)
+    }
+    private func shareMoodWithHealth() {
+        guard !isSharingMood, moodValence != nil, guidedCheckIn.canSave else { return }
+        saveDailyEntryFromJournal()
+        guard let mood = todayHabitEntry?.journalMood else { return }
+        isSharingMood = true
+        moodSharePresentation.begin(mood)
+        Task { @MainActor in
+            defer { isSharingMood = false }
+            let outcome: MoriJournalMoodSharePresentation.Outcome
+            do {
+                let result = try await MoriJournalMoodHealth.shared.share(mood)
+                if result == .written { HabitDataManager.shared.markMoodShared(mood) }
+                outcome = result == .written ? .written : .previouslyShared
+            } catch { outcome = .failed }
+            moodSharePresentation.complete(mood, outcome: outcome, draft: moodDraft,
+                persisted: HabitDataManager.shared.persistedMood(id: mood.id))
+        }
+    }
 
-        saveToneFromJournal(
-            emotion.tone,
-            note: dailyEntryNote,
-            trigger: legacyFields.trigger,
-            thought: legacyFields.thought,
-            feeling: legacyFields.feeling,
-            responsePlan: legacyFields.responsePlan,
-            journalEmotionID: emotion.id,
-            journalContextID: context.id,
-            journalResponseID: response.id,
-            photoAttachments: dailyEntryPhotos
-        )
+    private func saveDailyEntryFromJournal() {
+        guard let action = MoriJournalGuidedSaveAction(checkIn: guidedCheckIn,
+            existingEntry: todayHabitEntry, note: dailyEntryNote, valence: moodValence,
+            recordedAt: newMoodRecordedAt) else { return }
+        let entry = action.save(using: .shared)
+        saveToneFromJournal(entry.tone, note: entry.note, trigger: entry.trigger,
+            thought: entry.thought, feeling: entry.feeling, responsePlan: entry.responsePlan,
+            journalEmotionID: entry.journalEmotionID, journalContextID: entry.journalContextID,
+            journalResponseID: entry.journalResponseID, photoAttachments: dailyEntryPhotos,
+            savedEntry: entry)
     }
 
     private func saveToneFromJournal(
@@ -309,12 +360,14 @@ struct GratitudeJournalScreen: View {
         journalEmotionID: String? = nil,
         journalContextID: String? = nil,
         journalResponseID: String? = nil,
-        photoAttachments: [GratitudePhotoAttachment]? = nil
+        photoAttachments: [GratitudePhotoAttachment]? = nil,
+        moodEdit: MoriJournalMoodEdit = .preserve,
+        savedEntry: HabitEntry? = nil
     ) {
         let memoryNote = note ?? dailyEntryNote
         let photosToSave = photoAttachments
 
-        let entry = HabitDataManager.shared.saveEntry(
+        let entry = savedEntry ?? HabitDataManager.shared.saveEntry(
             tone: tone,
             note: memoryNote,
             trigger: trigger,
@@ -323,7 +376,8 @@ struct GratitudeJournalScreen: View {
             responsePlan: responsePlan,
             journalEmotionID: journalEmotionID,
             journalContextID: journalContextID,
-            journalResponseID: journalResponseID
+            journalResponseID: journalResponseID,
+            moodEdit: moodEdit
         )
 
         GratitudeEntryStore.live.saveDayLogEntry(
@@ -339,6 +393,7 @@ struct GratitudeJournalScreen: View {
 
         todayHabitEntry = entry
         guidedCheckIn = JournalGuidedCheckInState(restoring: entry)
+        moodValence = entry.journalMood?.valence
         dailyEntryNote = entry.note ?? ""
         if let photosToSave {
             dailyEntryPhotos = photosToSave

@@ -52,7 +52,7 @@ private struct QuietReplacementActionRow: View {
 
             Spacer()
 
-            Text("\(action.minutes)m")
+            Text(isSelected ? MoriL10n.display("Selected") : MoriL10n.display("Try"))
                 .font(MoriV2Type.caption)
                 .foregroundColor(MoriV2Palette.mutedStone)
         }
