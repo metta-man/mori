@@ -233,15 +233,26 @@ final class MoriRoutingTests: XCTestCase {
     }
 
     func testDisplayReadDoesNotInvalidateTheExpiryOwner() {
-        withDefaults { defaults, legacyDefaults in
-            let store = BeforeFeedGateStore(defaults: defaults, legacyDefaults: legacyDefaults)
-            let now = Date()
-            let end = now.addingTimeInterval(120)
-            store.saveGraceUntil(end, now: now)
-            XCTAssertEqual(store.allowanceDeadlineForDisplay(), end)
-            XCTAssertTrue(store.shouldReapplyExpiredAllowance(endsAt: end, now: end))
-            XCTAssertEqual(store.allowanceDeadlineForDisplay(), end)
-            XCTAssertTrue(store.shouldReapplyExpiredAllowance(endsAt: end, now: end.addingTimeInterval(1)))
+        // Exercise both an exactly representable deadline and a subsecond value
+        // that loses one ULP when converted from Date's 2001 epoch to Unix time.
+        for now in [Date(timeIntervalSinceReferenceDate: 815_400_000.125),
+                    Date(timeIntervalSinceReferenceDate: Double(815_400_000).nextUp)] {
+            withDefaults { defaults, legacyDefaults in
+                let store = BeforeFeedGateStore(defaults: defaults, legacyDefaults: legacyDefaults)
+                let requestedEnd = now.addingTimeInterval(120)
+                store.saveGraceUntil(requestedEnd, now: now)
+                // The manager captures the authoritative persisted deadline, not
+                // the pre-serialization Date, when scheduling its expiry callback.
+                guard let end = store.graceUntil(now: now) else {
+                    return XCTFail("The saved allowance must be readable")
+                }
+                XCTAssertEqual(end.timeIntervalSince1970, requestedEnd.timeIntervalSince1970)
+                XCTAssertEqual(store.allowanceDeadlineForDisplay(), end)
+                XCTAssertFalse(store.shouldReapplyExpiredAllowance(endsAt: end, now: now))
+                XCTAssertTrue(store.shouldReapplyExpiredAllowance(endsAt: end, now: end))
+                XCTAssertEqual(store.allowanceDeadlineForDisplay(), end)
+                XCTAssertTrue(store.shouldReapplyExpiredAllowance(endsAt: end, now: end.addingTimeInterval(1)))
+            }
         }
     }
 
